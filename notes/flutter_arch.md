@@ -10,7 +10,9 @@ more information [Set up and test drive Flutter](https://docs.flutter.dev/get-st
 
 ## Flutter SDK
 
-Installed by vscode when creating a new project - `Flutter: New Project` in command palette.
+The Flutter SDK is needed to create/use Flutter. Therefore when creating your first Flutter project, VS Code will prompt you to install the SDK if it cannot detect it.
+
+To create a new project, open the command palette and type `Flutter: New Project`. After doing so, VS Code will prompt you to install the Flutter SDK. Select the `Intall SDK` option.
 
 Install to `/opt/` and make a system link `sudo ln -s /opt/flutter/bin/flutter /usr/bin/flutter` to have access to the executable from your shell.
 
