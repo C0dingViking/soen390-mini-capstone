@@ -64,7 +64,7 @@ Execute `flutter emulators` to view the list and `QT_QPA_PLATFORM="wayland;xcb" 
 
 Don't forget to hit the power button to power the phone up.
 
-Start the emulator before you begin development.
+*Start the emulator before you begin development to ensure you can run the Dart application on said emulator.*
   
 ### Development
 
