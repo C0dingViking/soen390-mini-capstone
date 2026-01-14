@@ -30,11 +30,9 @@ Locate `/usr/share/applications/android-studio.desktop` and edit the `Exec=andro
 
 Follow the relevant section of this guide to create your device: [Set up Android development](https://docs.flutter.dev/platform-integration/android/setup). 
 
+Make sure you install the SDK Tools.
+
 Make sure it runs from the Virtual Device Manager before moving to the next step.
-
-### SDK Tools
-
-Flutter relies on `Android SDK Command-line Tools` which are not installed by default. To grab them, navigate to SDK manager in the same dropdown used to access the Virtual Device Manager and open SDK Tools. Select the Android SDK Command-line Tools and apply. 
 
 Execute `flutter doctor`. This should detect your android sdk without any errors. 
 
