@@ -6,7 +6,7 @@
 
 - [Flutter - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter)
 
-more information [Set up and test drive Flutter](https://docs.flutter.dev/get-started/quick)
+more information [Set up and test drive Flutter](https://docs.flutter.dev/get-started/quick#install)
 
 ## Flutter SDK
 
@@ -14,15 +14,23 @@ The Flutter SDK is needed to create/use Flutter. Therefore when creating your fi
 
 To create a new project, open the command palette and type `Flutter: New Project`. After doing so, VS Code will prompt you to install the Flutter SDK. Select the `Intall SDK` option.
 
-Install to `/opt/` and make a symbolic link `sudo ln -s /opt/flutter/bin/flutter /usr/bin/flutter` to have access to the executable from your shell.
+Install to `~/Downloads/`. Move the installed flutter folder into `/opt/` with `mv ~/Downloads/flutter /opt/.` and make a symbolic link `sudo ln -s /opt/flutter/bin/flutter /usr/bin/flutter` to have access to the executable from your shell.
+
+This will create a conflict in VSCode since it still thinks flutter is in ~/Downloads . To resolve this, hit the notifiction popup when launching vscode and edit the path in `settings.json` to `/opt/flutter/`.
 
 ## Android Studio
 
 Install [AUR (en) - android-studio](https://aur.archlinux.org/packages/android-studio). 
 
+### If using a wayland window manager
+
 Locate `/usr/share/applications/android-studio.desktop` and edit the `Exec=android-studio %f` to an env var like so: `Exec=env QT_QPA_PLATFORM=xcb android-studio %f`. More info [Android emulator can't find the wayland QT plugin - Android Enthusiasts Stack Exchange](https://android.stackexchange.com/questions/216898/android-emulator-cant-find-the-wayland-qt-plugin).
 
-Follow the relevant section of this guide to create your device: [Set up Android development](https://docs.flutter.dev/platform-integration/android/setup). Make sure it runs from the Virtual Device Manager.
+### Emulator setup
+
+Follow the relevant section of this guide to create your device: [Set up Android development](https://docs.flutter.dev/platform-integration/android/setup). 
+
+Make sure it runs from the Virtual Device Manager before moving to the next step.
 
 ### SDK Tools
 
@@ -64,4 +72,4 @@ Navigate to the directory of a flutter project in VSCode.
 
 Open the Flutter sidebar and select the emulated phone you launched under Devices.
 
-Navigate to `main.dart` (or any dart file) and hit `F5`. This should compile the project and launch the app on the phone automatically.
+Navigate to `lib/main.dart` (or any dart file) and hit `F5`. This should compile the project and launch the app on the phone automatically.
