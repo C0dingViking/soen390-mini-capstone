@@ -1,0 +1,57 @@
+name: User Story
+description: Create a user story
+labels: ["user story"]
+body:
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story Statement
+      description: |
+        Follow the format below for the user story statement:
+        As a [user description], I want to [functionality], so that [goal/benefit].
+      render: 
+      placeholder: |
+        As a ..., I want to ..., so that ...
+      render: markdown
+      validations:
+        required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Follow the given, when, then format for acceptance criteria.
+      placeholder: |
+        - Given ...
+          When ...
+          Then ...
+      render: markdown
+      validations:
+        required: true
+  
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - 1
+        - 2
+        - 3
+        - 5
+        - 8
+        - 13
+        - 21
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+        - Urgent
+      validations:
+        required: true
