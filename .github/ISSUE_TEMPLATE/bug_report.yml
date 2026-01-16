@@ -1,0 +1,30 @@
+name: Bug Report
+description: Report a bug
+labels: ["bug"]
+projects: ["c0dingviking/2"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What is the Bug?
+      description: Describe what is the issue and what should have happened instead.
+      placeholder: There is a fly in the system...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide steps to reproduce the bug.
+      placeholder: After selecting the Hall building ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra-info
+    attributes:
+      label: Relevant Log Output or Screenshots
+      description: Provide any relevant logs or screenshots that can help to determine the bug and how to fix it.
+    validations:
+      required: false

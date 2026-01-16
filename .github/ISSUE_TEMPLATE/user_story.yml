@@ -1,6 +1,7 @@
 name: User Story
 description: Create a user story
 labels: ["user story"]
+projects: [c0dingviking/2]
 body:
   - type: textarea
     id: user-story
@@ -32,6 +33,9 @@ body:
     id: size
     attributes:
       label: Size
+      description: |
+        The size is in term of Story Points and it follows the Fibonacci sequence. 
+        Story points are a relative estimation method to help assess effort, complexity, and risk for backlog items ([Atlassian](https://www.atlassian.com/agile/project-management/estimation)).
       options:
         - 1
         - 2
