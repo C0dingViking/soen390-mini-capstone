@@ -1,7 +1,7 @@
 name: EPIC
 description: Create an EPIC
 labels: ["epic"]
-projects: ["c0dingviking/2"]
+projects: ["C0dingViking/2"]
 body:
   - type: textarea
     id: epic
