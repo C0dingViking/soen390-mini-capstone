@@ -13,8 +13,8 @@ body:
       placeholder: |
         As a ..., I want to ..., so that ...
       render: markdown
-      validations:
-        required: true
+    validations:
+      required: true
 
   - type: textarea
     id: acceptance-criteria
@@ -26,8 +26,8 @@ body:
         -[] When ...
         -[] Then ...
       render: markdown
-      validations:
-        required: true
+    validations:
+      required: true
   
   - type: dropdown
     id: size
@@ -56,5 +56,5 @@ body:
         - Medium
         - High
         - Urgent
-      validations:
-        required: true
+    validations:
+      required: true
