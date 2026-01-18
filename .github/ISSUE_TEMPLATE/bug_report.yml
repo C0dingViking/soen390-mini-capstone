@@ -39,7 +39,7 @@ body:
     attributes:
       label: Why the Selected Priority?
       description: Briefly explain why you chose this priority.
-      placeholder: `Immediate fix needed` since the application crashes when a user ...
+      placeholder: Immediate fix needed since the application crashes when a user ...
     validations:
       required: false
 

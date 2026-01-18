@@ -5,14 +5,15 @@ projects: ["c0dingviking/2"]
 body:
   - type: textarea
     id: epic
-    label: EPIC Breakdown
-    description: Enter the user stories that make up the EPIC. Please link each user story to it's appropriate issue.
-    placeholder: |
-      1. Explore the campus map
-        1. Support both SGW and Loyola campus maps
-        2. Make shapes for the campus buildings, so that they are easily distinguished from the city buildings
-        3. Be able to easily switch between the campuses (toggle button)
-        4. Show the building I am currently located in
-        5. Show additional information for each building (pop-up information)
+    attributes:
+      label: EPIC Breakdown
+      description: Enter the user stories that make up the EPIC. Please link each user story to its appropriate issue.
+      placeholder: |
+        1. Explore the campus map
+          1. Support both SGW and Loyola campus maps
+          2. Make shapes for the campus buildings, so that they are easily distinguished from the city buildings
+          3. Be able to easily switch between the campuses (toggle button)
+          4. Show the building I am currently located in
+          5. Show additional information for each building (pop-up information)
     validations:
       required: true
