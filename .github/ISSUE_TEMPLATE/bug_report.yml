@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug
 labels: ["bug"]
-projects: ["c0dingviking/2"]
+projects: ["C0dingViking/2"]
 body:
   - type: textarea
     id: what-happened
