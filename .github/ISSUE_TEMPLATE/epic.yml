@@ -7,7 +7,7 @@ body:
     id: epic
     attributes:
       label: EPIC Breakdown
-      description: Enter the user stories that make up the EPIC. Please link each user story to it's appropriate issue.
+      description: Enter the user stories that make up the EPIC. Please link each user story to its appropriate issue.
       placeholder: |
         1. Explore the campus map
           1. Support both SGW and Loyola campus maps
