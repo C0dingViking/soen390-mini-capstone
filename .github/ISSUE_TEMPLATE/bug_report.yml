@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a bug
+labels: ["bug"]
+projects: ["c0dingviking/2"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What is the Bug?
+      description: Describe what is the issue and what should have happened instead.
+      placeholder: There is a fly in the system...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide steps to reproduce the bug.
+      placeholder: After selecting the Hall building ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Bug Priority
+      description: How urgent is this bug?
+      options:
+        - Fix would be enjoyable, but app works fine without it
+        - Fix can wait, but should be implemented before the next release
+        - Fix should be completed as soon as possible
+        - Immediate fix needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: priority_justification
+    attributes:
+      label: Why the Selected Priority?
+      description: Briefly explain why you chose this priority.
+      placeholder: `Immediate fix needed` since the application crashes when a user ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra-info
+    attributes:
+      label: Relevant Log Output or Screenshots
+      description: Provide any relevant logs or screenshots that can help to determine the bug and how to fix it.
+    validations:
+      required: false
