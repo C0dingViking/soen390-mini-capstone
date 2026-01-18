@@ -21,6 +21,28 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Bug Priority
+      description: How urgent is this bug?
+      options:
+        - Fix would be enjoyable, but app works fine without it
+        - Fix can wait, but should be implemented before the next release
+        - Fix should be completed as soon as possible
+        - Immediate fix needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: priority_justification
+    attributes:
+      label: Why the Selected Priority?
+      description: Briefly explain why you chose this priority.
+      placeholder: `Immediate fix needed` since the application crashes when a user ...
+    validations:
+      required: false
+
   - type: textarea
     id: extra-info
     attributes:
