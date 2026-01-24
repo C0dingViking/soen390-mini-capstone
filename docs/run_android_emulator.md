@@ -63,16 +63,28 @@ The app should build and launch on the emulator.
 
 ## Common Issues
 
-- **No devices found**  
-  Make sure the emulator is running before executing `flutter run`.
-
 - **Slow emulator performance**  
   Ensure hardware acceleration is enabled (Intel HAXM / AMD Hypervisor / Windows Hypervisor Platform).
 
 - **Build fails on first run**  
   Try running:
-  flutter pub get
+  `flutter pub get`
   before running the app again.
+
+- **Emulator not in the list of devices**  
+  Make sure the emulator is running before executing `flutter run`.
+
+  Restart Android Studio and the emulator, then try again.
+
+  If issues persist, run:
+  `flutter emulators`
+  to verify the emulator is recognized.
+
+  If not, recreate the emulator in Android Studio.
+
+  If the emulator is present and not running, start it with:
+  `flutter emulators --launch <emulator id>` with the ID of the corresponding emulator from the previous command.
+
 
 
 ## Notes

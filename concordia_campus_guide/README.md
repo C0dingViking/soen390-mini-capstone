@@ -27,4 +27,4 @@ The Campus Guide application aims to support:
 
 ## Notes
 
-For detailed documentation (architecture, setup guides, testing strategy, CI/CD, and contributor guidelines), refer to the `/docs` directory at the repository root.
+For detailed documentation (architecture, setup guides, testing strategy, CI/CD), refer to the `/docs` directory at the repository root or the [wiki](https://github.com/C0dingViking/soen390-mini-capstone/wiki).

@@ -6,7 +6,7 @@ Guide on how to run Flutter apps from VS Code and the terminal, and how the diff
 ## 1) Running from the Terminal (All Platforms)
 
 ### Step 1 — Install dependencies
-From the project directory, run:
+From the project directory (`\concordia_campus_guide`), run:
 
 `flutter pub get`
 
@@ -16,6 +16,8 @@ List all connected/running devices (emulators, simulators, physical devices):
 `flutter devices`
 
 If your emulator/simulator is running, you should see it in the list.
+
+If your emulator is not listed, refer to:[Fix: Emulator not showing in device list](run_android_emulator.md#emulator-not-in-the-list-of-devices)
 
 ### Step 3 — Run the app
 To run on the currently selected device:
@@ -56,7 +58,7 @@ Make sure VS Code has this extension installed:
 - Flutter
 
 Step 2: Open the project
-Open the folder that contains `pubspec.yaml`.
+Open the folder that contains `pubspec.yaml`. (`\concordia_campus_guide`)
 
 Step 3: Select a device
 At the bottom-right of VS Code, choose the current device (it may say “No Device”).

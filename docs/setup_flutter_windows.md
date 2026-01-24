@@ -27,7 +27,7 @@ If Flutter is installed correctly, this will print the Flutter version.
 
 ### Note:
 
-Do not install Dart SDK separately; Flutter includes its own Dart SDK.
+> Do not install Dart SDK separately; Flutter includes its own Dart SDK.
 
 ## 2) Set Up Android Development
 
