@@ -1,0 +1,61 @@
+name: Acceptance Test
+description: Acceptance test used for feature demo and product owner sign-off
+labels: ["acceptance test"]
+projects: ["C0dingViking/2"]
+
+body:
+  - type: input
+    id: user_story
+    attributes:
+      label: Related User Story
+      description: Link to the user story this acceptance test validates
+      placeholder: https://github.com/C0dingViking/2/issues/123
+    validations:
+      required: true
+
+  - type: textarea
+    id: preconditions
+    attributes:
+      label: Preconditions
+      description: Describe what must be ***true** before performing the test
+      placeholder: |
+        - Application is running
+        - User is on the homepage
+        - SGW and Loyola campuses exist in the system
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Use Given / When / Then format
+      placeholder: |
+        - Given there are 2 Concordia campuses
+          When I am on the app's homepage
+          Then I can use the app's features for the SGW campus
+
+        - Given there are 2 Concordia campuses
+          When I am on the app's homepage
+          Then I can use the app's features for the Loyola campus
+    validations:
+      required: true
+
+  - type: textarea
+    id: demo_notes
+    attributes:
+      label: Demo Notes
+      description: Describe how the demo will be performed
+      placeholder: |
+        - Select SGW campus and demonstrate route finding
+        - Return to homepage
+        - Select Loyola campus and demonstrate the same feature
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Product Owner Sign-Off
+
+        **Instructions for Product Owner:**
+        - Comment **"Accepted"** if all acceptance criteria are satisfied
+        - Otherwise, comment with concerns and suggested changes
