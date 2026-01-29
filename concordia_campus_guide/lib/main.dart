@@ -1,4 +1,8 @@
+import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart';
+import 'package:concordia_campus_guide/ui/home/widgets/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,38 +13,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          brightness: Brightness.dark
-        ),
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Concordia Campus Guide'),
-          centerTitle: true,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text(
-                'Welcome to Concordia Campus Guide',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Your campus navigation app',
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-        ),
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => HomeViewModel())],
+      child: MaterialApp(
+        title: 'Concordia Campus Guide',
+        theme: AppTheme.mainTheme,
+        home: const HomeScreen(),
       ),
     );
   }
