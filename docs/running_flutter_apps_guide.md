@@ -2,6 +2,8 @@
 
 Guide on how to run Flutter apps from VS Code and the terminal, and how the differences across **Windows**, **macOS**, and **Linux**.
 
+## Setting up Maps API
+In the file `\concordia_campus_guide\android\local.properties` add the line `GOOGLE_MAPS_API_KEY=YOUR_API_KEY`
 
 ## 1) Running from the Terminal (All Platforms)
 
