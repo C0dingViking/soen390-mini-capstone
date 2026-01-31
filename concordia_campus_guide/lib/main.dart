@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
         title: 'Concordia Campus Guide',
         theme: AppTheme.mainTheme,
         home: const HomeScreen(),
+        debugShowCheckedModeBanner: false
       ),
     );
   }

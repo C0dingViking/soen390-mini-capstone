@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:concordia_campus_guide/core/campus.dart';
+import 'package:concordia_campus_guide/utils/campus.dart';
 
 void main() {
   test('parseCampus parses common campus names', () {

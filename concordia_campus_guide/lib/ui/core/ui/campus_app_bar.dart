@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
-  static const double _height = 80;
+  static const double _height = 60;
 
   const CampusAppBar({super.key});
 
