@@ -63,8 +63,10 @@ jobs:
           java-version: "17"
 
       - name: Create android/local.properties (Google Maps key)
+        env: 
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         run: |
-          echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > android/local.properties
+          echo "GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY" > android/local.properties
       
       - name: Build APK (debug)
         run: flutter build apk --debug
