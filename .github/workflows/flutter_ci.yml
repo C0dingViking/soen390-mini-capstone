@@ -2,7 +2,7 @@ name: Flutter CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main" , "Sprint-2"]
 
 jobs:
   test:
@@ -62,6 +62,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Create android/local.properties (Google Maps key)
+        run: |
+          echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > android/local.properties
+      
       - name: Build APK (debug)
         run: flutter build apk --debug
 
