@@ -38,6 +38,8 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    useLibrary("org.apache.http.legacy")
 }
 
 flutter {
