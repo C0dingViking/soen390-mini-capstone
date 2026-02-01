@@ -1,5 +1,8 @@
 # Setting Up Google Maps API
 
+## Get an API key
+Use [Google Maps API Documentation](https://developers.google.com/maps/documentation/android-sdk/get-api-key)
+
 ## Configuration
 
 Add your Google Maps API key to the Android configuration file:
