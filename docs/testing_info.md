@@ -2,7 +2,7 @@
 Tests for the app are located in 'concordia_campus_guide/test/' directory.
 
 ### Continuous Integration (CI)
-The project uses GitHub Actions for CI. The workflow file is located at '.github/workflows/flutter_ci.yml'. It runs on every push and pull request to the main branch.
+The project uses GitHub Actions for CI. The workflow file is located at '.github/workflows/flutter_ci.yml'. It runs on every pull request to the main and development branches (Sprint branches).
 
 The main steps of the workflow include:
 - `flutter analyze`: Runs 'flutter analyze' to check for code issues. (more robust than just running tests)
