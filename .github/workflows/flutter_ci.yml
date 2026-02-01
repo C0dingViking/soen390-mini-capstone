@@ -2,7 +2,9 @@ name: Flutter CI
 
 on:
   pull_request:
-    branches: [ "main" , "Sprint-2"]
+    branches: 
+        - main
+        - "Sprint-*"
 
 jobs:
   test:

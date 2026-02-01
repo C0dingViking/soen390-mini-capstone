@@ -10,7 +10,7 @@ void main() {
       expect(c.longitude, -73.6);
     });
 
-    test('rejects invalid ranges (if you used asserts)', () {
+    test('invalid coordinate values are rejected', () {
       expect(
         () => Coordinate(latitude: 100, longitude: 0),
         throwsA(isA<AssertionError>()),
