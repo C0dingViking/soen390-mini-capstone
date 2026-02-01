@@ -2,7 +2,6 @@
 
 Guide on how to run Flutter apps from VS Code and the terminal, and how the differences across **Windows**, **macOS**, and **Linux**.
 
-
 ## 1) Running from the Terminal (All Platforms)
 
 ### Step 1 — Install dependencies
@@ -115,4 +114,5 @@ Linux can also build Linux desktop apps
   `flutter pub get`
 ## 6) Troubleshooting
 
-- Hot reload not working: Hot restart might be necessary for some more major changes.
+- **Hot reload not working**: Hot restart might be necessary for some more major changes.
+- **Maps authorization failure**: If you see "Google Android Maps SDK(6912): Authorization failure", ensure you've completed the [Google Maps API setup](setup_google_maps_api.md).
