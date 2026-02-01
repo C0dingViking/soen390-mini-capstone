@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   google_maps_flutter: ^2.14.0
+  flutter_svg: ^2.0.10
+  
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -63,6 +65,8 @@ flutter:
   # Any assets added to the app should be listed here
   assets:
     - assets/images/app_icon.png
+    - assets/images/app_logo.svg
+    - assets/images/bigger_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -93,4 +97,4 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/app_icon.png"
+  image_path: "assets/images/bigger_icon.png"
