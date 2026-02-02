@@ -6,14 +6,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  group('Building Repository', () {
-    test('loads a building with correct data', () async {
-      final repo = BuildingRepository(
-        loader: (path) async {
-          return File(path).readAsString();
-        },
-      );
 
+  group('Building Repository', () {
+    late BuildingRepository repo;
+
+    setUp(() {
+      repo = BuildingRepository(
+          loader: (path) async {
+            return File(path).readAsString();
+          },
+        );
+    });
+
+    test('loads a building with correct data', () async {
       final buildings = await repo.loadBuildings('test/assets/building_repository_test.json');
       final building = buildings['t'];
 
@@ -38,23 +43,11 @@ void main() {
     });
 
     test('fails gracefully if file is not found', () async {
-      final repo = BuildingRepository(
-        loader: (path) async {
-          return File(path).readAsString();
-        },
-      );
-
       final buildings = await repo.loadBuildings('fnf.json');
       expect(buildings.length, 0);
     });
 
     test('fails gracefully if file is malformed', () async {
-      final repo = BuildingRepository(
-        loader: (path) async {
-          return File(path).readAsString();
-        },
-      );
-
       final buildings = await repo.loadBuildings('test/assets/building_repository_test2.json');
       expect(buildings.length, 0);
     });
