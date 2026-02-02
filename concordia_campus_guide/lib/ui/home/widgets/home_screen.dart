@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<HomeViewModel>(
         builder: (_, hvm, _) => GoogleMap(
             initialCameraPosition: CameraPosition(target: sgw.toLatLng(), zoom: 15),
-            polygons: hvm.buildingPolygons,
+            polygons: hvm.buildingOutlines,
             markers: hvm.buildingMarkers,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
