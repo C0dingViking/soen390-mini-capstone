@@ -43,8 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_, hvm, _) => GoogleMap(
             initialCameraPosition: CameraPosition(target: sgw.toLatLng(), zoom: 15),
             polygons: hvm.buildingPolygons,
+            markers: hvm.buildingMarkers,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
+            fortyFiveDegreeImageryEnabled: false,
           )
       )
     );
