@@ -33,7 +33,7 @@ class BuildingRepository {
             longitude: buildingEntry['location'][1],
           ),
           campus: parseCampus(buildingEntry['campus'])!,
-          outlinePoints: (buildingEntry['polygons'] as List<dynamic>)
+          outlinePoints: (buildingEntry['points'] as List<dynamic>)
               .map((p) => Coordinate(latitude: p[0], longitude: p[1]))
               .toList(),
         );

@@ -19,7 +19,7 @@ void main() {
     });
 
     test('loads a building with correct data', () async {
-      final buildings = await repo.loadBuildings('test/assets/building_repository_test.json');
+      final buildings = await repo.loadBuildings('test/assets/building_testdata.json');
       final building = buildings['t'];
 
       expect(buildings.length, 1);
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('fails gracefully if file is malformed', () async {
-      final buildings = await repo.loadBuildings('test/assets/building_repository_test2.json');
+      final buildings = await repo.loadBuildings('test/assets/building_testdata2.json');
       expect(buildings.length, 0);
     });
 

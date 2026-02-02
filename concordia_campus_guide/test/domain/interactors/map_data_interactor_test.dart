@@ -95,7 +95,5 @@ void main() {
       expect(marker.longitude, closeTo(1 / 3, 1e-6));
     });
 
-
-
   });
 }
