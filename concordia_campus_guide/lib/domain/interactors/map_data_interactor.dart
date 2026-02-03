@@ -1,20 +1,20 @@
-import 'package:concordia_campus_guide/data/repositories/building_repository.dart';
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/domain/models/building_map_data.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
-import 'package:concordia_campus_guide/utils/coordinate_extensions.dart';
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/building_map_data.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
+import "package:flutter/material.dart";
+import "package:google_maps_flutter/google_maps_flutter.dart";
 
 class MapDataInteractor {
   final BuildingRepository _buildingRepo;
 
   // necessary to add custom BuildingRepository for testing
-  MapDataInteractor({required BuildingRepository buildingRepo})
+  MapDataInteractor({required final BuildingRepository buildingRepo})
       : _buildingRepo = buildingRepo;
 
-  Future<BuildingMapDataDTO> loadBuildingsWithMapElements(String path, Color color) async {
-    Map<String, Building> buildings = await _buildingRepo.loadBuildings(path);
+  Future<BuildingMapDataDTO> loadBuildingsWithMapElements(final String path, final Color color) async {
+    final Map<String, Building> buildings = await _buildingRepo.loadBuildings(path);
     Set<Polygon> buildingOutlines = {};
     Set<Marker> buildingMarkers = {};
     String? error;
@@ -24,7 +24,7 @@ class MapDataInteractor {
       buildingMarkers = generateBuildingMarkers(buildings.values);
     }
     else {
-      error = 'Failed to load building data.';
+      error = "Failed to load building data.";
     }
 
     return BuildingMapDataDTO(
@@ -35,25 +35,25 @@ class MapDataInteractor {
     );
   }
 
-  Set<Polygon> generateBuildingPolygons(Iterable<Building> buildings, Color outlineColor) {
-    return buildings.map((b) => Polygon(
-      polygonId: PolygonId('${b.id}-poly'),
-      points: b.outlinePoints.map((c) => c.toLatLng()).toList(),
+  Set<Polygon> generateBuildingPolygons(final Iterable<Building> buildings, final Color outlineColor) {
+    return buildings.map((final b) => Polygon(
+      polygonId: PolygonId("${b.id}-poly"),
+      points: b.outlinePoints.map((final c) => c.toLatLng()).toList(),
       fillColor: outlineColor.withAlpha(50),
       strokeColor: outlineColor,
       strokeWidth: 2,
     )).toSet();
   }
 
-  Set<Marker> generateBuildingMarkers(Iterable<Building> buildings) {
-    return buildings.map((b) => Marker(
-      markerId: MarkerId('${b.id}-marker'),
+  Set<Marker> generateBuildingMarkers(final Iterable<Building> buildings) {
+    return buildings.map((final b) => Marker(
+      markerId: MarkerId("${b.id}-marker"),
       position: _calculateBuildingCentroid(b.outlinePoints),
       infoWindow: InfoWindow(title: b.name, snippet: b.address)
     )).toSet();
   }
 
-  LatLng _calculateBuildingCentroid(List<Coordinate> points) {
+  LatLng _calculateBuildingCentroid(final List<Coordinate> points) {
     double centroidWeightedLat = 0.0;
     double centroidWeightedLng = 0.0;
     double totalArea = 0.0;
