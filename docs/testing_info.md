@@ -63,7 +63,7 @@ Or, from the `coverage/` folder, execute:
 genhtml lcov.info -o html
 ```
 
-This will creates an HTML report in `coverage/html/index.html`.
+This will create an HTML report in `coverage/html/index.html`.
 
 ### Viewing the Report
 
