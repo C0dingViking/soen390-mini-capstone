@@ -23,8 +23,9 @@ class CoordinatesController {
   }
 
   Future<void> goToCurrentLocation(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     if (!await Geolocator.isLocationServiceEnabled()) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enable location services')));
+      messenger.showSnackBar(const SnackBar(content: Text('Enable location services')));
       return;
     }
     LocationPermission permission = await Geolocator.checkPermission();
@@ -33,7 +34,7 @@ class CoordinatesController {
       if (permission == LocationPermission.denied) return;
     }
     if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enable location permissions in settings')));
+      messenger.showSnackBar(const SnackBar(content: Text('Enable location permissions in settings')));
       return;
     }
     final pos = await Geolocator.getCurrentPosition();

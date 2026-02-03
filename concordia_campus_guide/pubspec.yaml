@@ -38,7 +38,8 @@ dependencies:
   provider: ^6.1.5+1
   google_maps_flutter: ^2.14.0
   flutter_svg: ^2.0.10
-  
+  logger: ^2.6.2
+
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -68,6 +69,7 @@ flutter:
     - assets/images/app_icon.png
     - assets/images/app_logo.svg
     - assets/images/bigger_icon.png
+    - assets/maps/building_data.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
