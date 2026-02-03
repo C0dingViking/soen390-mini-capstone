@@ -39,12 +39,18 @@ jobs:
       - name: Run tests & collect coverage
         run: flutter test --coverage
 
+      # debugging step, meant to be removed before being merged
+      - name: Check coverage files
+          run: ls -R ./coverage
+          working-directory: ./concordia_campus_guide/
+
+
       # Cache coverage data to facilitate debugging if tests fail
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: coverage/
+          path: ./concordia_campus_guide/coverage/
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
