@@ -8,6 +8,7 @@ import 'package:concordia_campus_guide/utils/campus.dart';
 import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:logger/logger.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +17,9 @@ void main() {
     late MapDataInteractor mdi;
 
     setUp(() {
+      Logger.level = Level.off;
       final repo = BuildingRepository(
-        loader: (path) async {
+        buildingLoader: (path) async {
           return File(path).readAsString();
         },
       );
@@ -25,7 +27,7 @@ void main() {
     });
 
     test('loads building payload correctly', () async {
-      BuildingMapData payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata.json', AppTheme.concordiaDarkBlue);
+      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata.json', AppTheme.concordiaDarkBlue);
 
       expect(payload.buildings.length, 1);
       expect(payload.buildingMarkers.length, 1);
@@ -47,7 +49,7 @@ void main() {
     });
 
     test('carries error message on failure', () async {
-      BuildingMapData payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata2.json', AppTheme.concordiaDarkBlue);
+      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata2.json', AppTheme.concordiaDarkBlue);
 
       expect(payload.buildings.isEmpty, true);
       expect(payload.buildingOutlines.isEmpty, true);
@@ -88,7 +90,18 @@ void main() {
         Coordinate(latitude: 1.0, longitude: 0.0)
       ];
 
-      final LatLng marker = mdi.calculateBuildingCentroid(points);
+      final b = Building(
+        id: 'c',
+        name: 'Centroid Test',
+        street: '1 Test St.',
+        postalCode: 'C0R N34',
+        location: Coordinate(latitude: 0.0, longitude: 0.0),
+        campus: Campus.sgw,
+        outlinePoints: points,
+      );
+
+      final markers = mdi.generateBuildingMarkers([b]);
+      final LatLng marker = markers.first.position;
 
       // centroid of triangle (0,0),(0,1),(1,0) is (1/3, 1/3)
       expect(marker.latitude, closeTo(1 / 3, 1e-6));

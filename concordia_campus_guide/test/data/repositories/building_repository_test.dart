@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:concordia_campus_guide/data/repositories/building_repository.dart';
 import 'package:concordia_campus_guide/utils/campus.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -11,8 +12,9 @@ void main() {
     late BuildingRepository repo;
 
     setUp(() {
+      Logger.level = Level.off;
       repo = BuildingRepository(
-          loader: (path) async {
+          buildingLoader: (path) async {
             return File(path).readAsString();
           },
         );

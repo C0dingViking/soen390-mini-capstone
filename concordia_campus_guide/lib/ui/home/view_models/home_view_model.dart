@@ -33,7 +33,7 @@ class HomeViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    BuildingMapData payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
+    BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
 
     if (payload.errorMessage == null) {
       buildings = payload.buildings;

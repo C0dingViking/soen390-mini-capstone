@@ -4,6 +4,7 @@ import 'package:concordia_campus_guide/domain/interactors/map_data_interactor.da
 import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
 import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +14,9 @@ void main() {
     late HomeViewModel hvm;
 
     setUp(() {
+      Logger.level = Level.off;
       final repo = BuildingRepository(
-        loader: (path) async {
+        buildingLoader: (path) async {
           return File(path).readAsString();
         },
       );

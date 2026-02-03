@@ -8,18 +8,18 @@ import 'package:flutter/services.dart';
 
 class BuildingRepository {
   // necessary to inject file paths outside lib for testing
-  final Future<String> Function(String path) loader;
+  final Future<String> Function(String path) buildingLoader;
 
   BuildingRepository({
-    Future<String> Function(String path)? loader,
-  }) : loader = loader ?? rootBundle.loadString;
+    Future<String> Function(String path)? buildingLoader,
+  }) : buildingLoader = buildingLoader ?? rootBundle.loadString;
 
   // returns all supported buildings with their polygons loaded
   Future<Map<String, Building>> loadBuildings(String jsonPath) async {
     final buildings = <String, Building>{};
 
     try {
-      final buildingJson = await loader(jsonPath);
+      final buildingJson = await buildingLoader(jsonPath);
       final buildingData = jsonDecode(buildingJson);
 
       for (var buildingEntry in buildingData['buildings']) {
@@ -34,7 +34,10 @@ class BuildingRepository {
           ),
           campus: parseCampus(buildingEntry['campus'])!,
           outlinePoints: (buildingEntry['points'] as List<dynamic>)
-              .map((p) => Coordinate(latitude: p[0], longitude: p[1]))
+              .map((p) => Coordinate(
+                latitude: (p[0] as num).toDouble(),
+                  longitude: (p[1] as num).toDouble())
+              )
               .toList(),
         );
 

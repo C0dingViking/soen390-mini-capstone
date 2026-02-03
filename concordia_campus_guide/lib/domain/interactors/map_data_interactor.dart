@@ -13,7 +13,7 @@ class MapDataInteractor {
   MapDataInteractor({required BuildingRepository buildingRepo})
       : _buildingRepo = buildingRepo;
 
-  Future<BuildingMapData> loadBuildingsWithMapElements(String path, Color color) async {
+  Future<BuildingMapDataDTO> loadBuildingsWithMapElements(String path, Color color) async {
     Map<String, Building> buildings = await _buildingRepo.loadBuildings(path);
     Set<Polygon> buildingOutlines = {};
     Set<Marker> buildingMarkers = {};
@@ -27,7 +27,7 @@ class MapDataInteractor {
       error = 'Failed to load building data.';
     }
 
-    return BuildingMapData(
+    return BuildingMapDataDTO(
       buildings: buildings,
       buildingOutlines: buildingOutlines,
       buildingMarkers: buildingMarkers,
@@ -50,29 +50,32 @@ class MapDataInteractor {
   Set<Marker> generateBuildingMarkers(Iterable<Building> buildings) {
     return buildings.map((b) => Marker(
       markerId: MarkerId('${b.id}-marker'),
-      position: calculateBuildingCentroid(b.outlinePoints),
+      position: _calculateBuildingCentroid(b.outlinePoints),
       infoWindow: InfoWindow(title: b.name, snippet: b.address),
     )).toSet();
   }
 
   // calculates the centroid of a building given the polygon points
-  LatLng calculateBuildingCentroid(List<Coordinate> points) {
-    double cx = 0.0;
-    double cy = 0.0;
-    double area = 0.0;
+  LatLng _calculateBuildingCentroid(List<Coordinate> points) {
+    double centroidWeightedLat = 0.0;
+    double centroidWeightedLng = 0.0;
+    double totalArea = 0.0;
 
     for (int i = 0; i < points.length; i++) {
       final current = points[i];
       final next = points[(i + 1) % points.length];
 
       final a = current.latitude * next.longitude - next.latitude * current.longitude;
-      area += a;
+      totalArea += a;
 
-      cx += (current.latitude + next.latitude) * a;
-      cy += (current.longitude + next.longitude) * a;
+      centroidWeightedLat += (current.latitude + next.latitude) * a;
+      centroidWeightedLng += (current.longitude + next.longitude) * a;
     }
 
-    area *= 0.5;
-    return LatLng(cx / (6 * area), cy / (6 * area));
+    totalArea *= 0.5;
+    return LatLng(
+      centroidWeightedLat / (6 * totalArea),
+      centroidWeightedLng / (6 * totalArea)
+    );
   }
 }

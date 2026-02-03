@@ -23,5 +23,5 @@ class Building {
   String get address => '$street, Montreal, QC $postalCode, Canada';
 
   @override
-  String toString() => '$id($name - $address at ${location.toString()})';
+  String toString() => '$id: ($name - $address at ${location.toString()})';
 }
