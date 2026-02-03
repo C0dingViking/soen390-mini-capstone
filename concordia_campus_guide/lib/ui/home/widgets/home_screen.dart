@@ -20,9 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final Color _buttonColor = const Color(0xCC00ADEF);
 
-  final List<Campus_Details> _campuses = [
-    const Campus_Details(name: 'SGW', coord: HomeViewModel.sgw, icon: Icons.location_city),
-    const Campus_Details(name: 'LOY', coord: HomeViewModel.loyola, icon: Icons.school),
+  final List<CampusDetails> _campuses = [
+    const CampusDetails(name: 'SGW', coord: HomeViewModel.sgw, icon: Icons.location_city),
+    const CampusDetails(name: 'LOY', coord: HomeViewModel.loyola, icon: Icons.school),
   ];
 
   @override
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // subscribes to the HomeViewModel, rebuilds on change
       body: Consumer<HomeViewModel>(
         builder: (context, hvm, child) {
-          final Campus_Details selected = _campuses[hvm.selectedCampusIndex];
+          final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
           return Stack(
             children: [
               GoogleMap(
