@@ -27,7 +27,7 @@ void main() {
     });
 
     test('loads building payload correctly', () async {
-      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata.json', AppTheme.concordiaDarkBlue);
+      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata.json', AppTheme.concordiaMaroon);
 
       expect(payload.buildings.length, 1);
       expect(payload.buildingMarkers.length, 1);
@@ -49,7 +49,7 @@ void main() {
     });
 
     test('carries error message on failure', () async {
-      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata2.json', AppTheme.concordiaDarkBlue);
+      BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements('test/assets/building_testdata2.json', AppTheme.concordiaMaroon);
 
       expect(payload.buildings.isEmpty, true);
       expect(payload.buildingOutlines.isEmpty, true);
@@ -72,7 +72,7 @@ void main() {
         ],
       );
 
-      final polygons = mdi.generateBuildingPolygons([b], AppTheme.concordiaDarkBlue);
+      final polygons = mdi.generateBuildingPolygons([b], AppTheme.concordiaMaroon);
       expect(polygons.length, 1);
 
       final poly = polygons.first;
@@ -80,7 +80,7 @@ void main() {
       expect(poly.points.length, 3);
       expect(poly.points[1].latitude, 0.0);
       expect(poly.points[1].longitude, 1.0);
-      expect(poly.strokeColor, AppTheme.concordiaDarkBlue);
+      expect(poly.strokeColor, AppTheme.concordiaMaroon);
     });
 
     test('the centroid of the polygon is properly computed', () {

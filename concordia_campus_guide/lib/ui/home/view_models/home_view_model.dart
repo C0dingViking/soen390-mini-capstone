@@ -8,7 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
-  Color _buildingOutlineColor = AppTheme.concordiaDarkBlue;
+  Color _buildingOutlineColor = AppTheme.concordiaMaroon;
 
   HomeViewModel({required this.mapInteractor});
 

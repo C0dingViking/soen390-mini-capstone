@@ -61,15 +61,15 @@ void main() {
 
       expect(hvm.buildingOutlines, isNotEmpty);
       for (var polygon in hvm.buildingOutlines) {
-        expect(polygon.strokeColor, equals(AppTheme.concordiaDarkBlue));
+        expect(polygon.strokeColor, equals(AppTheme.concordiaMaroon));
       }
 
       // the buildingOutlineColor setter automatically regenerates the polygons
-      hvm.buildingOutlineColor = AppTheme.concordiaMaroon;
+      hvm.buildingOutlineColor = AppTheme.concordiaDarkBlue;
 
       expect(hvm.buildingOutlines, isNot(equals(initialPolygons)));
       for (var polygon in hvm.buildingOutlines) {
-        expect(polygon.strokeColor, equals(AppTheme.concordiaMaroon));
+        expect(polygon.strokeColor, equals(AppTheme.concordiaDarkBlue));
       }
     });
 
