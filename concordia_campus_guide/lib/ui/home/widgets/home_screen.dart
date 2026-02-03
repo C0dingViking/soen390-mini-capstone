@@ -30,6 +30,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final vm = Provider.of<HomeViewModel>(context, listen: false);
+    vm.addListener(_onViewModelChange);
+  }
+
+  void _onViewModelChange() {
+    final vm = Provider.of<HomeViewModel>(context, listen: false);
+    if (vm.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(vm.errorMessage!)),
+      );
+    }
+  }
+
   // Coordinates for loyola, uncomment if needed
   // static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
 

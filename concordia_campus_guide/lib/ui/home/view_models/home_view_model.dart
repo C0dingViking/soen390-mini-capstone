@@ -17,6 +17,7 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polygon> buildingOutlines = {};
   Set<Marker> buildingMarkers = {};
   bool isLoading = false;
+  String? errorMessage;
 
   // sets the colour of the building outlines and regenerates the polygons
   set buildingOutlineColor(Color color) {
@@ -31,6 +32,7 @@ class HomeViewModel extends ChangeNotifier {
   // pulls the building data and
   Future<void> initializeBuildingsData(String path) async {
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
@@ -40,6 +42,7 @@ class HomeViewModel extends ChangeNotifier {
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
     } else {
+      errorMessage = payload.errorMessage;
       logger.e(
         'HomeViewModel: something went wrong loading building data',
         error: payload.errorMessage
