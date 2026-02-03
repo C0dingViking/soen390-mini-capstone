@@ -41,9 +41,8 @@ jobs:
 
       # debugging step, meant to be removed before being merged
       - name: Check coverage files
-          run: ls -R ./coverage
-          working-directory: ./concordia_campus_guide/
-
+        run: ls -R ./coverage
+        working-directory: ./concordia_campus_guide/
 
       # Cache coverage data to facilitate debugging if tests fail
       - name: Upload test results
