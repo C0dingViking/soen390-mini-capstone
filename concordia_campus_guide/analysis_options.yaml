@@ -50,6 +50,7 @@ linter:
     - no_leading_underscores_for_local_identifiers
     - no_wildcard_variable_uses
     - prefer_contains
+    - prefer_double_quotes
     - prefer_final_locals
     - prefer_final_parameters
     - prefer_function_declarations_over_variables
