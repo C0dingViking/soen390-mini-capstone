@@ -50,6 +50,7 @@ class MapDataInteractor {
       markerId: MarkerId('${b.id}-marker'),
       position: _calculateBuildingCentroid(b.outlinePoints),
       infoWindow: InfoWindow(title: b.name, snippet: b.address),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
     )).toSet();
   }
 
