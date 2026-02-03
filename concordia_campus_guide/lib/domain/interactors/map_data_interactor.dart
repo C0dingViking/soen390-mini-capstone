@@ -35,7 +35,6 @@ class MapDataInteractor {
     );
   }
 
-  // generates the list of Polygon objects for each building in the map
   Set<Polygon> generateBuildingPolygons(Iterable<Building> buildings, Color outlineColor) {
     return buildings.map((b) => Polygon(
       polygonId: PolygonId('${b.id}-poly'),
@@ -46,7 +45,6 @@ class MapDataInteractor {
     )).toSet();
   }
 
-  // generates the list of Marker objects to mark the centre of each building
   Set<Marker> generateBuildingMarkers(Iterable<Building> buildings) {
     return buildings.map((b) => Marker(
       markerId: MarkerId('${b.id}-marker'),
@@ -55,7 +53,6 @@ class MapDataInteractor {
     )).toSet();
   }
 
-  // calculates the centroid of a building given the polygon points
   LatLng _calculateBuildingCentroid(List<Coordinate> points) {
     double centroidWeightedLat = 0.0;
     double centroidWeightedLng = 0.0;
@@ -65,11 +62,11 @@ class MapDataInteractor {
       final current = points[i];
       final next = points[(i + 1) % points.length];
 
-      final a = current.latitude * next.longitude - next.latitude * current.longitude;
-      totalArea += a;
+      final partialArea = current.latitude * next.longitude - next.latitude * current.longitude;
+      totalArea += partialArea;
 
-      centroidWeightedLat += (current.latitude + next.latitude) * a;
-      centroidWeightedLng += (current.longitude + next.longitude) * a;
+      centroidWeightedLat += (current.latitude + next.latitude) * partialArea;
+      centroidWeightedLng += (current.longitude + next.longitude) * partialArea;
     }
 
     totalArea *= 0.5;

@@ -12,14 +12,12 @@ class HomeViewModel extends ChangeNotifier {
 
   HomeViewModel({required this.mapInteractor});
 
-  // building view state
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
   Set<Marker> buildingMarkers = {};
   bool isLoading = false;
   String? errorMessage;
 
-  // sets the colour of the building outlines and regenerates the polygons
   set buildingOutlineColor(Color color) {
     _buildingOutlineColor = color;
     if (buildings.isNotEmpty) {
@@ -29,7 +27,6 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // pulls the building data and
   Future<void> initializeBuildingsData(String path) async {
     isLoading = true;
     errorMessage = null;
