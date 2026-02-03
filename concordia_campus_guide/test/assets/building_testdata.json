@@ -1,0 +1,26 @@
+{
+  "buildings": [
+    {
+      "id": "t",
+      "name": "Test Building (T)",
+      "street": "1234 Test St.",
+      "postalCode": "TE5 TM3",
+      "location": [45.67, -73.21],
+      "campus": "sgw",
+      "points": [
+        [
+          45.5,
+          -73.2
+        ],
+        [
+          45.6,
+          -73.3
+        ],
+        [
+          45.7,
+          -73.4
+        ]
+      ]
+    }
+  ]
+}
