@@ -1,52 +1,55 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
-import 'package:concordia_campus_guide/utils/app_logger.dart';
-import 'package:concordia_campus_guide/utils/campus.dart';
-import 'package:flutter/services.dart';
+import "dart:convert";
+import "dart:io";
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/utils/app_logger.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
+import "package:flutter/services.dart";
 
 class BuildingRepository {
   // necessary to inject file paths outside lib for testing
   final Future<String> Function(String path) buildingLoader;
 
   BuildingRepository({
-    Future<String> Function(String path)? buildingLoader,
+    final Future<String> Function(String path)? buildingLoader,
   }) : buildingLoader = buildingLoader ?? rootBundle.loadString;
 
   // returns all supported buildings with their polygons loaded
-  Future<Map<String, Building>> loadBuildings(String jsonPath) async {
+  Future<Map<String, Building>> loadBuildings(final String jsonPath) async {
     final buildings = <String, Building>{};
 
     try {
       final buildingJson = await buildingLoader(jsonPath);
-      final buildingData = jsonDecode(buildingJson);
+      final Map<String, dynamic> buildingData = jsonDecode(buildingJson) as Map<String, dynamic>;
 
-      for (var buildingEntry in buildingData['buildings']) {
+
+      for (Map<String, dynamic> buildingEntry in (buildingData["buildings"] as List).cast<Map<String, dynamic>>()) {
         final building = Building(
-          id: buildingEntry['id'],
-          name: buildingEntry['name'],
-          street: buildingEntry['street'],
-          postalCode: buildingEntry['postalCode'],
+          id: buildingEntry["id"] as String,
+          name: buildingEntry["name"] as String,
+          street: buildingEntry["street"] as String,
+          postalCode: buildingEntry["postalCode"] as String,
           location: Coordinate(
-            latitude: buildingEntry['location'][0],
-            longitude: buildingEntry['location'][1],
+            latitude: (buildingEntry["location"] as List<dynamic>)[0] as double,
+            longitude: (buildingEntry["location"] as List<dynamic>)[1] as double,
           ),
-          campus: parseCampus(buildingEntry['campus'])!,
-          outlinePoints: (buildingEntry['points'] as List<dynamic>)
-              .map((p) => Coordinate(
-                latitude: (p[0] as num).toDouble(),
-                  longitude: (p[1] as num).toDouble())
-              )
+          campus: parseCampus(buildingEntry["campus"] as String)!,
+          outlinePoints: (buildingEntry["points"] as List<dynamic>)
+              .map((final p) {
+                final point = p as List<dynamic>;
+                return Coordinate(
+                  latitude: (point[0] as num).toDouble(),
+                  longitude: (point[1] as num).toDouble());
+              })
               .toList(),
         );
 
         buildings[building.id] = building;
       }
     } on PathNotFoundException catch (e) {
-      logger.e('The building file was not found', error: e);
+      logger.e("The building file was not found", error: e);
     } catch (e) {
-      logger.e('Failed to load building data', error: e);
+      logger.e("Failed to load building data", error: e);
     }
 
     return buildings;
