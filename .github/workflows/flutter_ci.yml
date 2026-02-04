@@ -5,6 +5,7 @@ on:
     branches: 
         - main
         - "Sprint-*"
+    types: [opened, synchronize, reopened]
 
 jobs:
   test:
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for accurate analysis (recommended by SonarQube)
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -33,8 +36,20 @@ jobs:
       - name: Static analysis
         run: flutter analyze
 
-      - name: Run tests
-        run: flutter test
+      - name: Run tests & collect coverage
+        run: flutter test --coverage
+
+      # Cache coverage data to facilitate debugging if tests fail
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./concordia_campus_guide/coverage/
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         
   build-android:
     name: Build Android APK
