@@ -1,5 +1,5 @@
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
-import 'package:concordia_campus_guide/utils/campus.dart';
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
 
 class Building {
   final String id;
@@ -20,8 +20,8 @@ class Building {
     required this.outlinePoints,
   });
 
-  String get address => '$street, Montreal, QC $postalCode, Canada';
+  String get address => "$street, Montreal, QC $postalCode, Canada";
 
   @override
-  String toString() => '$id: ($name - $address at ${location.toString()})';
+  String toString() => "$id: ($name - $address at ${location.toString()})";
 }

@@ -1,16 +1,16 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
+import "package:flutter_test/flutter_test.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
 void main() {
-  group('Coordinate', () {
-    test('stores latitude and longitude', () {
+  group("Coordinate", () {
+    test("stores latitude and longitude", () {
       const c = Coordinate(latitude: 45.5, longitude: -73.6);
 
       expect(c.latitude, 45.5);
       expect(c.longitude, -73.6);
     });
 
-    test('invalid coordinate values are rejected', () {
+    test("invalid coordinate values are rejected", () {
       expect(
         () => Coordinate(latitude: 100, longitude: 0),
         throwsA(isA<AssertionError>()),

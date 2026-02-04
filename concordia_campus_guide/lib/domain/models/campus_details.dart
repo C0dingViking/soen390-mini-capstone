@@ -1,5 +1,5 @@
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
-import 'package:flutter/material.dart';
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:flutter/material.dart";
 
 class CampusDetails {
   final String name;

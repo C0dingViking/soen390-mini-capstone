@@ -1,5 +1,5 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../domain/models/coordinate.dart';
+import "package:google_maps_flutter/google_maps_flutter.dart";
+import "../domain/models/coordinate.dart";
 
 // Extensions to convert between LatLng and Coordinate
 

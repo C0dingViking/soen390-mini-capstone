@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:concordia_campus_guide/controllers/coordinates_controller.dart';
-import 'package:concordia_campus_guide/domain/models/campus_details.dart';
-import 'package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart';
-import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart';
-import 'package:concordia_campus_guide/utils/coordinate_extensions.dart';
-
+import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
+import "package:concordia_campus_guide/domain/models/campus_details.dart";
+import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:flutter/material.dart";
+import "package:google_maps_flutter/google_maps_flutter.dart";
+import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
+import "package:provider/provider.dart";
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,8 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final Color _buttonColor = const Color(0xCC00ADEF);
 
   final List<CampusDetails> _campuses = [
-    const CampusDetails(name: 'SGW', coord: HomeViewModel.sgw, icon: Icons.location_city),
-    const CampusDetails(name: 'LOY', coord: HomeViewModel.loyola, icon: Icons.school),
+    const CampusDetails(name: "SGW", coord: HomeViewModel.sgw, icon: Icons.location_city),
+    const CampusDetails(name: "LOY", coord: HomeViewModel.loyola, icon: Icons.school),
   ];
 
   @override
@@ -66,13 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     return Scaffold(
       appBar: const CampusAppBar(),
       
       // subscribes to the HomeViewModel, rebuilds on change
       body: Consumer<HomeViewModel>(
-        builder: (context, hvm, child) {
+        builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
           return Stack(
             children: [
@@ -93,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 left: 25,
                 bottom: 25,
                 child: FloatingActionButton(
-                  heroTag: 'my_location',
+                  heroTag: "my_location",
                   onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                   backgroundColor: _buttonColor,
                   child: const Icon(Icons.my_location, color: Colors.white),

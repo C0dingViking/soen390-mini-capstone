@@ -1,12 +1,12 @@
-import 'package:concordia_campus_guide/domain/interactors/map_data_interactor.dart';
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/domain/models/building_map_data.dart';
-import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
-import 'package:concordia_campus_guide/utils/app_logger.dart';
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
+import "package:flutter/material.dart";
+import "package:geolocator/geolocator.dart";
+import "package:google_maps_flutter/google_maps_flutter.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/building_map_data.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:concordia_campus_guide/utils/app_logger.dart";
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
@@ -29,7 +29,7 @@ class HomeViewModel extends ChangeNotifier {
   int selectedCampusIndex = 0;
   Coordinate? cameraTarget;
 
-  set buildingOutlineColor(Color color) {
+  set buildingOutlineColor(final Color color) {
     _buildingOutlineColor = color;
     if (buildings.isNotEmpty) {
       buildingOutlines = mapInteractor.generateBuildingPolygons(buildings.values, color);
@@ -37,12 +37,12 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initializeBuildingsData(String path) async {
+  Future<void> initializeBuildingsData(final String path) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
-    BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
+    final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
 
     if (payload.errorMessage == null) {
       buildings = payload.buildings;
@@ -50,7 +50,10 @@ class HomeViewModel extends ChangeNotifier {
       buildingMarkers = payload.buildingMarkers;
     } else {
       errorMessage = payload.errorMessage;
-      logger.e('HomeViewModel: something went wrong loading building data', error: payload.errorMessage);
+      logger.e(
+        "HomeViewModel: something went wrong loading building data",
+        error: payload.errorMessage
+      );
     }
 
     isLoading = false;
@@ -62,7 +65,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        errorMessage = 'Enable location services';
+        errorMessage = "Enable location services";
         notifyListeners();
         return;
       }
@@ -71,14 +74,14 @@ class HomeViewModel extends ChangeNotifier {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          errorMessage = 'Location permission denied';
+          errorMessage = "Location permission denied";
           notifyListeners();
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        errorMessage = 'Enable location permission in settings';
+        errorMessage = "Enable location permission in settings";
         notifyListeners();
         return;
       }
@@ -88,7 +91,7 @@ class HomeViewModel extends ChangeNotifier {
       myLocationEnabled = true;
       notifyListeners();
     } catch (e) {
-      errorMessage = 'Error: $e';
+      errorMessage = "Error: $e";
       notifyListeners();
     }
   }
