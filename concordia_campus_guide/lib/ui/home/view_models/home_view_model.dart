@@ -1,5 +1,5 @@
+import "dart:async";
 import "package:flutter/material.dart";
-import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
@@ -7,6 +7,7 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/building_map_data.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
+import "package:concordia_campus_guide/data/services/location_service.dart";
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
@@ -64,32 +65,13 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        errorMessage = "Enable location services";
-        notifyListeners();
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          errorMessage = "Location permission denied";
-          notifyListeners();
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        errorMessage = "Enable location permission in settings";
-        notifyListeners();
-        return;
-      }
-
-      final pos = await Geolocator.getCurrentPosition();
-      cameraTarget = Coordinate(latitude: pos.latitude, longitude: pos.longitude);
+      // ask LocationService for current position and ensure streaming
+      final posCoord = await LocationService.instance.getCurrentPosition();
+      cameraTarget = posCoord;
       myLocationEnabled = true;
       notifyListeners();
+
+      await LocationService.instance.start();
     } catch (e) {
       errorMessage = "Error: $e";
       notifyListeners();
