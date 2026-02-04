@@ -2,6 +2,7 @@ import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -16,8 +17,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final CoordinatesController _coords = CoordinatesController();
-
   final Color _buttonColor = const Color(0xCC00ADEF);
+  late HomeViewModel _viewModel;
 
   final List<CampusDetails> _campuses = [
     const CampusDetails(name: "SGW", coord: HomeViewModel.sgw, icon: Icons.location_city),
@@ -27,8 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    // initializes the building data once the Provider is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<HomeViewModel>().initializeBuildingsData("assets/maps/building_data.json");
@@ -38,55 +37,45 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final vm = Provider.of<HomeViewModel>(context, listen: false);
-    vm.addListener(_onViewModelChange);
+    _viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    _viewModel.addListener(_onViewModelChange);
   }
 
   @override
   void dispose() {
-    final vm = Provider.of<HomeViewModel>(context, listen: false);
-    vm.removeListener(_onViewModelChange);
+    _viewModel.removeListener(_onViewModelChange);
     super.dispose();
   }
 
   void _onViewModelChange() {
     if (!mounted) return;
-    final vm = context.read<HomeViewModel>();
-    if (vm.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(vm.errorMessage!)));
+    if (_viewModel.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
-    if (vm.cameraTarget != null) {
-      _coords.goToCoordinate(vm.cameraTarget!);
-      vm.clearCameraTarget();
+    if (_viewModel.cameraTarget != null) {
+      _coords.goToCoordinate(_viewModel.cameraTarget!);
+      _viewModel.clearCameraTarget();
     }
   }
-
-  // Coordinates for loyola, uncomment if needed
-  // static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
 
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
       appBar: const CampusAppBar(),
-      
-      // subscribes to the HomeViewModel, rebuilds on change
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
           return Stack(
             children: [
-              GoogleMap(
+              MapWrapper(
                 initialCameraPosition: CameraPosition(
                   target: HomeViewModel.sgw.toLatLng(),
                   zoom: 15,
                 ),
                 onMapCreated: _coords.onMapCreated,
                 myLocationEnabled: hvm.myLocationEnabled,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
                 polygons: hvm.buildingOutlines,
                 markers: hvm.buildingMarkers,
-                fortyFiveDegreeImageryEnabled: false,
               ),
               Positioned(
                 left: 25,
@@ -104,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
+                    key: const Key("campus_toggle_button"),
                     borderRadius: BorderRadius.circular(30),
                     onTap: () => context.read<HomeViewModel>().toggleCampus(),
                     child: Container(
