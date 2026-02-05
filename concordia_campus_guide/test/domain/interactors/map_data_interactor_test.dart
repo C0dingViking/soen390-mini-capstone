@@ -6,6 +6,7 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:flutter_google_maps_webservices/places.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:logger/logger.dart";
@@ -27,7 +28,10 @@ void main() {
     });
 
     test("loads building payload correctly", () async {
-      final BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements("test/assets/building_testdata.json", AppTheme.concordiaMaroon);
+      final BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements(
+        "test/assets/building_testdata.json",
+        AppTheme.concordiaMaroon,
+      );
 
       expect(payload.buildings.length, 1);
       expect(payload.buildingMarkers.length, 1);
@@ -49,7 +53,10 @@ void main() {
     });
 
     test("carries error message on failure", () async {
-      final BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements("test/assets/building_testdata2.json", AppTheme.concordiaMaroon);
+      final BuildingMapDataDTO payload = await mdi.loadBuildingsWithMapElements(
+        "test/assets/building_testdata2.json",
+        AppTheme.concordiaMaroon,
+      );
 
       expect(payload.buildings.isEmpty, true);
       expect(payload.buildingOutlines.isEmpty, true);
@@ -61,18 +68,23 @@ void main() {
       final b = Building(
         id: "p",
         name: "Polygon Test",
+        description: "Test polygon building",
         street: "123 St.",
         postalCode: "P0L Y00",
         location: Coordinate(latitude: 0.0, longitude: 0.0),
+        hours: OpeningHoursDetail(),
         campus: Campus.sgw,
         outlinePoints: [
           Coordinate(latitude: 0.0, longitude: 0.0),
           Coordinate(latitude: 0.0, longitude: 1.0),
           Coordinate(latitude: 1.0, longitude: 0.0),
         ],
+        buildingFeatures: [],
       );
 
-      final polygons = mdi.generateBuildingPolygons([b], AppTheme.concordiaMaroon);
+      final polygons = mdi.generateBuildingPolygons([
+        b,
+      ], AppTheme.concordiaMaroon);
       expect(polygons.length, 1);
 
       final poly = polygons.first;
@@ -87,17 +99,20 @@ void main() {
       final List<Coordinate> points = [
         Coordinate(latitude: 0.0, longitude: 0.0),
         Coordinate(latitude: 0.0, longitude: 1.0),
-        Coordinate(latitude: 1.0, longitude: 0.0)
+        Coordinate(latitude: 1.0, longitude: 0.0),
       ];
 
       final b = Building(
         id: "c",
         name: "Centroid Test",
+        description: "Test centroid building",
         street: "1 Test St.",
         postalCode: "C0R N34",
         location: Coordinate(latitude: 0.0, longitude: 0.0),
+        hours: OpeningHoursDetail(),
         campus: Campus.sgw,
         outlinePoints: points,
+        buildingFeatures: [],
       );
 
       final markers = mdi.generateBuildingMarkers([b]);
@@ -107,6 +122,5 @@ void main() {
       expect(marker.latitude, closeTo(1 / 3, 1e-6));
       expect(marker.longitude, closeTo(1 / 3, 1e-6));
     });
-
   });
 }

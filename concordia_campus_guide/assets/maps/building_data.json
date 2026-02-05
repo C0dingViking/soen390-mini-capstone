@@ -5,7 +5,10 @@
       "name": "Henry F. Hall Building (H)",
       "street": "1455 Blvd. De Maisonneuve Ouest",
       "postalCode": "H3G 1M8",
-      "location": [45.4973223, -73.5790288],
+      "location": [
+        45.4973223,
+        -73.5790288
+      ],
       "campus": "sgw",
       "points": [
         [
@@ -28,14 +31,23 @@
           45.4968299107234,
           -73.5788489042803
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     },
     {
       "id": "mb",
       "name": "John Molson School of Business Building (MB)",
       "street": "1450 Rue Guy",
       "postalCode": "H3H 0A1",
-      "location": [45.4953406, -73.5788682],
+      "location": [
+        45.4953406,
+        -73.5788682
+      ],
       "campus": "sgw",
       "points": [
         [
@@ -78,14 +90,23 @@
           45.4953582145817,
           -73.57936679236
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     },
     {
       "id": "lb",
       "name": "J.W. McConnell Building (LB)",
       "street": "1400 Maisonneuve Blvd W",
       "postalCode": "H3G 1M8",
-      "location": [45.4968739, -73.5780374],
+      "location": [
+        45.4968739,
+        -73.5780374
+      ],
       "campus": "sgw",
       "points": [
         [
@@ -212,14 +233,23 @@
           45.4967290356968,
           -73.5785791067169
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     },
     {
       "id": "cc",
       "name": "Central Building (CC)",
       "street": "7141 Rue Sherbrooke Ouest",
       "postalCode": "H4B 1R6",
-      "location": [45.458493399999995, -73.6406396],
+      "location": [
+        45.458493399999995,
+        -73.6406396
+      ],
       "campus": "loy",
       "points": [
         [
@@ -256,28 +286,28 @@
         ],
         [
           45.4580924575034,
-          -73.6399668476527],
+          -73.6399668476527
+        ],
         [
-
           45.4581219391978,
-           -73.6399436219669],
+          -73.6399436219669
+        ],
         [
-
           45.4581082196506,
-           -73.6399074228682],
+          -73.6399074228682
+        ],
         [
-
           45.4581418281119,
-           -73.6398811620684],
+          -73.6398811620684
+        ],
         [
-
           45.4581545656232,
-           -73.63991569451],
+          -73.63991569451
+        ],
         [
-
           45.4581660710766,
-           -73.6399458518892
-          ],
+          -73.6399458518892
+        ],
         [
           45.4582187587328,
           -73.6399018618318
@@ -302,14 +332,23 @@
           45.4585208608007,
           -73.640685034277
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     },
     {
       "id": "vl",
       "name": "Vanier Library Building (VL)",
       "street": "7141 Rue Sherbrooke Ouest",
       "postalCode": "H4B 1R6",
-      "location": [45.459080600000007, -73.6387088],
+      "location": [
+        45.459080600000007,
+        -73.6387088
+      ],
       "campus": "loy",
       "points": [
         [
@@ -428,14 +467,23 @@
           45.45930228738043,
           -73.63867096999957
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     },
     {
       "id": "ve",
       "name": "Vanier Extension (VE)",
       "street": "7141 Rue Sherbrooke Ouest",
       "postalCode": "H4B 1R6",
-      "location": [45.459080600000007, -73.6387088],
+      "location": [
+        45.459080600000007,
+        -73.6387088
+      ],
       "campus": "loy",
       "points": [
         [
@@ -474,7 +522,13 @@
           45.45905019315328,
           -73.6388645869857
         ]
-      ]
+      ],
+      "description": "Campus building",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": null
     }
   ]
 }

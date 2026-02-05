@@ -69,7 +69,7 @@ linter:
 analyzer:
   exclude:
     - .dart_tool/**
-    - android/**
+    - "**/*.g.dart"
     - assets/**
     - build/**
     - ios/**

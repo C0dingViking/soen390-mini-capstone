@@ -2,11 +2,69 @@
   "buildings": [
     {
       "id": "t",
+      "googlePlacesId": "ChIJTest123456789",
       "name": "Test Building (T)",
+      "description": "A test building for unit testing purposes",
       "street": "1234 Test St.",
       "postalCode": "TE5 TM3",
       "location": [45.67, -73.21],
       "campus": "sgw",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {
+            "open": {
+              "day": 1,
+              "time": "0800"
+            },
+            "close": {
+              "day": 1,
+              "time": "2200"
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "time": "0800"
+            },
+            "close": {
+              "day": 2,
+              "time": "2200"
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "time": "0800"
+            },
+            "close": {
+              "day": 3,
+              "time": "2200"
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "time": "0800"
+            },
+            "close": {
+              "day": 4,
+              "time": "2200"
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "time": "0800"
+            },
+            "close": {
+              "day": 5,
+              "time": "1800"
+            }
+          }
+        ]
+      },
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom"],
       "points": [
         [
           45.5,
