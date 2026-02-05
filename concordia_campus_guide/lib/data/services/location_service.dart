@@ -30,7 +30,7 @@ class LocationService {
     return Coordinate(latitude: pos.latitude, longitude: pos.longitude);
   }
 
-  Future<void> start({LocationAccuracy accuracy = LocationAccuracy.best, int distanceFilter = 5}) async {
+  Future<void> start({LocationAccuracy accuracy = LocationAccuracy.bestForNavigation, int distanceFilter = 5}) async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return;
 
