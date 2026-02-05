@@ -69,7 +69,7 @@ class LocationService {
 
   @visibleForTesting
   static void resetForTesting() {
-    instance._posSub?.cancel();
+    instance.dispose();
     instance._posSub = null;
     if (instance._controller.isClosed) {
       instance._controller = StreamController<Coordinate>.broadcast();
