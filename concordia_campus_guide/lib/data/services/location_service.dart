@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:concordia_campus_guide/domain/models/coordinate.dart';
 
@@ -8,7 +9,7 @@ class LocationService {
   LocationService._privateConstructor();
   static final LocationService instance = LocationService._privateConstructor();
 
-  final StreamController<Coordinate> _controller = StreamController<Coordinate>.broadcast();
+  late StreamController<Coordinate> _controller = StreamController<Coordinate>.broadcast();
   StreamSubscription<Position>? _posSub;
 
   Stream<Coordinate> get positionStream => _controller.stream;
@@ -43,9 +44,14 @@ class LocationService {
       _posSub?.cancel();
       _posSub = Geolocator.getPositionStream(
         locationSettings: LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter),
-      ).listen((final pos) {
-        _controller.add(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
-      });
+      ).listen(
+        (final pos) {
+          _controller.add(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
+        },
+        onError: (final error) {
+          // swallow stream errors silently
+        },
+      );
     } catch (_) {
       // swallow errors here; callers may subscribe to stream and handle absence
     }
@@ -59,5 +65,14 @@ class LocationService {
   void dispose() {
     stop();
     _controller.close();
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    instance._posSub?.cancel();
+    instance._posSub = null;
+    if (instance._controller.isClosed) {
+      instance._controller = StreamController<Coordinate>.broadcast();
+    }
   }
 }
