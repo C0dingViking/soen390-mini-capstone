@@ -1,5 +1,6 @@
 import "dart:io";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
@@ -14,6 +15,7 @@ class _FakeGeolocator extends GeolocatorPlatform {
   bool throwOnGet = false;
   double lat = 0.0;
   double lng = 0.0;
+  List<Position> positionsToStream = [];
 
   @override
   Future<bool> isLocationServiceEnabled() async => serviceEnabled;
@@ -40,6 +42,11 @@ class _FakeGeolocator extends GeolocatorPlatform {
       headingAccuracy: 0.0,
     );
   }
+
+  @override
+  Stream<Position> getPositionStream({final LocationSettings? locationSettings}) {
+    return Stream.fromIterable(positionsToStream);
+  }
 }
 
 void main() {
@@ -64,6 +71,8 @@ void main() {
 
     tearDown(() {
       GeolocatorPlatform.instance = previousPlatform;
+      hvm.dispose();
+      LocationService.resetForTesting();
     });
 
     test("initializes building data correctly", () async {
@@ -131,7 +140,7 @@ void main() {
     test("goToCurrentLocation when service disabled sets error", () async {
       fakeGeolocator.serviceEnabled = false;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Enable location services"));
+      expect(hvm.errorMessage, equals("Error: Exception: Location services disabled"));
       expect(hvm.myLocationEnabled, isFalse);
       expect(hvm.cameraTarget, isNull);
     });
@@ -141,14 +150,14 @@ void main() {
       fakeGeolocator.checkPermissionResult = LocationPermission.denied;
       fakeGeolocator.requestPermissionResult = LocationPermission.denied;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Location permission denied"));
+      expect(hvm.errorMessage, equals("Error: Exception: Location permission denied"));
     });
 
     test("goToCurrentLocation when permission denied forever", () async {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.deniedForever;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Enable location permission in settings"));
+      expect(hvm.errorMessage, equals("Error: Exception: Location permission deniedForever. Please enable it in settings."));
     });
 
     test("goToCurrentLocation success sets cameraTarget and enables location", () async {
@@ -170,6 +179,118 @@ void main() {
       fakeGeolocator.throwOnGet = true;
       await hvm.goToCurrentLocation();
       expect(hvm.errorMessage, contains("boom"));
+    });
+
+    group("Building detection with location stream", () {
+      test("initializeBuildingsData starts location tracking", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 45.5,
+            longitude: -73.5,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(hvm.myLocationEnabled, isTrue);
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, 45.5);
+      });
+
+      test("currentBuilding is null when user is outside all buildings", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        // Position far from any building
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 0.0,
+            longitude: 0.0,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(hvm.currentBuilding, isNull);
+      });
+
+      test("stopLocationTracking stops position updates", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 45.5,
+            longitude: -73.5,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(hvm.myLocationEnabled, isTrue);
+
+        hvm.stopLocationTracking();
+
+        expect(hvm.myLocationEnabled, isFalse);
+      });
+
+      test("goToCurrentLocation starts streaming position updates", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        fakeGeolocator.lat = 45.4973;
+        fakeGeolocator.lng = -73.5786;
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 45.4973,
+            longitude: -73.5786,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+        await hvm.goToCurrentLocation();
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.myLocationEnabled, isTrue);
+      });
     });
   });
 }
