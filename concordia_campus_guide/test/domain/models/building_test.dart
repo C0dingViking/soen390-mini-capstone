@@ -1,16 +1,16 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
-import 'package:concordia_campus_guide/utils/campus.dart';
+import "package:flutter_test/flutter_test.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
 
 void main() {
-  group('Building bbox', () {
-    test('computeOutlineBBox uses location for empty outline', () {
+  group("Building bbox", () {
+    test("computeOutlineBBox uses location for empty outline", () {
       final b = Building(
-        id: 'b1',
-        name: 'Test',
-        street: '1 Test St',
-        postalCode: 'H0H0H0',
+        id: "b1",
+        name: "Test",
+        street: "1 Test St",
+        postalCode: "H0H0H0",
         location: const Coordinate(latitude: 10.0, longitude: 20.0),
         campus: Campus.sgw,
         outlinePoints: const [],
@@ -24,12 +24,12 @@ void main() {
       expect(b.maxLongitude, equals(20.0));
     });
 
-    test('computeOutlineBBox computes correct min/max for multiple points', () {
+    test("computeOutlineBBox computes correct min/max for multiple points", () {
       final b = Building(
-        id: 'b2',
-        name: 'Poly',
-        street: '2 Poly Ln',
-        postalCode: 'H0H0H0',
+        id: "b2",
+        name: "Poly",
+        street: "2 Poly Ln",
+        postalCode: "H0H0H0",
         location: const Coordinate(latitude: 0.0, longitude: 0.0),
         campus: Campus.sgw,
         outlinePoints: [
@@ -47,12 +47,12 @@ void main() {
       expect(b.maxLongitude, equals(3.0));
     });
 
-    test('isInsideBBox returns true for inside point and false for outside', () {
+    test("isInsideBBox returns true for inside point and false for outside", () {
       final b = Building(
-        id: 'b3',
-        name: 'Box',
-        street: '3 Box Rd',
-        postalCode: 'H0H0H0',
+        id: "b3",
+        name: "Box",
+        street: "3 Box Rd",
+        postalCode: "H0H0H0",
         location: const Coordinate(latitude: 0.0, longitude: 0.0),
         campus: Campus.sgw,
         outlinePoints: [
