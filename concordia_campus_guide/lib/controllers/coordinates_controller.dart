@@ -1,7 +1,6 @@
 import "dart:async";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
-import "package:geolocator/geolocator.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "../domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";

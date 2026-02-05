@@ -1,4 +1,5 @@
 import "dart:async";
+import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
@@ -18,6 +19,8 @@ class HomeViewModel extends ChangeNotifier {
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
   Set<Marker> buildingMarkers = {};
+  Building? currentBuilding;
+  StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
 
@@ -49,6 +52,27 @@ class HomeViewModel extends ChangeNotifier {
       buildings = payload.buildings;
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
+      // start location service and subscribe to updates
+      await LocationService.instance.start();
+      _locationSubscription?.cancel();
+      _locationSubscription = LocationService.instance.positionStream.listen((final posCoord) {
+        cameraTarget = posCoord;
+        myLocationEnabled = true;
+
+        Building? found;
+        for (final b in buildings.values) {
+          if (b.outlinePoints.isNotEmpty && posCoord.isInPolygon(b.outlinePoints)) {
+            found = b;
+            break;
+          }
+        }
+
+        if (found?.id != currentBuilding?.id) {
+          currentBuilding = found;
+        }
+
+        notifyListeners();
+      });
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -87,5 +111,20 @@ class HomeViewModel extends ChangeNotifier {
   void clearCameraTarget() {
     cameraTarget = null;
     notifyListeners();
+  }
+
+  void stopLocationTracking() {
+    _locationSubscription?.cancel();
+    _locationSubscription = null;
+    LocationService.instance.stop();
+    myLocationEnabled = false;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _locationSubscription?.cancel();
+    LocationService.instance.dispose();
+    super.dispose();
   }
 }
