@@ -71,7 +71,10 @@ class HomeViewModel extends ChangeNotifier {
 
         Building? found;
         for (final b in buildings.values) {
-          if (b.outlinePoints.isNotEmpty && posCoord.isInPolygon(b.outlinePoints)) {
+          // quick reject using precomputed bounding box
+          if (b.outlinePoints.isEmpty) continue;
+          if (!b.isInsideBBox(posCoord)) continue;
+          if (posCoord.isInPolygon(b.outlinePoints)) {
             found = b;
             break;
           }

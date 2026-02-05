@@ -2,6 +2,7 @@ import "dart:io";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -290,6 +291,24 @@ void main() {
 
         expect(hvm.cameraTarget, isNotNull);
         expect(hvm.myLocationEnabled, isTrue);
+      });
+
+      test("loaded buildings have bbox precomputed and isInsideBBox works", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        // get first building and ensure bbox fields are present
+        final b = hvm.buildings.values.first;
+        expect(b.minLatitude, isNotNull);
+        expect(b.maxLatitude, isNotNull);
+        expect(b.minLongitude, isNotNull);
+        expect(b.maxLongitude, isNotNull);
+
+        // a far away coordinate should be outside the bbox
+        final outside = Coordinate(latitude: 0.0, longitude: 0.0);
+        expect(b.isInsideBBox(outside), isFalse);
       });
 
       test("cameraTarget only updates when coordinate changes (identical positions)", () async {

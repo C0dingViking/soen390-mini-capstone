@@ -44,6 +44,8 @@ class BuildingRepository {
               .toList(),
         );
 
+        // precompute bounding box for quick spatial checks
+        building.computeOutlineBBox();
         buildings[building.id] = building;
       }
     } on PathNotFoundException catch (e) {
