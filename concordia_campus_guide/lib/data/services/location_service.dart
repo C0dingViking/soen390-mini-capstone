@@ -1,8 +1,8 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:concordia_campus_guide/domain/models/coordinate.dart';
+import "package:flutter/foundation.dart";
+import "package:geolocator/geolocator.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
 /// Encapsulates Geolocator usage and exposes a broadcast stream of `Coordinate`.
 class LocationService {
@@ -30,7 +30,7 @@ class LocationService {
     return Coordinate(latitude: pos.latitude, longitude: pos.longitude);
   }
 
-  Future<void> start({LocationAccuracy accuracy = LocationAccuracy.bestForNavigation, int distanceFilter = 5}) async {
+  Future<void> start({final LocationAccuracy accuracy = LocationAccuracy.bestForNavigation, final int distanceFilter = 5}) async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return;
 
