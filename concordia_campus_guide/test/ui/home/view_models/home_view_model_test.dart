@@ -140,7 +140,7 @@ void main() {
     test("goToCurrentLocation when service disabled sets error", () async {
       fakeGeolocator.serviceEnabled = false;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Error: Exception: Location services disabled"));
+      expect(hvm.errorMessage, equals("Error: Location services disabled"));
       expect(hvm.myLocationEnabled, isFalse);
       expect(hvm.cameraTarget, isNull);
     });
@@ -150,14 +150,14 @@ void main() {
       fakeGeolocator.checkPermissionResult = LocationPermission.denied;
       fakeGeolocator.requestPermissionResult = LocationPermission.denied;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Error: Exception: Location permission denied"));
+      expect(hvm.errorMessage, equals("Error: Location permission denied"));
     });
 
     test("goToCurrentLocation when permission denied forever", () async {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.deniedForever;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Error: Exception: Location permission deniedForever. Please enable it in settings."));
+      expect(hvm.errorMessage, equals("Error: Location permission deniedForever. Please enable it in settings."));
     });
 
     test("goToCurrentLocation success sets cameraTarget and enables location", () async {
