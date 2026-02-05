@@ -114,9 +114,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void stopLocationTracking() {
-    _locationSubscription?.cancel();
-    _locationSubscription = null;
-    LocationService.instance.stop();
+    LocationService.instance.dispose();
     myLocationEnabled = false;
     notifyListeners();
   }
