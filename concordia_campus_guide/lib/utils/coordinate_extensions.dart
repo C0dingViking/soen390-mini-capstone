@@ -41,3 +41,10 @@ extension PointInPolygon on Coordinate {
     return inside;
   }
 }
+
+// Provides approximate-equality comparison for coordinates.
+extension CoordinateApproxEqual on Coordinate {
+  bool isApproximatelyEqual(final Coordinate other, {final double eps = 1e-6}) {
+    return (latitude - other.latitude).abs() < eps && (longitude - other.longitude).abs() < eps;
+  }
+}

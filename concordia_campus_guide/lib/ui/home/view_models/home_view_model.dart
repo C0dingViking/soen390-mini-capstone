@@ -56,8 +56,18 @@ class HomeViewModel extends ChangeNotifier {
       await LocationService.instance.start();
       _locationSubscription?.cancel();
       _locationSubscription = LocationService.instance.positionStream.listen((final posCoord) {
-        cameraTarget = posCoord;
-        myLocationEnabled = true;
+        bool changed = false;
+
+        // only update cameraTarget if significantly different
+        if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+          cameraTarget = posCoord;
+          changed = true;
+        }
+
+        if (!myLocationEnabled) {
+          myLocationEnabled = true;
+          changed = true;
+        }
 
         Building? found;
         for (final b in buildings.values) {
@@ -69,9 +79,10 @@ class HomeViewModel extends ChangeNotifier {
 
         if (found?.id != currentBuilding?.id) {
           currentBuilding = found;
+          changed = true;
         }
 
-        notifyListeners();
+        if (changed) notifyListeners();
       });
     } else {
       errorMessage = payload.errorMessage;
@@ -91,9 +102,16 @@ class HomeViewModel extends ChangeNotifier {
     try {
       // ask LocationService for current position and ensure streaming
       final posCoord = await LocationService.instance.getCurrentPosition();
-      cameraTarget = posCoord;
-      myLocationEnabled = true;
-      notifyListeners();
+      bool changed = false;
+      if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+        cameraTarget = posCoord;
+        changed = true;
+      }
+      if (!myLocationEnabled) {
+        myLocationEnabled = true;
+        changed = true;
+      }
+      if (changed) notifyListeners();
 
       await LocationService.instance.start();
     } catch (e) {

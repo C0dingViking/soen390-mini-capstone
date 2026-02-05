@@ -291,6 +291,83 @@ void main() {
         expect(hvm.cameraTarget, isNotNull);
         expect(hvm.myLocationEnabled, isTrue);
       });
+
+      test("cameraTarget only updates when coordinate changes (identical positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+
+        // two identical positions should cause only one cameraTarget update
+        fakeGeolocator.positionsToStream = [pos, pos];
+
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // initializeBuildingsData triggers two notifications (start + end),
+        // plus one from the first position update -> total 3
+        expect(notifyCount, equals(3));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5));
+      });
+
+      test("cameraTarget updates again when coordinate changes (different positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos1 = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+        final pos2 = Position(
+          latitude: 45.5009,
+          longitude: -73.5009,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+
+        // two different positions should cause two cameraTarget updates
+        fakeGeolocator.positionsToStream = [pos1, pos2];
+
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
+
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
+
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+
+        // start + end + two position updates = 4
+        expect(notifyCount, equals(4));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5009));
+      });
     });
   });
 }
