@@ -55,38 +55,7 @@ class HomeViewModel extends ChangeNotifier {
       // start location service and subscribe to updates
       await LocationService.instance.start();
       _locationSubscription?.cancel();
-      _locationSubscription = LocationService.instance.positionStream.listen((final posCoord) {
-        bool changed = false;
-
-        // only update cameraTarget if significantly different
-        if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
-          cameraTarget = posCoord;
-          changed = true;
-        }
-
-        if (!myLocationEnabled) {
-          myLocationEnabled = true;
-          changed = true;
-        }
-
-        Building? found;
-        for (final b in buildings.values) {
-          // quick reject using precomputed bounding box
-          if (b.outlinePoints.isEmpty) continue;
-          if (!b.isInsideBBox(posCoord)) continue;
-          if (posCoord.isInPolygon(b.outlinePoints)) {
-            found = b;
-            break;
-          }
-        }
-
-        if (found?.id != currentBuilding?.id) {
-          currentBuilding = found;
-          changed = true;
-        }
-
-        if (changed) notifyListeners();
-      });
+      _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -138,6 +107,31 @@ class HomeViewModel extends ChangeNotifier {
     LocationService.instance.dispose();
     myLocationEnabled = false;
     notifyListeners();
+  }
+
+  void _handleLocationUpdate(final Coordinate posCoord) {
+    bool changed = false;
+
+    // only update cameraTarget if significantly different
+    if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+      cameraTarget = posCoord;
+      changed = true;
+    }
+
+    if (!myLocationEnabled) {
+      myLocationEnabled = true;
+      changed = true;
+    }
+
+    // find building at current location using domain interactor
+    final Building? found = mapInteractor.findBuildingAt(posCoord, buildings);
+
+    if (found?.id != currentBuilding?.id) {
+      currentBuilding = found;
+      changed = true;
+    }
+
+    if (changed) notifyListeners();
   }
 
   @override
