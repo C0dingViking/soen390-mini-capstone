@@ -37,7 +37,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     },
     {
       "id": "mb",
@@ -96,7 +97,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     },
     {
       "id": "lb",
@@ -239,7 +241,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     },
     {
       "id": "cc",
@@ -338,7 +341,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     },
     {
       "id": "vl",
@@ -346,7 +350,7 @@
       "street": "7141 Rue Sherbrooke Ouest",
       "postalCode": "H4B 1R6",
       "location": [
-        45.459080600000007,
+        45.45908060000001,
         -73.6387088
       ],
       "campus": "loy",
@@ -473,7 +477,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     },
     {
       "id": "ve",
@@ -481,7 +486,7 @@
       "street": "7141 Rue Sherbrooke Ouest",
       "postalCode": "H4B 1R6",
       "location": [
-        45.459080600000007,
+        45.45908060000001,
         -73.6387088
       ],
       "campus": "loy",
@@ -528,7 +533,8 @@
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null
+      "buildingFeatures": null,
+      "images": []
     }
   ]
 }

@@ -80,6 +80,7 @@ void main() {
           Coordinate(latitude: 1.0, longitude: 0.0),
         ],
         buildingFeatures: [],
+        images: [],
       );
 
       final polygons = mdi.generateBuildingPolygons([
@@ -113,6 +114,7 @@ void main() {
         campus: Campus.sgw,
         outlinePoints: points,
         buildingFeatures: [],
+        images: [],
       );
 
       final markers = mdi.generateBuildingMarkers([b]);

@@ -65,6 +65,7 @@
         ]
       },
       "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom"],
+      "images": [],
       "points": [
         [
           45.5,

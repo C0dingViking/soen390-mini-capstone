@@ -115,7 +115,7 @@ void main() {
 
       // Verify invalid features are not present
       final featureNames = building.buildingFeatures!
-          .map((f) => f.name)
+          .map((final f) => f.name)
           .toList();
       expect(featureNames.contains("invalidFeature"), false);
       expect(featureNames.contains("nonExistentFeature"), false);

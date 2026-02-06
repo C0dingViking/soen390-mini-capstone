@@ -24,6 +24,7 @@ class Building {
   final String description;
   final String street;
   final String postalCode;
+  final List<String> images;
 
   @CoordinateConverter()
   final Coordinate location;
@@ -52,6 +53,7 @@ class Building {
     required this.hours,
     required this.campus,
     required this.outlinePoints,
+    required this.images,
     this.buildingFeatures,
   });
 
@@ -70,7 +72,7 @@ class Building {
     final currentDay = now.weekday % 7;
     final currentTime = now.hour * 100 + now.minute;
 
-    for (final period in hours!.periods) {
+    for (final period in hours.periods) {
       if (period.open?.day == currentDay) {
         final openTime = int.tryParse(period.open?.time ?? "") ?? 0;
         final closeTime = period.close != null

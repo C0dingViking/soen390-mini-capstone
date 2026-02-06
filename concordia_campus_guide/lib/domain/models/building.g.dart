@@ -19,6 +19,7 @@ Building _$BuildingFromJson(Map<String, dynamic> json) => Building(
   outlinePoints: const CoordinateListConverter().fromJson(
     json['points'] as List,
   ),
+  images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),
   buildingFeatures: const BuildingFeatureListConverter().fromJson(
     json['buildingFeatures'] as List?,
   ),
@@ -38,4 +39,5 @@ Map<String, dynamic> _$BuildingToJson(Building instance) => <String, dynamic>{
   'buildingFeatures': const BuildingFeatureListConverter().toJson(
     instance.buildingFeatures,
   ),
+  'images': instance.images,
 };
