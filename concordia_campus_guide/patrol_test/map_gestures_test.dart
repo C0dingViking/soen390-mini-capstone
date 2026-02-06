@@ -12,7 +12,6 @@ void main() {
 
     final mapFinder = find.byType(GoogleMap);
     await $.tester.pumpAndSettle();
-    $.log("Map ready for interaction");
 
     final homeScreenState = $.tester.state<State<HomeScreen>>(
       find.byType(HomeScreen),
@@ -28,6 +27,9 @@ void main() {
     $.log(
       "Initial position: ${initialRegion.southwest.latitude.toStringAsFixed(4)}, ${initialRegion.southwest.longitude.toStringAsFixed(4)}",
     );
+
+    // Add delay for map rendering
+    await $.pump(const Duration(seconds: 2));
 
     $.log("Swipe left");
     await $.tester.fling(mapFinder, const Offset(-300, 0), 800);
