@@ -38,7 +38,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/SGW/h.jpg"]
     },
     {
       "id": "mb",
@@ -98,7 +98,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/SGW/mb.jpg"]
     },
     {
       "id": "lb",
@@ -242,7 +242,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/SGW/lb.jpg"]
     },
     {
       "id": "cc",
@@ -342,7 +342,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/LOY/cc.jpg"]
     },
     {
       "id": "vl",
@@ -478,7 +478,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/LOY/vl.jpg"]
     },
     {
       "id": "ve",
@@ -534,7 +534,7 @@
         "periods": []
       },
       "buildingFeatures": null,
-      "images": []
+      "images": ["assets/images/buildings/LOY/ve.jpg"]
     }
   ]
 }
