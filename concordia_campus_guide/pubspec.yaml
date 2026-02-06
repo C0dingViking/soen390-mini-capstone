@@ -47,6 +47,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
+  patrol: ^4.1.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -104,3 +105,8 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/bigger_icon.png"
+
+patrol:
+  app_name: Concordia Campus Guide
+  android:
+    package_name: com.example.concordia_campus_guide

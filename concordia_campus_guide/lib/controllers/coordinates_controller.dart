@@ -8,6 +8,8 @@ import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 class CoordinatesController {
   final Completer<GoogleMapController> _controller = Completer();
 
+  Future<GoogleMapController> get mapController => _controller.future;
+
   static const Coordinate sgw = Coordinate(latitude: 45.4972, longitude: -73.5786);
   static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
 
