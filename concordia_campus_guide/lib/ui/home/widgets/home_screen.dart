@@ -3,6 +3,7 @@ import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
+import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -21,8 +22,16 @@ class _HomeScreenState extends State<HomeScreen> {
   late HomeViewModel _viewModel;
 
   final List<CampusDetails> _campuses = [
-    const CampusDetails(name: "SGW", coord: HomeViewModel.sgw, icon: Icons.location_city),
-    const CampusDetails(name: "LOY", coord: HomeViewModel.loyola, icon: Icons.school),
+    const CampusDetails(
+      name: "SGW",
+      coord: HomeViewModel.sgw,
+      icon: Icons.location_city,
+    ),
+    const CampusDetails(
+      name: "LOY",
+      coord: HomeViewModel.loyola,
+      icon: Icons.school,
+    ),
   ];
 
   @override
@@ -30,7 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<HomeViewModel>().initializeBuildingsData("assets/maps/building_data.json");
+      context.read<HomeViewModel>().initializeBuildingsData(
+        "assets/maps/building_data.json",
+      );
     });
   }
 
@@ -50,11 +61,32 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onViewModelChange() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
     if (_viewModel.cameraTarget != null) {
       _coords.goToCoordinate(_viewModel.cameraTarget!);
       _viewModel.clearCameraTarget();
+    }
+  }
+
+  void _onBuildingTapped(PolygonId polygonId) {
+    // Extract building ID from polygon ID (format: "buildingId-poly")
+    final buildingId = polygonId.value.replaceAll('-poly', '');
+    print('Polygon tapped: ${polygonId.value}, Building ID: $buildingId');
+    final building = _viewModel.buildings[buildingId];
+
+    if (building != null) {
+      print('Navigating to building: ${building.name}');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BuildingDetailScreen(building: building),
+        ),
+      );
+    } else {
+      print('Building not found for ID: $buildingId');
     }
   }
 
@@ -76,13 +108,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 myLocationEnabled: hvm.myLocationEnabled,
                 polygons: hvm.buildingOutlines,
                 markers: hvm.buildingMarkers,
+                onPolygonTap: _onBuildingTapped,
               ),
               Positioned(
                 left: 25,
                 bottom: 25,
                 child: FloatingActionButton(
                   heroTag: "my_location",
-                  onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
+                  onPressed: () =>
+                      context.read<HomeViewModel>().goToCurrentLocation(),
                   backgroundColor: _buttonColor,
                   child: const Icon(Icons.my_location, color: Colors.white),
                 ),
@@ -97,12 +131,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(30),
                     onTap: () => context.read<HomeViewModel>().toggleCampus(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: _buttonColor,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Row(
@@ -116,13 +157,21 @@ class _HomeScreenState extends State<HomeScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Center(
-                              child: Icon(selected.icon, color: Colors.white, size: 20),
+                              child: Icon(
+                                selected.icon,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             selected.name,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(width: 8),
                         ],
