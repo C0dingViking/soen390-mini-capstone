@@ -1,7 +1,7 @@
 import "dart:async";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
-import "package:geolocator/geolocator.dart";
+import "package:concordia_campus_guide/data/services/location_service.dart";
 import "../domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 
@@ -24,20 +24,20 @@ class CoordinatesController {
 
   Future<void> goToCurrentLocation(final BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      messenger.showSnackBar(const SnackBar(content: Text("Enable location services")));
-      return;
+    try {
+      final coord = await LocationService.instance.getCurrentPosition();
+      await goToCoordinate(coord);
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains("disabled")) {
+        messenger.showSnackBar(const SnackBar(content: Text("Enable location services")));
+      } else if (msg.contains("deniedForever")) {
+        messenger.showSnackBar(const SnackBar(content: Text("Enable location permissions in settings")));
+      } else if (msg.contains("denied")) {
+        // user denied once; silently return
+      } else {
+        messenger.showSnackBar(SnackBar(content: Text("Location error: $e")));
+      }
     }
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-    if (permission == LocationPermission.deniedForever) {
-      messenger.showSnackBar(const SnackBar(content: Text("Enable location permissions in settings")));
-      return;
-    }
-    final pos = await Geolocator.getCurrentPosition();
-    await goToCoordinate(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
   }
 }
