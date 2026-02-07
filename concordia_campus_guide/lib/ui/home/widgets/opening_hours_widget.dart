@@ -1,6 +1,6 @@
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
-import 'package:flutter/material.dart';
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:flutter/material.dart";
 
 class OpeningHoursWidget extends StatefulWidget {
   final Building building;
@@ -15,7 +15,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
   bool _isExpanded = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     final isOpen = widget.building.isOpen();
     final schedule = widget.building.getSchedule();
 
@@ -28,32 +28,32 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
     final currentTime = now.hour * 100 + now.minute;
 
     final todaySchedule = schedule.firstWhere(
-      (period) => period.open?.day == currentDay,
+      (final period) => period.open?.day == currentDay,
       orElse: () => schedule.first,
     );
 
-    String statusText = '';
+    String statusText = "";
     if (isOpen) {
-      final closeTime = todaySchedule.close?.time ?? '';
-      statusText = 'Closes ${_formatTimeSimple(closeTime)}';
+      final closeTime = todaySchedule.close?.time ?? "";
+      statusText = "Closes ${_formatTimeSimple(closeTime)}";
     } else {
-      final openTime = todaySchedule.open?.time ?? '';
+      final openTime = todaySchedule.open?.time ?? "";
       final openHour = int.tryParse(openTime.substring(0, 2)) ?? 0;
       final openMinute = int.tryParse(openTime.substring(2, 4)) ?? 0;
       final openTimeInt = openHour * 100 + openMinute;
 
       if (openTimeInt > currentTime) {
         // Opens later today
-        statusText = 'Opens ${_formatTimeSimple(openTime)}';
+        statusText = "Opens ${_formatTimeSimple(openTime)}";
       } else {
         // Opens tomorrow or next available day
         final nextDay = schedule.firstWhere(
-          (period) => (period.open?.day ?? 0) > currentDay,
+          (final period) => (period.open?.day ?? 0) > currentDay,
           orElse: () => schedule.first,
         );
-        final nextOpenTime = nextDay.open?.time ?? '';
+        final nextOpenTime = nextDay.open?.time ?? "";
         final nextDayName = _getDayName(nextDay.open?.day ?? 0);
-        statusText = 'Opens $nextDayName ${_formatTimeSimple(nextOpenTime)}';
+        statusText = "Opens $nextDayName ${_formatTimeSimple(nextOpenTime)}";
       }
     }
 
@@ -79,7 +79,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                       ),
                       children: [
                         TextSpan(
-                          text: isOpen ? 'Open' : 'Closed',
+                          text: isOpen ? "Open" : "Closed",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: isOpen
@@ -88,7 +88,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                           ),
                         ),
                         TextSpan(
-                          text: ' · $statusText',
+                          text: " · $statusText",
                           style: TextStyle(
                             color: AppTheme.concordiaForeground.withValues(
                               alpha: 0.8,
@@ -110,10 +110,10 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
             ),
             if (_isExpanded) ...[
               const SizedBox(height: 16),
-              ...schedule.map((period) {
+              ...schedule.map((final period) {
                 final dayName = _getDayName(period.open?.day ?? 0);
-                final openTime = _formatTimeSimple(period.open?.time ?? '');
-                final closeTime = _formatTimeSimple(period.close?.time ?? '');
+                final openTime = _formatTimeSimple(period.open?.time ?? "");
+                final closeTime = _formatTimeSimple(period.close?.time ?? "");
                 final isToday = period.open?.day == currentDay;
 
                 return Padding(
@@ -131,7 +131,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                         ),
                       ),
                       Text(
-                        '$openTime - $closeTime',
+                        "$openTime - $closeTime",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: isToday
                               ? FontWeight.w600
@@ -144,7 +144,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ],
         ),
@@ -152,22 +152,22 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
     );
   }
 
-  String _getDayName(int day) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  String _getDayName(final int day) {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return days[day % 7];
   }
 
-  String _formatTimeSimple(String time) {
+  String _formatTimeSimple(final String time) {
     if (time.isEmpty || time.length != 4) return time;
     final hour = int.tryParse(time.substring(0, 2)) ?? 0;
     final minute = time.substring(2, 4);
-    final period = hour >= 12 ? 'p.m.' : 'a.m.';
+    final period = hour >= 12 ? "p.m." : "a.m.";
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
 
     // Don't show minutes if they're 00
-    if (minute == '00') {
-      return '$displayHour $period';
+    if (minute == "00") {
+      return "$displayHour $period";
     }
-    return '$displayHour:$minute $period';
+    return "$displayHour:$minute $period";
   }
 }

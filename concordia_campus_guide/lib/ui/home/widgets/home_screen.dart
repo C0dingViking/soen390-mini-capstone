@@ -71,22 +71,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onBuildingTapped(PolygonId polygonId) {
+  void _onBuildingTapped(final PolygonId polygonId) {
     // Extract building ID from polygon ID (format: "buildingId-poly")
-    final buildingId = polygonId.value.replaceAll('-poly', '');
-    print('Polygon tapped: ${polygonId.value}, Building ID: $buildingId');
+    final buildingId = polygonId.value.replaceAll("-poly", "");
     final building = _viewModel.buildings[buildingId];
 
     if (building != null) {
-      print('Navigating to building: ${building.name}');
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => BuildingDetailScreen(building: building),
+        MaterialPageRoute<void>(
+          builder: (final context) => BuildingDetailScreen(building: building),
         ),
       );
-    } else {
-      print('Building not found for ID: $buildingId');
     }
   }
 

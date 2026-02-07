@@ -3,7 +3,6 @@ import "package:flutter_test/flutter_test.dart";
 import "package:provider/provider.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
-import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
@@ -178,16 +177,7 @@ void main() {
         await pumpHomeScreen(tester);
 
         // Get the home screen state to call the method directly
-        final homeScreenState = tester.state<State<HomeScreen>>(
-          find.byType(HomeScreen),
-        );
-
-        // Simulate tapping on a building polygon
-        final polygonId = const PolygonId("H-poly");
-
-        // Use reflection or direct call to test the callback
-        // Since _onBuildingTapped is private, we'll test via the MapWrapper callback
-        final homeScreen = homeScreenState.widget as HomeScreen;
+        tester.state<State<HomeScreen>>(find.byType(HomeScreen));
 
         // Find MapWrapper and verify it has an onPolygonTap callback
         expect(find.byType(HomeScreen), findsOneWidget);
@@ -205,7 +195,7 @@ void main() {
 
       // Test the building ID extraction logic
       const polygonId = PolygonId("H-poly");
-      final buildingId = polygonId.value.replaceAll('-poly', '');
+      final buildingId = polygonId.value.replaceAll("-poly", "");
 
       expect(buildingId, equals("H"));
       expect(vm.buildings.containsKey(buildingId), isTrue);
@@ -217,7 +207,7 @@ void main() {
       await pumpHomeScreen(tester);
 
       const polygonId = PolygonId("INVALID-poly");
-      final buildingId = polygonId.value.replaceAll('-poly', '');
+      final buildingId = polygonId.value.replaceAll("-poly", "");
 
       expect(buildingId, equals("INVALID"));
       expect(vm.buildings.containsKey(buildingId), isFalse);

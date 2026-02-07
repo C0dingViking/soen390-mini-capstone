@@ -6,11 +6,19 @@ import "package:flutter/material.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:flutter_test/flutter_test.dart";
 
+Finder findRichTextContaining(final String text) {
+  return find.byWidgetPredicate(
+    (final widget) =>
+        widget is RichText && widget.text.toPlainText().contains(text),
+    description: 'RichText containing "$text"',
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group("OpeningHoursWidget Tests", () {
-    Building createBuildingWithHours(List<OpeningHoursPeriod> periods) {
+    Building createBuildingWithHours(final List<OpeningHoursPeriod> periods) {
       return Building(
         id: "TEST",
         googlePlacesId: null,
@@ -27,7 +35,10 @@ void main() {
       );
     }
 
-    Future<void> pumpWidget(WidgetTester tester, Building building) async {
+    Future<void> pumpWidget(
+      final WidgetTester tester,
+      final Building building,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: OpeningHoursWidget(building: building)),
@@ -36,7 +47,7 @@ void main() {
     }
 
     testWidgets("returns empty container when schedule is empty", (
-      tester,
+      final tester,
     ) async {
       final building = createBuildingWithHours([]);
       await pumpWidget(tester, building);
@@ -45,7 +56,7 @@ void main() {
       expect(find.text("Closed"), findsNothing);
     });
 
-    testWidgets("displays open/closed status", (tester) async {
+    testWidgets("displays open/closed status", (final tester) async {
       final now = DateTime.now();
       final currentDay = now.weekday % 7;
 
@@ -59,13 +70,18 @@ void main() {
       await pumpWidget(tester, building);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining(RegExp(r'(Open|Closed)')), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (final widget) =>
+              widget is RichText &&
+              (widget.text.toPlainText().contains("Open") ||
+                  widget.text.toPlainText().contains("Closed")),
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets("expands and collapses on tap", (tester) async {
-      final now = DateTime.now();
-      final currentDay = now.weekday % 7;
-
+    testWidgets("expands and collapses on tap", (final tester) async {
       final building = createBuildingWithHours([
         OpeningHoursPeriod(
           open: OpeningHoursPeriodDate(day: 1, time: "0900"),
@@ -82,7 +98,10 @@ void main() {
 
       expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
 
-      await tester.tap(find.byType(GestureDetector));
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
@@ -90,7 +109,7 @@ void main() {
       expect(find.text("Tue"), findsOneWidget);
     });
 
-    testWidgets("formats times correctly", (tester) async {
+    testWidgets("formats times correctly", (final tester) async {
       final now = DateTime.now();
       final currentDay = now.weekday % 7;
 
@@ -102,14 +121,18 @@ void main() {
       ]);
 
       await pumpWidget(tester, building);
-      await tester.tap(find.byType(GestureDetector));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining("9 a.m."), findsOneWidget);
-      expect(find.textContaining("5:30 p.m."), findsOneWidget);
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("9 a.m. - 5:30 p.m."), findsOneWidget);
     });
 
-    testWidgets("displays multiple days in schedule", (tester) async {
+    testWidgets("displays multiple days in schedule", (final tester) async {
       final building = createBuildingWithHours([
         OpeningHoursPeriod(
           open: OpeningHoursPeriodDate(day: 1, time: "0900"),
@@ -126,7 +149,12 @@ void main() {
       ]);
 
       await pumpWidget(tester, building);
-      await tester.tap(find.byType(GestureDetector));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.text("Mon"), findsOneWidget);

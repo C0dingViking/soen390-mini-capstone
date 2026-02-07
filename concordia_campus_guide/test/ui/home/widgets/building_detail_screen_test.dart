@@ -112,12 +112,12 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
-            builder: (context) => Scaffold(
+            builder: (final context) => Scaffold(
               body: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    MaterialPageRoute<void>(
                       builder: (_) =>
                           BuildingDetailScreen(building: testBuilding),
                     ),

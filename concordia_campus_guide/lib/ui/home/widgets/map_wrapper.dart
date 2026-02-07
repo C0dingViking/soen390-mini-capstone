@@ -33,7 +33,7 @@ class MapWrapper extends StatelessWidget {
     final Set<Polygon> tappablePolygons = onPolygonTap != null
         ? polygons
               .map(
-                (polygon) => polygon.copyWith(
+                (final polygon) => polygon.copyWith(
                   onTapParam: () => onPolygonTap!(polygon.polygonId),
                   consumeTapEventsParam: true,
                 ),

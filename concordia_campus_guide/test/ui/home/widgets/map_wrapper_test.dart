@@ -10,8 +10,6 @@ void main() {
     testWidgets("MapWrapper accepts onPolygonTap callback", (
       final tester,
     ) async {
-      PolygonId? tappedPolygonId;
-
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -33,8 +31,8 @@ void main() {
                 ),
               },
               markers: {},
-              onPolygonTap: (polygonId) {
-                tappedPolygonId = polygonId;
+              onPolygonTap: (final polygonId) {
+                // Callback is provided to test it's accepted
               },
             ),
           ),
@@ -102,7 +100,7 @@ void main() {
                 myLocationEnabled: false,
                 polygons: {originalPolygon},
                 markers: {},
-                onPolygonTap: (polygonId) {},
+                onPolygonTap: (final polygonId) {},
               ),
             ),
           ),
@@ -115,7 +113,6 @@ void main() {
     testWidgets("MapWrapper passes through all required GoogleMap properties", (
       final tester,
     ) async {
-      bool mapCreatedCalled = false;
       final testPolygon = Polygon(
         polygonId: const PolygonId("test-poly"),
         points: const [LatLng(45.497, -73.579), LatLng(45.498, -73.579)],
@@ -134,7 +131,7 @@ void main() {
                 zoom: 15,
               ),
               onMapCreated: (_) {
-                mapCreatedCalled = true;
+                // Callback is provided to test it's accepted
               },
               myLocationEnabled: true,
               myLocationButtonEnabled: true,
@@ -161,7 +158,7 @@ void main() {
 
       for (final testCase in testCases) {
         final polygonId = PolygonId(testCase["input"] as String);
-        final buildingId = polygonId.value.replaceAll('-poly', '');
+        final buildingId = polygonId.value.replaceAll("-poly", "");
         expect(buildingId, equals(testCase["expected"]));
       }
     });

@@ -1,11 +1,9 @@
-import 'package:concordia_campus_guide/domain/models/building.dart';
-import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
-import 'package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart';
-import 'package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart';
-import "package:concordia_campus_guide/utils/app_logger.dart";
-import 'package:concordia_campus_guide/utils/image_helper.dart';
-import 'package:flutter/material.dart';
-import "package:flutter/widget_previews.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
+import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
+import "package:concordia_campus_guide/utils/image_helper.dart";
+import "package:flutter/material.dart";
 
 class BuildingDetailScreen extends StatelessWidget {
   final Building building;
@@ -13,7 +11,7 @@ class BuildingDetailScreen extends StatelessWidget {
   const BuildingDetailScreen({super.key, required this.building});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     return Scaffold(
       appBar: const CampusAppBar(),
       body: Container(
@@ -58,7 +56,7 @@ class BuildingDetailScreen extends StatelessWidget {
                       if (building.buildingFeatures != null &&
                           building.buildingFeatures!.isNotEmpty)
                         Builder(
-                          builder: (context) => _buildFeaturesRow(context),
+                          builder: (final context) => _buildFeaturesRow(context),
                         ),
 
                       const SizedBox(height: 16),
@@ -98,7 +96,7 @@ class BuildingDetailScreen extends StatelessWidget {
         width: double.infinity,
         height: 250,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+        errorBuilder: (final context, final error, final stackTrace) => _buildPlaceholderImage(),
       );
     }
     return _buildPlaceholderImage();
@@ -113,7 +111,7 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressRow(BuildContext context) {
+  Widget _buildAddressRow(final BuildContext context) {
     return Column(
       children: [
         Text(
@@ -125,14 +123,14 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showAccessibilityDialog(BuildContext context) {
-    showDialog(
+  void _showAccessibilityDialog(final BuildContext context) {
+    showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (final BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: Text(
-            'Accessibility Features',
+            "Accessibility Features",
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(color: AppTheme.concordiaMaroon),
@@ -140,7 +138,7 @@ class BuildingDetailScreen extends StatelessWidget {
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: building.buildingFeatures!.map((feature) {
+              children: building.buildingFeatures!.map((final feature) {
                 return _buildAccessibilityFeature(feature, context);
               }).toList(),
             ),
@@ -149,7 +147,7 @@ class BuildingDetailScreen extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Close',
+                "Close",
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: AppTheme.concordiaMaroon,
                 ),
@@ -162,8 +160,8 @@ class BuildingDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAccessibilityFeature(
-    BuildingFeature feature,
-    BuildContext context,
+    final BuildingFeature feature,
+    final BuildContext context,
   ) {
     IconData icon;
     String description;
@@ -171,31 +169,31 @@ class BuildingDetailScreen extends StatelessWidget {
     switch (feature) {
       case BuildingFeature.wheelChairAccess:
         icon = Icons.accessible;
-        description = 'Wheelchair Accessible';
+        description = "Wheelchair Accessible";
         break;
       case BuildingFeature.elevator:
         icon = Icons.elevator;
-        description = 'Elevator Available';
+        description = "Elevator Available";
         break;
       case BuildingFeature.escalator:
         icon = Icons.stairs;
-        description = 'Escalator Available';
+        description = "Escalator Available";
         break;
       case BuildingFeature.bathroom:
         icon = Icons.wc;
-        description = 'Restrooms Available';
+        description = "Restrooms Available";
         break;
       case BuildingFeature.metroAccess:
         icon = Icons.train;
-        description = 'Metro Access';
+        description = "Metro Access";
         break;
       case BuildingFeature.food:
         icon = Icons.restaurant;
-        description = 'Food Services';
+        description = "Food Services";
         break;
       case BuildingFeature.shuttleBus:
         icon = Icons.directions_bus;
-        description = 'Shuttle Bus Stop';
+        description = "Shuttle Bus Stop";
         break;
     }
 
@@ -216,11 +214,11 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturesRow(BuildContext context) {
+  Widget _buildFeaturesRow(final BuildContext context) {
     return Wrap(
       spacing: 20.0,
       runSpacing: 16.0,
-      children: building.buildingFeatures!.take(8).map((feature) {
+      children: building.buildingFeatures!.take(8).map((final feature) {
         return SizedBox(
           width: (MediaQuery.of(context).size.width - 32 - 60) / 6,
           child: _buildFeatureIcon(feature),
@@ -229,7 +227,7 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureIcon(BuildingFeature feature) {
+  Widget _buildFeatureIcon(final BuildingFeature feature) {
     IconData icon;
 
     switch (feature) {
