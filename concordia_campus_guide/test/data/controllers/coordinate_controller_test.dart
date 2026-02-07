@@ -75,6 +75,13 @@ void main() {
     expect(true, true);
   });
 
+  test("mapController returns the created controller", () async {
+    final Future<GoogleMapController> future = controller.mapController;
+    controller.onMapCreated(mockMapController);
+    final GoogleMapController result = await future;
+    expect(result, same(mockMapController));
+  });
+
   test("goToCoordinate animates camera", () async {
     controller.onMapCreated(mockMapController);
     const testCoord = Coordinate(latitude: 10.0, longitude: 10.0);
