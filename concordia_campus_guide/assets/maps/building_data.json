@@ -32,18 +32,20 @@
           -73.5788489042803
         ]
       ],
-      "description": "Campus building",
+      "description": "The tallest building on campus with 13 floors, named after Concordia's first principal. Home to engineers ranging from brutal mechanical masterminds to skinny software developers. It connects underground to the Guy-Concordia metro station, making it a hub for student traffic.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "1700"}},
-          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "1800"}},
-          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "1900"}},
-          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2000"}},
-          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "2100"}}
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 7, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
         ]
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "bathroom", "food", "metroAccess", "shuttleBus"],
       "images": ["assets/images/buildings/SGW/h.jpg"]
     },
     {
@@ -98,19 +100,20 @@
           -73.57936679236
         ]
       ],
-      "description": "Campus building",
+      "description": "Home to the John Molson School of Business. Features a stunning atrium and trading floor! This is also where business students survive tax season.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0800"}, "close": {"day": 1, "time": "1800"}},
-          {"open": {"day": 2, "time": "0800"}, "close": {"day": 2, "time": "1900"}},
-          {"open": {"day": 3, "time": "0800"}, "close": {"day": 3, "time": "2000"}},
-          {"open": {"day": 4, "time": "0800"}, "close": {"day": 4, "time": "2100"}},
-          {"open": {"day": 5, "time": "0800"}, "close": {"day": 5, "time": "2200"}},
-          {"open": {"day": 6, "time": "1000"}, "close": {"day": 6, "time": "1600"}}
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 7, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
         ]
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["elevator", "escalator", "wheelChairAccess", "bathroom", "food", "metroAccess"],
       "images": ["assets/images/buildings/SGW/mb.jpg"]
     },
     {
@@ -249,20 +252,20 @@
           -73.5785791067169
         ]
       ],
-      "description": "Campus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus building",
+      "description": "Home to the Webster Library with over 2 million items. The 12th floor study lounge has the best view! Hosts the Technology Sandbox, a place where one can try out VR gaming, 3D printing or game development.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2200"}},
-          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2200"}},
-          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2200"}},
-          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2200"}},
-          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2200"}},
-          {"open": {"day": 6, "time": "0900"}, "close": {"day": 6, "time": "1800"}},
-          {"open": {"day": 0, "time": "1000"}, "close": {"day": 0, "time": "1700"}}
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
         ]
       },
-      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "food", "shuttleBus" ],
+      "buildingFeatures": ["elevator", "wheelChairAccess", "food", "metroAccess", "bathroom"],
       "images": ["assets/images/buildings/SGW/lb.jpg"]
     },
     {
@@ -357,19 +360,20 @@
           -73.640685034277
         ]
       ],
-      "description": "Campus building",
+      "description": "The heart of Loyola Campus. Built in 1916, it's the oldest building Concordia owns! Its distinctive architecture features classic Jesuit college design with beautiful green spaces surrounding it.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "2100"}},
-          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "2100"}},
-          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "2100"}},
-          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2100"}},
-          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "1800"}},
-          {"open": {"day": 6, "time": "1000"}, "close": {"day": 6, "time": "1700"}}
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
         ]
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom"],
       "images": ["assets/images/buildings/LOY/cc.jpg"]
     },
     {
@@ -500,20 +504,20 @@
           -73.63867096999957
         ]
       ],
-      "description": "Campus building",
+      "description": "The main library at Loyola. Open late during exams with 24/7 access for students! Features modern study spaces and extensive research resources for all disciplines.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0800"}, "close": {"day": 1, "time": "2300"}},
-          {"open": {"day": 2, "time": "0800"}, "close": {"day": 2, "time": "2300"}},
-          {"open": {"day": 3, "time": "0800"}, "close": {"day": 3, "time": "2300"}},
-          {"open": {"day": 4, "time": "0800"}, "close": {"day": 4, "time": "2300"}},
-          {"open": {"day": 5, "time": "0800"}, "close": {"day": 5, "time": "2000"}},
-          {"open": {"day": 6, "time": "0900"}, "close": {"day": 6, "time": "1900"}},
-          {"open": {"day": 0, "time": "1000"}, "close": {"day": 0, "time": "1800"}}
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
         ]
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
       "images": ["assets/images/buildings/LOY/vl.jpg"]
     },
     {
@@ -564,18 +568,20 @@
           -73.6388645869857
         ]
       ],
-      "description": "Campus building",
+      "description": "Extension to the Vanier Library. Houses special collections and quiet study spaces. Popular among graduate students for its tranquil environment and research carrels.",
       "hours": {
         "open_now": true,
         "periods": [
-          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "1800"}},
-          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "1900"}},
-          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "2000"}},
-          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2100"}},
-          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "1700"}}
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
         ]
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
       "images": ["assets/images/buildings/LOY/ve.jpg"]
     }
   ]

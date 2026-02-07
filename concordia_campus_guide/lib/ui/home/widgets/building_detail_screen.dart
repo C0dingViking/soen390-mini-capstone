@@ -94,9 +94,10 @@ class BuildingDetailScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => logger.d("meh"),
-        tooltip: "Assesibility Information",
-        child: const Icon(Icons.info),
+        onPressed: () => _showAccessibilityDialog(context),
+        tooltip: "Accessibility Information",
+        backgroundColor: AppTheme.concordiaMaroon,
+        child: const Icon(Icons.info, color: Colors.white),
       ),
     );
   }
@@ -136,6 +137,96 @@ class BuildingDetailScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showAccessibilityDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Accessibility Features',
+            style: TextStyle(
+              color: AppTheme.concordiaMaroon,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: building.buildingFeatures!.map((feature) {
+                return _buildAccessibilityFeature(feature);
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Close',
+                style: TextStyle(color: AppTheme.concordiaMaroon),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAccessibilityFeature(BuildingFeature feature) {
+    IconData icon;
+    String description;
+
+    switch (feature) {
+      case BuildingFeature.wheelChairAccess:
+        icon = Icons.accessible;
+        description = 'Wheelchair Accessible';
+        break;
+      case BuildingFeature.elevator:
+        icon = Icons.elevator;
+        description = 'Elevator Available';
+        break;
+      case BuildingFeature.escalator:
+        icon = Icons.stairs;
+        description = 'Escalator Available';
+        break;
+      case BuildingFeature.bathroom:
+        icon = Icons.wc;
+        description = 'Restrooms Available';
+        break;
+      case BuildingFeature.metroAccess:
+        icon = Icons.train;
+        description = 'Metro Access';
+        break;
+      case BuildingFeature.food:
+        icon = Icons.restaurant;
+        description = 'Food Services';
+        break;
+      case BuildingFeature.shuttleBus:
+        icon = Icons.directions_bus;
+        description = 'Shuttle Bus Stop';
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 32, color: AppTheme.concordiaMaroon),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              description,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppTheme.concordiaForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
