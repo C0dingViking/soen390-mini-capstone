@@ -207,7 +207,6 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
       displayHour = hour;
     }
 
-    // Don't show minutes if they're 00
     if (minute == "00") {
       return "$displayHour $period";
     }
