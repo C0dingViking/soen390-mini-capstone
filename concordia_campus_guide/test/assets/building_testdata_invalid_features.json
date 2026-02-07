@@ -1,0 +1,41 @@
+{
+  "buildings": [
+    {
+      "id": "t2",
+      "googlePlacesId": "ChIJTest987654321",
+      "name": "Test Building with Invalid Features (T2)",
+      "description": "A test building with invalid building features",
+      "street": "5678 Test Ave.",
+      "postalCode": "TE5 TM4",
+      "location": [45.68, -73.22],
+      "campus": "loyola",
+      "hours": {
+        "open_now": false,
+        "periods": [
+          {
+            "open": {
+              "day": 1,
+              "time": "0900"
+            },
+            "close": {
+              "day": 1,
+              "time": "1700"
+            }
+          }
+        ]
+      },
+      "buildingFeatures": ["elevator", "invalidFeature", "wheelChairAccess", "nonExistentFeature", "bathroom", "food", "shuttleBus"],
+      "images": [],
+      "points": [
+        [
+          45.5,
+          -73.2
+        ],
+        [
+          45.6,
+          -73.3
+        ]
+      ]
+    }
+  ]
+}
