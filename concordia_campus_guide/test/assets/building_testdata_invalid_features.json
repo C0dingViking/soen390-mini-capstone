@@ -24,7 +24,7 @@
           }
         ]
       },
-      "buildingFeatures": ["elevator", "invalidFeature", "wheelChairAccess", "nonExistentFeature", "bathroom"],
+      "buildingFeatures": ["elevator", "invalidFeature", "wheelChairAccess", "nonExistentFeature", "bathroom", "food", "shuttleBus"],
       "images": [],
       "points": [
         [

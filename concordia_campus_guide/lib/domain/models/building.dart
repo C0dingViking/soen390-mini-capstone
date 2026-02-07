@@ -13,7 +13,9 @@ enum BuildingFeature {
   elevator,
   wheelChairAccess,
   bathroom,
+  shuttleBus,
   metroAccess,
+  food,
 }
 
 @JsonSerializable()

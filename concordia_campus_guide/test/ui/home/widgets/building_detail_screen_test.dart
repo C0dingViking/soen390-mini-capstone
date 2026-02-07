@@ -163,6 +163,8 @@ void main() {
           BuildingFeature.escalator,
           BuildingFeature.bathroom,
           BuildingFeature.metroAccess,
+          BuildingFeature.food,
+          BuildingFeature.shuttleBus,
         ],
       );
       await pumpBuildingDetailScreen(tester);
@@ -172,6 +174,8 @@ void main() {
       expect(find.byIcon(Icons.stairs), findsOneWidget);
       expect(find.byIcon(Icons.wc), findsOneWidget);
       expect(find.byIcon(Icons.train), findsOneWidget);
+      expect(find.byIcon(Icons.restaurant), findsOneWidget);
+      expect(find.byIcon(Icons.directions_bus), findsOneWidget);
     });
   });
 }

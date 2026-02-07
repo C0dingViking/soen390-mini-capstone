@@ -171,6 +171,12 @@ class BuildingDetailScreen extends StatelessWidget {
       case BuildingFeature.metroAccess:
         icon = Icons.train;
         break;
+      case BuildingFeature.food:
+        icon = Icons.restaurant;
+        break;
+      case BuildingFeature.shuttleBus:
+        icon = Icons.directions_bus;
+        break;
     }
 
     return Column(

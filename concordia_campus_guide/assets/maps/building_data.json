@@ -262,7 +262,7 @@
           {"open": {"day": 0, "time": "1000"}, "close": {"day": 0, "time": "1700"}}
         ]
       },
-      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess" ],
+      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "food", "shuttleBus" ],
       "images": ["assets/images/buildings/SGW/lb.jpg"]
     },
     {

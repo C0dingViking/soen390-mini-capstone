@@ -51,10 +51,12 @@ void main() {
       expect(building.description, "A test building for unit testing purposes");
 
       expect(building.buildingFeatures, isNotNull);
-      expect(building.buildingFeatures!.length, 3);
+      expect(building.buildingFeatures!.length, 5);
       expect(building.buildingFeatures![0].name, "elevator");
       expect(building.buildingFeatures![1].name, "wheelChairAccess");
       expect(building.buildingFeatures![2].name, "bathroom");
+      expect(building.buildingFeatures![3].name, "food");
+      expect(building.buildingFeatures![4].name, "shuttleBus");
 
       final schedule = building.getSchedule();
       expect(schedule, isNotNull);
@@ -108,10 +110,12 @@ void main() {
       expect(building, isNotNull);
 
       expect(building!.buildingFeatures, isNotNull);
-      expect(building.buildingFeatures!.length, 3);
+      expect(building.buildingFeatures!.length, 5);
       expect(building.buildingFeatures![0].name, "elevator");
       expect(building.buildingFeatures![1].name, "wheelChairAccess");
       expect(building.buildingFeatures![2].name, "bathroom");
+      expect(building.buildingFeatures![3].name, "food");
+      expect(building.buildingFeatures![4].name, "shuttleBus");
 
       // Verify invalid features are not present
       final featureNames = building.buildingFeatures!
