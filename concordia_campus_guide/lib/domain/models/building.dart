@@ -40,6 +40,10 @@ class Building {
   @JsonKey(name: "points")
   @CoordinateListConverter()
   List<Coordinate> outlinePoints;
+  double? minLatitude;
+  double? maxLatitude;
+  double? minLongitude;
+  double? maxLongitude;
 
   @BuildingFeatureListConverter()
   final List<BuildingFeature>? buildingFeatures;
@@ -62,6 +66,47 @@ class Building {
   factory Building.fromJson(final Map<String, dynamic> json) =>
       _$BuildingFromJson(json);
   Map<String, dynamic> toJson() => _$BuildingToJson(this);
+
+  /// Precompute axis-aligned bounding box for outlinePoints. Call after
+  /// constructing or when `outlinePoints` changes.
+  void computeOutlineBBox() {
+    if (outlinePoints.isEmpty) {
+      minLatitude = maxLatitude = location.latitude;
+      minLongitude = maxLongitude = location.longitude;
+      return;
+    }
+
+    double minLat = outlinePoints[0].latitude;
+    double maxLat = outlinePoints[0].latitude;
+    double minLon = outlinePoints[0].longitude;
+    double maxLon = outlinePoints[0].longitude;
+
+    for (final p in outlinePoints) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLon) minLon = p.longitude;
+      if (p.longitude > maxLon) maxLon = p.longitude;
+    }
+
+    minLatitude = minLat;
+    maxLatitude = maxLat;
+    minLongitude = minLon;
+    maxLongitude = maxLon;
+  }
+
+  /// Fast axis-aligned bbox check; returns true if [c] is inside the bbox.
+  bool isInsideBBox(final Coordinate c) {
+    if (minLatitude == null ||
+        maxLatitude == null ||
+        minLongitude == null ||
+        maxLongitude == null) {
+      computeOutlineBBox();
+    }
+    return c.latitude >= (minLatitude ?? double.negativeInfinity) &&
+        c.latitude <= (maxLatitude ?? double.infinity) &&
+        c.longitude >= (minLongitude ?? double.negativeInfinity) &&
+        c.longitude <= (maxLongitude ?? double.infinity);
+  }
 
   String get address => "$street, Montreal, QC $postalCode, Canada";
 

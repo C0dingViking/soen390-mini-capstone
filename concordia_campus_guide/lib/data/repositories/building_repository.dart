@@ -24,6 +24,8 @@ class BuildingRepository {
       for (Map<String, dynamic> buildingEntry
           in (buildingData["buildings"] as List).cast<Map<String, dynamic>>()) {
         final building = Building.fromJson(buildingEntry);
+        // precompute bounding box for quick spatial checks
+        building.computeOutlineBBox();
         buildings[building.id] = building;
       }
     } on PathNotFoundException catch (e) {

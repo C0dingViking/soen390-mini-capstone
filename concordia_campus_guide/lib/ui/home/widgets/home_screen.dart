@@ -109,13 +109,35 @@ class _HomeScreenState extends State<HomeScreen> {
               Positioned(
                 left: 25,
                 bottom: 25,
-                child: FloatingActionButton(
-                  heroTag: "my_location",
-                  onPressed: () =>
-                      context.read<HomeViewModel>().goToCurrentLocation(),
-                  backgroundColor: _buttonColor,
-                  child: const Icon(Icons.my_location, color: Colors.white),
-                ),
+                child: hvm.currentBuilding != null
+                    ? FloatingActionButton.extended(
+                        heroTag: "my_location",
+                        onPressed: () =>
+                            context.read<HomeViewModel>().goToCurrentLocation(),
+                        backgroundColor: _buttonColor,
+                        icon: const Icon(
+                          Icons.my_location,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          hvm.currentBuilding!.id.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    : FloatingActionButton(
+                        heroTag: "my_location",
+                        onPressed: () =>
+                            context.read<HomeViewModel>().goToCurrentLocation(),
+                        backgroundColor: _buttonColor,
+                        child: const Icon(
+                          Icons.my_location,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
               Positioned(
                 right: 25,
