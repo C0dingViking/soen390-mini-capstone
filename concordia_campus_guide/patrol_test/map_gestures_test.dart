@@ -7,7 +7,7 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:patrol/patrol.dart";
 
 void main() {
-  patrolTest("Swipe gestures on map", ($) async {
+  patrolTest("Swipe gestures on map", (final $) async {
     await $.pumpWidgetAndSettle(const MyApp());
 
     final mapFinder = find.byType(GoogleMap);
