@@ -74,8 +74,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.concordiaForeground,
                       ),
                       children: [
@@ -124,8 +123,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                     children: [
                       Text(
                         dayName,
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: isToday
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -134,8 +132,7 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                       ),
                       Text(
                         '$openTime - $closeTime',
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: isToday
                               ? FontWeight.w600
                               : FontWeight.normal,

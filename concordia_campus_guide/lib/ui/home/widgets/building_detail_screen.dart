@@ -30,10 +30,7 @@ class BuildingDetailScreen extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppTheme.concordiaForeground,
-                      ),
+                      icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.of(context).pop(),
                       constraints: const BoxConstraints(),
                     ),
@@ -41,11 +38,7 @@ class BuildingDetailScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         building.name,
-                        style: const TextStyle(
-                          color: AppTheme.concordiaForeground,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ),
                   ],
@@ -58,7 +51,7 @@ class BuildingDetailScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      _buildAddressRow(),
+                      _buildAddressRow(context),
 
                       const SizedBox(height: 16),
 
@@ -77,11 +70,7 @@ class BuildingDetailScreen extends StatelessWidget {
                       Text(
                         building.description,
                         textAlign: TextAlign.left,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
-                          color: AppTheme.concordiaForeground,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge,
                       ),
 
                       const SizedBox(height: 24),
@@ -124,17 +113,13 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressRow() {
+  Widget _buildAddressRow(BuildContext context) {
     return Column(
       children: [
         Text(
           building.address,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppTheme.concordiaForeground,
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
@@ -148,16 +133,15 @@ class BuildingDetailScreen extends StatelessWidget {
           backgroundColor: Colors.white,
           title: Text(
             'Accessibility Features',
-            style: TextStyle(
-              color: AppTheme.concordiaMaroon,
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppTheme.concordiaMaroon),
           ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: building.buildingFeatures!.map((feature) {
-                return _buildAccessibilityFeature(feature);
+                return _buildAccessibilityFeature(feature, context);
               }).toList(),
             ),
           ),
@@ -166,7 +150,9 @@ class BuildingDetailScreen extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Close',
-                style: TextStyle(color: AppTheme.concordiaMaroon),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppTheme.concordiaMaroon,
+                ),
               ),
             ),
           ],
@@ -175,7 +161,10 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccessibilityFeature(BuildingFeature feature) {
+  Widget _buildAccessibilityFeature(
+    BuildingFeature feature,
+    BuildContext context,
+  ) {
     IconData icon;
     String description;
 
@@ -219,10 +208,7 @@ class BuildingDetailScreen extends StatelessWidget {
           Expanded(
             child: Text(
               description,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.concordiaForeground,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
         ],
