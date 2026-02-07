@@ -56,7 +56,8 @@ class BuildingDetailScreen extends StatelessWidget {
                       if (building.buildingFeatures != null &&
                           building.buildingFeatures!.isNotEmpty)
                         Builder(
-                          builder: (final context) => _buildFeaturesRow(context),
+                          builder: (final context) =>
+                              _buildFeaturesRow(context),
                         ),
 
                       const SizedBox(height: 16),
@@ -96,7 +97,8 @@ class BuildingDetailScreen extends StatelessWidget {
         width: double.infinity,
         height: 250,
         fit: BoxFit.cover,
-        errorBuilder: (final context, final error, final stackTrace) => _buildPlaceholderImage(),
+        errorBuilder: (final context, final error, final stackTrace) =>
+            _buildPlaceholderImage(),
       );
     }
     return _buildPlaceholderImage();
@@ -128,7 +130,7 @@ class BuildingDetailScreen extends StatelessWidget {
       context: context,
       builder: (final BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: AppTheme.concordiaGold,
           title: Text(
             "Accessibility Features",
             style: Theme.of(
