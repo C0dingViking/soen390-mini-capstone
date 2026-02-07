@@ -9,6 +9,7 @@ class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(final BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0),

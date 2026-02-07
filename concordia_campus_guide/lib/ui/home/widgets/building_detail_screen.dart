@@ -1,5 +1,6 @@
 import 'package:concordia_campus_guide/domain/models/building.dart';
 import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
+import 'package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart';
 import 'package:concordia_campus_guide/utils/image_helper.dart';
 import 'package:flutter/material.dart';
 
@@ -11,41 +12,40 @@ class BuildingDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppTheme.concordiaMaroon,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          building.name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Image.asset(
-              'assets/images/concordia_logo.png',
-              height: 32,
-              errorBuilder: (context, error, stackTrace) => const SizedBox(),
-            ),
-          ),
-        ],
-      ),
+      appBar: const CampusAppBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Building Image
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      building.name,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             _buildImage(),
 
             const SizedBox(height: 16),
 
-            // Address Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: _buildAddressRow(),
@@ -53,7 +53,6 @@ class BuildingDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Amenities/Features Icons
             if (building.buildingFeatures != null &&
                 building.buildingFeatures!.isNotEmpty)
               Padding(
@@ -63,7 +62,6 @@ class BuildingDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Description
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -85,7 +83,7 @@ class BuildingDetailScreen extends StatelessWidget {
 
   Widget _buildImage() {
     if (building.images.isNotEmpty) {
-      // convert to an carousel if we decide to scrape images from google places API
+      // TODO: convert to an carousel if we decide to scrape images from google places API
       return building.images.first.toImage(
         width: double.infinity,
         height: 250,
