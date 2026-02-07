@@ -5,6 +5,7 @@ import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 
 class TestHomeViewModel extends HomeViewModel {
   bool initCalled = false;
@@ -105,6 +106,14 @@ void main() {
       await tester.pump();
       expect(vm.clearCalled, isTrue);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets("exposes coordsController getter", (final tester) async {
+      await pumpHomeScreen(tester);
+      final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
+      // ignore: avoid_dynamic_calls
+      final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
+      expect(controller, isNotNull);
     });
   });
 }

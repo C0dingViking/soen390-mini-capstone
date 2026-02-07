@@ -6,6 +6,10 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
+dependencies {
+    androidTestUtil("androidx.test:orchestrator:1.5.1")
+}
+
 android {
     namespace = "com.example.concordia_campus_guide"
     compileSdk = flutter.compileSdkVersion
@@ -29,6 +33,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
 
     buildTypes {
@@ -40,6 +46,10 @@ android {
     }
 
     useLibrary("org.apache.http.legacy")
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
 }
 
 flutter {
