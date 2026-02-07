@@ -35,7 +35,13 @@
       "description": "Campus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "1700"}},
+          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "1800"}},
+          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "1900"}},
+          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2000"}},
+          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "2100"}}
+        ]
       },
       "buildingFeatures": null,
       "images": ["assets/images/buildings/SGW/h.jpg"]
@@ -95,7 +101,14 @@
       "description": "Campus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0800"}, "close": {"day": 1, "time": "1800"}},
+          {"open": {"day": 2, "time": "0800"}, "close": {"day": 2, "time": "1900"}},
+          {"open": {"day": 3, "time": "0800"}, "close": {"day": 3, "time": "2000"}},
+          {"open": {"day": 4, "time": "0800"}, "close": {"day": 4, "time": "2100"}},
+          {"open": {"day": 5, "time": "0800"}, "close": {"day": 5, "time": "2200"}},
+          {"open": {"day": 6, "time": "1000"}, "close": {"day": 6, "time": "1600"}}
+        ]
       },
       "buildingFeatures": null,
       "images": ["assets/images/buildings/SGW/mb.jpg"]
@@ -239,9 +252,17 @@
       "description": "Campus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2200"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2200"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2200"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2200"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2200"}},
+          {"open": {"day": 6, "time": "0900"}, "close": {"day": 6, "time": "1800"}},
+          {"open": {"day": 0, "time": "1000"}, "close": {"day": 0, "time": "1700"}}
+        ]
       },
-      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "bathroom", "metroAccess"],
+      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess" ],
       "images": ["assets/images/buildings/SGW/lb.jpg"]
     },
     {
@@ -339,7 +360,14 @@
       "description": "Campus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "2100"}},
+          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "2100"}},
+          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "2100"}},
+          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2100"}},
+          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "1800"}},
+          {"open": {"day": 6, "time": "1000"}, "close": {"day": 6, "time": "1700"}}
+        ]
       },
       "buildingFeatures": null,
       "images": ["assets/images/buildings/LOY/cc.jpg"]
@@ -475,7 +503,15 @@
       "description": "Campus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0800"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0800"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0800"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0800"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0800"}, "close": {"day": 5, "time": "2000"}},
+          {"open": {"day": 6, "time": "0900"}, "close": {"day": 6, "time": "1900"}},
+          {"open": {"day": 0, "time": "1000"}, "close": {"day": 0, "time": "1800"}}
+        ]
       },
       "buildingFeatures": null,
       "images": ["assets/images/buildings/LOY/vl.jpg"]
@@ -531,7 +567,13 @@
       "description": "Campus building",
       "hours": {
         "open_now": true,
-        "periods": []
+        "periods": [
+          {"open": {"day": 1, "time": "0900"}, "close": {"day": 1, "time": "1800"}},
+          {"open": {"day": 2, "time": "0900"}, "close": {"day": 2, "time": "1900"}},
+          {"open": {"day": 3, "time": "0900"}, "close": {"day": 3, "time": "2000"}},
+          {"open": {"day": 4, "time": "0900"}, "close": {"day": 4, "time": "2100"}},
+          {"open": {"day": 5, "time": "0900"}, "close": {"day": 5, "time": "1700"}}
+        ]
       },
       "buildingFeatures": null,
       "images": ["assets/images/buildings/LOY/ve.jpg"]

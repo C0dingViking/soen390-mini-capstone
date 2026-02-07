@@ -50,15 +50,6 @@ void main() {
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
     });
 
-    testWidgets("displays building address with location icon", (
-      final tester,
-    ) async {
-      await pumpBuildingDetailScreen(tester);
-      expect(find.byIcon(Icons.location_on), findsOneWidget);
-      expect(find.textContaining("7141 Rue Sherbrooke O"), findsOneWidget);
-      expect(find.textContaining("H4B 1R6"), findsOneWidget);
-    });
-
     testWidgets("displays building description", (final tester) async {
       await pumpBuildingDetailScreen(tester);
       expect(

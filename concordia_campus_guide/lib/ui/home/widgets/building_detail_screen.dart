@@ -1,6 +1,7 @@
 import 'package:concordia_campus_guide/domain/models/building.dart';
 import 'package:concordia_campus_guide/ui/core/themes/app_theme.dart';
 import 'package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart';
+import 'package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart';
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import 'package:concordia_campus_guide/utils/image_helper.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,10 @@ class BuildingDetailScreen extends StatelessWidget {
                         Builder(
                           builder: (context) => _buildFeaturesRow(context),
                         ),
+
+                      const SizedBox(height: 16),
+
+                      _buildOpeningHours(),
 
                       const SizedBox(height: 20),
 
@@ -174,5 +179,9 @@ class BuildingDetailScreen extends StatelessWidget {
         const SizedBox(height: 8),
       ],
     );
+  }
+
+  Widget _buildOpeningHours() {
+    return OpeningHoursWidget(building: building);
   }
 }
