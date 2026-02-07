@@ -236,12 +236,12 @@
           -73.5785791067169
         ]
       ],
-      "description": "Campus building",
+      "description": "Campus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus buildingCampus building",
       "hours": {
         "open_now": true,
         "periods": []
       },
-      "buildingFeatures": null,
+      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "bathroom", "metroAccess"],
       "images": ["assets/images/buildings/SGW/lb.jpg"]
     },
     {

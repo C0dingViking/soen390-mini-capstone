@@ -63,12 +63,15 @@ class BuildingDetailScreen extends StatelessWidget {
 
                       if (building.buildingFeatures != null &&
                           building.buildingFeatures!.isNotEmpty)
-                        _buildFeaturesRow(),
+                        Builder(
+                          builder: (context) => _buildFeaturesRow(context),
+                        ),
 
                       const SizedBox(height: 20),
 
                       Text(
                         building.description,
+                        textAlign: TextAlign.left,
                         style: const TextStyle(
                           fontSize: 16,
                           height: 1.5,
@@ -116,34 +119,28 @@ class BuildingDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAddressRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        const Icon(
-          Icons.location_on,
-          color: AppTheme.concordiaForeground,
-          size: 20,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            building.address,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.concordiaForeground,
-            ),
+        Text(
+          building.address,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppTheme.concordiaForeground,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFeaturesRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: building.buildingFeatures!.map((feature) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 20.0),
+  Widget _buildFeaturesRow(BuildContext context) {
+    return Wrap(
+      spacing: 20.0,
+      runSpacing: 16.0,
+      children: building.buildingFeatures!.take(8).map((feature) {
+        return SizedBox(
+          width: (MediaQuery.of(context).size.width - 32 - 60) / 6,
           child: _buildFeatureIcon(feature),
         );
       }).toList(),
@@ -152,42 +149,29 @@ class BuildingDetailScreen extends StatelessWidget {
 
   Widget _buildFeatureIcon(BuildingFeature feature) {
     IconData icon;
-    String label;
 
     switch (feature) {
       case BuildingFeature.wheelChairAccess:
         icon = Icons.accessible;
-        label = 'Wheelchair Access';
         break;
       case BuildingFeature.elevator:
         icon = Icons.elevator;
-        label = 'Elevator';
         break;
       case BuildingFeature.escalator:
         icon = Icons.stairs;
-        label = 'Escalator';
         break;
       case BuildingFeature.bathroom:
         icon = Icons.wc;
-        label = 'Restroom';
         break;
       case BuildingFeature.metroAccess:
         icon = Icons.train;
-        label = 'Metro Access';
         break;
     }
 
     return Column(
       children: [
-        Icon(icon, size: 32, color: AppTheme.concordiaForeground),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: AppTheme.concordiaForeground,
-          ),
-        ),
+        Icon(icon, size: 48, color: AppTheme.concordiaForeground),
+        const SizedBox(height: 8),
       ],
     );
   }
