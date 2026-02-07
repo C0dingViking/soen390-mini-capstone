@@ -9,7 +9,7 @@ class AppTheme {
   static const Color concordiaForeground = Colors.black;
 
   static ThemeData mainTheme = ThemeData(
-    appBarTheme: AppBarTheme(backgroundColor: concordiaMaroon),
+    appBarTheme: const AppBarTheme(backgroundColor: concordiaMaroon),
     textTheme: GoogleFonts.robotoTextTheme().apply(
       bodyColor: concordiaForeground,
       displayColor: concordiaForeground,
