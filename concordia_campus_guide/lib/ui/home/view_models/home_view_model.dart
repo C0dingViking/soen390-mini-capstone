@@ -1,5 +1,6 @@
+import "dart:async";
+import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
-import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
@@ -7,6 +8,7 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/building_map_data.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
+import "package:concordia_campus_guide/data/services/location_service.dart";
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
@@ -17,6 +19,8 @@ class HomeViewModel extends ChangeNotifier {
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
   Set<Marker> buildingMarkers = {};
+  Building? currentBuilding;
+  StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
 
@@ -48,6 +52,10 @@ class HomeViewModel extends ChangeNotifier {
       buildings = payload.buildings;
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
+      // start location service and subscribe to updates
+      await LocationService.instance.start();
+      _locationSubscription?.cancel();
+      _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -64,32 +72,20 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        errorMessage = "Enable location services";
-        notifyListeners();
-        return;
+      // ask LocationService for current position and ensure streaming
+      final posCoord = await LocationService.instance.getCurrentPosition();
+      bool changed = false;
+      if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+        cameraTarget = posCoord;
+        changed = true;
       }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          errorMessage = "Location permission denied";
-          notifyListeners();
-          return;
-        }
+      if (!myLocationEnabled) {
+        myLocationEnabled = true;
+        changed = true;
       }
+      if (changed) notifyListeners();
 
-      if (permission == LocationPermission.deniedForever) {
-        errorMessage = "Enable location permission in settings";
-        notifyListeners();
-        return;
-      }
-
-      final pos = await Geolocator.getCurrentPosition();
-      cameraTarget = Coordinate(latitude: pos.latitude, longitude: pos.longitude);
-      myLocationEnabled = true;
-      notifyListeners();
+      await LocationService.instance.start();
     } catch (e) {
       errorMessage = "Error: $e";
       notifyListeners();
@@ -105,5 +101,43 @@ class HomeViewModel extends ChangeNotifier {
   void clearCameraTarget() {
     cameraTarget = null;
     notifyListeners();
+  }
+
+  void stopLocationTracking() {
+    LocationService.instance.dispose();
+    myLocationEnabled = false;
+    notifyListeners();
+  }
+
+  void _handleLocationUpdate(final Coordinate posCoord) {
+    bool changed = false;
+
+    // only update cameraTarget if significantly different
+    if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+      cameraTarget = posCoord;
+      changed = true;
+    }
+
+    if (!myLocationEnabled) {
+      myLocationEnabled = true;
+      changed = true;
+    }
+
+    // find building at current location using domain interactor
+    final Building? found = mapInteractor.findBuildingAt(posCoord, buildings);
+
+    if (found?.id != currentBuilding?.id) {
+      currentBuilding = found;
+      changed = true;
+    }
+
+    if (changed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _locationSubscription?.cancel();
+    LocationService.instance.dispose();
+    super.dispose();
   }
 }

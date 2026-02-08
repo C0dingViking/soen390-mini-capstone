@@ -1,9 +1,7 @@
 import "dart:convert";
 import "dart:io";
 import "package:concordia_campus_guide/domain/models/building.dart";
-import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
-import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/services.dart";
 
 class BuildingRepository {
@@ -20,30 +18,14 @@ class BuildingRepository {
 
     try {
       final buildingJson = await buildingLoader(jsonPath);
-      final Map<String, dynamic> buildingData = jsonDecode(buildingJson) as Map<String, dynamic>;
+      final Map<String, dynamic> buildingData =
+          jsonDecode(buildingJson) as Map<String, dynamic>;
 
-
-      for (Map<String, dynamic> buildingEntry in (buildingData["buildings"] as List).cast<Map<String, dynamic>>()) {
-        final building = Building(
-          id: buildingEntry["id"] as String,
-          name: buildingEntry["name"] as String,
-          street: buildingEntry["street"] as String,
-          postalCode: buildingEntry["postalCode"] as String,
-          location: Coordinate(
-            latitude: (buildingEntry["location"] as List<dynamic>)[0] as double,
-            longitude: (buildingEntry["location"] as List<dynamic>)[1] as double,
-          ),
-          campus: parseCampus(buildingEntry["campus"] as String)!,
-          outlinePoints: (buildingEntry["points"] as List<dynamic>)
-              .map((final p) {
-                final point = p as List<dynamic>;
-                return Coordinate(
-                  latitude: (point[0] as num).toDouble(),
-                  longitude: (point[1] as num).toDouble());
-              })
-              .toList(),
-        );
-
+      for (Map<String, dynamic> buildingEntry
+          in (buildingData["buildings"] as List).cast<Map<String, dynamic>>()) {
+        final building = Building.fromJson(buildingEntry);
+        // precompute bounding box for quick spatial checks
+        building.computeOutlineBBox();
         buildings[building.id] = building;
       }
     } on PathNotFoundException catch (e) {

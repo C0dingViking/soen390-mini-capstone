@@ -53,6 +53,19 @@ class MapDataInteractor {
     )).toSet();
   }
 
+  /// Finds the building at the given coordinate, or null if outside all buildings.
+  Building? findBuildingAt(final Coordinate coord, final Map<String, Building> buildings) {
+    for (final b in buildings.values) {
+      // quick reject using precomputed bounding box
+      if (b.outlinePoints.isEmpty) continue;
+      if (!b.isInsideBBox(coord)) continue;
+      if (coord.isInPolygon(b.outlinePoints)) {
+        return b;
+      }
+    }
+    return null;
+  }
+
   LatLng _calculateBuildingCentroid(final List<Coordinate> points) {
     double centroidWeightedLat = 0.0;
     double centroidWeightedLng = 0.0;

@@ -2,7 +2,7 @@ name: concordia_campus_guide
 description: "A Concordia Campus Guide to get across the campus easily."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -41,12 +41,16 @@ dependencies:
   google_maps_flutter: ^2.14.0
   flutter_svg: ^2.0.10
   logger: ^2.6.2
-
+  flutter_google_maps_webservices: ^1.1.1
+  json_annotation: ^4.9.0
+  google_fonts: ^8.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
   patrol: ^4.1.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -62,7 +66,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -74,6 +77,8 @@ flutter:
     - assets/images/app_logo.svg
     - assets/images/bigger_icon.png
     - assets/maps/building_data.json
+    - assets/images/buildings/LOY/
+    - assets/images/buildings/SGW/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
