@@ -42,31 +42,32 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> initializeBuildingsData(final String path) async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
+  isLoading = true;
+  errorMessage = null;
+  notifyListeners();
 
-    final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
+  final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
 
-    if (payload.errorMessage == null) {
-      buildings = payload.buildings;
-      buildingOutlines = payload.buildingOutlines;
-      buildingMarkers = payload.buildingMarkers;
-      // start location service and subscribe to updates
-      await LocationService.instance.start();
-      _locationSubscription?.cancel();
-      _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
-    } else {
-      errorMessage = payload.errorMessage;
-      logger.e(
-        "HomeViewModel: something went wrong loading building data",
-        error: payload.errorMessage
-      );
-    }
-
-    isLoading = false;
-    notifyListeners();
+  if (payload.errorMessage == null) {
+    buildings = payload.buildings;
+    buildingOutlines = payload.buildingOutlines;
+    buildingMarkers = payload.buildingMarkers;
+    // start location service and subscribe to updates
+    await LocationService.instance.start();
+    _locationSubscription?.cancel();
+    _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
+    // <-- NOTHING HERE
+  } else {
+    errorMessage = payload.errorMessage;
+    logger.e(
+      "HomeViewModel: something went wrong loading building data",
+      error: payload.errorMessage
+    );
   }
+
+  isLoading = false;
+  notifyListeners();
+}
 
   Future<void> goToCurrentLocation() async {
     errorMessage = null;

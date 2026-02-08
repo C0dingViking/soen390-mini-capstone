@@ -3,6 +3,7 @@ import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
+import "package:concordia_campus_guide/ui/directions/directions_screen.dart";  
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -61,7 +62,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
-      appBar: const CampusAppBar(),
+      appBar: AppBar(  
+        title: const Text('Campus Guide'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.directions),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DirectionsScreen(
+                    buildings: context.read<HomeViewModel>().buildings,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
@@ -97,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor: _buttonColor,
                         child: const Icon(Icons.my_location, color: Colors.white),
                       ),
-              ),
+              ), 
               Positioned(
                 right: 25,
                 bottom: 25,
