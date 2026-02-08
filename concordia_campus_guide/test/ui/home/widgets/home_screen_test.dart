@@ -10,6 +10,7 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
+import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 
 class TestHomeViewModel extends HomeViewModel {
   bool initCalled = false;
@@ -230,6 +231,13 @@ void main() {
       final mcConnell = vm.buildings["MB"];
       expect(mcConnell?.name, equals("J.W. McConnell Building"));
       expect(mcConnell?.id, equals("MB"));
+    });
+
+    testWidgets("exposes coordsController getter", (final tester) async {
+      await pumpHomeScreen(tester);
+      final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
+      final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
+      expect(controller, isNotNull);
     });
   });
 }

@@ -21,6 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final Color _buttonColor = const Color(0xCC00ADEF);
   late HomeViewModel _viewModel;
 
+  CoordinatesController get coordsController => _coords;
+
   final List<CampusDetails> _campuses = [
     const CampusDetails(
       name: "SGW",
