@@ -18,7 +18,7 @@ class RouteInteractor {
   }
 
   double _calculateDistance(Coordinate start, Coordinate end) {
-    const double earthRadius = 6371000;
+    const double earthRadius_Meters = 6371000;
     
     final lat1 = start.latitude * pi / 180;
     final lat2 = end.latitude * pi / 180;
@@ -29,6 +29,6 @@ class RouteInteractor {
         cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return earthRadius * c;
+    return earthRadius_Meters * c;
   }
 }
