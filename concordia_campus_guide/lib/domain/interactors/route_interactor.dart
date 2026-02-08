@@ -17,18 +17,27 @@ class RouteInteractor {
     );
   }
 
-  double _calculateDistance(Coordinate start, Coordinate end) {
-    const double earthRadius_Meters = 6371000;
-    
-    final lat1 = start.latitude * pi / 180;
-    final lat2 = end.latitude * pi / 180;
-    final dLat = (end.latitude - start.latitude) * pi / 180;
-    final dLon = (end.longitude - start.longitude) * pi / 180;
+  /// Haversine Formula reference: https://en.wikipedia.org/wiki/Haversine_formula
+  /// Additional explanation: https://www.movable-type.co.uk/scripts/latlong.html
+  /// /// Use cases:
+  /// - Calculating distances between geographic locations (cities, addresses, GPS coordinates)
+  /// - Finding nearby points of interest within a certain radius
+  /// - Navigation and mapping applications
+  /// - Geofencing and location-based services
+  double _calculateDistance(final Coordinate start, final Coordinate end) {
+    const double earthRadiusInMeters = 6371000;
+    /// Earth's mean radius in meters.
+    /// Source: https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
+    /// 
+    final startLatitudeRad = start.latitude * pi / 180;
+    final endLatitudeRad  = end.latitude * pi / 180;
+    final deltaLatitudeRad  = (end.latitude - start.latitude) * pi / 180;
+    final deltaLongitudeRad  = (end.longitude - start.longitude) * pi / 180;
 
-    final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    final haversineValue  = sin(deltaLatitudeRad  / 2) * sin(deltaLatitudeRad  / 2) +
+        cos(startLatitudeRad) * cos(endLatitudeRad ) * sin(deltaLongitudeRad  / 2) * sin(deltaLongitudeRad  / 2);
+    final centralAngle  = 2 * atan2(sqrt(haversineValue ), sqrt(1 - haversineValue ));
 
-    return earthRadius_Meters * c;
+    return earthRadiusInMeters * centralAngle ;
   }
 }
