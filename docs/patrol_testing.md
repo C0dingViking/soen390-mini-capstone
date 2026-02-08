@@ -23,9 +23,11 @@ Web:
 • Program node found in /usr/bin/node
 • Program npm found in /usr/bin/npm
 ```
-**Note**: For our project we're only concerned with the `Android` section.
+**Note**: Since we're developing for android were only concerned with the `Android` section.
 
 ### Run tests
+
+Ensure that an Android emulator is running for test execution, or use a physical device instead.
 
 From `concordia_campus_guide`:
 
@@ -37,6 +39,13 @@ For specific tests:
 
 ```bash
 patrol test -t patrol_test/your_test.dart
+```
+
+For a specific device, execute `patrol devices` to find the device id then use:
+
+```bash
+patrol test --device <device-id>
+```
 ```
 
 Tests filles are located in `concordia_campus_guide/patrol_test`
