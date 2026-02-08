@@ -236,7 +236,6 @@ void main() {
     testWidgets("exposes coordsController getter", (final tester) async {
       await pumpHomeScreen(tester);
       final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
-      // ignore: avoid_dynamic_calls
       final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
       expect(controller, isNotNull);
     });
