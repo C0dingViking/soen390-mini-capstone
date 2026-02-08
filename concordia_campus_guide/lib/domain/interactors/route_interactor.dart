@@ -5,8 +5,8 @@ import "package:concordia_campus_guide/domain/models/route.dart";
 
 class RouteInteractor {
   DirectionRoute createOutdoorRoute(  
-    Coordinate currentCoordinate,
-    Building destination,
+    final Coordinate currentCoordinate,
+    final Building destination,
   ) {
     final distance = _calculateDistance(currentCoordinate, destination.location);
     
