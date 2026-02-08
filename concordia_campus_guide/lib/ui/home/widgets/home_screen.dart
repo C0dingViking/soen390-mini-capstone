@@ -62,23 +62,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
-      appBar: AppBar(  
-        title: const Text('Campus Guide'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.directions),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DirectionsScreen(
-                    buildings: context.read<HomeViewModel>().buildings,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+      appBar: CampusAppBar(  
+        onDirectionsPressed: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (final context) => DirectionsScreen(
+                buildings: context.read<HomeViewModel>().buildings,
+              ),
+            ),
+          );
+        },
       ),
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
