@@ -260,7 +260,6 @@ void main() {
       viewModel.destinationBuilding = null;
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
-      viewModel.destinationBuilding = null;
 
       // Assert
       expect(viewModel.canGetDirections, isFalse);
