@@ -96,7 +96,7 @@ class DirectionsScreen extends StatelessWidget {
                           ),
                         );
                       }).toList(),
-                      onChanged: (value) {
+                      onChanged: (final value) {
                         if (value != null) {
                           context.read<DirectionsViewModel>().setDestination(buildings[value]!);
                         }
