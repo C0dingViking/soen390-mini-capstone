@@ -146,9 +146,8 @@ void main() {
       // Act
       final route = interactor.createOutdoorRoute(northPole, equatorBuilding);
 
-      // Assert - Should be approximately 9,890 km (Earth"s quarter circumference)
-      expect(route.estimatedDistanceMeters, greaterThan(9800000));
-      expect(route.estimatedDistanceMeters, lessThan(10000000));
+      // Assert - Should be approximately 9,890 km (Earth's quarter circumference)
+      expect(route.estimatedDistanceMeters, closeTo(expectedDistanceMeters, 10000);
     });
   });
 }
