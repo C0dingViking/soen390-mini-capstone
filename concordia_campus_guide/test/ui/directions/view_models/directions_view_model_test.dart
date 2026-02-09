@@ -183,20 +183,24 @@ void main() {
   }
 });
 
-    test("viewModel notifies listeners on state changes", () {
-      // Arrange
-      int notificationCount = 0;
-      viewModel.addListener(() {
-        notificationCount++;
-      });
+  test("updateDestination notifies listeners exactly once", () {
+      var count = 0;
+      viewModel.addListener(() => count++);
 
-      // Act
       viewModel.updateDestination(testBuilding);
+
+      expect(count, equals(1));
+  });
+  
+  test("clearStartLocation notifies listeners exactly once", () {
+      var count = 0;
+      viewModel.addListener(() => count++);
+
       viewModel.clearStartLocation();
 
-      // Assert
-      expect(notificationCount, greaterThanOrEqualTo(2));
-    });
+     expect(count, equals(1));
+});
+
 
     test("updating location triggers route recalculation", () {
       // Arrange
