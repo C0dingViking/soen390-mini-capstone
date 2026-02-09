@@ -109,7 +109,7 @@ void main() {
       expect(route.estimatedDistanceMeters, equals(0.0));
     });
 
-    test("route with large distance", () {
+    test("route with large distance can exist and store said large distance", () {
       // Act - Cross-country distance
       final route = DirectionRoute(
         startCoordinate: testCoordinate,
