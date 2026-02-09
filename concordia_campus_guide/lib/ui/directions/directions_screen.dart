@@ -128,7 +128,7 @@ class DirectionsScreen extends StatelessWidget {
     );
   }
 
-  void _showRoute(BuildContext context, DirectionsViewModel viewModel) {
+  void _showRoute(final BuildContext context, final DirectionsViewModel viewModel) {
     final route = viewModel.plannedRoute!;
     final distanceKm = (route.estimatedDistanceMeters ?? 0) / 1000;
     
