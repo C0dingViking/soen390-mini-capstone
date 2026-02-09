@@ -111,8 +111,7 @@ void main() {
       final route = interactor.createOutdoorRoute(coord1, building);
 
       // Assert - Distance should be roughly 40-60 meters
-      expect(route.estimatedDistanceMeters, greaterThan(30));
-      expect(route.estimatedDistanceMeters, lessThan(80));
+      expect(route.estimatedDistanceMeters, closeTo(50, 10));
     });
 
     test("createOutdoorRoute handles different campuses", () {
