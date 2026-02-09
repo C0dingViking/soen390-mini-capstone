@@ -161,7 +161,7 @@ void main() {
   await viewModel.useCurrentLocation();
   
   // Small delay to ensure all async operations complete
-  await Future.delayed(const Duration(milliseconds: 50));
+  await Future<void>.delayed(const Duration(milliseconds: 50));
 
   // Assert
   expect(viewModel.isLoadingLocation, isFalse, reason: "Loading should be false after completion");

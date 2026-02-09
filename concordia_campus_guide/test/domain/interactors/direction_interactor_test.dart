@@ -14,10 +14,10 @@ void main() {
     });
 
     Building createTestBuilding({
-      required String id,
-      required String name,
-      required Coordinate location,
-      required Campus campus,
+      required final String id,
+      required final String name,
+      required final Coordinate location,
+      required final Campus campus,
     }) {
       return Building(
         id: id,
