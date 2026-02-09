@@ -10,7 +10,7 @@ class DirectionsScreen extends StatelessWidget {
   const DirectionsScreen({super.key, required this.buildings});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => DirectionsViewModel(
         routeInteractor: RouteInteractor(),
