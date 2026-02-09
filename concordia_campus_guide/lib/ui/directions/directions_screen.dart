@@ -87,7 +87,7 @@ class DirectionsScreen extends StatelessWidget {
                       ),
                       isExpanded: true, 
                       initialValue: viewModel.destinationBuilding?.id,
-                      items: buildings.values.map((building) {
+                      items: buildings.values.map((final building) {
                         return DropdownMenuItem<String>(
                           value: building.id,
                           child: Text(
