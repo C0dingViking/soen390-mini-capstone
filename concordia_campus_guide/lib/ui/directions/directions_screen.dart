@@ -86,7 +86,7 @@ class DirectionsScreen extends StatelessWidget {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8), 
                       ),
                       isExpanded: true, 
-                      value: viewModel.destinationBuilding?.id,
+                      initialValue: viewModel.destinationBuilding?.id,
                       items: buildings.values.map((building) {
                         return DropdownMenuItem<String>(
                           value: building.id,
