@@ -1,0 +1,588 @@
+{
+  "buildings": [
+    {
+      "id": "h",
+      "name": "Henry F. Hall Building (H)",
+      "street": "1455 Blvd. De Maisonneuve Ouest",
+      "postalCode": "H3G 1M8",
+      "location": [
+        45.4973223,
+        -73.5790288
+      ],
+      "campus": "sgw",
+      "points": [
+        [
+          45.4968299107234,
+          -73.5788489042803
+        ],
+        [
+          45.4973732706121,
+          -73.5783380857457
+        ],
+        [
+          45.4977094511199,
+          -73.5790334928957
+        ],
+        [
+          45.4971650215363,
+          -73.5795441094622
+        ],
+        [
+          45.4968299107234,
+          -73.5788489042803
+        ]
+      ],
+      "description": "The tallest building on campus with 13 floors, named after Concordia's first principal. Home to engineers ranging from brutal mechanical masterminds to skinny software developers. It connects underground to the Guy-Concordia metro station, making it a hub for student traffic.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 7, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
+        ]
+      },
+      "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "bathroom", "food", "metroAccess", "shuttleBus"],
+      "images": ["assets/images/buildings/SGW/h.jpg"]
+    },
+    {
+      "id": "mb",
+      "name": "John Molson School of Business Building (MB)",
+      "street": "1450 Rue Guy",
+      "postalCode": "H3H 0A1",
+      "location": [
+        45.4953406,
+        -73.5788682
+      ],
+      "campus": "sgw",
+      "points": [
+        [
+          45.4953582145817,
+          -73.57936679236
+        ],
+        [
+          45.4952214724534,
+          -73.5791140655931
+        ],
+        [
+          45.495166957671,
+          -73.5791709321529
+        ],
+        [
+          45.4950053688838,
+          -73.5788237177934
+        ],
+        [
+          45.495038478239,
+          -73.578790914583
+        ],
+        [
+          45.4950046494943,
+          -73.578736668877
+        ],
+        [
+          45.4951866964358,
+          -73.5785253185921
+        ],
+        [
+          45.4954398667409,
+          -73.5789620198379
+        ],
+        [
+          45.4955189127982,
+          -73.5791999148236
+        ],
+        [
+          45.4953582145817,
+          -73.57936679236
+        ]
+      ],
+      "description": "Home to the John Molson School of Business. Features a stunning atrium and trading floor! This is also where business students survive tax season.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 7, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
+        ]
+      },
+      "buildingFeatures": ["elevator", "escalator", "wheelChairAccess", "bathroom", "food", "metroAccess"],
+      "images": ["assets/images/buildings/SGW/mb.jpg"]
+    },
+    {
+      "id": "lb",
+      "name": "J.W. McConnell Building (LB)",
+      "street": "1400 Maisonneuve Blvd W",
+      "postalCode": "H3G 1M8",
+      "location": [
+        45.4968739,
+        -73.5780374
+      ],
+      "campus": "sgw",
+      "points": [
+        [
+          45.4967290356968,
+          -73.5785791067169
+        ],
+        [
+          45.4967061329409,
+          -73.5785308839501
+        ],
+        [
+          45.4966684315951,
+          -73.5785665996882
+        ],
+        [
+          45.4962551742886,
+          -73.577698780706
+        ],
+        [
+          45.4964959113351,
+          -73.577464874399
+        ],
+        [
+          45.4965831527425,
+          -73.5776511440844
+        ],
+        [
+          45.4966370883208,
+          -73.5776013590509
+        ],
+        [
+          45.4966155543521,
+          -73.5775564169593
+        ],
+        [
+          45.496892296862,
+          -73.5772933087358
+        ],
+        [
+          45.4970083219392,
+          -73.577538644865
+        ],
+        [
+          45.4969774601587,
+          -73.577567672881
+        ],
+        [
+          45.4969978494418,
+          -73.5776118596604
+        ],
+        [
+          45.4969882404829,
+          -73.5776207950782
+        ],
+        [
+          45.4969937370459,
+          -73.5776310443142
+        ],
+        [
+          45.4970408336724,
+          -73.5775879481697
+        ],
+        [
+          45.4971154337745,
+          -73.5777475406371
+        ],
+        [
+          45.497070682136,
+          -73.5777925242258
+        ],
+        [
+          45.4970775229245,
+          -73.577806886371
+        ],
+        [
+          45.4970854213868,
+          -73.5777993682524
+        ],
+        [
+          45.497108216581,
+          -73.5778478596577
+        ],
+        [
+          45.4971413047383,
+          -73.577816906224
+        ],
+        [
+          45.4972596303715,
+          -73.5780578215289
+        ],
+        [
+          45.4970184079805,
+          -73.578295484113
+        ],
+        [
+          45.4970012731094,
+          -73.5782573500428
+        ],
+        [
+          45.4969646664758,
+          -73.5782954868039
+        ],
+        [
+          45.4969408652714,
+          -73.5782471800773
+        ],
+        [
+          45.4968949963946,
+          -73.5782915948847
+        ],
+        [
+          45.4969127577037,
+          -73.5783299726621
+        ],
+        [
+          45.4968688933457,
+          -73.5783709572706
+        ],
+        [
+          45.496890779169,
+          -73.5784152833381
+        ],
+        [
+          45.4967290356968,
+          -73.5785791067169
+        ]
+      ],
+      "description": "Home to the Webster Library with over 2 million items. The 12th floor study lounge has the best view! Hosts the Technology Sandbox, a place where one can try out VR gaming, 3D printing or game development.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
+        ]
+      },
+      "buildingFeatures": ["elevator", "wheelChairAccess", "food", "metroAccess", "bathroom"],
+      "images": ["assets/images/buildings/SGW/lb.jpg"]
+    },
+    {
+      "id": "cc",
+      "name": "Central Building (CC)",
+      "street": "7141 Rue Sherbrooke Ouest",
+      "postalCode": "H4B 1R6",
+      "location": [
+        45.458493399999995,
+        -73.6406396
+      ],
+      "campus": "loy",
+      "points": [
+        [
+          45.4585208608007,
+          -73.640685034277
+        ],
+        [
+          45.4583791494107,
+          -73.6407957736703
+        ],
+        [
+          45.458288067748,
+          -73.6405590484041
+        ],
+        [
+          45.4582807370996,
+          -73.640564372429
+        ],
+        [
+          45.4581655166129,
+          -73.6402606533331
+        ],
+        [
+          45.4581718691469,
+          -73.6402556996114
+        ],
+        [
+          45.4580776515112,
+          -73.6400146981164
+        ],
+        [
+          45.4581036322558,
+          -73.6399947518581
+        ],
+        [
+          45.4580924575034,
+          -73.6399668476527
+        ],
+        [
+          45.4581219391978,
+          -73.6399436219669
+        ],
+        [
+          45.4581082196506,
+          -73.6399074228682
+        ],
+        [
+          45.4581418281119,
+          -73.6398811620684
+        ],
+        [
+          45.4581545656232,
+          -73.63991569451
+        ],
+        [
+          45.4581660710766,
+          -73.6399458518892
+        ],
+        [
+          45.4582187587328,
+          -73.6399018618318
+        ],
+        [
+          45.4583151280049,
+          -73.6401444564348
+        ],
+        [
+          45.4583216203185,
+          -73.6401414600105
+        ],
+        [
+          45.45843855574,
+          -73.640445805528
+        ],
+        [
+          45.4584315753495,
+          -73.6404494963462
+        ],
+        [
+          45.4585208608007,
+          -73.640685034277
+        ]
+      ],
+      "description": "The heart of Loyola Campus. Built in 1916, it's the oldest building Concordia owns! Its distinctive architecture features classic Jesuit college design with beautiful green spaces surrounding it.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0700"}, "close": {"day": 1, "time": "2300"}},
+          {"open": {"day": 2, "time": "0700"}, "close": {"day": 2, "time": "2300"}},
+          {"open": {"day": 3, "time": "0700"}, "close": {"day": 3, "time": "2300"}},
+          {"open": {"day": 4, "time": "0700"}, "close": {"day": 4, "time": "2300"}},
+          {"open": {"day": 5, "time": "0700"}, "close": {"day": 5, "time": "2300"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}},
+          {"open": {"day": 6, "time": "0700"}, "close": {"day": 6, "time": "2100"}}
+        ]
+      },
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom"],
+      "images": ["assets/images/buildings/LOY/cc.jpg"]
+    },
+    {
+      "id": "vl",
+      "name": "Vanier Library Building (VL)",
+      "street": "7141 Rue Sherbrooke Ouest",
+      "postalCode": "H4B 1R6",
+      "location": [
+        45.45908060000001,
+        -73.6387088
+      ],
+      "campus": "loy",
+      "points": [
+        [
+          45.45930228738043,
+          -73.63867096999957
+        ],
+        [
+          45.459312164433044,
+          -73.63866225281996
+        ],
+        [
+          45.45913296620852,
+          -73.63819621899432
+        ],
+        [
+          45.45921292349149,
+          -73.6381318459756
+        ],
+        [
+          45.45913813991705,
+          -73.63793872693364
+        ],
+        [
+          45.459131555195206,
+          -73.63794409135187
+        ],
+        [
+          45.45912214844831,
+          -73.63791928091756
+        ],
+        [
+          45.45912873317129,
+          -73.63791391649933
+        ],
+        [
+          45.459102394274794,
+          -73.6378461907192
+        ],
+        [
+          45.459073703677106,
+          -73.63786764839212
+        ],
+        [
+          45.45908075874348,
+          -73.63788776496047
+        ],
+        [
+          45.45904595374088,
+          -73.6379152576039
+        ],
+        [
+          45.45903795799401,
+          -73.63789447048326
+        ],
+        [
+          45.45890155978096,
+          -73.63800175883974
+        ],
+        [
+          45.45891096656465,
+          -73.63802589872178
+        ],
+        [
+          45.45888274620894,
+          -73.63804869749924
+        ],
+        [
+          45.458902030120186,
+          -73.6380996594724
+        ],
+        [
+          45.45886863602578,
+          -73.63812648156356
+        ],
+        [
+          45.45888744960252,
+          -73.6381747613276
+        ],
+        [
+          45.45888745597307,
+          -73.63817458870597
+        ],
+        [
+          45.458852180511506,
+          -73.63820208134938
+        ],
+        [
+          45.458865820359264,
+          -73.63823695006786
+        ],
+        [
+          45.45883059307134,
+          -73.6382640872476
+        ],
+        [
+          45.45905019315328,
+          -73.6388645869857
+        ],
+        [
+          45.45909017186765,
+          -73.63896986369342
+        ],
+        [
+          45.45919599773939,
+          -73.63888738576317
+        ],
+        [
+          45.45915695977598,
+          -73.63878546181888
+        ],
+        [
+          45.45916354449487,
+          -73.63878009740066
+        ],
+        [
+          45.45930228738043,
+          -73.63867096999957
+        ]
+      ],
+      "description": "The main library at Loyola. Open late during exams with 24/7 access for students! Features modern study spaces and extensive research resources for all disciplines.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
+        ]
+      },
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
+      "images": ["assets/images/buildings/LOY/vl.jpg"]
+    },
+    {
+      "id": "ve",
+      "name": "Vanier Extension (VE)",
+      "street": "7141 Rue Sherbrooke Ouest",
+      "postalCode": "H4B 1R6",
+      "location": [
+        45.45908060000001,
+        -73.6387088
+      ],
+      "campus": "loy",
+      "points": [
+        [
+          45.45905019315328,
+          -73.6388645869857
+        ],
+        [
+          45.45883059307134,
+          -73.6382640872476
+        ],
+        [
+          45.458703837038136,
+          -73.63836329256839
+        ],
+        [
+          45.45871747692177,
+          -73.63839883183914
+        ],
+        [
+          45.45863046381439,
+          -73.63846722817155
+        ],
+        [
+          45.45882894757199,
+          -73.63898221231717
+        ],
+        [
+          45.458837046971425,
+          -73.63897596783613
+        ],
+        [
+          45.458853824135524,
+          -73.63902021059172
+        ],
+        [
+          45.45905019315328,
+          -73.6388645869857
+        ]
+      ],
+      "description": "Extension to the Vanier Library. Houses special collections and quiet study spaces. Popular among graduate students for its tranquil environment and research carrels.",
+      "hours": {
+        "open_now": true,
+        "periods": [
+          {"open": {"day": 1, "time": "0000"}, "close": {"day": 1, "time": "2400"}},
+          {"open": {"day": 2, "time": "0000"}, "close": {"day": 2, "time": "2400"}},
+          {"open": {"day": 3, "time": "0000"}, "close": {"day": 3, "time": "2400"}},
+          {"open": {"day": 4, "time": "0000"}, "close": {"day": 4, "time": "2400"}},
+          {"open": {"day": 5, "time": "0000"}, "close": {"day": 5, "time": "2400"}},
+          {"open": {"day": 6, "time": "0000"}, "close": {"day": 6, "time": "2400"}},
+          {"open": {"day": 0, "time": "0000"}, "close": {"day": 0, "time": "2400"}}
+        ]
+      },
+      "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
+      "images": ["assets/images/buildings/LOY/ve.jpg"]
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 name: concordia_campus_guide
-description: "A new Flutter project."
+description: "A Concordia Campus Guide to get across the campus easily."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -30,14 +30,28 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  geolocator: ^9.0.2
+  mockito: ^5.4.4
+  plugin_platform_interface: ^2.1.8
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  provider: ^6.1.5+1
+  google_maps_flutter: ^2.14.0
+  flutter_svg: ^2.0.10
+  logger: ^2.6.2
+  flutter_google_maps_webservices: ^1.1.1
+  json_annotation: ^4.9.0
+  google_fonts: ^8.0.1
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
+  patrol: ^4.1.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -45,22 +59,26 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  geolocator_platform_interface: ^4.2.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  # Any assets added to the app should be listed here
+  assets:
+    - assets/images/app_icon.png
+    - assets/images/app_logo.svg
+    - assets/images/bigger_icon.png
+    - assets/maps/building_data.json
+    - assets/images/buildings/LOY/
+    - assets/images/buildings/SGW/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -87,3 +105,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/bigger_icon.png"
+
+patrol:
+  app_name: Concordia Campus Guide
+  android:
+    package_name: com.example.concordia_campus_guide

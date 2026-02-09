@@ -1,5 +1,11 @@
 # Concordia Campus Guide
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=C0dingViking_soen390-mini-capstone&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=C0dingViking_soen390-mini-capstone)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=C0dingViking_soen390-mini-capstone&metric=bugs)](https://sonarcloud.io/summary/new_code?id=C0dingViking_soen390-mini-capstone)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=C0dingViking_soen390-mini-capstone&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=C0dingViking_soen390-mini-capstone)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=C0dingViking_soen390-mini-capstone&metric=coverage)](https://sonarcloud.io/summary/new_code?id=C0dingViking_soen390-mini-capstone)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=C0dingViking_soen390-mini-capstone&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=C0dingViking_soen390-mini-capstone)
+
 Concordia campus Guide is a cross-platform mobile application made to help users navigate university campuses by an interactive map with outdoor and indoor directions.
 The application is built using Flutter and targets both Android and iOS from a single codebase.
 
