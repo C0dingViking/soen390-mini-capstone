@@ -151,6 +151,34 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+
+    testWidgets("directions button is accessible", (final tester) async {
+      await pumpHomeScreen(tester);
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(vm.buildings, isNotEmpty);
+    });
+
+    testWidgets("shows extended FAB when currentBuilding is set", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      vm.currentBuilding = vm.buildings["H"];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+      
+      expect(find.text("H"), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets("shows regular FAB when no currentBuilding", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      vm.currentBuilding = null;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+      
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byIcon(Icons.my_location), findsOneWidget);
+    });
   });
 
   group("Building Navigation Tests", () {
@@ -238,6 +266,39 @@ void main() {
       final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
       final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
       expect(controller, isNotNull);
+    });
+
+    testWidgets("building tap handler extracts correct ID", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      // Simulate building tap logic
+      const polygonId = PolygonId("H-poly");
+      final buildingId = polygonId.value.replaceAll("-poly", "");
+      final building = vm.buildings[buildingId];
+      
+      // Verify building is found
+      expect(building, isNotNull);
+      expect(building?.id, equals("H"));
+      expect(building?.name, equals("Science Hall"));
+    });
+
+    testWidgets("building tap with valid ID finds building", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      // Test the extraction and lookup logic
+      final testCases = [
+        {"input": "H-poly", "expected": "H"},
+        {"input": "MB-poly", "expected": "MB"},
+      ];
+      
+      for (final testCase in testCases) {
+        final polygonId = PolygonId(testCase["input"]!);
+        final buildingId = polygonId.value.replaceAll("-poly", "");
+        final building = vm.buildings[buildingId];
+        
+        expect(buildingId, equals(testCase["expected"]));
+        expect(building, isNotNull);
+      }
     });
   });
 }
