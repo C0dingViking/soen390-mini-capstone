@@ -1,8 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:provider/provider.dart";
 import "package:concordia_campus_guide/ui/directions/directions_screen.dart";
-import "package:concordia_campus_guide/ui/directions/view_models/directions_view_model.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
@@ -54,7 +52,7 @@ void main() {
       };
     });
 
-    testWidgets("renders all main UI elements", (WidgetTester tester) async {
+    testWidgets("renders all main UI elements", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
@@ -68,7 +66,7 @@ void main() {
       expect(find.byIcon(Icons.my_location), findsOneWidget);
     });
 
-    testWidgets("dropdown shows all buildings", (WidgetTester tester) async {
+    testWidgets("dropdown shows all buildings", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
@@ -82,7 +80,7 @@ void main() {
       expect(find.text("EV Building (EV)"), findsWidgets);
     });
 
-    testWidgets("can select building from dropdown", (WidgetTester tester) async {
+    testWidgets("can select building from dropdown", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
@@ -98,7 +96,7 @@ void main() {
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     });
 
-    testWidgets("shows loading indicator when fetching location", (WidgetTester tester) async {
+    testWidgets("shows loading indicator when fetching location", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
@@ -111,7 +109,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets("UI has proper layout constraints", (WidgetTester tester) async {
+    testWidgets("UI has proper layout constraints", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
@@ -128,7 +126,7 @@ void main() {
       expect(container.constraints, const BoxConstraints(maxHeight: 56));
     });
 
-    testWidgets("building codes are uppercase", (WidgetTester tester) async {
+    testWidgets("building codes are uppercase", (final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: DirectionsScreen(buildings: testBuildings),
