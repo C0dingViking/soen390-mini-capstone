@@ -17,7 +17,7 @@ class DirectionsViewModel extends ChangeNotifier {
   bool isLoadingLocation = false;
   String? errorMessage;
 
-  void setDestination(Building building) {
+  void updateDestination(final Building building) {
     destinationBuilding = building;
     _updateRoute();
     notifyListeners();
@@ -34,6 +34,10 @@ class DirectionsViewModel extends ChangeNotifier {
       _updateRoute();
     } catch (e) {
       errorMessage = "Unable to get current location: $e";
+      logger.e(
+      "DirectionViewModel: something went wrong when fetching the current position",
+      error: errorMessage
+    );
     } finally {
       isLoadingLocation = false;
       notifyListeners();

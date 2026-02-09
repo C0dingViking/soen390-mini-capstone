@@ -18,6 +18,7 @@ class DirectionsScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Get Directions"),
+          foregroundColor: Colors.white,
         ),
         body: Consumer<DirectionsViewModel>(
           builder: (context, viewModel, child) {
