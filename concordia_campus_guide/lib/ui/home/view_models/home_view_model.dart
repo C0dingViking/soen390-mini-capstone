@@ -56,7 +56,6 @@ class HomeViewModel extends ChangeNotifier {
     await LocationService.instance.start();
     _locationSubscription?.cancel();
     _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
-    // <-- NOTHING HERE
   } else {
     errorMessage = payload.errorMessage;
     logger.e(
