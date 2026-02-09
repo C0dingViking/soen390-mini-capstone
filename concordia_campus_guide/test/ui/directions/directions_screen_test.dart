@@ -1,8 +1,11 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:provider/provider.dart";
 import "package:concordia_campus_guide/ui/directions/directions_screen.dart";
+import "package:concordia_campus_guide/ui/directions/view_models/directions_view_model.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/interactors/route_interactor.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 
@@ -92,7 +95,6 @@ void main() {
       await tester.tap(find.text("Hall Building (H)").last);
       await tester.pumpAndSettle();
 
-      // After selection, dropdown should close
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     });
 
@@ -138,6 +140,45 @@ void main() {
 
       expect(find.textContaining("(H)"), findsWidgets);
       expect(find.textContaining("(h)"), findsNothing);
+    });
+
+    testWidgets("shows location state when set", (final WidgetTester tester) async {
+      final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+      viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<DirectionsViewModel>.value(
+            value: viewModel,
+            child: DirectionsScreen(buildings: testBuildings),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      expect(viewModel.currentLocationCoordinate, isNotNull);
+      expect(viewModel.currentLocationCoordinate?.latitude, equals(45.4972));
+      expect(find.textContaining("Current Location"), findsOneWidget);
+    });
+
+    testWidgets("Get Directions button enabled when both inputs set", (final WidgetTester tester) async {
+      final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+      viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
+      viewModel.updateDestination(testBuildings["h"]!);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<DirectionsViewModel>.value(
+            value: viewModel,
+            child: DirectionsScreen(buildings: testBuildings),
+          ),
+        ),
+      );
+
+      expect(viewModel.plannedRoute, isNotNull);
+      expect(viewModel.canGetDirections, isTrue);
+      expect(viewModel.plannedRoute?.destinationBuilding.name, equals("Hall Building"));
     });
   });
 }
