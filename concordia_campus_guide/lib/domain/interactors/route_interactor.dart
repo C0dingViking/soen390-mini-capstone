@@ -13,7 +13,7 @@ class RouteInteractor {
     return DirectionRoute(  
       startCoordinate: currentCoordinate,
       destinationBuilding: destination,
-      estimatedDistance: distance,
+      estimatedDistanceMeters: distance,
     );
   }
 

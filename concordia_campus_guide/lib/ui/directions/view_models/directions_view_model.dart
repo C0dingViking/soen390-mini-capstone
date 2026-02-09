@@ -1,9 +1,11 @@
+
 import "package:flutter/material.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/route.dart";  
 import "package:concordia_campus_guide/domain/interactors/route_interactor.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
+import "package:concordia_campus_guide/utils/app_logger.dart";
 
 class DirectionsViewModel extends ChangeNotifier {
   final RouteInteractor routeInteractor;
