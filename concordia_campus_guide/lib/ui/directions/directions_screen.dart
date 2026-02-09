@@ -132,7 +132,7 @@ class DirectionsScreen extends StatelessWidget {
     final route = viewModel.plannedRoute!;
     final distanceKm = (route.estimatedDistance ?? 0) / 1000;
     
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (final context) => AlertDialog(
         title: const Text("Route Created"),
