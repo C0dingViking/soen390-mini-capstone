@@ -17,7 +17,7 @@ class DirectionsViewModel extends ChangeNotifier {
   bool isLoadingLocation = false;
   String? errorMessage;
 
-  void setDestination(Building building) {
+  void updateDestination(final Building building) {
     destinationBuilding = building;
     _updateRoute();
     notifyListeners();
