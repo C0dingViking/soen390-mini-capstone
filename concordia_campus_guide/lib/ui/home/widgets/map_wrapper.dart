@@ -7,7 +7,8 @@ class MapWrapper extends StatelessWidget {
   final bool myLocationEnabled;
   final Set<Polygon> polygons;
   final Set<Marker> markers;
-  
+  final void Function(PolygonId)? onPolygonTap;
+
   // These are the missing definitions
   final bool myLocationButtonEnabled;
   final bool zoomControlsEnabled;
@@ -20,6 +21,7 @@ class MapWrapper extends StatelessWidget {
     required this.myLocationEnabled,
     required this.polygons,
     required this.markers,
+    this.onPolygonTap,
     this.myLocationButtonEnabled = false,
     this.zoomControlsEnabled = false,
     this.fortyFiveDegreeImageryEnabled = false,
@@ -27,13 +29,25 @@ class MapWrapper extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) {
+    // Add onTap callback to polygons if provided
+    final Set<Polygon> tappablePolygons = onPolygonTap != null
+        ? polygons
+              .map(
+                (final polygon) => polygon.copyWith(
+                  onTapParam: () => onPolygonTap!(polygon.polygonId),
+                  consumeTapEventsParam: true,
+                ),
+              )
+              .toSet()
+        : polygons;
+
     return GoogleMap(
       initialCameraPosition: initialCameraPosition,
       onMapCreated: onMapCreated,
       myLocationEnabled: myLocationEnabled,
       myLocationButtonEnabled: myLocationButtonEnabled,
       zoomControlsEnabled: zoomControlsEnabled,
-      polygons: polygons,
+      polygons: tappablePolygons,
       markers: markers,
       fortyFiveDegreeImageryEnabled: fortyFiveDegreeImageryEnabled,
     );

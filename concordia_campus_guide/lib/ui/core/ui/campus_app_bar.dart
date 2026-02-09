@@ -11,6 +11,7 @@ class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(final BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       actions: [
         if (onDirectionsPressed != null)
           IconButton(
