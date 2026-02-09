@@ -97,7 +97,7 @@ void main() {
       expect(route.startCoordinate, equals(coord));
     });
 
-    test("route with zero distance", () {
+    test("route with zero distance can exist and stores a distance of 0", () {
       // Act
       final route = DirectionRoute(
         startCoordinate: testCoordinate,
