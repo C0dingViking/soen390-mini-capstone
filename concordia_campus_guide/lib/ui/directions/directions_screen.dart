@@ -21,7 +21,7 @@ class DirectionsScreen extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
         body: Consumer<DirectionsViewModel>(
-          builder: (context, viewModel, child) {
+          builder: (final context, final viewModel, final child) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
