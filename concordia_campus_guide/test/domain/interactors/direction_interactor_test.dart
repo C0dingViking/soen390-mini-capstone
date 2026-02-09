@@ -93,7 +93,7 @@ void main() {
       final route = interactor.createOutdoorRoute(coord, building);
 
       // Assert - Should be essentially 0
-      expect(route.estimatedDistanceMeters!, lessThan(1));
+      expect(route.estimatedDistanceMeters, closeTo(0, 1e-6));
     });
 
     test("calculateDistance handles short distances accurately", () {
