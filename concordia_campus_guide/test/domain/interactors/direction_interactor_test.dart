@@ -74,9 +74,8 @@ void main() {
       // Act
       final route = interactor.createOutdoorRoute(sgwCoord, building);
 
-      // Assert - Distance should be approximately 8500 meters (8.5 km)
-      expect(route.estimatedDistanceMeters, greaterThan(6000));
-      expect(route.estimatedDistanceMeters, lessThan(7000));
+      // Assert - Distance should be approximately 6500 meters (6.5 km)
+      expect( route.estimatedDistanceMeters, closeTo(6500, 20)); //+- 20m
     });
 
     test("calculateDistance returns near-zero for same coordinates", () {
