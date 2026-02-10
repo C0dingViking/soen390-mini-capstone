@@ -1,0 +1,48 @@
+name: Dev Story
+description: Create a dev story
+title: "[Dev] "
+labels: ["dev story"]
+projects: [C0dingViking/2]
+body:
+  - type: textarea
+    id: dev-story
+    attributes:
+      label: Dev Story Statement
+      description: |
+        Follow the format below for the user story statement:
+        As a developer, I want to [implement/refactor/improve something], so that [goal/benefit].
+      placeholder: |
+        As a developer,
+        I want to ..., 
+        so that ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks / Implementation Plan
+      description: |
+        List the steps needed to complete this story.
+        Keep tasks small and actionable.
+      placeholder: |
+        - Determine the adequate Dart file format for the codebase
+        - Refactor the existing code to fit the new format
+        - Implement an automation functionality to ensure the codebase remains consistent with the new format
+        - Write documentation to explain how to set up and use the automation functionality
+        - Write documentation to explain why the chosen format is appropriate for the codebase
+    validations:
+      required: true
+
+  - type: textarea
+    id: completion
+    attributes:
+      label: Completion Criteria
+      description: |
+        Define what "done" means for this story.
+      placeholder: |
+        - All tasks are completed
+        - Automation functionality is tested, working as expected and easy to use
+        - Documentation is reviewed and approved
+    validations:
+      required: true
