@@ -82,7 +82,7 @@ void main() {
       expect(route.destinationBuilding.campus, equals(Campus.sgw));
     });
 
-    test("DirectionRoute can be created using a const Coordinate"ts", () {
+    test("DirectionRoute can be created using a const Coordinate ts", () {
       // This test verifies that the const constructor works
       const coord = Coordinate(latitude: 45.4972, longitude: -73.5786);
       

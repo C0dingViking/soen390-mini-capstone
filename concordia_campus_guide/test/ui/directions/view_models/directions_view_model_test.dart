@@ -169,18 +169,8 @@ void main() {
   expect(viewModel.errorMessage, isNotNull, reason: "Error message should be set");
   
   // More flexible error message check
-  if (viewModel.errorMessage != null) {
-    expect(
-      viewModel.errorMessage!.toLowerCase(),
-      anyOf([
-        contains("unable"),
-        contains("error"),
-        contains("failed"),
-        contains("location"),
-      ]),
-      reason: "Error message should indicate a location problem",
-    );
-  }
+  expect(viewModel.errorMessage, isNotNull);
+  expect(viewModel.errorMessage!, contains("Unable"));
 });
 
   test("updateDestination notifies listeners exactly once", () {
@@ -254,14 +244,21 @@ void main() {
       
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
+      // Verify route exists
       expect(viewModel.plannedRoute, isNotNull);
+      expect(viewModel.canGetDirections, isTrue);
 
       // Act - Set destination to a different building, then clear it
       viewModel.destinationBuilding = null;
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
 
-      // Assert
+      // Act - Clear the destination by updating to null
+      viewModel.destinationBuilding = null;
+      viewModel.notifyListeners(); // Trigger UI update
+
+      // Assert - Route should be cleared
+      expect(viewModel.destinationBuilding, isNull);
       expect(viewModel.canGetDirections, isFalse);
     });
   });
