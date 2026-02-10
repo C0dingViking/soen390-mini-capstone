@@ -6,13 +6,15 @@ import "package:concordia_campus_guide/domain/interactors/route_interactor.dart"
 
 class DirectionsScreen extends StatelessWidget {
   final Map<String, Building> buildings;
+  final DirectionsViewModel? viewModel; //For testing purposes
 
-  const DirectionsScreen({super.key, required this.buildings});
+
+  const DirectionsScreen({super.key, required this.buildings, this.viewModel});
 
   @override
   Widget build(final BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => DirectionsViewModel(
+      create: (_) => viewModel ?? DirectionsViewModel( 
         routeInteractor: RouteInteractor(),
       ),
       child: Scaffold(

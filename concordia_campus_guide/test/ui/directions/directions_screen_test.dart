@@ -180,5 +180,69 @@ void main() {
       expect(viewModel.canGetDirections, isTrue);
       expect(viewModel.plannedRoute?.destinationBuilding.name, equals("Hall Building"));
     });
+    testWidgets("shows route dialog when Get Directions pressed", (final WidgetTester tester) async {
+  final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+  viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
+  viewModel.updateDestination(testBuildings["h"]!);
+
+  await tester.pumpWidget(
+    MaterialApp(
+      home: DirectionsScreen(
+        buildings: testBuildings,
+        viewModel: viewModel,
+      ),
+    ),
+  );
+
+  await tester.pump();
+
+  // Tap Get Directions button
+  final getDirectionsButton = find.descendant(
+    of: find.byType(ElevatedButton),
+    matching: find.text("Get Directions"),
+  );
+  await tester.tap(getDirectionsButton);
+  await tester.pumpAndSettle();
+
+  // Verify dialog-specific content (unique to the dialog only)
+  expect(find.text("Route Created"), findsOneWidget);
+  expect(find.text("OK"), findsOneWidget);
+  expect(find.textContaining("From: Current Location"), findsOneWidget);
+  expect(find.textContaining("To: Hall Building"), findsOneWidget);    // ← More specific!
+  expect(find.textContaining("Distance: 0.04 km"), findsOneWidget);   // ← More specific!
+
+  // Tap OK to dismiss
+  await tester.tap(find.text("OK"));
+  await tester.pumpAndSettle();
+
+  // Dialog should be gone
+  expect(find.text("Route Created"), findsNothing);
+});
+
+testWidgets("shows error message when errorMessage is set", (final WidgetTester tester) async {
+  final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+  viewModel.errorMessage = "Unable to get current location: test error";
+
+  await tester.pumpWidget(
+    MaterialApp(
+      home: DirectionsScreen(
+        buildings: testBuildings,
+        viewModel: viewModel,
+      ),
+    ),
+  );
+
+  await tester.pump();
+
+  
+  expect(find.textContaining("Unable to get current location"), findsOneWidget);
+
+  // Verify error styling
+  final errorText = tester.widget<Text>(
+    find.textContaining("Unable to get current location"),
+  );
+  expect(errorText.style?.color, Colors.red);
+  expect(errorText.style?.fontSize, 12);
+});
   });
 }
