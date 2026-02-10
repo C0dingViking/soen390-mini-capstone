@@ -46,3 +46,33 @@ body:
         - Documentation is reviewed and approved
     validations:
       required: true
+  
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: |
+        The size is in term of Story Points and it follows the Fibonacci sequence. 
+        Story points are a relative estimation method to help assess effort, complexity, and risk for backlog items ([Atlassian](https://www.atlassian.com/agile/project-management/estimation)).
+      options:
+        - 1
+        - 2
+        - 3
+        - 5
+        - 8
+        - 13
+        - 21
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+        - Urgent
+    validations:
+      required: true
