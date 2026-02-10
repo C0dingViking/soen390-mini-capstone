@@ -126,11 +126,11 @@ void main() {
 
       // Act
       final route = interactor.createOutdoorRoute(sgwCoord, loyolaBuilding);
-
+      final num actualDistance = 6500; //Distance between campuses via google maps
       // Assert
       expect(route.startCoordinate, equals(sgwCoord));
       expect(route.destinationBuilding.campus, equals(Campus.loyola));
-      expect(route.estimatedDistanceMeters, greaterThan(1000));
+      expect(route.estimatedDistanceMeters, closeTo(actualDistance, 1000));
     });
 
     test("createOutdoorRoute handles coordinates at extreme latitudes", () {
