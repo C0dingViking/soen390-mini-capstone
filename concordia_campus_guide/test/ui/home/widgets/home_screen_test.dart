@@ -282,6 +282,33 @@ void main() {
       expect(building?.name, equals("Science Hall"));
     });
 
+    testWidgets(
+  "tapping extended FAB when currentBuilding is set calls goToCurrentLocation",
+  (final tester) async {
+    await pumpHomeScreen(tester);
+
+    // Set currentBuilding so extended FAB appears
+    vm.currentBuilding = vm.buildings["H"];
+    vm.notifyListeners();
+    await tester.pumpAndSettle();
+
+    // Ensure extended FAB is shown
+    expect(find.text("H"), findsOneWidget);
+
+    // Tap the extended FAB specifically
+    final extendedFab = find.widgetWithText(
+      FloatingActionButton,
+      "H",
+    );
+
+    await tester.tap(extendedFab);
+    await tester.pump();
+
+    expect(vm.goToCalled, isTrue);
+  },
+);
+
+
     testWidgets("building tap with valid ID finds building", (final tester) async {
       await pumpHomeScreen(tester);
       
