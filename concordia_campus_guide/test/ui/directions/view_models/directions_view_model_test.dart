@@ -14,8 +14,8 @@ import "package:flutter_google_maps_webservices/places.dart";
 import "directions_view_model_test.mocks.dart";
 
 void main() {
-  
   TestWidgetsFlutterBinding.ensureInitialized();
+
   group("DirectionsViewModel", () {
     late DirectionsViewModel viewModel;
     late MockRouteInteractor mockRouteInteractor;
@@ -24,7 +24,7 @@ void main() {
     setUp(() {
       mockRouteInteractor = MockRouteInteractor();
       viewModel = DirectionsViewModel(routeInteractor: mockRouteInteractor);
-      
+
       testBuilding = Building(
         id: "h",
         googlePlacesId: null,
@@ -65,7 +65,7 @@ void main() {
 
       // Assert
       expect(viewModel.destinationBuilding, equals(testBuilding));
-      expect(viewModel.plannedRoute, isNull); // No route yet without start location
+      expect(viewModel.plannedRoute, isNull);
     });
 
     test("updateDestination creates route when start location is set", () {
@@ -76,7 +76,7 @@ void main() {
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 100.0,
       );
-      
+
       when(mockRouteInteractor.createOutdoorRoute(startCoord, testBuilding))
           .thenReturn(expectedRoute);
 
@@ -101,10 +101,10 @@ void main() {
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 100.0,
       );
-      
+
       when(mockRouteInteractor.createOutdoorRoute(startCoord, testBuilding))
           .thenReturn(route);
-      
+
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
       expect(viewModel.plannedRoute, isNotNull);
@@ -125,10 +125,10 @@ void main() {
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 100.0,
       );
-      
+
       when(mockRouteInteractor.createOutdoorRoute(startCoord, testBuilding))
           .thenReturn(route);
-      
+
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
 
@@ -153,62 +153,58 @@ void main() {
     });
 
     test("useCurrentLocation sets error message on location service failure", () async {
-  // Arrange
-  expect(viewModel.errorMessage, isNull, reason: "Should start with no error");
-  expect(viewModel.isLoadingLocation, isFalse, reason: "Should start not loading");
+      // Arrange
+      expect(viewModel.errorMessage, isNull, reason: "Should start with no error");
+      expect(viewModel.isLoadingLocation, isFalse, reason: "Should start not loading");
 
-  // Act
-  await viewModel.useCurrentLocation();
-  
-  // Small delay to ensure all async operations complete
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Act
+      await viewModel.useCurrentLocation();
 
-  // Assert
-  expect(viewModel.isLoadingLocation, isFalse, reason: "Loading should be false after completion");
-  expect(viewModel.currentLocationCoordinate, isNull, reason: "Coordinate should be null on error");
-  expect(viewModel.errorMessage, isNotNull, reason: "Error message should be set");
-  
-  // More flexible error message check
-  expect(viewModel.errorMessage, isNotNull);
-  expect(viewModel.errorMessage!, contains("Unable"));
-});
+      // Small delay to ensure all async operations complete
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-  test("updateDestination notifies listeners exactly once", () {
+      // Assert
+      expect(viewModel.isLoadingLocation, isFalse, reason: "Loading should be false after completion");
+      expect(viewModel.currentLocationCoordinate, isNull, reason: "Coordinate should be null on error");
+      expect(viewModel.errorMessage, isNotNull, reason: "Error message should be set");
+      expect(viewModel.errorMessage!, contains("Unable"));
+    });
+
+    test("updateDestination notifies listeners exactly once", () {
       var count = 0;
       viewModel.addListener(() => count++);
 
       viewModel.updateDestination(testBuilding);
 
       expect(count, equals(1));
-  });
-  
-  test("clearStartLocation notifies listeners exactly once", () {
+    });
+
+    test("clearStartLocation notifies listeners exactly once", () {
       var count = 0;
       viewModel.addListener(() => count++);
 
       viewModel.clearStartLocation();
 
-     expect(count, equals(1));
-});
-
+      expect(count, equals(1));
+    });
 
     test("updating location triggers route recalculation", () {
       // Arrange
       const coord1 = Coordinate(latitude: 45.4972, longitude: -73.5786);
       const coord2 = Coordinate(latitude: 45.4980, longitude: -73.5800);
-      
+
       final route1 = DirectionRoute(
         startCoordinate: coord1,
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 100.0,
       );
-      
+
       final route2 = DirectionRoute(
         startCoordinate: coord2,
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 200.0,
       );
-      
+
       when(mockRouteInteractor.createOutdoorRoute(coord1, testBuilding))
           .thenReturn(route1);
       when(mockRouteInteractor.createOutdoorRoute(coord2, testBuilding))
@@ -216,13 +212,13 @@ void main() {
 
       viewModel.updateDestination(testBuilding);
       viewModel.currentLocationCoordinate = coord1;
-      viewModel.updateDestination(testBuilding); // Trigger route creation
-      
+      viewModel.updateDestination(testBuilding);
+
       expect(viewModel.plannedRoute?.estimatedDistanceMeters, equals(100.0));
 
       // Act - Change location
       viewModel.currentLocationCoordinate = coord2;
-      viewModel.updateDestination(testBuilding); // Trigger route recalculation
+      viewModel.updateDestination(testBuilding);
 
       // Assert
       expect(viewModel.plannedRoute?.estimatedDistanceMeters, equals(200.0));
@@ -238,26 +234,22 @@ void main() {
         destinationBuilding: testBuilding,
         estimatedDistanceMeters: 100.0,
       );
-      
+
       when(mockRouteInteractor.createOutdoorRoute(startCoord, testBuilding))
           .thenReturn(route);
-      
+
       viewModel.currentLocationCoordinate = startCoord;
       viewModel.updateDestination(testBuilding);
+
       // Verify route exists
       expect(viewModel.plannedRoute, isNotNull);
       expect(viewModel.canGetDirections, isTrue);
 
-      // Act - Set destination to a different building, then clear it
+      // Act - Clear the destination
       viewModel.destinationBuilding = null;
-      viewModel.currentLocationCoordinate = startCoord;
-      viewModel.updateDestination(testBuilding);
+      viewModel.notifyListeners();
 
-      // Act - Clear the destination by updating to null
-      viewModel.destinationBuilding = null;
-      viewModel.notifyListeners(); // Trigger UI update
-
-      // Assert - Route should be cleared
+      // Assert
       expect(viewModel.destinationBuilding, isNull);
       expect(viewModel.canGetDirections, isFalse);
     });
