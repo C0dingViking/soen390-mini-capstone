@@ -12,7 +12,8 @@ class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       leading: IconButton(
         onPressed: Scaffold.of(context).openDrawer, 
-        icon: Icon(Icons.menu)
+        icon: Icon(Icons.menu),
+        color: Colors.white,
       ),
       actions: [
         Padding(
