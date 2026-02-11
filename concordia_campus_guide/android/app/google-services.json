@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "501981294191",
+    "project_id": "concordia-campus-guide",
+    "storage_bucket": "concordia-campus-guide.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501981294191:android:8c45c6151630086c92279a",
+        "android_client_info": {
+          "package_name": "com.example.concordia_campus_guide"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.concordia_campus_guide",
+            "certificate_hash": "08672018181c7b795716ab8085538d0158b7b27e"
+          }
+        },
+        {
+          "client_id": "501981294191-1vo9t3mdu3lmqf3egbpdkcl46i7lno8b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCglLyi3JO_-2BFdz-ituHiOTOL5yPY_8Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "501981294191-1vo9t3mdu3lmqf3egbpdkcl46i7lno8b.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.concordiaCampusGuide"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
