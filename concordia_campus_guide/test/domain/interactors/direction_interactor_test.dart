@@ -149,7 +149,7 @@ void main() {
       // Act
       final route = interactor.createOutdoorRoute(northPole, equatorBuilding);
 
-      // Assert Changed for tighter tolerance, ~121 km 
+      // Assert Changed for tighter tolerance, 1m 
       expect(route.estimatedDistanceMeters, closeTo(9896348.47, 1));
     });
   });
