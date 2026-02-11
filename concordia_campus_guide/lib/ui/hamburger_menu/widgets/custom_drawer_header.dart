@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
 
 class CustomDrawerHeader extends StatelessWidget {
+  //TODO: these should be replaced by a user model in the future when we implement user authentication
   final String name;
   final String email;
   final String imageUrl;
