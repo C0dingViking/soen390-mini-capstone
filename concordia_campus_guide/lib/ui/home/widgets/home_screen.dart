@@ -1,7 +1,7 @@
 import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
-import "package:concordia_campus_guide/ui/core/ui/hamburger_menu.dart";
+import "package:concordia_campus_guide/ui/hamburger_menu/widgets/hamburger_menu.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
