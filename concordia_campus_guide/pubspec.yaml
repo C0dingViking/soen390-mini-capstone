@@ -44,6 +44,7 @@ dependencies:
   flutter_google_maps_webservices: ^1.1.1
   json_annotation: ^4.9.0
   google_fonts: ^8.0.1
+  firebase_core: ^4.4.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "910185126084",
+    "project_id": "mini-cap-b97a5",
+    "storage_bucket": "mini-cap-b97a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910185126084:android:e37a418233c93ce1881191",
+        "android_client_info": {
+          "package_name": "com.example.concordia_campus_guide"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "910185126084-ttdpa4d6aj8hnvohp8d2rkmvfpegcjoa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWYyG7VGIdX14y_7faXdo6DEi964tyNfc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "910185126084-ttdpa4d6aj8hnvohp8d2rkmvfpegcjoa.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "910185126084-brp13f61098ujag3nqjdopekslrnv03t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.concordiaCampusGuide"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
