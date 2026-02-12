@@ -2,6 +2,8 @@ import "package:concordia_campus_guide/data/repositories/building_repository.dar
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
+import "package:firebase_ui_auth/firebase_ui_auth.dart";
+import "package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
@@ -11,6 +13,14 @@ import "firebase_options.dart";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseUIAuth.configureProviders([
+    GoogleProvider(
+      clientId:
+          "910185126084-ttdpa4d6aj8hnvohp8d2rkmvfpegcjoa.apps.googleusercontent.com",
+    ),
+  ]);
+
   runApp(const MyApp());
 }
 

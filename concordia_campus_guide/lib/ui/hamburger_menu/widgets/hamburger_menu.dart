@@ -3,6 +3,7 @@ import "package:google_fonts/google_fonts.dart";
 
 import "package:flutter/material.dart";
 import "package:concordia_campus_guide/ui/hamburger_menu/widgets/custom_drawer_header.dart";
+import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
 
 class HamburgerMenu extends StatelessWidget {
   const HamburgerMenu({super.key});
@@ -16,7 +17,8 @@ class HamburgerMenu extends StatelessWidget {
           CustomDrawerHeader(
             name: "Bot Clanker",
             email: "bot.clanker@example.com",
-            imageUrl: "https://api.dicebear.com/9.x/bottts/png", //placeholder image, should be replaced with actual user profile picture
+            imageUrl:
+                "https://api.dicebear.com/9.x/bottts/png", //placeholder image, should be replaced with actual user profile picture
           ),
           ListTile(
             contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
@@ -28,6 +30,13 @@ class HamburgerMenu extends StatelessWidget {
                 fontSize: 18.0,
               ),
             ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (final context) => const LoginScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),

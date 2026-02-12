@@ -45,6 +45,10 @@ dependencies:
   json_annotation: ^4.9.0
   google_fonts: ^8.0.1
   firebase_core: ^4.4.0
+  firebase_ui_auth: ^3.0.1
+  firebase_auth: ^6.1.4
+  firebase_ui_oauth_google: ^2.0.1
+  google_sign_in: ^6.3.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
