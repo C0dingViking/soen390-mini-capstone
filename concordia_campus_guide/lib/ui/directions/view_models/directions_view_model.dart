@@ -20,7 +20,7 @@ class DirectionsViewModel extends ChangeNotifier {
   bool isLoadingLocation = false;
   String? errorMessage;
 
-  void initializeFromBuildings(Building? start, Building? dest) {
+  void initializeFromBuildings(final Building? start, final Building? dest) {
     if (start != null) {
       startBuilding = start;
     }

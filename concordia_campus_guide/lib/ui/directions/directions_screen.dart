@@ -40,7 +40,7 @@ class DirectionsScreen extends StatelessWidget {
                     buildings: buildings.values.toList(),
                     selected: viewModel.startBuilding,
                     label: "Start Location",
-                    onSelected: (b) => viewModel.setStartBuilding(b),
+                    onSelected: (final b) => viewModel.setStartBuilding(b),
                   ),
 
                   SizedBox(height: keyboardOpen ? 12 : 32),
@@ -85,7 +85,7 @@ class DirectionsScreen extends StatelessWidget {
                     buildings: buildings.values.toList(),
                     selected: viewModel.destinationBuilding,
                     label: "Destination Building",
-                    onSelected: (b) => viewModel.updateDestination(b),
+                    onSelected: (final b) => viewModel.updateDestination(b),
                   ),
 
                   SizedBox(height: keyboardOpen ? 12 : 32),
