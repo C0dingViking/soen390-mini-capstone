@@ -17,7 +17,7 @@ Future<void> main() async {
   FirebaseUIAuth.configureProviders([
     GoogleProvider(
       clientId:
-          "910185126084-ttdpa4d6aj8hnvohp8d2rkmvfpegcjoa.apps.googleusercontent.com",
+          "501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com",
     ),
   ]);
 

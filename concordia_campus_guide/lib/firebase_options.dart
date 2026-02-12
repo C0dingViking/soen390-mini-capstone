@@ -41,50 +41,56 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCE48WsdG2F6BIgCcfzWa9bft9YxE7Gf4c',
-    appId: '1:910185126084:web:51e49e767fa975fe881191',
-    messagingSenderId: '910185126084',
-    projectId: 'mini-cap-b97a5',
-    authDomain: 'mini-cap-b97a5.firebaseapp.com',
-    storageBucket: 'mini-cap-b97a5.firebasestorage.app',
-    measurementId: 'G-EFT8RMJ0CX',
+    apiKey: 'AIzaSyDvzXTT-b4Sy5i0X7W7JqmmGFqAa9LTnHw',
+    appId: '1:501981294191:web:8a06ad40bb504a7492279a',
+    messagingSenderId: '501981294191',
+    projectId: 'concordia-campus-guide',
+    authDomain: 'concordia-campus-guide.firebaseapp.com',
+    storageBucket: 'concordia-campus-guide.firebasestorage.app',
+    measurementId: 'G-4KZB60QVG1',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBWYyG7VGIdX14y_7faXdo6DEi964tyNfc',
-    appId: '1:910185126084:android:e37a418233c93ce1881191',
-    messagingSenderId: '910185126084',
-    projectId: 'mini-cap-b97a5',
-    storageBucket: 'mini-cap-b97a5.firebasestorage.app',
+    apiKey: 'AIzaSyCglLyi3JO_-2BFdz-ituHiOTOL5yPY_8Q',
+    appId: '1:501981294191:android:8c45c6151630086c92279a',
+    messagingSenderId: '501981294191',
+    projectId: 'concordia-campus-guide',
+    storageBucket: 'concordia-campus-guide.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAbsca1J-FwLHV_ZR2r9_-HYwCxdCfGqj4',
-    appId: '1:910185126084:ios:35d5c7530af776fd881191',
-    messagingSenderId: '910185126084',
-    projectId: 'mini-cap-b97a5',
-    storageBucket: 'mini-cap-b97a5.firebasestorage.app',
-    iosClientId: '910185126084-brp13f61098ujag3nqjdopekslrnv03t.apps.googleusercontent.com',
+    apiKey: 'AIzaSyCE1OBKkQqMuc8lQX5SZFMrBC87fSmqEyE',
+    appId: '1:501981294191:ios:f8a4c8ba16a080c692279a',
+    messagingSenderId: '501981294191',
+    projectId: 'concordia-campus-guide',
+    storageBucket: 'concordia-campus-guide.firebasestorage.app',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAbsca1J-FwLHV_ZR2r9_-HYwCxdCfGqj4',
-    appId: '1:910185126084:ios:35d5c7530af776fd881191',
-    messagingSenderId: '910185126084',
-    projectId: 'mini-cap-b97a5',
-    storageBucket: 'mini-cap-b97a5.firebasestorage.app',
-    iosClientId: '910185126084-brp13f61098ujag3nqjdopekslrnv03t.apps.googleusercontent.com',
+    apiKey: 'AIzaSyCE1OBKkQqMuc8lQX5SZFMrBC87fSmqEyE',
+    appId: '1:501981294191:ios:f8a4c8ba16a080c692279a',
+    messagingSenderId: '501981294191',
+    projectId: 'concordia-campus-guide',
+    storageBucket: 'concordia-campus-guide.firebasestorage.app',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCE48WsdG2F6BIgCcfzWa9bft9YxE7Gf4c',
-    appId: '1:910185126084:web:c1692761da3c73d4881191',
-    messagingSenderId: '910185126084',
-    projectId: 'mini-cap-b97a5',
-    authDomain: 'mini-cap-b97a5.firebaseapp.com',
-    storageBucket: 'mini-cap-b97a5.firebasestorage.app',
-    measurementId: 'G-X4LY8Y8R8R',
+    apiKey: 'AIzaSyDvzXTT-b4Sy5i0X7W7JqmmGFqAa9LTnHw',
+    appId: '1:501981294191:web:3e8c8f10970bf88092279a',
+    messagingSenderId: '501981294191',
+    projectId: 'concordia-campus-guide',
+    authDomain: 'concordia-campus-guide.firebaseapp.com',
+    storageBucket: 'concordia-campus-guide.firebasestorage.app',
+    measurementId: 'G-4WN8ZHBJHM',
   );
 }
