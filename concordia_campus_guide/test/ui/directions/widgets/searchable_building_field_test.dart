@@ -8,7 +8,7 @@ import "package:flutter_google_maps_webservices/places.dart";
 
 void main() {
   testWidgets("SearchableBuildingField triggers filter, shows list, and selects item",
-          (WidgetTester tester) async {
+          (final WidgetTester tester) async {
         final buildings = [
           Building(
             id: "h",
@@ -53,31 +53,28 @@ void main() {
                 buildings: buildings,
                 selected: null,
                 label: "Test",
-                onSelected: (b) => selected = b,
+                onSelected: (final b) => selected = b,
               ),
             ),
           ),
         );
 
-        // Tap → triggers onTap → calls _filter()
         await tester.tap(find.byType(TextField));
-        await tester.pump();            // IMPORTANT
+        await tester.pump();
         await tester.pumpAndSettle();
 
         expect(find.text("Hall Building (H)"), findsOneWidget);
         expect(find.text("EV Building (EV)"), findsOneWidget);
 
-        // Type → triggers _filter("Hall")
         await tester.enterText(find.byType(TextField), "Hall");
-        await tester.pump();            // IMPORTANT
+        await tester.pump();
         await tester.pumpAndSettle();
 
         expect(find.text("Hall Building (H)"), findsOneWidget);
         expect(find.text("EV Building (EV)"), findsNothing);
 
-        // Tap → triggers onSelected + hides list
         await tester.tap(find.text("Hall Building (H)"));
-        await tester.pump();            // IMPORTANT
+        await tester.pump();
         await tester.pumpAndSettle();
 
         expect(selected?.id, "h");
