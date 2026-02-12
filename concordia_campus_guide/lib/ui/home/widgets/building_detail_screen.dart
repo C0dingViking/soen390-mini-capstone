@@ -4,6 +4,10 @@ import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+
+import "../../directions/directions_screen.dart";
+import "../view_models/home_view_model.dart";
 
 class BuildingDetailScreen extends StatelessWidget {
   final Building building;
@@ -81,11 +85,61 @@ class BuildingDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAccessibilityDialog(context),
-        tooltip: "Accessibility Information",
-        backgroundColor: AppTheme.concordiaMaroon,
-        child: const Icon(Icons.info, color: Colors.white),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Accessibility Info
+          FloatingActionButton(
+            heroTag: "accessibility_info",
+            onPressed: () => _showAccessibilityDialog(context),
+            tooltip: "Accessibility Information",
+            backgroundColor: AppTheme.concordiaMaroon,
+            child: const Icon(Icons.info, color: Colors.white),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Start From Here
+          FloatingActionButton.extended(
+            heroTag: "start_from_here",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (final context) => DirectionsScreen(
+                    buildings: context.read<HomeViewModel>().buildings,
+                    startBuilding: building,
+                  ),
+                ),
+              );
+            },
+            backgroundColor: Colors.green.shade700,
+            icon: const Icon(Icons.flag, color: Colors.white),
+            label: const Text("Start from here", style: TextStyle(color: Colors.white)),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Go To This Building
+          FloatingActionButton.extended(
+            heroTag: "go_to_here",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (final context) => DirectionsScreen(
+                    buildings: context.read<HomeViewModel>().buildings,
+                    destinationBuilding: building,
+                  ),
+                ),
+              );
+            },
+            backgroundColor: Colors.blue.shade700,
+            icon: const Icon(Icons.place, color: Colors.white),
+            label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
