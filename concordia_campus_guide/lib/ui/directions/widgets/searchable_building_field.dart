@@ -84,7 +84,7 @@ class _SearchableBuildingFieldState extends State<SearchableBuildingField> {
               shrinkWrap: true,
               children: _filtered.map((final b) {
                 return ListTile(
-                  title: Text("${b.name} (${b.id.toUpperCase()})"),
+                  title: Text(b.name),
                   onTap: () {
                     widget.onSelected(b);
                     _controller.text = b.name;
