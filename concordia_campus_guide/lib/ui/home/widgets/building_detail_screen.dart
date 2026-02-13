@@ -5,9 +5,9 @@ import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
+import "package:concordia_campus_guide/ui/directions/directions_screen.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 
-import "package:concordia_campus_guide/lib/ui/directions/directions_screen.dart";
-import "package:concordia_campus_guide/lib/ui/home/view_models/home_view_model.dart";
 class BuildingDetailScreen extends StatelessWidget {
   final Building building;
 
