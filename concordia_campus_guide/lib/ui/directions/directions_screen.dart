@@ -18,9 +18,9 @@ class DirectionsScreen extends StatelessWidget {
   Widget build(final BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) {
-        final vm = DirectionsViewModel(routeInteractor: RouteInteractor());
-        vm.initializeFromBuildings(startBuilding, destinationBuilding);
-        return vm;
+        final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+        viewModel.initializeFromBuildings(startBuilding, destinationBuilding);
+        return viewModel;
       },
       child: Scaffold(
         appBar: AppBar(
