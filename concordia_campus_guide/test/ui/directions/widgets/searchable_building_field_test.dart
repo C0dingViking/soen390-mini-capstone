@@ -63,17 +63,17 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        expect(find.text("Hall Building (H)"), findsOneWidget);
-        expect(find.text("EV Building (EV)"), findsOneWidget);
+        expect(find.text("Hall Building"), findsOneWidget);
+        expect(find.text("EV Building"), findsOneWidget);
 
         await tester.enterText(find.byType(TextField), "Hall");
         await tester.pump();
         await tester.pumpAndSettle();
 
-        expect(find.text("Hall Building (H)"), findsOneWidget);
-        expect(find.text("EV Building (EV)"), findsNothing);
+        expect(find.text("Hall Building"), findsOneWidget);
+        expect(find.text("EV Building"), findsNothing);
 
-        await tester.tap(find.text("Hall Building (H)"));
+        await tester.tap(find.text("Hall Building"));
         await tester.pump();
         await tester.pumpAndSettle();
 

@@ -80,8 +80,8 @@ void main() {
       await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
 
-      expect(find.text("Hall Building (H)"), findsWidgets);
-      expect(find.text("EV Building (EV)"), findsWidgets);
+      expect(find.text("Hall Building"), findsWidgets);
+      expect(find.text("EV Building"), findsWidgets);
     });
 
     testWidgets("can select building from dropdown", (final WidgetTester tester) async {
@@ -93,7 +93,7 @@ void main() {
 
       await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text("Hall Building (H)").last);
+      await tester.tap(find.text("Hall Building").last);
       await tester.pumpAndSettle();
 
       expect(find.text("Hall Building"), findsOneWidget);
@@ -133,7 +133,7 @@ void main() {
       await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining("(H)"), findsWidgets);
+      expect(find.textContaining("Hall Building"), findsWidgets);
       expect(find.textContaining("(h)"), findsNothing);
     });
 
@@ -176,34 +176,48 @@ void main() {
       expect(viewModel.plannedRoute?.destinationBuilding.name, equals("Hall Building"));
     });
     testWidgets("shows route dialog when Get Directions pressed", (final WidgetTester tester) async {
-  final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
-  viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
-  viewModel.updateDestination(testBuildings["h"]!);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DirectionsScreen(buildings: testBuildings),
+        ),
+      );
 
-  await tester.pumpWidget(
-    MaterialApp(
-      home: DirectionsScreen(
-        buildings: testBuildings,
-        viewModel: viewModel,
-      ),
-    ),
-  );
+      await tester.pump();
+
+      // Get the  ViewModel created inside DirectionsScreen
+      final viewModel = Provider.of<DirectionsViewModel>(
+        tester.element(find.byType(Consumer<DirectionsViewModel>)),
+        listen: false,
+      );
+
+      // Set required state so the button becomes enabled
+      viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
+      viewModel.destinationBuilding = testBuildings["h"]!;
+      viewModel.plannedRoute = viewModel.routeInteractor.createOutdoorRoute(
+        viewModel.currentLocationCoordinate!,
+        viewModel.destinationBuilding!,
+      );
+      viewModel.notifyListeners();
 
   await tester.pump();
 
   // Select Start Location
   await tester.tap(find.byType(TextField).first);
   await tester.pumpAndSettle();
-  await tester.tap(find.text("Hall Building (H)").first);
+  await tester.tap(find.text("Hall Building").first);
   await tester.pumpAndSettle();
 
   // Select Destination Building
   await tester.tap(find.byType(TextField).last);
   await tester.pumpAndSettle();
-  await tester.tap(find.text("Hall Building (H)").first);
+  await tester.tap(find.text("Hall Building").first);
   await tester.pumpAndSettle();
 
+  await tester.pump();
+
   // Tap Get Directions button
+  await tester.drag(find.byType(Scaffold), const Offset(0, -300));
+  await tester.pumpAndSettle();
   await tester.tap( find.widgetWithText(ElevatedButton, "Get Directions") );
   await tester.pumpAndSettle();
 
