@@ -22,7 +22,7 @@ class BuildingDetailScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
+              minHeight: MediaQuery.of(context).size.height + 300,
             ),
             child: Column(
               spacing: 10,
