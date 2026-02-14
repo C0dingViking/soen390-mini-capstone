@@ -6,6 +6,9 @@ import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/building_map_data.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
+import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
+import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
@@ -13,9 +16,10 @@ import "package:concordia_campus_guide/utils/campus.dart";
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
+  final PlacesInteractor placesInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
 
-  HomeViewModel({required this.mapInteractor});
+  HomeViewModel({required this.mapInteractor, required this.placesInteractor});
 
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
@@ -24,8 +28,13 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
+  bool isSearchingPlaces = false;
+  bool isResolvingPlace = false;
+  Marker? searchDestinationMarker;
 
-  List<Building> searchResults = [];
+  List<SearchSuggestion> searchResults = [];
+  String _searchQuery = "";
+  Timer? _searchDebounce;
 
   bool myLocationEnabled = false;
 
@@ -106,14 +115,55 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Set<Marker> get mapMarkers {
+    final markers = <Marker>{...buildingMarkers};
+    if (searchDestinationMarker != null) {
+      markers.add(searchDestinationMarker!);
+    }
+    return markers;
+  }
+
   void updateSearchQuery(final String query) {
-    searchResults = _searchBuildings(query);
+    _searchQuery = query;
+    _searchDebounce?.cancel();
+
+    final buildingSuggestions = _buildingSuggestions(query);
+    searchResults = buildingSuggestions;
+    isSearchingPlaces = false;
     notifyListeners();
+
+    final trimmed = query.trim();
+    if (trimmed.length < 3) return;
+
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () async {
+      if (trimmed != _searchQuery.trim()) return;
+      isSearchingPlaces = true;
+      notifyListeners();
+
+      final places = await placesInteractor.searchPlaces(trimmed);
+      if (trimmed != _searchQuery.trim()) {
+        isSearchingPlaces = false;
+        notifyListeners();
+        return;
+      }
+
+      final combined = <SearchSuggestion>[
+        ...buildingSuggestions,
+        ...places.map(SearchSuggestion.place),
+      ];
+
+      searchResults = combined;
+      isSearchingPlaces = false;
+      notifyListeners();
+    });
   }
 
   void clearSearchResults() {
-    if (searchResults.isNotEmpty) {
+    _searchDebounce?.cancel();
+    _searchQuery = "";
+    if (searchResults.isNotEmpty || isSearchingPlaces) {
       searchResults = [];
+      isSearchingPlaces = false;
       notifyListeners();
     }
   }
@@ -121,6 +171,32 @@ class HomeViewModel extends ChangeNotifier {
   void selectSearchBuilding(final Building building) {
     selectedCampusIndex = _campusIndexFor(building.campus);
     cameraTarget = building.location;
+    searchDestinationMarker = null;
+    searchResults = [];
+    notifyListeners();
+  }
+
+  Future<void> selectPlaceSuggestion(final PlaceSuggestion suggestion) async {
+    errorMessage = null;
+    isResolvingPlace = true;
+    notifyListeners();
+
+    final coordinate = await placesInteractor.resolvePlace(suggestion.placeId);
+    isResolvingPlace = false;
+
+    if (coordinate == null) {
+      errorMessage = "Unable to resolve that address.";
+      notifyListeners();
+      return;
+    }
+
+    cameraTarget = coordinate;
+    searchDestinationMarker = Marker(
+      markerId: const MarkerId("search-destination"),
+      position: coordinate.toLatLng(),
+      infoWindow: InfoWindow(title: suggestion.mainText),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    );
     searchResults = [];
     notifyListeners();
   }
@@ -160,7 +236,7 @@ class HomeViewModel extends ChangeNotifier {
     return campus == Campus.sgw ? 0 : 1;
   }
 
-  List<Building> _searchBuildings(final String query) {
+  List<SearchSuggestion> _buildingSuggestions(final String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return [];
 
@@ -177,7 +253,13 @@ class HomeViewModel extends ChangeNotifier {
       return a.name.compareTo(b.name);
     });
 
-    return matches.take(8).toList();
+    return matches.take(6).map((final building) {
+      final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
+      return SearchSuggestion.building(
+        building,
+        subtitle: "$campusLabel - ${building.id.toUpperCase()}",
+      );
+    }).toList();
   }
 
   int _matchRank(final Building building, final String query) {
@@ -192,6 +274,7 @@ class HomeViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _locationSubscription?.cancel();
     LocationService.instance.dispose();
     super.dispose();

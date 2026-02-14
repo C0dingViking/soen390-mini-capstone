@@ -1,6 +1,6 @@
 import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
-import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -48,7 +48,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     setState(() {});
   }
 
-  void _selectBuilding(final Building building) {
+  Future<void> _selectBuilding(final Building building) async {
     _controller.text = building.name;
     _controller.selection = TextSelection.fromPosition(
       TextPosition(offset: _controller.text.length),
@@ -58,12 +58,29 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     FocusScope.of(context).unfocus();
   }
 
+  Future<void> _selectPlace(final SearchSuggestion suggestion) async {
+    final place = suggestion.place;
+    if (place == null) return;
+    _controller.text = suggestion.title;
+    _controller.selection = TextSelection.fromPosition(
+      TextPosition(offset: _controller.text.length),
+    );
+    await context.read<HomeViewModel>().selectPlaceSuggestion(place);
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(final BuildContext context) {
     final results = context.select(
       (final HomeViewModel vm) => vm.searchResults,
     );
     final showClear = _controller.text.isNotEmpty;
+    final isSearchingPlaces = context.select(
+      (final HomeViewModel vm) => vm.isSearchingPlaces,
+    );
+    final isResolvingPlace = context.select(
+      (final HomeViewModel vm) => vm.isResolvingPlace,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,14 +94,32 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
             onChanged: _handleQueryChanged,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: "Search for a building",
+              hintText: "Search for a place or address",
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: showClear
-                  ? IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _clearQuery,
+              suffixIcon: isResolvingPlace
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
-                  : null,
+                  : showClear
+                      ? IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: _clearQuery,
+                        )
+                      : isSearchingPlaces
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : null,
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -119,23 +154,27 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
               itemCount: results.length,
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (final context, final index) {
-                final building = results[index];
+                final suggestion = results[index];
+                final isBuilding =
+                    suggestion.type == SearchSuggestionType.building;
                 return ListTile(
-                  leading: const Icon(Icons.place_outlined),
-                  title: Text(building.name),
-                  subtitle: Text(
-                    "${_campusLabel(building.campus)} · ${building.id.toUpperCase()}",
+                  leading: Icon(
+                    isBuilding
+                        ? Icons.apartment_outlined
+                        : Icons.location_on_outlined,
                   ),
-                  onTap: () => _selectBuilding(building),
+                  title: Text(suggestion.title),
+                  subtitle: suggestion.subtitle != null
+                      ? Text(suggestion.subtitle!)
+                      : null,
+                  onTap: () => isBuilding
+                      ? _selectBuilding(suggestion.building!)
+                      : _selectPlace(suggestion),
                 );
               },
             ),
           ),
       ],
     );
-  }
-
-  String _campusLabel(final Campus campus) {
-    return campus == Campus.sgw ? "SGW" : "LOY";
   }
 }
