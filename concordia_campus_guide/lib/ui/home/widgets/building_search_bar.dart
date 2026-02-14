@@ -100,7 +100,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           _activeField,
         );
     if (!mounted) return;
-    if (_activeField == SearchField.destination) {
+    final shouldAutoSetStart =
+        _activeField == SearchField.destination && !_expanded;
+    if (shouldAutoSetStart) {
       await context.read<HomeViewModel>().setStartToCurrentLocation();
       if (!mounted) return;
       _startController.text = "Current location";
