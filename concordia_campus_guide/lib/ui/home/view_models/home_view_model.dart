@@ -32,6 +32,7 @@ class HomeViewModel extends ChangeNotifier {
   String? errorMessage;
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
+  bool isResolvingStartLocation = false;
   Marker? searchStartMarker;
   Marker? searchDestinationMarker;
   Coordinate? startCoordinate;
@@ -222,6 +223,32 @@ class HomeViewModel extends ChangeNotifier {
     );
     searchResults = [];
     notifyListeners();
+  }
+
+  Future<void> setStartToCurrentLocation() async {
+    errorMessage = null;
+    isResolvingStartLocation = true;
+    notifyListeners();
+
+    try {
+      final posCoord = await LocationService.instance.getCurrentPosition();
+      _applySelection(
+        field: SearchField.start,
+        coordinate: posCoord,
+        label: "Current location",
+        campus: null,
+      );
+
+      myLocationEnabled = true;
+      isResolvingStartLocation = false;
+      notifyListeners();
+
+      await LocationService.instance.start();
+    } catch (e) {
+      isResolvingStartLocation = false;
+      errorMessage = "Error: $e";
+      notifyListeners();
+    }
   }
 
   void stopLocationTracking() {

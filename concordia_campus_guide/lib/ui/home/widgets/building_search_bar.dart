@@ -115,6 +115,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final isResolvingPlace = context.select(
       (final HomeViewModel vm) => vm.isResolvingPlace,
     );
+    final isResolvingStart = context.select(
+      (final HomeViewModel vm) => vm.isResolvingStartLocation,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,12 +140,41 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                   decoration: InputDecoration(
                     hintText: "Choose starting point",
                     prefixIcon: const Icon(Icons.trip_origin),
-                    suffixIcon: showClearStart
-                        ? IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => _clearQuery(SearchField.start),
+                    suffixIcon: isResolvingStart
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
                           )
-                        : null,
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.my_location),
+                                onPressed: () async {
+                                  await context
+                                      .read<HomeViewModel>()
+                                      .setStartToCurrentLocation();
+                                  _startController.text = "Current location";
+                                  _startController.selection =
+                                      TextSelection.fromPosition(
+                                    TextPosition(
+                                      offset: _startController.text.length,
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (showClearStart)
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () =>
+                                      _clearQuery(SearchField.start),
+                                ),
+                            ],
+                          ),
                     filled: true,
                     fillColor: Colors.white,
                     border: const OutlineInputBorder(
