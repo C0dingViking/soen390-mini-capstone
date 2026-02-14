@@ -74,17 +74,20 @@ class PlacesService {
         fields: const ["geometry"],
       );
 
-      if (!details.isOkay) return null;
-
-      final location = details.result.geometry?.location;
-      if (location == null) return null;
-
-      return Coordinate(latitude: location.lat, longitude: location.lng);
-    } catch (e) {
-      logger.w("PlacesService: details lookup failed", error: e);
-      if (fallbackQuery == null || fallbackQuery.trim().isEmpty) {
-        return null;
+      if (details.isOkay) {
+        final location = details.result.geometry?.location;
+        if (location != null) {
+          return Coordinate(latitude: location.lat, longitude: location.lng);
+        }
       }
+    } catch (e) {
+      // Silently fall through to text search fallback
+      // The package may throw type cast errors on certain API responses
+    }
+
+    // Fallback to text search if details lookup failed
+    if (fallbackQuery == null || fallbackQuery.trim().isEmpty) {
+      return null;
     }
 
     try {
@@ -102,7 +105,7 @@ class PlacesService {
 
       return Coordinate(latitude: location.lat, longitude: location.lng);
     } catch (e) {
-      logger.w("PlacesService: text search fallback failed", error: e);
+      logger.w("PlacesService: both place details and text search failed", error: e);
       return null;
     }
   }
