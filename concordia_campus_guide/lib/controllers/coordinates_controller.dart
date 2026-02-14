@@ -24,6 +24,38 @@ class CoordinatesController {
     ));
   }
 
+  Future<void> fitBounds(
+    final LatLngBounds bounds, {
+    final double padding = 80,
+  }) async {
+    final controller = await _controller.future;
+    final adjustedBounds = _expandBoundsIfNeeded(bounds);
+    await controller.animateCamera(CameraUpdate.newLatLngBounds(
+      adjustedBounds,
+      padding,
+    ));
+  }
+
+  LatLngBounds _expandBoundsIfNeeded(final LatLngBounds bounds) {
+    const minSpan = 0.002; // ~200m to prevent over-zooming on tiny routes
+    final latSpan = (bounds.northeast.latitude - bounds.southwest.latitude).abs();
+    final lngSpan = (bounds.northeast.longitude - bounds.southwest.longitude).abs();
+
+    if (latSpan >= minSpan && lngSpan >= minSpan) {
+      return bounds;
+    }
+
+    final centerLat = (bounds.northeast.latitude + bounds.southwest.latitude) / 2;
+    final centerLng = (bounds.northeast.longitude + bounds.southwest.longitude) / 2;
+    final halfLat = (latSpan < minSpan ? minSpan : latSpan) / 2;
+    final halfLng = (lngSpan < minSpan ? minSpan : lngSpan) / 2;
+
+    return LatLngBounds(
+      southwest: LatLng(centerLat - halfLat, centerLng - halfLng),
+      northeast: LatLng(centerLat + halfLat, centerLng + halfLng),
+    );
+  }
+
   Future<void> goToCurrentLocation(final BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     try {

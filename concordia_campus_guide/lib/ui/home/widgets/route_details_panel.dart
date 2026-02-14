@@ -10,44 +10,45 @@ class RouteDetailsPanel extends StatefulWidget {
   State<RouteDetailsPanel> createState() => _RouteDetailsPanelState();
 }
 
-class _RouteDetailsPanelState extends State<RouteDetailsPanel>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  bool _isExpanded = false;
+class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
+  double _panelHeight = _minHeight;
+  bool _isDragging = false;
 
   static const double _minHeight = 120;
-  static const double _maxHeight = 400;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   void _toggleExpanded() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final targets = _panelTargets(screenHeight);
+    final current = _panelHeight;
+    final currentIndex = _nearestTargetIndex(targets, current);
+    final nextIndex = (currentIndex + 1) % targets.length;
     setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
+      _panelHeight = targets[nextIndex];
     });
   }
+
+  List<double> _panelTargets(final double screenHeight) {
+    return <double>[
+      _minHeight,
+      screenHeight * 0.5,
+      screenHeight * (2 / 3),
+    ];
+  }
+
+  int _nearestTargetIndex(final List<double> targets, final double value) {
+    var bestIndex = 0;
+    var bestDistance = (targets.first - value).abs();
+    for (var i = 1; i < targets.length; i++) {
+      final distance = (targets[i] - value).abs();
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
+
+  bool get _isCollapsed => _panelHeight <= _minHeight + 1;
 
   @override
   Widget build(final BuildContext context) {
@@ -71,58 +72,73 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
       return const SizedBox.shrink();
     }
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (final context, final child) {
-        final height = _minHeight + (_maxHeight - _minHeight) * _animation.value;
-        return Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: GestureDetector(
-            onVerticalDragUpdate: (final details) {
-              if (details.delta.dy < -5 && !_isExpanded) {
-                _toggleExpanded();
-              } else if (details.delta.dy > 5 && _isExpanded) {
-                _toggleExpanded();
-              }
-            },
-            child: Container(
-              height: height,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHandle(),
-                  Expanded(
-                    child: isLoadingRoutes
-                        ? const Center(
-                            child: CircularProgressIndicator(),
-                          )
-                        : _buildContent(
-                            routeOptions: routeOptions,
-                            selectedMode: selectedMode,
-                            routeError: routeError,
-                          ),
-                  ),
-                ],
-              ),
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * (2 / 3);
+    final clampedHeight = _panelHeight.clamp(_minHeight, maxHeight) as double;
+    final targets = _panelTargets(screenHeight);
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: GestureDetector(
+        onVerticalDragStart: (_) {
+          setState(() {
+            _isDragging = true;
+          });
+        },
+        onVerticalDragUpdate: (final details) {
+          final nextHeight = (_panelHeight - details.delta.dy)
+              .clamp(_minHeight, maxHeight) as double;
+          setState(() {
+            _panelHeight = nextHeight;
+          });
+        },
+        onVerticalDragEnd: (_) {
+          final nearestIndex = _nearestTargetIndex(targets, _panelHeight);
+          setState(() {
+            _panelHeight = targets[nearestIndex];
+            _isDragging = false;
+          });
+        },
+        child: AnimatedContainer(
+          height: clampedHeight,
+          duration: _isDragging
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-        );
-      },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHandle(),
+              Expanded(
+                child: isLoadingRoutes
+                    ? const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : _buildContent(
+                        routeOptions: routeOptions,
+                        selectedMode: selectedMode,
+                        routeError: routeError,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -180,7 +196,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
           _buildModeSelector(routeOptions, selectedMode),
           const SizedBox(height: 12),
           _buildRouteSummary(option, selectedMode),
-          if (_isExpanded && selectedMode == RouteMode.transit && option != null)
+          if (!_isCollapsed && selectedMode == RouteMode.transit && option != null)
             ...[
             const SizedBox(height: 16),
             _buildTransitSteps(option.steps),
@@ -386,7 +402,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
               ],
             ),
           ),
-          if (!_isExpanded &&
+          if (_isCollapsed &&
               selectedMode == RouteMode.transit &&
               option.steps.isNotEmpty)
             Icon(

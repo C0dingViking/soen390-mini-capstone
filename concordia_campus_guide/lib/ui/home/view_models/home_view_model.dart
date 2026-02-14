@@ -73,6 +73,8 @@ class HomeViewModel extends ChangeNotifier {
 
   int selectedCampusIndex = 0;
   Coordinate? cameraTarget;
+  LatLngBounds? routeBounds;
+  bool _suppressNextCameraTarget = false;
 
   set buildingOutlineColor(final Color color) {
     _buildingOutlineColor = color;
@@ -144,6 +146,11 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearRouteBounds() {
+    routeBounds = null;
+    notifyListeners();
+  }
+
   Set<Marker> get mapMarkers {
     final markers = <Marker>{...buildingMarkers};
     if (searchStartMarker != null) markers.add(searchStartMarker!);
@@ -207,6 +214,7 @@ class HomeViewModel extends ChangeNotifier {
     routeOptions = {};
     routePolylines = {};
     transitChangeCircles = {};
+    routeBounds = null;
     routeErrorMessage = null;
     isLoadingRoutes = false;
     notifyListeners();
@@ -264,6 +272,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _suppressNextCameraTarget = true;
       final posCoord = await LocationService.instance.getCurrentPosition();
       _applySelection(
         field: SearchField.start,
@@ -335,7 +344,9 @@ class HomeViewModel extends ChangeNotifier {
     bool changed = false;
 
     // only update cameraTarget if significantly different
-    if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
+    if (_suppressNextCameraTarget) {
+      _suppressNextCameraTarget = false;
+    } else if (!(cameraTarget?.isApproximatelyEqual(posCoord) ?? false)) {
       cameraTarget = posCoord;
       changed = true;
     }
@@ -379,7 +390,6 @@ class HomeViewModel extends ChangeNotifier {
         infoWindow: InfoWindow(title: label),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
       );
-      if (destinationCoordinate == null) cameraTarget = coordinate;
     } else {
       destinationCoordinate = coordinate;
       selectedDestinationLabel = label;
@@ -389,7 +399,6 @@ class HomeViewModel extends ChangeNotifier {
         infoWindow: InfoWindow(title: label),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
       );
-      cameraTarget = coordinate;
     }
   }
 
@@ -426,6 +435,7 @@ class HomeViewModel extends ChangeNotifier {
       routeOptions = {};
       routePolylines = {};
       transitChangeCircles = {};
+      routeBounds = null;
       notifyListeners();
       return;
     }
@@ -454,6 +464,7 @@ class HomeViewModel extends ChangeNotifier {
     if (option == null || option.polyline.isEmpty) {
       routePolylines = {};
       transitChangeCircles = {};
+      routeBounds = null;
       return;
     }
 
@@ -509,11 +520,13 @@ class HomeViewModel extends ChangeNotifier {
       ),
     };
     transitChangeCircles = {}; // Clear circles for non-transit modes
+    routeBounds = _calculateBounds(points);
   }
 
   void _updateTransitPolylines(final RouteOption option) {
     final polylines = <Polyline>{};
     final circles = <Circle>{};
+    final allPoints = <LatLng>[];
     int segmentIndex = 0;
     String? previousTravelMode;
 
@@ -521,6 +534,7 @@ class HomeViewModel extends ChangeNotifier {
       if (step.polyline.isEmpty) continue;
 
       final points = step.polyline.map((final c) => c.toLatLng()).toList();
+      allPoints.addAll(points);
       Color color;
       int width;
       List<PatternItem> pattern;
@@ -593,6 +607,27 @@ class HomeViewModel extends ChangeNotifier {
 
     routePolylines = polylines;
     transitChangeCircles = circles;
+    routeBounds = _calculateBounds(allPoints);
+  }
+
+  LatLngBounds? _calculateBounds(final List<LatLng> points) {
+    if (points.isEmpty) return null;
+    double minLat = points.first.latitude;
+    double maxLat = points.first.latitude;
+    double minLng = points.first.longitude;
+    double maxLng = points.first.longitude;
+
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {

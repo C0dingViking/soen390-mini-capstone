@@ -69,6 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
+    if (_viewModel.routeBounds != null) {
+      _coords.fitBounds(_viewModel.routeBounds!);
+      _viewModel.clearRouteBounds();
+      if (_viewModel.cameraTarget != null) {
+        _viewModel.clearCameraTarget();
+      }
+      return;
+    }
     if (_viewModel.cameraTarget != null) {
       _coords.goToCoordinate(_viewModel.cameraTarget!);
       _viewModel.clearCameraTarget();

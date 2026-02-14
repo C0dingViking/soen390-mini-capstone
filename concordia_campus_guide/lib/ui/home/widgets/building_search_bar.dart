@@ -19,6 +19,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   final FocusNode _destinationFocusNode = FocusNode();
   SearchField _activeField = SearchField.destination;
   bool _expanded = false;
+  String? _lastSyncedStartLabel;
+  String? _lastSyncedDestinationLabel;
 
   @override
   void initState() {
@@ -97,6 +99,13 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           suggestion,
           _activeField,
         );
+    if (_activeField == SearchField.destination) {
+      await context.read<HomeViewModel>().setStartToCurrentLocation();
+      _startController.text = "Current location";
+      _startController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _startController.text.length),
+      );
+    }
     if (!_expanded) {
       _expanded = true;
     }
@@ -128,11 +137,21 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
     // Update text controllers and expand if a selection was made
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (selectedStartLabel != null && _startController.text != selectedStartLabel) {
-        _startController.text = selectedStartLabel;
+      if (selectedStartLabel != _lastSyncedStartLabel && !_startFocusNode.hasFocus) {
+        _lastSyncedStartLabel = selectedStartLabel;
+        if (selectedStartLabel == null) {
+          _startController.clear();
+        } else if (_startController.text != selectedStartLabel) {
+          _startController.text = selectedStartLabel;
+        }
       }
-      if (selectedDestinationLabel != null && _destinationController.text != selectedDestinationLabel) {
-        _destinationController.text = selectedDestinationLabel;
+      if (selectedDestinationLabel != _lastSyncedDestinationLabel && !_destinationFocusNode.hasFocus) {
+        _lastSyncedDestinationLabel = selectedDestinationLabel;
+        if (selectedDestinationLabel == null) {
+          _destinationController.clear();
+        } else if (_destinationController.text != selectedDestinationLabel) {
+          _destinationController.text = selectedDestinationLabel;
+        }
       }
       if ((selectedStartLabel != null || selectedDestinationLabel != null) && !_expanded) {
         setState(() {
