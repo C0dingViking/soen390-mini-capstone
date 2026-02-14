@@ -42,114 +42,158 @@ class DirectionsService {
       final modeString = _toModeString(mode);
       final origin = "${start.latitude},${start.longitude}";
       final dest = "${destination.latitude},${destination.longitude}";
-      
-      final queryParams = <String, String>{
-        "origin": origin,
-        "destination": dest,
-        "mode": modeString,
-        "alternatives": "false",
-        "key": apiKey,
-        if (mode == RouteMode.transit) "transit_mode": "subway|bus",
-        if (departureTime != null) "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000).toString(),
-        if (arrivalTime != null) "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
-      };
-      
-      final uri = Uri.https(
-        "maps.googleapis.com",
-        "/maps/api/directions/json",
-        queryParams,
+      final uri = _buildDirectionsUri(
+        origin,
+        dest,
+        mode,
+        modeString,
+        apiKey,
+        departureTime,
+        arrivalTime,
       );
-      
+
       logger.i(
         "DirectionsService: requesting route with mode=$modeString from $origin to $dest",
       );
 
       final response = await _httpClient.get(uri);
-      
-      if (response.statusCode != 200) {
-        logger.w(
-          "DirectionsService: HTTP error ${response.statusCode}",
-          error: response.body,
-        );
-        return null;
-      }
+      final data = _decodeResponse(response, modeString);
+      if (data == null) return null;
 
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      final status = data["status"] as String?;
-      
-      if (status != "OK") {
-        logger.w(
-          "DirectionsService: route request failed for mode $modeString",
-          error: status ?? "Unknown error",
-        );
-        return null;
-      }
+      final routeOption = _parseRouteOption(data, mode, modeString);
+      if (routeOption == null) return null;
 
-      final routes = data["routes"] as List<dynamic>?;
-      if (routes == null || routes.isEmpty) {
-        logger.w("DirectionsService: no routes returned for mode $modeString");
-        return null;
-      }
-
-      final route = routes.first as Map<String, dynamic>;
-      final legs = route["legs"] as List<dynamic>?;
-      final leg = (legs != null && legs.isNotEmpty) 
-          ? legs.first as Map<String, dynamic> 
-          : null;
-      
-      final overviewPolyline = route["overview_polyline"] as Map<String, dynamic>?;
-      final encoded = overviewPolyline?["points"] as String? ?? "";
-      final polyline = encoded.isNotEmpty ? decodePolyline(encoded) : <Coordinate>[];
-
-      final distance = leg?["distance"] as Map<String, dynamic>?;
-      final duration = leg?["duration"] as Map<String, dynamic>?;
-      final summary = route["summary"] as String?;
-      
-      // Parse departure and arrival times from leg if available
-      DateTime? parsedDepartureTime;
-      DateTime? parsedArrivalTime;
-      
-      if (leg != null) {
-        final depTime = leg["departure_time"] as Map<String, dynamic>?;
-        if (depTime != null) {
-          final timestamp = depTime["value"] as int?;
-          if (timestamp != null) {
-            parsedDepartureTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-          }
-        }
-        
-        final arrTime = leg["arrival_time"] as Map<String, dynamic>?;
-        if (arrTime != null) {
-          final timestamp = arrTime["value"] as int?;
-          if (timestamp != null) {
-            parsedArrivalTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-          }
-        }
-      }
-      
-      // Parse route steps for detailed instructions
-      final steps = _parseRouteSteps(leg);
-      
       logger.i(
         "DirectionsService: successfully parsed route for mode $modeString, "
-        "points=${polyline.length}, distance=${distance?["value"]}, "
-        "duration=${duration?["value"]}, steps=${steps.length}, summary=$summary",
+        "points=${routeOption.polyline.length}, distance=${routeOption.distanceMeters}, "
+        "duration=${routeOption.durationSeconds}, steps=${routeOption.steps.length}, "
+        "summary=${routeOption.summary}",
       );
 
-      return RouteOption(
-        mode: mode,
-        distanceMeters: (distance?["value"] as num?)?.toDouble(),
-        durationSeconds: (duration?["value"] as num?)?.toInt(),
-        polyline: polyline,
-        steps: steps,
-        summary: summary,
-        departureTime: parsedDepartureTime,
-        arrivalTime: parsedArrivalTime,
-      );
+      return routeOption;
     } catch (e, stackTrace) {
       logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);
       return null;
     }
+  }
+
+  Uri _buildDirectionsUri(
+    final String origin,
+    final String dest,
+    final RouteMode mode,
+    final String modeString,
+    final String apiKey,
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  ) {
+    final queryParams = <String, String>{
+      "origin": origin,
+      "destination": dest,
+      "mode": modeString,
+      "alternatives": "false",
+      "key": apiKey,
+      if (mode == RouteMode.transit) "transit_mode": "subway|bus",
+      if (departureTime != null) "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000).toString(),
+      if (arrivalTime != null) "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
+    };
+
+    return Uri.https(
+      "maps.googleapis.com",
+      "/maps/api/directions/json",
+      queryParams,
+    );
+  }
+
+  Map<String, dynamic>? _decodeResponse(final http.Response response, final String modeString) {
+    if (response.statusCode != 200) {
+      logger.w(
+        "DirectionsService: HTTP error ${response.statusCode}",
+        error: response.body,
+      );
+      return null;
+    }
+
+    final data = json.decode(response.body);
+    if (data is! Map<String, dynamic>) {
+      logger.w("DirectionsService: invalid response payload for mode $modeString");
+      return null;
+    }
+
+    return data;
+  }
+
+  RouteOption? _parseRouteOption(
+    final Map<String, dynamic> data,
+    final RouteMode mode,
+    final String modeString,
+  ) {
+    final route = _firstRoute(data, modeString);
+    if (route == null) return null;
+
+    final leg = _firstLeg(route);
+    final polyline = _parseOverviewPolyline(route);
+    final distance = leg?["distance"] as Map<String, dynamic>?;
+    final duration = leg?["duration"] as Map<String, dynamic>?;
+    final summary = route["summary"] as String?;
+    final legTimes = _parseLegTimes(leg);
+    final steps = _parseRouteSteps(leg);
+
+    return RouteOption(
+      mode: mode,
+      distanceMeters: (distance?["value"] as num?)?.toDouble(),
+      durationSeconds: (duration?["value"] as num?)?.toInt(),
+      polyline: polyline,
+      steps: steps,
+      summary: summary,
+      departureTime: legTimes.departureTime,
+      arrivalTime: legTimes.arrivalTime,
+    );
+  }
+
+  Map<String, dynamic>? _firstRoute(final Map<String, dynamic> data, final String modeString) {
+    final status = data["status"] as String?;
+    if (status != "OK") {
+      logger.w(
+        "DirectionsService: route request failed for mode $modeString",
+        error: status ?? "Unknown error",
+      );
+      return null;
+    }
+
+    final routes = data["routes"] as List<dynamic>?;
+    if (routes == null || routes.isEmpty) {
+      logger.w("DirectionsService: no routes returned for mode $modeString");
+      return null;
+    }
+
+    return routes.first as Map<String, dynamic>;
+  }
+
+  Map<String, dynamic>? _firstLeg(final Map<String, dynamic> route) {
+    final legs = route["legs"] as List<dynamic>?;
+    if (legs == null || legs.isEmpty) return null;
+
+    return legs.first as Map<String, dynamic>;
+  }
+
+  List<Coordinate> _parseOverviewPolyline(final Map<String, dynamic> route) {
+    final overviewPolyline = route["overview_polyline"] as Map<String, dynamic>?;
+    final encoded = overviewPolyline?["points"] as String? ?? "";
+    return encoded.isNotEmpty ? decodePolyline(encoded) : <Coordinate>[];
+  }
+
+  _LegTimes _parseLegTimes(final Map<String, dynamic>? leg) {
+    if (leg == null) return _LegTimes();
+
+    final departure = _parseTimeValue(leg["departure_time"] as Map<String, dynamic>?);
+    final arrival = _parseTimeValue(leg["arrival_time"] as Map<String, dynamic>?);
+    return _LegTimes(departureTime: departure, arrivalTime: arrival);
+  }
+
+  DateTime? _parseTimeValue(final Map<String, dynamic>? timeData) {
+    final timestamp = timeData?["value"] as int?;
+    if (timestamp == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
   }
 
   String _toModeString(final RouteMode mode) {
@@ -260,4 +304,11 @@ class DirectionsService {
         .replaceAll("&quot;", "\"")
         .trim();
   }
+}
+
+class _LegTimes {
+  final DateTime? departureTime;
+  final DateTime? arrivalTime;
+
+  const _LegTimes({this.departureTime, this.arrivalTime});
 }
