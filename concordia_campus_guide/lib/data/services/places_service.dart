@@ -89,7 +89,7 @@ class PlacesService {
 
     try {
       final textResponse = await client.searchByText(
-        fallbackQuery!.trim(),
+        fallbackQuery.trim(),
         language: "en",
         location: Location(lat: 45.4972, lng: -73.5786),
         radius: 25000,

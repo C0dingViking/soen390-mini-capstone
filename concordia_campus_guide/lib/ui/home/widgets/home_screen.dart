@@ -5,6 +5,7 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart";
+import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -118,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Positioned(
                 left: 25,
-                bottom: 25,
+                bottom: (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes) ? 145 : 25,
                 child: hvm.currentBuilding != null
                     ? FloatingActionButton.extended(
                         heroTag: "my_location",
@@ -151,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ), 
               Positioned(
                 right: 25,
-                bottom: 25,
+                bottom: (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes) ? 145 : 25,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -208,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              const RouteDetailsPanel(),
             ],
           );
         },

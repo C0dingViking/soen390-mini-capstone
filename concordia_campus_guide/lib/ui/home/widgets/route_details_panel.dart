@@ -1,0 +1,512 @@
+import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+
+class RouteDetailsPanel extends StatefulWidget {
+  const RouteDetailsPanel({super.key});
+
+  @override
+  State<RouteDetailsPanel> createState() => _RouteDetailsPanelState();
+}
+
+class _RouteDetailsPanelState extends State<RouteDetailsPanel>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _isExpanded = false;
+
+  static const double _minHeight = 120;
+  static const double _maxHeight = 400;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(final BuildContext context) {
+    final hasRoutes = context.select(
+      (final HomeViewModel vm) => vm.routeOptions.isNotEmpty,
+    );
+    final isLoadingRoutes = context.select(
+      (final HomeViewModel vm) => vm.isLoadingRoutes,
+    );
+    final routeOptions = context.select(
+      (final HomeViewModel vm) => vm.routeOptions,
+    );
+    final selectedMode = context.select(
+      (final HomeViewModel vm) => vm.selectedRouteMode,
+    );
+    final routeError = context.select(
+      (final HomeViewModel vm) => vm.routeErrorMessage,
+    );
+
+    if (!hasRoutes && !isLoadingRoutes) {
+      return const SizedBox.shrink();
+    }
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (final context, final child) {
+        final height = _minHeight + (_maxHeight - _minHeight) * _animation.value;
+        return Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: GestureDetector(
+            onVerticalDragUpdate: (final details) {
+              if (details.delta.dy < -5 && !_isExpanded) {
+                _toggleExpanded();
+              } else if (details.delta.dy > 5 && _isExpanded) {
+                _toggleExpanded();
+              }
+            },
+            child: Container(
+              height: height,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHandle(),
+                  Expanded(
+                    child: isLoadingRoutes
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : _buildContent(
+                            routeOptions: routeOptions,
+                            selectedMode: selectedMode,
+                            routeError: routeError,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHandle() {
+    return GestureDetector(
+      onTap: _toggleExpanded,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        color: Colors.transparent,
+        child: Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent({
+    required final Map<RouteMode, RouteOption> routeOptions,
+    required final RouteMode selectedMode,
+    required final String? routeError,
+  }) {
+    if (routeError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            routeError,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (routeOptions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final option = routeOptions[selectedMode];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildModeSelector(routeOptions, selectedMode),
+          const SizedBox(height: 12),
+          _buildRouteSummary(option, selectedMode),
+          if (_isExpanded && selectedMode == RouteMode.transit && option != null)
+            ...[
+            const SizedBox(height: 16),
+            _buildTransitSteps(option.steps),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeSelector(
+    final Map<RouteMode, RouteOption> routeOptions,
+    final RouteMode selectedMode,
+  ) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: RouteMode.values.map((final mode) {
+        if (!routeOptions.containsKey(mode)) return const SizedBox.shrink();
+        final option = routeOptions[mode];
+        return ChoiceChip(
+          avatar: Icon(
+            _modeIcon(mode),
+            size: 18,
+            color: selectedMode == mode ? Colors.white : null,
+          ),
+          label: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_modeLabel(mode)),
+              if (option != null)
+                Text(
+                  _formatDuration(option.durationSeconds) ?? "",
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: selectedMode == mode
+                        ? Colors.white70
+                        : Colors.grey[600],
+                  ),
+                ),
+            ],
+          ),
+          selected: selectedMode == mode,
+          onSelected: (_) =>
+              context.read<HomeViewModel>().selectRouteMode(mode),
+          selectedColor: _getModeColor(mode),
+          backgroundColor: Colors.grey[200],
+          labelStyle: TextStyle(
+            color: selectedMode == mode ? Colors.white : Colors.black87,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildRouteSummary(final RouteOption? option, final RouteMode selectedMode) {
+    if (option == null) return const SizedBox.shrink();
+
+    final distance = _formatDistance(option.distanceMeters);
+    final duration = _formatDuration(option.durationSeconds);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.access_time,
+            size: 20,
+            color: Colors.grey[700],
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (duration != null)
+                  Text(
+                    duration,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                if (distance != null)
+                  Text(
+                    distance,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                if (option.summary != null)
+                  Text(
+                    option.summary!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          if (!_isExpanded &&
+              selectedMode == RouteMode.transit &&
+              option.steps.isNotEmpty)
+            Icon(
+              Icons.keyboard_arrow_up,
+              color: Colors.grey[700],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransitSteps(final List<RouteStep> steps) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Route Details",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...steps.map((step) => _buildStepItem(step)),
+      ],
+    );
+  }
+
+  Widget _buildStepItem(final RouteStep step) {
+    final travelMode = step.travelMode;
+    final instruction = step.instruction;
+    final duration = _formatDuration(step.durationSeconds);
+    final transitDetails = step.transitDetails;
+
+    IconData icon;
+    Color iconColor;
+
+    if (travelMode == "TRANSIT" && transitDetails != null) {
+      switch (transitDetails.mode) {
+        case TransitMode.subway:
+          icon = Icons.subway;
+          iconColor = const Color(0xFF4285F4);
+          break;
+        case TransitMode.bus:
+          icon = Icons.directions_bus;
+          iconColor = const Color(0xFF34A853);
+          break;
+        case TransitMode.train:
+          icon = Icons.train;
+          iconColor = const Color(0xFFFBBC04);
+          break;
+        default:
+          icon = Icons.directions_transit;
+          iconColor = const Color(0xFF4285F4);
+      }
+    } else {
+      icon = Icons.directions_walk;
+      iconColor = Colors.grey[600]!;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 24, color: iconColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (transitDetails != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: iconColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          transitDetails.shortName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          transitDetails.lineName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Board at ${transitDetails.departureStop}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  Text(
+                    "Exit at ${transitDetails.arrivalStop}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  if (transitDetails.numStops != null)
+                    Text(
+                      "${transitDetails.numStops} stops • $duration",
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ] else ...[
+                  Text(
+                    instruction,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  if (duration != null)
+                    Text(
+                      duration,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _modeLabel(final RouteMode mode) {
+    switch (mode) {
+      case RouteMode.walking:
+        return "Walk";
+      case RouteMode.bicycling:
+        return "Bike";
+      case RouteMode.driving:
+        return "Drive";
+      case RouteMode.transit:
+        return "Transit";
+    }
+  }
+
+  IconData _modeIcon(final RouteMode mode) {
+    switch (mode) {
+      case RouteMode.walking:
+        return Icons.directions_walk;
+      case RouteMode.bicycling:
+        return Icons.directions_bike;
+      case RouteMode.driving:
+        return Icons.directions_car;
+      case RouteMode.transit:
+        return Icons.directions_transit;
+    }
+  }
+
+  Color _getModeColor(final RouteMode mode) {
+    switch (mode) {
+      case RouteMode.walking:
+        return const Color(0xFF4285F4);
+      case RouteMode.bicycling:
+        return const Color(0xFF34A853);
+      case RouteMode.driving:
+        return const Color(0xFF912338); // Concordia maroon
+      case RouteMode.transit:
+        return const Color(0xFF4285F4);
+    }
+  }
+
+  String? _formatDistance(final double? meters) {
+    if (meters == null) return null;
+    if (meters >= 1000) {
+      final km = meters / 1000;
+      return "${km.toStringAsFixed(1)} km";
+    }
+    return "${meters.toStringAsFixed(0)} m";
+  }
+
+  String? _formatDuration(final int? seconds) {
+    if (seconds == null) return null;
+    final minutes = (seconds / 60).round();
+    if (minutes < 60) return "$minutes min";
+    final hours = minutes ~/ 60;
+    final remaining = minutes % 60;
+    return "$hours h $remaining min";
+  }
+}
