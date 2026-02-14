@@ -1,6 +1,8 @@
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
 import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
 import "package:provider/provider.dart";
 
 class BuildingSearchBar extends StatefulWidget {
@@ -270,14 +272,33 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                 final isBuilding =
                     suggestion.type == SearchSuggestionType.building;
                 return ListTile(
-                  leading: Icon(
-                    isBuilding
-                        ? Icons.apartment_outlined
-                        : Icons.location_on_outlined,
-                  ),
+                  leading: isBuilding
+                      ? SvgPicture.asset(
+                          "assets/images/app_logo.svg",
+                          height: 24,
+                          width: 24,
+                        )
+                      : const Icon(Icons.location_on_outlined),
                   title: Text(suggestion.title),
                   subtitle: suggestion.subtitle != null
                       ? Text(suggestion.subtitle!)
+                      : null,
+                  trailing: isBuilding && suggestion.building != null
+                      ? IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (final context) =>
+                                    BuildingDetailScreen(
+                                  building: suggestion.building!,
+                                ),
+                              ),
+                            );
+                          },
+                          tooltip: "View building info",
+                        )
                       : null,
                   onTap: () => _selectSuggestion(suggestion),
                 );
