@@ -585,7 +585,7 @@ class HomeViewModel extends ChangeNotifier {
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
             radius: 7,
-            fillColor: const Color.fromARGB(255, 134, 134, 134)!.withValues(alpha: 1.0), // Opaque
+            fillColor: const Color.fromARGB(255, 134, 134, 134).withValues(alpha: 1.0), // Opaque
             strokeWidth: 3,
             strokeColor: const Color.fromARGB(255, 207, 207, 207),
           ),

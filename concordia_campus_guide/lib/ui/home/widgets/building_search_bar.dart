@@ -99,8 +99,10 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           suggestion,
           _activeField,
         );
+    if (!mounted) return;
     if (_activeField == SearchField.destination) {
       await context.read<HomeViewModel>().setStartToCurrentLocation();
+      if (!mounted) return;
       _startController.text = "Current location";
       _startController.selection = TextSelection.fromPosition(
         TextPosition(offset: _startController.text.length),
@@ -306,7 +308,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
               padding: const EdgeInsets.symmetric(vertical: 4),
               shrinkWrap: true,
               itemCount: results.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (final context, final index) =>
+                  const Divider(height: 1),
               itemBuilder: (final context, final index) {
                 final suggestion = results[index];
                 final isBuilding =

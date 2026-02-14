@@ -74,7 +74,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight = screenHeight * (2 / 3);
-    final clampedHeight = _panelHeight.clamp(_minHeight, maxHeight) as double;
+    final clampedHeight = _panelHeight.clamp(_minHeight, maxHeight);
     final targets = _panelTargets(screenHeight);
 
     return Positioned(
@@ -89,7 +89,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         },
         onVerticalDragUpdate: (final details) {
           final nextHeight = (_panelHeight - details.delta.dy)
-              .clamp(_minHeight, maxHeight) as double;
+              .clamp(_minHeight, maxHeight);
           setState(() {
             _panelHeight = nextHeight;
           });
@@ -214,7 +214,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Departure Time',
+            "Departure Time",
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
@@ -226,7 +226,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   viewModel.setDepartureMode(DepartureMode.now);
                 },
                 selected: viewModel.departureMode == DepartureMode.now,
-                label: const Text('Now'),
+                label: const Text("Now"),
               ),
               FilterChip(
                 onSelected: (_) async {
@@ -285,7 +285,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Leave at ${_formatTime(viewModel.suggestedDepartureTime!)} to arrive on time',
+                "Leave at ${_formatTime(viewModel.suggestedDepartureTime!)} to arrive on time",
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -297,9 +297,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   }
 
   String _formatTime(final DateTime time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+    final hour = time.hour.toString().padLeft(2, "0");
+    final minute = time.minute.toString().padLeft(2, "0");
+    return "$hour:$minute";
   }
 
   Widget _buildModeSelector(
@@ -426,7 +426,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           ),
         ),
         const SizedBox(height: 8),
-        ...steps.map((step) => _buildStepItem(step)),
+        ...steps.map((final step) => _buildStepItem(step)),
       ],
     );
   }

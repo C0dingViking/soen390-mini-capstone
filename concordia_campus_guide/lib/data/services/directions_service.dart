@@ -12,7 +12,7 @@ class DirectionsService {
   Future<String?>? _keyLookup;
   final http.Client _httpClient;
 
-  DirectionsService({http.Client? httpClient, ApiKeyService? apiKeyService})
+  DirectionsService({final http.Client? httpClient, final ApiKeyService? apiKeyService})
       : _httpClient = httpClient ?? http.Client(),
         _apiKeyService = apiKeyService ?? ApiKeyService();
 

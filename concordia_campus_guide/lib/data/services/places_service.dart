@@ -10,7 +10,7 @@ class PlacesService {
   String? _resolvedKey;
   Future<String?>? _keyLookup;
 
-  PlacesService({GoogleMapsPlaces? client, ApiKeyService? apiKeyService})
+  PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
       : _places = client,
         _apiKeyService = apiKeyService ?? ApiKeyService();
 
