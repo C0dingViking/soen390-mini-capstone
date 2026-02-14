@@ -6,6 +6,9 @@ on:
         - main
         - "Sprint-*"
     types: [opened, synchronize, reopened]
+  push:
+    branches: 
+        - main # needed for SonarQube to analyze the main branch
 
 jobs:
   test:
@@ -55,6 +58,7 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name != 'push' # Only build on PRs, not on direct pushes to main
 
     defaults:
       run:
