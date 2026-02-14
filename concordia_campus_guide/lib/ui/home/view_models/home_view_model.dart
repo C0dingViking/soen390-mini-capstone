@@ -9,6 +9,7 @@ import "package:concordia_campus_guide/domain/models/building_map_data.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
 
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
@@ -23,6 +24,8 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
+
+  List<Building> searchResults = [];
 
   bool myLocationEnabled = false;
 
@@ -103,6 +106,25 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateSearchQuery(final String query) {
+    searchResults = _searchBuildings(query);
+    notifyListeners();
+  }
+
+  void clearSearchResults() {
+    if (searchResults.isNotEmpty) {
+      searchResults = [];
+      notifyListeners();
+    }
+  }
+
+  void selectSearchBuilding(final Building building) {
+    selectedCampusIndex = _campusIndexFor(building.campus);
+    cameraTarget = building.location;
+    searchResults = [];
+    notifyListeners();
+  }
+
   void stopLocationTracking() {
     LocationService.instance.dispose();
     myLocationEnabled = false;
@@ -132,6 +154,40 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     if (changed) notifyListeners();
+  }
+
+  int _campusIndexFor(final Campus campus) {
+    return campus == Campus.sgw ? 0 : 1;
+  }
+
+  List<Building> _searchBuildings(final String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return [];
+
+    final matches = buildings.values.where((final b) {
+      final name = b.name.toLowerCase();
+      final id = b.id.toLowerCase();
+      return name.contains(q) || id.contains(q);
+    }).toList();
+
+    matches.sort((final a, final b) {
+      final rankA = _matchRank(a, q);
+      final rankB = _matchRank(b, q);
+      if (rankA != rankB) return rankA.compareTo(rankB);
+      return a.name.compareTo(b.name);
+    });
+
+    return matches.take(8).toList();
+  }
+
+  int _matchRank(final Building building, final String query) {
+    final name = building.name.toLowerCase();
+    final id = building.id.toLowerCase();
+    if (name.startsWith(query)) return 0;
+    if (name.contains(query)) return 1;
+    if (id.startsWith(query)) return 2;
+    if (id.contains(query)) return 3;
+    return 4;
   }
 
   @override

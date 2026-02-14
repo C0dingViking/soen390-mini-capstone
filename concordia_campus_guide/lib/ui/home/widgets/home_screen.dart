@@ -3,8 +3,8 @@ import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
-import "package:concordia_campus_guide/ui/directions/directions_screen.dart";  
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
+import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -92,18 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
-      appBar: CampusAppBar(  
-        onDirectionsPressed: () {
-          Navigator.push<void>(
-            context,
-            MaterialPageRoute(
-              builder: (final context) => DirectionsScreen(
-                buildings: context.read<HomeViewModel>().buildings,
-              ),
-            ),
-          );
-        },
-      ),
+      appBar: const CampusAppBar(),
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
@@ -119,6 +108,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 polygons: hvm.buildingOutlines,
                 markers: hvm.buildingMarkers,
                 onPolygonTap: _onBuildingTapped,
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                top: 12,
+                child: BuildingSearchBar(
+                  onBuildingSelected: (final building) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (final context) => BuildingDetailScreen(
+                          building: building,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               Positioned(
                 left: 25,
