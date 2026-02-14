@@ -10,11 +10,19 @@ class DirectionsInteractor {
 
   Future<List<RouteOption>> getRouteOptions(
     final Coordinate start,
-    final Coordinate destination,
-  ) async {
+    final Coordinate destination, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
     final results = await Future.wait(
       RouteMode.values.map(
-        (final mode) => _service.fetchRoute(start, destination, mode),
+        (final mode) => _service.fetchRoute(
+          start,
+          destination,
+          mode,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+        ),
       ),
     );
 

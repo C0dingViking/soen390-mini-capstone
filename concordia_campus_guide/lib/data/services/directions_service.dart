@@ -28,8 +28,10 @@ class DirectionsService {
   Future<RouteOption?> fetchRoute(
     final Coordinate start,
     final Coordinate destination,
-    final RouteMode mode,
-  ) async {
+    final RouteMode mode, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
     final apiKey = await _getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
       logger.w("DirectionsService: API key not available");
@@ -41,17 +43,21 @@ class DirectionsService {
       final origin = "${start.latitude},${start.longitude}";
       final dest = "${destination.latitude},${destination.longitude}";
       
+      final queryParams = <String, String>{
+        "origin": origin,
+        "destination": dest,
+        "mode": modeString,
+        "alternatives": "false",
+        "key": apiKey,
+        if (mode == RouteMode.transit) "transit_mode": "subway|bus",
+        if (departureTime != null) "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000).toString(),
+        if (arrivalTime != null) "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
+      };
+      
       final uri = Uri.https(
         "maps.googleapis.com",
         "/maps/api/directions/json",
-        {
-          "origin": origin,
-          "destination": dest,
-          "mode": modeString,
-          "alternatives": "false", // Get best route for each mode
-          "key": apiKey,
-          if (mode == RouteMode.transit) "transit_mode": "subway|bus",
-        },
+        queryParams,
       );
       
       logger.i(
@@ -99,6 +105,28 @@ class DirectionsService {
       final duration = leg?["duration"] as Map<String, dynamic>?;
       final summary = route["summary"] as String?;
       
+      // Parse departure and arrival times from leg if available
+      DateTime? parsedDepartureTime;
+      DateTime? parsedArrivalTime;
+      
+      if (leg != null) {
+        final depTime = leg["departure_time"] as Map<String, dynamic>?;
+        if (depTime != null) {
+          final timestamp = depTime["value"] as int?;
+          if (timestamp != null) {
+            parsedDepartureTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+          }
+        }
+        
+        final arrTime = leg["arrival_time"] as Map<String, dynamic>?;
+        if (arrTime != null) {
+          final timestamp = arrTime["value"] as int?;
+          if (timestamp != null) {
+            parsedArrivalTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+          }
+        }
+      }
+      
       // Parse route steps for detailed instructions
       final steps = _parseRouteSteps(leg);
       
@@ -115,6 +143,8 @@ class DirectionsService {
         polyline: polyline,
         steps: steps,
         summary: summary,
+        departureTime: parsedDepartureTime,
+        arrivalTime: parsedArrivalTime,
       );
     } catch (e, stackTrace) {
       logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);

@@ -17,6 +17,8 @@ import "package:concordia_campus_guide/utils/campus.dart";
 
 enum SearchField { start, destination }
 
+enum DepartureMode { now, departAt, arriveBy }
+
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
@@ -52,6 +54,12 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polyline> routePolylines = {};
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
+
+  // Departure/Arrival time state
+  DepartureMode departureMode = DepartureMode.now;
+  DateTime? selectedDepartureTime;
+  DateTime? selectedArrivalTime;
+  DateTime? suggestedDepartureTime;
 
   List<SearchSuggestion> searchResults = [];
   String _searchQuery = "";
@@ -283,6 +291,46 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setDepartureMode(final DepartureMode mode) {
+    if (departureMode == mode) return;
+    departureMode = mode;
+    if (mode == DepartureMode.now) {
+      selectedDepartureTime = null;
+      selectedArrivalTime = null;
+      suggestedDepartureTime = null;
+    }
+    _loadRoutesIfReady();
+  }
+
+  void setDepartureTime(final DateTime time) {
+    selectedDepartureTime = time;
+    selectedArrivalTime = null;
+    suggestedDepartureTime = null;
+    departureMode = DepartureMode.departAt;
+    _loadRoutesIfReady();
+  }
+
+  void setArrivalTime(final DateTime time) {
+    selectedArrivalTime = time;
+    selectedDepartureTime = null;
+    departureMode = DepartureMode.arriveBy;
+    _calculateSuggestedDeparture();
+    _loadRoutesIfReady();
+  }
+
+  void _calculateSuggestedDeparture() {
+    if (selectedArrivalTime == null || routeOptions.isEmpty) return;
+    
+    final selectedOption = routeOptions[selectedRouteMode];
+    if (selectedOption == null || selectedOption.durationSeconds == null) return;
+    
+    final durationSeconds = selectedOption.durationSeconds!;
+    suggestedDepartureTime = selectedArrivalTime!.subtract(
+      Duration(seconds: durationSeconds),
+    );
+    notifyListeners();
+  }
+
   void _handleLocationUpdate(final Coordinate posCoord) {
     bool changed = false;
 
@@ -353,9 +401,21 @@ class HomeViewModel extends ChangeNotifier {
     routeErrorMessage = null;
     notifyListeners();
 
+    // Determine time parameters based on departure mode
+    DateTime? departureParam;
+    DateTime? arrivalParam;
+    
+    if (departureMode == DepartureMode.departAt) {
+      departureParam = selectedDepartureTime;
+    } else if (departureMode == DepartureMode.arriveBy) {
+      arrivalParam = selectedArrivalTime;
+    }
+
     final options = await directionsInteractor.getRouteOptions(
       startCoordinate!,
       destinationCoordinate!,
+      departureTime: departureParam,
+      arrivalTime: arrivalParam,
     );
 
     if (requestId != _routeRequestId) return;
@@ -376,6 +436,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     _updateRoutePolylines();
+    _calculateSuggestedDeparture();
     isLoadingRoutes = false;
     notifyListeners();
   }
@@ -384,6 +445,7 @@ class HomeViewModel extends ChangeNotifier {
     if (selectedRouteMode == mode) return;
     selectedRouteMode = mode;
     _updateRoutePolylines();
+    _calculateSuggestedDeparture();
     notifyListeners();
   }
 

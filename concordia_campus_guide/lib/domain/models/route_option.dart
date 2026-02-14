@@ -47,6 +47,8 @@ class RouteOption {
   final List<Coordinate> polyline;
   final List<RouteStep> steps;
   final String? summary;
+  final DateTime? departureTime;
+  final DateTime? arrivalTime;
 
   const RouteOption({
     required this.mode,
@@ -55,5 +57,7 @@ class RouteOption {
     required this.polyline,
     this.steps = const [],
     this.summary,
+    this.departureTime,
+    this.arrivalTime,
   });
 }

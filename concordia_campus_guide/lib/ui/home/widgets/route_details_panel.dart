@@ -175,6 +175,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildTimeSelector(),
+          const SizedBox(height: 12),
           _buildModeSelector(routeOptions, selectedMode),
           const SizedBox(height: 12),
           _buildRouteSummary(option, selectedMode),
@@ -186,6 +188,102 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
         ],
       ),
     );
+  }
+
+  Widget _buildTimeSelector() {
+    final viewModel = context.read<HomeViewModel>();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Departure Time',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              FilterChip(
+                onSelected: (_) {
+                  viewModel.setDepartureMode(DepartureMode.now);
+                },
+                selected: viewModel.departureMode == DepartureMode.now,
+                label: const Text('Now'),
+              ),
+              FilterChip(
+                onSelected: (_) async {
+                  final now = DateTime.now();
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(
+                      viewModel.selectedDepartureTime ?? now,
+                    ),
+                  );
+                  if (time != null) {
+                    final dateTime = DateTime(
+                      now.year,
+                      now.month,
+                      now.day,
+                      time.hour,
+                      time.minute,
+                    );
+                    viewModel.setDepartureTime(dateTime);
+                  }
+                },
+                selected: viewModel.departureMode == DepartureMode.departAt,
+                label: Text(
+                  'Depart at ${viewModel.selectedDepartureTime != null ? _formatTime(viewModel.selectedDepartureTime!) : ''}',
+                ),
+              ),
+              FilterChip(
+                onSelected: (_) async {
+                  final now = DateTime.now();
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(
+                      viewModel.selectedArrivalTime ?? now,
+                    ),
+                  );
+                  if (time != null) {
+                    final dateTime = DateTime(
+                      now.year,
+                      now.month,
+                      now.day,
+                      time.hour,
+                      time.minute,
+                    );
+                    viewModel.setArrivalTime(dateTime);
+                  }
+                },
+                selected: viewModel.departureMode == DepartureMode.arriveBy,
+                label: Text(
+                  'Arrive by ${viewModel.selectedArrivalTime != null ? _formatTime(viewModel.selectedArrivalTime!) : ''}',
+                ),
+              ),
+            ],
+          ),
+          if (viewModel.departureMode == DepartureMode.arriveBy &&
+              viewModel.suggestedDepartureTime != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Leave at ${_formatTime(viewModel.suggestedDepartureTime!)} to arrive on time',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(final DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   Widget _buildModeSelector(
