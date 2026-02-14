@@ -350,6 +350,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final option = routeOptions[selectedMode];
     final distance = _formatDistance(option?.distanceMeters);
     final duration = _formatDuration(option?.durationSeconds);
+    final hasTransitSteps = selectedMode == RouteMode.transit && 
+                            option != null && 
+                            option.steps.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(top: 10),
@@ -385,9 +388,123 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
               child: Text(
                 [if (duration != null) duration, if (distance != null) distance]
                     .join(" - "),
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ),
+          if (hasTransitSteps)
+            _buildTransitSteps(option.steps),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransitSteps(final List<RouteStep> steps) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Route Details:",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...steps.map((step) => _buildStepItem(step)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepItem(final RouteStep step) {
+    final travelMode = step.travelMode;
+    final instruction = step.instruction;
+    final duration = _formatDuration(step.durationSeconds);
+    final transitDetails = step.transitDetails;
+    
+    IconData icon;
+    Color iconColor;
+    
+    if (travelMode == "TRANSIT" && transitDetails != null) {
+      switch (transitDetails.mode) {
+        case TransitMode.subway:
+          icon = Icons.subway;
+          iconColor = Colors.blue;
+          break;
+        case TransitMode.bus:
+          icon = Icons.directions_bus;
+          iconColor = Colors.green;
+          break;
+        case TransitMode.train:
+          icon = Icons.train;
+          iconColor = Colors.orange;
+          break;
+        default:
+          icon = Icons.directions_transit;
+          iconColor = Colors.blue;
+      }
+    } else {
+      icon = Icons.directions_walk;
+      iconColor = Colors.grey;
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (transitDetails != null) ...[
+                  Text(
+                    "${transitDetails.shortName} - ${transitDetails.lineName}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    "From ${transitDetails.departureStop} to ${transitDetails.arrivalStop}",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  if (transitDetails.numStops != null)
+                    Text(
+                      "${transitDetails.numStops} stops",
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                ] else
+                  Text(
+                    instruction,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                if (duration != null)
+                  Text(
+                    duration,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

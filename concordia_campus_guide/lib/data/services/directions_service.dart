@@ -48,8 +48,9 @@ class DirectionsService {
           "origin": origin,
           "destination": dest,
           "mode": modeString,
+          "alternatives": "false", // Get best route for each mode
           "key": apiKey,
-          if (mode == RouteMode.transit) "transit_mode": "subway",
+          if (mode == RouteMode.transit) "transit_mode": "subway|bus",
         },
       );
       
@@ -96,10 +97,15 @@ class DirectionsService {
 
       final distance = leg?["distance"] as Map<String, dynamic>?;
       final duration = leg?["duration"] as Map<String, dynamic>?;
+      final summary = route["summary"] as String?;
+      
+      // Parse route steps for detailed instructions
+      final steps = _parseRouteSteps(leg);
       
       logger.i(
         "DirectionsService: successfully parsed route for mode $modeString, "
-        "points=${polyline.length}, distance=${distance?["value"]}, duration=${duration?["value"]}",
+        "points=${polyline.length}, distance=${distance?["value"]}, "
+        "duration=${duration?["value"]}, steps=${steps.length}, summary=$summary",
       );
 
       return RouteOption(
@@ -107,6 +113,8 @@ class DirectionsService {
         distanceMeters: (distance?["value"] as num?)?.toDouble(),
         durationSeconds: (duration?["value"] as num?)?.toInt(),
         polyline: polyline,
+        steps: steps,
+        summary: summary,
       );
     } catch (e, stackTrace) {
       logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);
@@ -125,5 +133,93 @@ class DirectionsService {
       case RouteMode.transit:
         return "transit";
     }
+  }
+
+  List<RouteStep> _parseRouteSteps(final Map<String, dynamic>? leg) {
+    if (leg == null) return [];
+    
+    final stepsData = leg["steps"] as List<dynamic>?;
+    if (stepsData == null || stepsData.isEmpty) return [];
+    
+    final steps = <RouteStep>[];
+    for (final stepData in stepsData) {
+      final step = stepData as Map<String, dynamic>;
+      
+      final distance = step["distance"] as Map<String, dynamic>?;
+      final duration = step["duration"] as Map<String, dynamic>?;
+      final travelMode = step["travel_mode"] as String? ?? "WALKING";
+      final instruction = _stripHtml(step["html_instructions"] as String? ?? "");
+      
+      TransitDetails? transitDetails;
+      if (travelMode == "TRANSIT") {
+        transitDetails = _parseTransitDetails(step);
+      }
+      
+      steps.add(RouteStep(
+        instruction: instruction,
+        distanceMeters: (distance?["value"] as num?)?.toDouble() ?? 0,
+        durationSeconds: (duration?["value"] as num?)?.toInt() ?? 0,
+        travelMode: travelMode,
+        transitDetails: transitDetails,
+      ));
+    }
+    
+    return steps;
+  }
+
+  TransitDetails? _parseTransitDetails(final Map<String, dynamic> step) {
+    final transitData = step["transit_details"] as Map<String, dynamic>?;
+    if (transitData == null) return null;
+    
+    final line = transitData["line"] as Map<String, dynamic>?;
+    final departureStop = transitData["departure_stop"] as Map<String, dynamic>?;
+    final arrivalStop = transitData["arrival_stop"] as Map<String, dynamic>?;
+    final numStops = transitData["num_stops"] as int?;
+    
+    final lineName = line?["name"] as String? ?? "";
+    final shortName = line?["short_name"] as String? ?? "";
+    final vehicleData = line?["vehicle"] as Map<String, dynamic>?;
+    final vehicleType = vehicleData?["type"] as String? ?? "BUS";
+    
+    final transitMode = _parseTransitMode(vehicleType);
+    
+    return TransitDetails(
+      lineName: lineName,
+      shortName: shortName,
+      mode: transitMode,
+      departureStop: departureStop?["name"] as String? ?? "",
+      arrivalStop: arrivalStop?["name"] as String? ?? "",
+      numStops: numStops,
+    );
+  }
+
+  TransitMode _parseTransitMode(final String vehicleType) {
+    switch (vehicleType.toUpperCase()) {
+      case "SUBWAY":
+      case "METRO_RAIL":
+        return TransitMode.subway;
+      case "BUS":
+        return TransitMode.bus;
+      case "TRAIN":
+      case "HEAVY_RAIL":
+        return TransitMode.train;
+      case "TRAM":
+        return TransitMode.tram;
+      case "RAIL":
+        return TransitMode.rail;
+      default:
+        return TransitMode.bus;
+    }
+  }
+
+  String _stripHtml(final String html) {
+    return html
+        .replaceAll(RegExp(r"<[^>]*>"), "")
+        .replaceAll("&nbsp;", " ")
+        .replaceAll("&amp;", "&")
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&quot;", "\"")
+        .trim();
   }
 }
