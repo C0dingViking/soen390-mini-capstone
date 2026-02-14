@@ -198,7 +198,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
       children: RouteMode.values.map((final mode) {
         if (!routeOptions.containsKey(mode)) return const SizedBox.shrink();
         final option = routeOptions[mode];
-        return ChoiceChip(
+        return FilterChip(
           avatar: Icon(
             _modeIcon(mode),
             size: 18,
@@ -229,6 +229,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
           labelStyle: TextStyle(
             color: selectedMode == mode ? Colors.white : Colors.black87,
           ),
+          showCheckmark: false,
         );
       }).toList(),
     );
@@ -329,23 +330,23 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
       switch (transitDetails.mode) {
         case TransitMode.subway:
           icon = Icons.subway;
-          iconColor = const Color(0xFF4285F4);
+          iconColor = const Color(0xFF004085); // Dark Blue for subway
           break;
         case TransitMode.bus:
           icon = Icons.directions_bus;
-          iconColor = const Color(0xFF34A853);
+          iconColor = const Color(0xFF00adef); // Cyan for bus
           break;
         case TransitMode.train:
           icon = Icons.train;
-          iconColor = const Color(0xFFFBBC04);
+          iconColor = const Color(0xFF573996); // Mauve for train
           break;
         default:
           icon = Icons.directions_transit;
-          iconColor = const Color(0xFF4285F4);
+          iconColor = const Color(0xFF004085); // Dark Blue for transit
       }
     } else {
       icon = Icons.directions_walk;
-      iconColor = Colors.grey[600]!;
+      iconColor = const Color(0xFF057d78); // Turquoise for walking
     }
 
     return Container(
@@ -482,13 +483,13 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel>
   Color _getModeColor(final RouteMode mode) {
     switch (mode) {
       case RouteMode.walking:
-        return const Color(0xFF4285F4);
+        return const Color(0xFF057d78); // Concordia Turquoise
       case RouteMode.bicycling:
-        return const Color(0xFF34A853);
+        return const Color(0xFF057d78); // Concordia Turquoise
       case RouteMode.driving:
-        return const Color(0xFF912338); // Concordia maroon
+        return const Color(0xFF912338); // Concordia Burgundy
       case RouteMode.transit:
-        return const Color(0xFF4285F4);
+        return const Color(0xFF004085); // Dark Blue
     }
   }
 

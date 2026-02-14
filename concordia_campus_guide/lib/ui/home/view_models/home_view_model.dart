@@ -327,7 +327,7 @@ class HomeViewModel extends ChangeNotifier {
         markerId: const MarkerId("search-start"),
         position: coordinate.toLatLng(),
         infoWindow: InfoWindow(title: label),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
       );
       if (destinationCoordinate == null) cameraTarget = coordinate;
     } else {
@@ -337,7 +337,7 @@ class HomeViewModel extends ChangeNotifier {
         markerId: const MarkerId("search-destination"),
         position: coordinate.toLatLng(),
         infoWindow: InfoWindow(title: label),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
       );
       cameraTarget = coordinate;
     }
@@ -406,7 +406,7 @@ class HomeViewModel extends ChangeNotifier {
     
     switch (selectedRouteMode) {
       case RouteMode.walking:
-        polylineColor = const Color(0xFF4285F4); // Blue for walking
+        polylineColor = const Color(0xFF057d78); // Concordia Turquoise
         polylineWidth = 4;
         polylinePattern = [
           PatternItem.dot,
@@ -414,17 +414,17 @@ class HomeViewModel extends ChangeNotifier {
         ]; // Dotted line for pedestrian paths
         break;
       case RouteMode.bicycling:
-        polylineColor = const Color(0xFF34A853); // Green for biking
+        polylineColor = const Color(0xFF057d78); // Concordia Turquoise
         polylineWidth = 5;
         polylinePattern = []; // Solid line
         break;
       case RouteMode.driving:
-        polylineColor = AppTheme.concordiaMaroon; // Maroon for driving
+        polylineColor = const Color(0xFF912338); // Concordia Burgundy
         polylineWidth = 6;
         polylinePattern = []; // Solid line
         break;
       case RouteMode.transit:
-        polylineColor = const Color(0xFF4285F4); // Blue for transit
+        polylineColor = const Color(0xFF004085); // Dark Blue
         polylineWidth = 5;
         polylinePattern = [
           PatternItem.dash(20),
@@ -457,37 +457,37 @@ class HomeViewModel extends ChangeNotifier {
       List<PatternItem> pattern;
 
       if (step.travelMode == "TRANSIT" && step.transitDetails != null) {
-        // Color-code based on transit type
+        // Color-code based on transit type (colorblind-friendly Concordia palette)
         switch (step.transitDetails!.mode) {
           case TransitMode.subway:
-            color = const Color(0xFF4285F4); // Blue for subway/metro
+            color = const Color(0xFF004085); // Dark Blue for subway/metro
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.bus:
-            color = const Color(0xFF34A853); // Green for bus
+            color = const Color(0xFF00adef); // Cyan for bus (differentiates from metro)
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.train:
-            color = const Color(0xFFFBBC04); // Yellow for train
+            color = const Color(0xFF573996); // Mauve for train
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.tram:
-            color = const Color(0xFFEA4335); // Red for tram
+            color = const Color(0xFF057d78); // Turquoise for tram
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.rail:
-            color = const Color(0xFF9E9E9E); // Gray for rail
+            color = const Color(0xFFcbb576); // Gold for rail
             width = 6;
             pattern = []; // Solid line
             break;
         }
       } else {
         // Walking segments in transit route
-        color = const Color(0xFF4285F4); // Blue
+        color = const Color(0xFF057d78); // Turquoise
         width = 4;
         pattern = [
           PatternItem.dot,
