@@ -99,27 +99,6 @@ class BuildingDetailScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Start From Here
-          FloatingActionButton.extended(
-            heroTag: "start_from_here",
-            onPressed: () async {
-              final suggestion = SearchSuggestion.building(
-                building,
-                subtitle: building.campus.name,
-              );
-              await context
-                  .read<HomeViewModel>()
-                  .selectSearchSuggestion(suggestion, SearchField.start);
-              if (!context.mounted) return;
-              Navigator.pop(context);
-            },
-            backgroundColor: Colors.green.shade700,
-            icon: const Icon(Icons.flag, color: Colors.white),
-            label: const Text("Start from here", style: TextStyle(color: Colors.white)),
-          ),
-
-          const SizedBox(height: 12),
-
           // Go To This Building
           FloatingActionButton.extended(
             heroTag: "go_to_here",
