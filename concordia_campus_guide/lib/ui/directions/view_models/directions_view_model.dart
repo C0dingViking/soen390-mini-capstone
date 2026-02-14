@@ -13,11 +13,24 @@ class DirectionsViewModel extends ChangeNotifier {
   DirectionsViewModel({required this.routeInteractor});
 
   Coordinate? currentLocationCoordinate;
+  Building? startBuilding;
   Building? destinationBuilding;
   DirectionRoute? plannedRoute; 
   
   bool isLoadingLocation = false;
   String? errorMessage;
+
+  void setStartAndDestinationBuildings(final Building? start, final Building? dest) {
+    if (start != null) {
+      startBuilding = start;
+    }
+    if (dest != null) {
+      destinationBuilding = dest;
+    }
+
+    _updateRoute();
+    notifyListeners();
+  }
 
   void updateDestination(final Building building) {
     destinationBuilding = building;
@@ -32,6 +45,7 @@ class DirectionsViewModel extends ChangeNotifier {
 
     try {
       final coordinate = await LocationService.instance.getCurrentPosition();
+      startBuilding = null;
       currentLocationCoordinate = coordinate;
       _updateRoute();
     } catch (e) {
@@ -44,9 +58,10 @@ class DirectionsViewModel extends ChangeNotifier {
   }
 
   void _updateRoute() {
-    if (currentLocationCoordinate != null && destinationBuilding != null) {
+    final start = startBuilding?.location ?? currentLocationCoordinate;
+    if (start != null && destinationBuilding != null) {
       plannedRoute = routeInteractor.createOutdoorRoute(
-        currentLocationCoordinate!,
+        start,
         destinationBuilding!,
       );
     } else {
@@ -60,6 +75,13 @@ class DirectionsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get canGetDirections => 
-      currentLocationCoordinate != null && destinationBuilding != null;
+  bool get canGetDirections =>
+      (currentLocationCoordinate != null || startBuilding != null) && destinationBuilding != null;
+
+  void setStartBuilding(final Building building) {
+    startBuilding = building;
+    currentLocationCoordinate = null;
+    _updateRoute();
+    notifyListeners();
+  }
 }

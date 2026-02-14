@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/ui/directions/widgets/searchable_building_field.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:concordia_campus_guide/ui/directions/view_models/directions_view_model.dart";
@@ -7,16 +8,20 @@ import "package:concordia_campus_guide/domain/interactors/route_interactor.dart"
 class DirectionsScreen extends StatelessWidget {
   final Map<String, Building> buildings;
   final DirectionsViewModel? viewModel; //For testing purposes
+  final Building? startBuilding;
+  final Building? destinationBuilding;
 
 
-  const DirectionsScreen({super.key, required this.buildings, this.viewModel});
+  const DirectionsScreen({super.key, required this.buildings, this.viewModel, this.startBuilding, this.destinationBuilding});
 
   @override
   Widget build(final BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => viewModel ?? DirectionsViewModel( 
-        routeInteractor: RouteInteractor(),
-      ),
+      create: (_) {
+        final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
+        viewModel.setStartAndDestinationBuildings(startBuilding, destinationBuilding);
+        return viewModel;
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Get Directions"),
@@ -24,17 +29,21 @@ class DirectionsScreen extends StatelessWidget {
         ),
         body: Consumer<DirectionsViewModel>(
           builder: (final context, final viewModel, final child) {
+            final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Start Location Section
-                  const Text(
-                    "Start Location",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  SearchableBuildingField(
+                    buildings: buildings.values.toList(),
+                    selected: viewModel.startBuilding,
+                    label: "Start Location",
+                    onSelected: (final b) => viewModel.setStartBuilding(b),
                   ),
-                  const SizedBox(height: 12),
+
+                  SizedBox(height: keyboardOpen ? 12 : 32),
                   
                   ElevatedButton.icon(
                     onPressed: viewModel.isLoadingLocation 
@@ -72,40 +81,14 @@ class DirectionsScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Destination Section
-                  const Text(
-                    "Destination Building",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  SearchableBuildingField(
+                    buildings: buildings.values.toList(),
+                    selected: viewModel.destinationBuilding,
+                    label: "Destination Building",
+                    onSelected: (final b) => viewModel.updateDestination(b),
                   ),
-                  const SizedBox(height: 12),
 
-                  //Wrapper
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 56), 
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: "Select a building",
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8), 
-                      ),
-                      isExpanded: true, 
-                      initialValue: viewModel.destinationBuilding?.id,
-                      items: buildings.values.map((final building) {
-                        return DropdownMenuItem<String>(
-                          value: building.id,
-                          child: Text(
-                            "${building.name} (${building.id.toUpperCase()})",
-                            overflow: TextOverflow.ellipsis, //Long Building Names
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (final value) {
-                        if (value != null) {
-                          context.read<DirectionsViewModel>().updateDestination(buildings[value]!);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: keyboardOpen ? 12 : 32),
 
                   // Get Directions Button
                   ElevatedButton(

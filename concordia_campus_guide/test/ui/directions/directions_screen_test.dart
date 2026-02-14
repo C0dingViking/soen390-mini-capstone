@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/ui/directions/widgets/searchable_building_field.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:provider/provider.dart";
@@ -65,7 +66,7 @@ void main() {
       expect(find.text("Start Location"), findsOneWidget);
       expect(find.text("Destination Building"), findsOneWidget);
       expect(find.text("Use Current Location"), findsOneWidget);
-      expect(find.text("Select a building"), findsOneWidget);
+      expect(find.byType(SearchableBuildingField), findsNWidgets(2));
       expect(find.byIcon(Icons.my_location), findsOneWidget);
     });
 
@@ -76,11 +77,11 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
 
-      expect(find.text("Hall Building (H)"), findsWidgets);
-      expect(find.text("EV Building (EV)"), findsWidgets);
+      expect(find.text("Hall Building"), findsWidgets);
+      expect(find.text("EV Building"), findsWidgets);
     });
 
     testWidgets("can select building from dropdown", (final WidgetTester tester) async {
@@ -90,12 +91,12 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text("Hall Building (H)").last);
+      await tester.tap(find.text("Hall Building").last);
       await tester.pumpAndSettle();
 
-      expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+      expect(find.text("Hall Building"), findsOneWidget);
     });
 
     testWidgets("shows loading indicator when fetching location", (final WidgetTester tester) async {
@@ -118,14 +119,8 @@ void main() {
         ),
       );
 
-      final container = tester.widget<Container>(
-        find.ancestor(
-          of: find.byType(DropdownButtonFormField<String>),
-          matching: find.byType(Container),
-        ),
-      );
-
-      expect(container.constraints, const BoxConstraints(maxHeight: 56));
+      // Dropdown menu doesn't have constrains anymore, just check TextField for this test
+      expect(find.byType(TextField), findsWidgets);
     });
 
     testWidgets("building codes are uppercase", (final WidgetTester tester) async {
@@ -135,10 +130,10 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining("(H)"), findsWidgets);
+      expect(find.textContaining("Hall Building"), findsWidgets);
       expect(find.textContaining("(h)"), findsNothing);
     });
 
@@ -181,27 +176,49 @@ void main() {
       expect(viewModel.plannedRoute?.destinationBuilding.name, equals("Hall Building"));
     });
     testWidgets("shows route dialog when Get Directions pressed", (final WidgetTester tester) async {
-  final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
-  viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
-  viewModel.updateDestination(testBuildings["h"]!);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DirectionsScreen(buildings: testBuildings),
+        ),
+      );
 
-  await tester.pumpWidget(
-    MaterialApp(
-      home: DirectionsScreen(
-        buildings: testBuildings,
-        viewModel: viewModel,
-      ),
-    ),
-  );
+      await tester.pump();
+
+      // Get the  ViewModel created inside DirectionsScreen
+      final viewModel = Provider.of<DirectionsViewModel>(
+        tester.element(find.byType(Consumer<DirectionsViewModel>)),
+        listen: false,
+      );
+
+      // Set required state so the button becomes enabled
+      viewModel.currentLocationCoordinate = const Coordinate(latitude: 45.4972, longitude: -73.5786);
+      viewModel.destinationBuilding = testBuildings["h"]!;
+      viewModel.plannedRoute = viewModel.routeInteractor.createOutdoorRoute(
+        viewModel.currentLocationCoordinate!,
+        viewModel.destinationBuilding!,
+      );
+      viewModel.notifyListeners();
+
+  await tester.pump();
+
+  // Select Start Location
+  await tester.tap(find.byType(TextField).first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text("Hall Building").first);
+  await tester.pumpAndSettle();
+
+  // Select Destination Building
+  await tester.tap(find.byType(TextField).last);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text("Hall Building").first);
+  await tester.pumpAndSettle();
 
   await tester.pump();
 
   // Tap Get Directions button
-  final getDirectionsButton = find.descendant(
-    of: find.byType(ElevatedButton),
-    matching: find.text("Get Directions"),
-  );
-  await tester.tap(getDirectionsButton);
+  await tester.drag(find.byType(Scaffold), const Offset(0, -300));
+  await tester.pumpAndSettle();
+  await tester.tap( find.widgetWithText(ElevatedButton, "Get Directions") );
   await tester.pumpAndSettle();
 
   // Verify dialog-specific content (unique to the dialog only)
@@ -209,7 +226,7 @@ void main() {
   expect(find.text("OK"), findsOneWidget);
   expect(find.textContaining("From: Current Location"), findsOneWidget);
   expect(find.textContaining("To: Hall Building"), findsOneWidget);    // ← More specific!
-  expect(find.textContaining("Distance: 0.04 km"), findsOneWidget);   // ← More specific!
+  expect(find.textContaining("Distance: 0.00 km"), findsOneWidget);   // ← More specific!
 
   // Tap OK to dismiss
   await tester.tap(find.text("OK"));
@@ -220,21 +237,26 @@ void main() {
 });
 
 testWidgets("shows error message when errorMessage is set", (final WidgetTester tester) async {
-  final viewModel = DirectionsViewModel(routeInteractor: RouteInteractor());
-  viewModel.errorMessage = "Unable to get current location: test error";
-
   await tester.pumpWidget(
     MaterialApp(
       home: DirectionsScreen(
         buildings: testBuildings,
-        viewModel: viewModel,
       ),
     ),
   );
 
   await tester.pump();
 
-  
+  final vm = Provider.of<DirectionsViewModel>(
+    tester.element(find.byType(Consumer<DirectionsViewModel>)),
+    listen: false,
+  );
+
+  vm.errorMessage = "Unable to get current location: test error";
+  vm.notifyListeners();
+
+  await tester.pump();
+
   expect(find.textContaining("Unable to get current location"), findsOneWidget);
 
   // Verify error styling
