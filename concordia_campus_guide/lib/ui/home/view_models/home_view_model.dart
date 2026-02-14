@@ -66,6 +66,10 @@ class HomeViewModel extends ChangeNotifier {
   Timer? _searchDebounce;
 
   bool myLocationEnabled = false;
+  bool isSearchBarExpanded = false;
+  int _unfocusSearchBarSignal = 0;
+
+  int get unfocusSearchBarSignal => _unfocusSearchBarSignal;
 
   static const Coordinate sgw = Coordinate(latitude: 45.4972, longitude: -73.5786);
   static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
@@ -217,6 +221,17 @@ class HomeViewModel extends ChangeNotifier {
     routeBounds = null;
     routeErrorMessage = null;
     isLoadingRoutes = false;
+    notifyListeners();
+  }
+
+  void setSearchBarExpanded(final bool value) {
+    if (isSearchBarExpanded == value) return;
+    isSearchBarExpanded = value;
+    notifyListeners();
+  }
+
+  void requestUnfocusSearchBar() {
+    _unfocusSearchBarSignal++;
     notifyListeners();
   }
 

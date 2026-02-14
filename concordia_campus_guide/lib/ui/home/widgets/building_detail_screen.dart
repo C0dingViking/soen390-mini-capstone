@@ -103,13 +103,19 @@ class BuildingDetailScreen extends StatelessWidget {
           FloatingActionButton.extended(
             heroTag: "go_to_here",
             onPressed: () async {
+              final viewModel = context.read<HomeViewModel>();
               final suggestion = SearchSuggestion.building(
                 building,
                 subtitle: building.campus.name,
               );
-              await context
-                  .read<HomeViewModel>()
-                  .selectSearchSuggestion(suggestion, SearchField.destination);
+              if (!viewModel.isSearchBarExpanded) {
+                await viewModel.setStartToCurrentLocation();
+              }
+              await viewModel.selectSearchSuggestion(
+                suggestion,
+                SearchField.destination,
+              );
+              viewModel.requestUnfocusSearchBar();
               if (!context.mounted) return;
               Navigator.pop(context);
             },

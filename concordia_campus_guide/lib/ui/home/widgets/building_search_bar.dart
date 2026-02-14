@@ -21,6 +21,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   bool _expanded = false;
   String? _lastSyncedStartLabel;
   String? _lastSyncedDestinationLabel;
+  int _lastUnfocusSignal = 0;
 
   @override
   void initState() {
@@ -82,6 +83,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     _activeField = SearchField.destination;
     context.read<HomeViewModel>().clearSearchResults();
     context.read<HomeViewModel>().clearRouteSelection();
+    context.read<HomeViewModel>().setSearchBarExpanded(false);
     FocusScope.of(context).unfocus();
     setState(() {});
   }
@@ -101,7 +103,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         );
     if (!mounted) return;
     final shouldAutoSetStart =
-        _activeField == SearchField.destination && !_expanded;
+      _activeField == SearchField.destination && !_expanded;
     if (shouldAutoSetStart) {
       await context.read<HomeViewModel>().setStartToCurrentLocation();
       if (!mounted) return;
@@ -112,6 +114,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     }
     if (!_expanded) {
       _expanded = true;
+      context.read<HomeViewModel>().setSearchBarExpanded(true);
     }
     FocusScope.of(context).unfocus();
   }
@@ -138,9 +141,18 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final selectedDestinationLabel = context.select(
       (final HomeViewModel vm) => vm.selectedDestinationLabel,
     );
+    final unfocusSignal = context.select(
+      (final HomeViewModel vm) => vm.unfocusSearchBarSignal,
+    );
 
     // Update text controllers and expand if a selection was made
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (unfocusSignal != _lastUnfocusSignal) {
+        _lastUnfocusSignal = unfocusSignal;
+        _startFocusNode.unfocus();
+        _destinationFocusNode.unfocus();
+        FocusScope.of(context).unfocus();
+      }
       if (selectedStartLabel != _lastSyncedStartLabel && !_startFocusNode.hasFocus) {
         _lastSyncedStartLabel = selectedStartLabel;
         if (selectedStartLabel == null) {
@@ -161,6 +173,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         setState(() {
           _expanded = true;
         });
+        context.read<HomeViewModel>().setSearchBarExpanded(true);
       }
     });
 
