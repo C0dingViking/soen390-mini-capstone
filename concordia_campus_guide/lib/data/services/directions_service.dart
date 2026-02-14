@@ -150,6 +150,13 @@ class DirectionsService {
       final travelMode = step["travel_mode"] as String? ?? "WALKING";
       final instruction = _stripHtml(step["html_instructions"] as String? ?? "");
       
+      // Parse polyline for this step
+      final polylineData = step["polyline"] as Map<String, dynamic>?;
+      final encodedPolyline = polylineData?["points"] as String? ?? "";
+      final stepPolyline = encodedPolyline.isNotEmpty 
+          ? decodePolyline(encodedPolyline) 
+          : <Coordinate>[];
+      
       TransitDetails? transitDetails;
       if (travelMode == "TRANSIT") {
         transitDetails = _parseTransitDetails(step);
@@ -161,6 +168,7 @@ class DirectionsService {
         durationSeconds: (duration?["value"] as num?)?.toInt() ?? 0,
         travelMode: travelMode,
         transitDetails: transitDetails,
+        polyline: stepPolyline,
       ));
     }
     

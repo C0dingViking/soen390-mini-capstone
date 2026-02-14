@@ -28,6 +28,7 @@ class RouteStep {
   final int durationSeconds;
   final String travelMode; // WALKING, TRANSIT, etc.
   final TransitDetails? transitDetails;
+  final List<Coordinate> polyline;
 
   const RouteStep({
     required this.instruction,
@@ -35,6 +36,7 @@ class RouteStep {
     required this.durationSeconds,
     required this.travelMode,
     this.transitDetails,
+    this.polyline = const [],
   });
 }
 

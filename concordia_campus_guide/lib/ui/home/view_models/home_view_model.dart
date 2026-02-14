@@ -385,9 +385,15 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    // Special handling for transit routes - show distinct segments
+    if (selectedRouteMode == RouteMode.transit && option.steps.isNotEmpty) {
+      _updateTransitPolylines(option);
+      return;
+    }
+
+    // For non-transit routes, use single polyline with mode-specific styling
     final points = option.polyline.map((final c) => c.toLatLng()).toList();
     
-    // Mode-specific styling to replicate Google Maps behavior
     Color polylineColor;
     int polylineWidth;
     List<PatternItem> polylinePattern;
@@ -430,6 +436,72 @@ class HomeViewModel extends ChangeNotifier {
         patterns: polylinePattern,
       ),
     };
+  }
+
+  void _updateTransitPolylines(final RouteOption option) {
+    final polylines = <Polyline>{};
+    int segmentIndex = 0;
+
+    for (final step in option.steps) {
+      if (step.polyline.isEmpty) continue;
+
+      final points = step.polyline.map((final c) => c.toLatLng()).toList();
+      Color color;
+      int width;
+      List<PatternItem> pattern;
+
+      if (step.travelMode == "TRANSIT" && step.transitDetails != null) {
+        // Color-code based on transit type
+        switch (step.transitDetails!.mode) {
+          case TransitMode.subway:
+            color = const Color(0xFF4285F4); // Blue for subway/metro
+            width = 6;
+            pattern = []; // Solid line
+            break;
+          case TransitMode.bus:
+            color = const Color(0xFF34A853); // Green for bus
+            width = 6;
+            pattern = []; // Solid line
+            break;
+          case TransitMode.train:
+            color = const Color(0xFFFBBC04); // Yellow for train
+            width = 6;
+            pattern = []; // Solid line
+            break;
+          case TransitMode.tram:
+            color = const Color(0xFFEA4335); // Red for tram
+            width = 6;
+            pattern = []; // Solid line
+            break;
+          case TransitMode.rail:
+            color = const Color(0xFF9E9E9E); // Gray for rail
+            width = 6;
+            pattern = []; // Solid line
+            break;
+        }
+      } else {
+        // Walking segments in transit route
+        color = const Color(0xFF4285F4); // Blue
+        width = 4;
+        pattern = [
+          PatternItem.dot,
+          PatternItem.gap(10),
+        ]; // Dotted line for walking
+      }
+
+      polylines.add(
+        Polyline(
+          polylineId: PolylineId("transit-segment-$segmentIndex"),
+          points: points,
+          color: color,
+          width: width,
+          patterns: pattern,
+        ),
+      );
+      segmentIndex++;
+    }
+
+    routePolylines = polylines;
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {
