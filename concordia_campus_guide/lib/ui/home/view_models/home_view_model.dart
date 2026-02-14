@@ -43,6 +43,8 @@ class HomeViewModel extends ChangeNotifier {
   Marker? searchDestinationMarker;
   Coordinate? startCoordinate;
   Coordinate? destinationCoordinate;
+  String? selectedStartLabel;
+  String? selectedDestinationLabel;
   bool isLoadingRoutes = false;
   String? routeErrorMessage;
   Map<RouteMode, RouteOption> routeOptions = {};
@@ -189,6 +191,8 @@ class HomeViewModel extends ChangeNotifier {
     _routeRequestId++;
     startCoordinate = null;
     destinationCoordinate = null;
+    selectedStartLabel = null;
+    selectedDestinationLabel = null;
     searchStartMarker = null;
     searchDestinationMarker = null;
     routeOptions = {};
@@ -318,6 +322,7 @@ class HomeViewModel extends ChangeNotifier {
 
     if (field == SearchField.start) {
       startCoordinate = coordinate;
+      selectedStartLabel = label;
       searchStartMarker = Marker(
         markerId: const MarkerId("search-start"),
         position: coordinate.toLatLng(),
@@ -327,6 +332,7 @@ class HomeViewModel extends ChangeNotifier {
       if (destinationCoordinate == null) cameraTarget = coordinate;
     } else {
       destinationCoordinate = coordinate;
+      selectedDestinationLabel = label;
       searchDestinationMarker = Marker(
         markerId: const MarkerId("search-destination"),
         position: coordinate.toLatLng(),

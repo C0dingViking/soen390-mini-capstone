@@ -119,6 +119,27 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final isResolvingStart = context.select(
       (final HomeViewModel vm) => vm.isResolvingStartLocation,
     );
+    final selectedStartLabel = context.select(
+      (final HomeViewModel vm) => vm.selectedStartLabel,
+    );
+    final selectedDestinationLabel = context.select(
+      (final HomeViewModel vm) => vm.selectedDestinationLabel,
+    );
+
+    // Update text controllers and expand if a selection was made
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (selectedStartLabel != null && _startController.text != selectedStartLabel) {
+        _startController.text = selectedStartLabel;
+      }
+      if (selectedDestinationLabel != null && _destinationController.text != selectedDestinationLabel) {
+        _destinationController.text = selectedDestinationLabel;
+      }
+      if ((selectedStartLabel != null || selectedDestinationLabel != null) && !_expanded) {
+        setState(() {
+          _expanded = true;
+        });
+      }
+    });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
