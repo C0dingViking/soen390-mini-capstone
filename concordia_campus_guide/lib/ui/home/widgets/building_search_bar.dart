@@ -145,225 +145,336 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       (final HomeViewModel vm) => vm.unfocusSearchBarSignal,
     );
 
-    // Update text controllers and expand if a selection was made
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (unfocusSignal != _lastUnfocusSignal) {
-        _lastUnfocusSignal = unfocusSignal;
-        _startFocusNode.unfocus();
-        _destinationFocusNode.unfocus();
-        FocusScope.of(context).unfocus();
-      }
-      if (selectedStartLabel != _lastSyncedStartLabel && !_startFocusNode.hasFocus) {
-        _lastSyncedStartLabel = selectedStartLabel;
-        if (selectedStartLabel == null) {
-          _startController.clear();
-        } else if (_startController.text != selectedStartLabel) {
-          _startController.text = selectedStartLabel;
-        }
-      }
-      if (selectedDestinationLabel != _lastSyncedDestinationLabel && !_destinationFocusNode.hasFocus) {
-        _lastSyncedDestinationLabel = selectedDestinationLabel;
-        if (selectedDestinationLabel == null) {
-          _destinationController.clear();
-        } else if (_destinationController.text != selectedDestinationLabel) {
-          _destinationController.text = selectedDestinationLabel;
-        }
-      }
-      if ((selectedStartLabel != null || selectedDestinationLabel != null) && !_expanded) {
-        setState(() {
-          _expanded = true;
-        });
-        context.read<HomeViewModel>().setSearchBarExpanded(true);
-      }
-    });
+    _schedulePostFrameSync(
+      context: context,
+      unfocusSignal: unfocusSignal,
+      selectedStartLabel: selectedStartLabel,
+      selectedDestinationLabel: selectedDestinationLabel,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_expanded)
-                TextField(
-                  controller: _startController,
-                  focusNode: _startFocusNode,
-                  onChanged: (final value) => _handleQueryChanged(
-                    value,
-                    SearchField.start,
-                  ),
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    hintText: "Choose starting point",
-                    prefixIcon: const Icon(Icons.trip_origin),
-                    suffixIcon: isResolvingStart
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.my_location),
-                                onPressed: () async {
-                                  await context
-                                      .read<HomeViewModel>()
-                                      .setStartToCurrentLocation();
-                                  _startController.text = "Current location";
-                                  _startController.selection =
-                                      TextSelection.fromPosition(
-                                    TextPosition(
-                                      offset: _startController.text.length,
-                                    ),
-                                  );
-                                },
-                              ),
-                              if (showClearStart)
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () =>
-                                      _clearQuery(SearchField.start),
-                                ),
-                            ],
-                          ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: const OutlineInputBorder(
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                  ),
-                ),
-              if (_expanded) const Divider(height: 1),
-              TextField(
-                controller: _destinationController,
-                focusNode: _destinationFocusNode,
-                onChanged: (final value) => _handleQueryChanged(
-                  value,
-                  SearchField.destination,
-                ),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: _expanded
-                      ? "Choose destination"
-                      : "Search for a place or address",
-                  prefixIcon: const Icon(Icons.place_outlined),
-                  suffixIcon: isResolvingPlace
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : _expanded
-                          ? IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: _cancelSearch,
-                            )
-                          : showClearDestination
-                              ? IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () =>
-                                      _clearQuery(SearchField.destination),
-                                )
-                              : isSearchingPlaces
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(12),
-                                      child: SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    )
-                                  : null,
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: const OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        _buildSearchCard(
+          context,
+          showClearStart: showClearStart,
+          showClearDestination: showClearDestination,
+          isResolvingStart: isResolvingStart,
+          isResolvingPlace: isResolvingPlace,
+          isSearchingPlaces: isSearchingPlaces,
         ),
-        if (results.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.only(top: 6),
-            constraints: const BoxConstraints(maxHeight: 260),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
+        if (results.isNotEmpty) _buildResultsList(context, results),
+      ],
+    );
+  }
+
+  void _schedulePostFrameSync({
+    required final BuildContext context,
+    required final int unfocusSignal,
+    required final String? selectedStartLabel,
+    required final String? selectedDestinationLabel,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleUnfocusSignal(context, unfocusSignal);
+      _syncStartLabel(selectedStartLabel);
+      _syncDestinationLabel(selectedDestinationLabel);
+      _expandIfSelected(context, selectedStartLabel, selectedDestinationLabel);
+    });
+  }
+
+  void _handleUnfocusSignal(
+    final BuildContext context,
+    final int unfocusSignal,
+  ) {
+    if (unfocusSignal == _lastUnfocusSignal) return;
+    _lastUnfocusSignal = unfocusSignal;
+    _startFocusNode.unfocus();
+    _destinationFocusNode.unfocus();
+    FocusScope.of(context).unfocus();
+  }
+
+  void _syncStartLabel(final String? selectedStartLabel) {
+    if (selectedStartLabel == _lastSyncedStartLabel || _startFocusNode.hasFocus) {
+      return;
+    }
+    _lastSyncedStartLabel = selectedStartLabel;
+    if (selectedStartLabel == null) {
+      _startController.clear();
+    } else if (_startController.text != selectedStartLabel) {
+      _startController.text = selectedStartLabel;
+    }
+  }
+
+  void _syncDestinationLabel(final String? selectedDestinationLabel) {
+    if (selectedDestinationLabel == _lastSyncedDestinationLabel ||
+        _destinationFocusNode.hasFocus) {
+      return;
+    }
+    _lastSyncedDestinationLabel = selectedDestinationLabel;
+    if (selectedDestinationLabel == null) {
+      _destinationController.clear();
+    } else if (_destinationController.text != selectedDestinationLabel) {
+      _destinationController.text = selectedDestinationLabel;
+    }
+  }
+
+  void _expandIfSelected(
+    final BuildContext context,
+    final String? selectedStartLabel,
+    final String? selectedDestinationLabel,
+  ) {
+    if (_expanded) return;
+    if (selectedStartLabel == null && selectedDestinationLabel == null) return;
+
+    setState(() {
+      _expanded = true;
+    });
+    context.read<HomeViewModel>().setSearchBarExpanded(true);
+  }
+
+  Widget _buildSearchCard(
+    final BuildContext context, {
+    required final bool showClearStart,
+    required final bool showClearDestination,
+    required final bool isResolvingStart,
+    required final bool isResolvingPlace,
+    required final bool isSearchingPlaces,
+  }) {
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_expanded)
+            _buildStartField(
+              context,
+              showClearStart: showClearStart,
+              isResolvingStart: isResolvingStart,
             ),
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              shrinkWrap: true,
-              itemCount: results.length,
-              separatorBuilder: (final context, final index) =>
-                  const Divider(height: 1),
-              itemBuilder: (final context, final index) {
-                final suggestion = results[index];
-                final isBuilding =
-                    suggestion.type == SearchSuggestionType.building;
-                return ListTile(
-                  leading: isBuilding
-                      ? SvgPicture.asset(
-                          "assets/images/app_logo.svg",
-                          height: 24,
-                          width: 24,
-                        )
-                      : const Icon(Icons.location_on_outlined),
-                  title: Text(suggestion.title),
-                  subtitle: suggestion.subtitle != null
-                      ? Text(suggestion.subtitle!)
-                      : null,
-                  trailing: isBuilding && suggestion.building != null
-                      ? IconButton(
-                          icon: const Icon(Icons.info_outline),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (final context) =>
-                                    BuildingDetailScreen(
-                                  building: suggestion.building!,
-                                ),
-                              ),
-                            );
-                          },
-                          tooltip: "View building info",
-                        )
-                      : null,
-                  onTap: () => _selectSuggestion(suggestion),
-                );
-              },
-            ),
+          if (_expanded) const Divider(height: 1),
+          _buildDestinationField(
+            context,
+            showClearDestination: showClearDestination,
+            isResolvingPlace: isResolvingPlace,
+            isSearchingPlaces: isSearchingPlaces,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStartField(
+    final BuildContext context, {
+    required final bool showClearStart,
+    required final bool isResolvingStart,
+  }) {
+    return TextField(
+      controller: _startController,
+      focusNode: _startFocusNode,
+      onChanged: (final value) => _handleQueryChanged(
+        value,
+        SearchField.start,
+      ),
+      textInputAction: TextInputAction.next,
+      decoration: InputDecoration(
+        hintText: "Choose starting point",
+        prefixIcon: const Icon(Icons.trip_origin),
+        suffixIcon: _buildStartSuffix(
+          context,
+          showClearStart: showClearStart,
+          isResolvingStart: isResolvingStart,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStartSuffix(
+    final BuildContext context, {
+    required final bool showClearStart,
+    required final bool isResolvingStart,
+  }) {
+    if (isResolvingStart) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.my_location),
+          onPressed: () async {
+            await context.read<HomeViewModel>().setStartToCurrentLocation();
+            _startController.text = "Current location";
+            _startController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _startController.text.length),
+            );
+          },
+        ),
+        if (showClearStart)
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => _clearQuery(SearchField.start),
           ),
       ],
+    );
+  }
+
+  Widget _buildDestinationField(
+    final BuildContext context, {
+    required final bool showClearDestination,
+    required final bool isResolvingPlace,
+    required final bool isSearchingPlaces,
+  }) {
+    return TextField(
+      controller: _destinationController,
+      focusNode: _destinationFocusNode,
+      onChanged: (final value) => _handleQueryChanged(
+        value,
+        SearchField.destination,
+      ),
+      textInputAction: TextInputAction.search,
+      decoration: InputDecoration(
+        hintText: _expanded
+            ? "Choose destination"
+            : "Search for a place or address",
+        prefixIcon: const Icon(Icons.place_outlined),
+        suffixIcon: _buildDestinationSuffix(
+          showClearDestination: showClearDestination,
+          isResolvingPlace: isResolvingPlace,
+          isSearchingPlaces: isSearchingPlaces,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget? _buildDestinationSuffix({
+    required final bool showClearDestination,
+    required final bool isResolvingPlace,
+    required final bool isSearchingPlaces,
+  }) {
+    if (isResolvingPlace) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (_expanded) {
+      return IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _cancelSearch,
+      );
+    }
+
+    if (showClearDestination) {
+      return IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: () => _clearQuery(SearchField.destination),
+      );
+    }
+
+    if (isSearchingPlaces) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    return null;
+  }
+
+  Widget _buildResultsList(
+    final BuildContext context,
+    final List<SearchSuggestion> results,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      constraints: const BoxConstraints(maxHeight: 260),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        shrinkWrap: true,
+        itemCount: results.length,
+        separatorBuilder: (final context, final index) =>
+            const Divider(height: 1),
+        itemBuilder: (final context, final index) {
+          final suggestion = results[index];
+          final isBuilding = suggestion.type == SearchSuggestionType.building;
+          return ListTile(
+            leading: isBuilding
+                ? SvgPicture.asset(
+                    "assets/images/app_logo.svg",
+                    height: 24,
+                    width: 24,
+                  )
+                : const Icon(Icons.location_on_outlined),
+            title: Text(suggestion.title),
+            subtitle:
+                suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
+            trailing: isBuilding && suggestion.building != null
+                ? IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (final context) => BuildingDetailScreen(
+                            building: suggestion.building!,
+                          ),
+                        ),
+                      );
+                    },
+                    tooltip: "View building info",
+                  )
+                : null,
+            onTap: () => _selectSuggestion(suggestion),
+          );
+        },
+      ),
     );
   }
 }
