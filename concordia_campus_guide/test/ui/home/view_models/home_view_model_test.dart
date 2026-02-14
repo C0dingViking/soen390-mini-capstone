@@ -2,7 +2,11 @@ import "dart:io";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
+import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -50,6 +54,29 @@ class _FakeGeolocator extends GeolocatorPlatform {
   }
 }
 
+class _FakePlacesInteractor extends PlacesInteractor {
+  @override
+  Future<List<PlaceSuggestion>> searchPlaces(final String query) async => [];
+
+  @override
+  Future<Coordinate?> resolvePlace(final String placeId) async => null;
+
+  @override
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
+}
+
+class _FakeDirectionsInteractor extends DirectionsInteractor {
+  @override
+  Future<List<RouteOption>> getRouteOptions(
+    final Coordinate start,
+    final Coordinate destination, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
+    return [];
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group("Home View Model", () {
@@ -64,7 +91,11 @@ void main() {
           return File(path).readAsString();
         },
       );
-      hvm = HomeViewModel(mapInteractor: MapDataInteractor(buildingRepo: repo));
+      hvm = HomeViewModel(
+        mapInteractor: MapDataInteractor(buildingRepo: repo),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+      );
       previousPlatform = GeolocatorPlatform.instance;
       fakeGeolocator = _FakeGeolocator();
       GeolocatorPlatform.instance = fakeGeolocator;
