@@ -50,6 +50,7 @@ class HomeViewModel extends ChangeNotifier {
   Map<RouteMode, RouteOption> routeOptions = {};
   RouteMode selectedRouteMode = RouteMode.walking;
   Set<Polyline> routePolylines = {};
+  Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
 
   List<SearchSuggestion> searchResults = [];
@@ -197,6 +198,7 @@ class HomeViewModel extends ChangeNotifier {
     searchDestinationMarker = null;
     routeOptions = {};
     routePolylines = {};
+    transitChangeCircles = {};
     routeErrorMessage = null;
     isLoadingRoutes = false;
     notifyListeners();
@@ -363,6 +365,7 @@ class HomeViewModel extends ChangeNotifier {
       isLoadingRoutes = false;
       routeOptions = {};
       routePolylines = {};
+      transitChangeCircles = {};
       notifyListeners();
       return;
     }
@@ -388,6 +391,7 @@ class HomeViewModel extends ChangeNotifier {
     final option = routeOptions[selectedRouteMode];
     if (option == null || option.polyline.isEmpty) {
       routePolylines = {};
+      transitChangeCircles = {};
       return;
     }
 
@@ -442,11 +446,14 @@ class HomeViewModel extends ChangeNotifier {
         patterns: polylinePattern,
       ),
     };
+    transitChangeCircles = {}; // Clear circles for non-transit modes
   }
 
   void _updateTransitPolylines(final RouteOption option) {
     final polylines = <Polyline>{};
+    final circles = <Circle>{};
     int segmentIndex = 0;
+    String? previousTravelMode;
 
     for (final step in option.steps) {
       if (step.polyline.isEmpty) continue;
@@ -495,6 +502,20 @@ class HomeViewModel extends ChangeNotifier {
         ]; // Dotted line for walking
       }
 
+      // Check if travel mode changed - add circle at transition point
+      if (previousTravelMode != null && previousTravelMode != step.travelMode && points.isNotEmpty) {
+        circles.add(
+          Circle(
+            circleId: CircleId("transit-change-$segmentIndex"),
+            center: points.first,
+            radius: 7,
+            fillColor: const Color.fromARGB(255, 134, 134, 134)!.withValues(alpha: 1.0), // Opaque
+            strokeWidth: 3,
+            strokeColor: const Color.fromARGB(255, 207, 207, 207),
+          ),
+        );
+      }
+
       polylines.add(
         Polyline(
           polylineId: PolylineId("transit-segment-$segmentIndex"),
@@ -505,9 +526,11 @@ class HomeViewModel extends ChangeNotifier {
         ),
       );
       segmentIndex++;
+      previousTravelMode = step.travelMode;
     }
 
     routePolylines = polylines;
+    transitChangeCircles = circles;
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {
