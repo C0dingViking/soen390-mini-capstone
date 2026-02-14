@@ -183,7 +183,7 @@ class DirectionsService {
   }
 
   _LegTimes _parseLegTimes(final Map<String, dynamic>? leg) {
-    if (leg == null) return _LegTimes();
+    if (leg == null) return const _LegTimes();
 
     final departure = _parseTimeValue(leg["departure_time"] as Map<String, dynamic>?);
     final arrival = _parseTimeValue(leg["arrival_time"] as Map<String, dynamic>?);
@@ -294,9 +294,27 @@ class DirectionsService {
     }
   }
 
+  // not using regexp cus sonarqube doesnt like it so have to do this isntead... yuck
   String _stripHtml(final String html) {
-    return html
-        .replaceAll(RegExp(r"<[^>]*>"), "")
+    final buffer = StringBuffer();
+    var inTag = false;
+    for (var i = 0; i < html.length; i++) {
+      final char = html[i];
+      if (char == "<") {
+        inTag = true;
+        continue;
+      }
+      if (char == ">") {
+        inTag = false;
+        continue;
+      }
+      if (!inTag) {
+        buffer.write(char);
+      }
+    }
+
+    return buffer
+        .toString()
         .replaceAll("&nbsp;", " ")
         .replaceAll("&amp;", "&")
         .replaceAll("&lt;", "<")
