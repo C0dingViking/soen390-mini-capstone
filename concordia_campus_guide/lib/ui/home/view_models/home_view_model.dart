@@ -9,6 +9,8 @@ import "package:concordia_campus_guide/domain/models/building_map_data.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
+import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
@@ -19,9 +21,14 @@ enum SearchField { start, destination }
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
+  final DirectionsInteractor directionsInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
 
-  HomeViewModel({required this.mapInteractor, required this.placesInteractor});
+  HomeViewModel({
+    required this.mapInteractor,
+    required this.placesInteractor,
+    required this.directionsInteractor,
+  });
 
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
@@ -37,6 +44,12 @@ class HomeViewModel extends ChangeNotifier {
   Marker? searchDestinationMarker;
   Coordinate? startCoordinate;
   Coordinate? destinationCoordinate;
+  bool isLoadingRoutes = false;
+  String? routeErrorMessage;
+  Map<RouteMode, RouteOption> routeOptions = {};
+  RouteMode selectedRouteMode = RouteMode.walking;
+  Set<Polyline> routePolylines = {};
+  int _routeRequestId = 0;
 
   List<SearchSuggestion> searchResults = [];
   String _searchQuery = "";
@@ -174,10 +187,15 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void clearRouteSelection() {
+    _routeRequestId++;
     startCoordinate = null;
     destinationCoordinate = null;
     searchStartMarker = null;
     searchDestinationMarker = null;
+    routeOptions = {};
+    routePolylines = {};
+    routeErrorMessage = null;
+    isLoadingRoutes = false;
     notifyListeners();
   }
 
@@ -194,6 +212,7 @@ class HomeViewModel extends ChangeNotifier {
         label: building.name,
         campus: building.campus,
       );
+      await _loadRoutesIfReady();
       searchResults = [];
       notifyListeners();
       return;
@@ -206,7 +225,7 @@ class HomeViewModel extends ChangeNotifier {
     isResolvingPlace = true;
     notifyListeners();
 
-    final coordinate = await placesInteractor.resolvePlace(place.placeId);
+    final coordinate = await placesInteractor.resolvePlaceSuggestion(place);
     isResolvingPlace = false;
 
     if (coordinate == null) {
@@ -221,6 +240,7 @@ class HomeViewModel extends ChangeNotifier {
       label: suggestion.title,
       campus: null,
     );
+    await _loadRoutesIfReady();
     searchResults = [];
     notifyListeners();
   }
@@ -238,6 +258,7 @@ class HomeViewModel extends ChangeNotifier {
         label: "Current location",
         campus: null,
       );
+      await _loadRoutesIfReady();
 
       myLocationEnabled = true;
       isResolvingStartLocation = false;
@@ -315,6 +336,65 @@ class HomeViewModel extends ChangeNotifier {
       );
       cameraTarget = coordinate;
     }
+  }
+
+  Future<void> _loadRoutesIfReady() async {
+    if (startCoordinate == null || destinationCoordinate == null) return;
+    final requestId = ++_routeRequestId;
+
+    isLoadingRoutes = true;
+    routeErrorMessage = null;
+    notifyListeners();
+
+    final options = await directionsInteractor.getRouteOptions(
+      startCoordinate!,
+      destinationCoordinate!,
+    );
+
+    if (requestId != _routeRequestId) return;
+
+    if (options.isEmpty) {
+      routeErrorMessage = "No routes available.";
+      isLoadingRoutes = false;
+      routeOptions = {};
+      routePolylines = {};
+      notifyListeners();
+      return;
+    }
+
+    routeOptions = {for (final option in options) option.mode: option};
+    if (!routeOptions.containsKey(selectedRouteMode)) {
+      selectedRouteMode = options.first.mode;
+    }
+
+    _updateRoutePolylines();
+    isLoadingRoutes = false;
+    notifyListeners();
+  }
+
+  void selectRouteMode(final RouteMode mode) {
+    if (selectedRouteMode == mode) return;
+    selectedRouteMode = mode;
+    _updateRoutePolylines();
+    notifyListeners();
+  }
+
+  void _updateRoutePolylines() {
+    final option = routeOptions[selectedRouteMode];
+    if (option == null || option.polyline.isEmpty) {
+      routePolylines = {};
+      return;
+    }
+
+    final points = option.polyline.map((final c) => c.toLatLng()).toList();
+    routePolylines = {
+      Polyline(
+        polylineId: PolylineId("route-${selectedRouteMode.name}"),
+        points: points,
+        color: AppTheme.concordiaMaroon,
+        width: 5,
+      ),
+    };
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {

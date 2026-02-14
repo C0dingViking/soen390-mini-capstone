@@ -107,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 myLocationEnabled: hvm.myLocationEnabled,
                 polygons: hvm.buildingOutlines,
                 markers: hvm.mapMarkers,
+                polylines: hvm.routePolylines,
                 onPolygonTap: _onBuildingTapped,
               ),
               const Positioned(

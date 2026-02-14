@@ -61,14 +61,17 @@ class PlacesService {
     }
   }
 
-  Future<Coordinate?> fetchPlaceCoordinate(final String placeId) async {
+  Future<Coordinate?> fetchPlaceCoordinate(
+    final String placeId, {
+    final String? fallbackQuery,
+  }) async {
     final client = await _getClient();
     if (client == null || placeId.isEmpty) return null;
 
     try {
       final details = await client.getDetailsByPlaceId(
         placeId,
-        fields: ["geometry", "name", "formatted_address"],
+        fields: const ["geometry"],
       );
 
       if (!details.isOkay) return null;
@@ -79,6 +82,27 @@ class PlacesService {
       return Coordinate(latitude: location.lat, longitude: location.lng);
     } catch (e) {
       logger.w("PlacesService: details lookup failed", error: e);
+      if (fallbackQuery == null || fallbackQuery.trim().isEmpty) {
+        return null;
+      }
+    }
+
+    try {
+      final textResponse = await client.searchByText(
+        fallbackQuery!.trim(),
+        language: "en",
+        location: Location(lat: 45.4972, lng: -73.5786),
+        radius: 25000,
+      );
+
+      if (!textResponse.isOkay || textResponse.results.isEmpty) return null;
+
+      final location = textResponse.results.first.geometry?.location;
+      if (location == null) return null;
+
+      return Coordinate(latitude: location.lat, longitude: location.lng);
+    } catch (e) {
+      logger.w("PlacesService: text search fallback failed", error: e);
       return null;
     }
   }

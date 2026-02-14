@@ -1,4 +1,4 @@
-import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:flutter/material.dart";
@@ -117,6 +117,24 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     );
     final isResolvingStart = context.select(
       (final HomeViewModel vm) => vm.isResolvingStartLocation,
+    );
+    final hasStart = context.select(
+      (final HomeViewModel vm) => vm.startCoordinate != null,
+    );
+    final hasDestination = context.select(
+      (final HomeViewModel vm) => vm.destinationCoordinate != null,
+    );
+    final isLoadingRoutes = context.select(
+      (final HomeViewModel vm) => vm.isLoadingRoutes,
+    );
+    final routeError = context.select(
+      (final HomeViewModel vm) => vm.routeErrorMessage,
+    );
+    final routeOptions = context.select(
+      (final HomeViewModel vm) => vm.routeOptions,
+    );
+    final selectedMode = context.select(
+      (final HomeViewModel vm) => vm.selectedRouteMode,
     );
 
     return Column(
@@ -285,7 +303,137 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
               },
             ),
           ),
+        if (_expanded && hasStart && hasDestination)
+          _buildRouteOptions(
+            context,
+            isLoadingRoutes: isLoadingRoutes,
+            routeError: routeError,
+            routeOptions: routeOptions,
+            selectedMode: selectedMode,
+          ),
       ],
     );
+  }
+
+  Widget _buildRouteOptions(
+    final BuildContext context, {
+    required final bool isLoadingRoutes,
+    required final String? routeError,
+    required final Map<RouteMode, RouteOption> routeOptions,
+    required final RouteMode selectedMode,
+  }) {
+    if (isLoadingRoutes) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 10),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (routeError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Text(
+          routeError,
+          style: const TextStyle(color: Colors.red, fontSize: 12),
+        ),
+      );
+    }
+
+    if (routeOptions.isEmpty) return const SizedBox.shrink();
+
+    final option = routeOptions[selectedMode];
+    final distance = _formatDistance(option?.distanceMeters);
+    final duration = _formatDuration(option?.durationSeconds);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: RouteMode.values.map((final mode) {
+              if (!routeOptions.containsKey(mode)) return const SizedBox();
+              return ChoiceChip(
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _modeIcon(mode),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(_modeLabel(mode)),
+                  ],
+                ),
+                selected: selectedMode == mode,
+                onSelected: (_) => context
+                    .read<HomeViewModel>()
+                    .selectRouteMode(mode),
+              );
+            }).toList(),
+          ),
+          if (distance != null || duration != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                [if (duration != null) duration, if (distance != null) distance]
+                    .join(" - "),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _modeLabel(final RouteMode mode) {
+    switch (mode) {
+      case RouteMode.walking:
+        return "Walk";
+      case RouteMode.bicycling:
+        return "Bike";
+      case RouteMode.driving:
+        return "Car";
+      case RouteMode.transit:
+        return "Metro";
+    }
+  }
+
+  IconData _modeIcon(final RouteMode mode) {
+    switch (mode) {
+      case RouteMode.walking:
+        return Icons.directions_walk;
+      case RouteMode.bicycling:
+        return Icons.directions_bike;
+      case RouteMode.driving:
+        return Icons.directions_car;
+      case RouteMode.transit:
+        return Icons.directions_transit;
+    }
+  }
+
+  String? _formatDistance(final double? meters) {
+    if (meters == null) return null;
+    if (meters >= 1000) {
+      final km = meters / 1000;
+      return "${km.toStringAsFixed(1)} km";
+    }
+    return "${meters.toStringAsFixed(0)} m";
+  }
+
+  String? _formatDuration(final int? seconds) {
+    if (seconds == null) return null;
+    final minutes = (seconds / 60).round();
+    if (minutes < 60) return "${minutes} min";
+    final hours = minutes ~/ 60;
+    final remaining = minutes % 60;
+    return "${hours} h ${remaining} min";
   }
 }

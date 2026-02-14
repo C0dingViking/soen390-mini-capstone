@@ -15,4 +15,11 @@ class PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) {
     return _service.fetchPlaceCoordinate(placeId);
   }
+
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) {
+    return _service.fetchPlaceCoordinate(
+      suggestion.placeId,
+      fallbackQuery: suggestion.description,
+    );
+  }
 }
