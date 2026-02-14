@@ -6,7 +6,6 @@ import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/building_map_data.dart";
-import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
@@ -387,12 +386,48 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final points = option.polyline.map((final c) => c.toLatLng()).toList();
+    
+    // Mode-specific styling to replicate Google Maps behavior
+    Color polylineColor;
+    int polylineWidth;
+    List<PatternItem> polylinePattern;
+    
+    switch (selectedRouteMode) {
+      case RouteMode.walking:
+        polylineColor = const Color(0xFF4285F4); // Blue for walking
+        polylineWidth = 4;
+        polylinePattern = [
+          PatternItem.dot,
+          PatternItem.gap(10),
+        ]; // Dotted line for pedestrian paths
+        break;
+      case RouteMode.bicycling:
+        polylineColor = const Color(0xFF34A853); // Green for biking
+        polylineWidth = 5;
+        polylinePattern = []; // Solid line
+        break;
+      case RouteMode.driving:
+        polylineColor = AppTheme.concordiaMaroon; // Maroon for driving
+        polylineWidth = 6;
+        polylinePattern = []; // Solid line
+        break;
+      case RouteMode.transit:
+        polylineColor = const Color(0xFF4285F4); // Blue for transit
+        polylineWidth = 5;
+        polylinePattern = [
+          PatternItem.dash(20),
+          PatternItem.gap(10),
+        ]; // Dashed line for transit
+        break;
+    }
+    
     routePolylines = {
       Polyline(
         polylineId: PolylineId("route-${selectedRouteMode.name}"),
         points: points,
-        color: AppTheme.concordiaMaroon,
-        width: 5,
+        color: polylineColor,
+        width: polylineWidth,
+        patterns: polylinePattern,
       ),
     };
   }
