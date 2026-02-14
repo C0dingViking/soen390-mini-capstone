@@ -2,8 +2,8 @@ import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 import "package:concordia_campus_guide/domain/models/campus_details.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
-import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
+import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
@@ -109,22 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 markers: hvm.mapMarkers,
                 onPolygonTap: _onBuildingTapped,
               ),
-              Positioned(
+              const Positioned(
                 left: 16,
                 right: 16,
                 top: 12,
-                child: BuildingSearchBar(
-                  onBuildingSelected: (final building) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (final context) => BuildingDetailScreen(
-                          building: building,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                child: BuildingSearchBar(),
               ),
               Positioned(
                 left: 25,

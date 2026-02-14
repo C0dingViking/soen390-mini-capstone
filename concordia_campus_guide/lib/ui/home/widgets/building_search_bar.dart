@@ -5,67 +5,100 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 class BuildingSearchBar extends StatefulWidget {
-  final void Function(Building) onBuildingSelected;
-
-  const BuildingSearchBar({super.key, required this.onBuildingSelected});
+  const BuildingSearchBar({super.key});
 
   @override
   State<BuildingSearchBar> createState() => _BuildingSearchBarState();
 }
 
 class _BuildingSearchBarState extends State<BuildingSearchBar> {
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
+  final TextEditingController _startController = TextEditingController();
+  final TextEditingController _destinationController = TextEditingController();
+  final FocusNode _startFocusNode = FocusNode();
+  final FocusNode _destinationFocusNode = FocusNode();
+  SearchField _activeField = SearchField.destination;
+  bool _expanded = false;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(_handleFocusChange);
+    _startFocusNode.addListener(_handleFocusChange);
+    _destinationFocusNode.addListener(_handleFocusChange);
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_handleFocusChange);
-    _focusNode.dispose();
-    _controller.dispose();
+    _startFocusNode.removeListener(_handleFocusChange);
+    _destinationFocusNode.removeListener(_handleFocusChange);
+    _startFocusNode.dispose();
+    _destinationFocusNode.dispose();
+    _startController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
   void _handleFocusChange() {
-    if (!_focusNode.hasFocus) {
+    if (_startFocusNode.hasFocus) {
+      _activeField = SearchField.start;
+      context.read<HomeViewModel>().updateSearchQuery(_startController.text);
+      return;
+    }
+    if (_destinationFocusNode.hasFocus) {
+      _activeField = SearchField.destination;
+      context.read<HomeViewModel>().updateSearchQuery(
+        _destinationController.text,
+      );
+      return;
+    }
+
+    if (!_startFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
       context.read<HomeViewModel>().clearSearchResults();
     }
   }
 
-  void _handleQueryChanged(final String query) {
+  void _handleQueryChanged(final String query, final SearchField field) {
+    _activeField = field;
     context.read<HomeViewModel>().updateSearchQuery(query);
     setState(() {});
   }
 
-  void _clearQuery() {
-    _controller.clear();
+  void _clearQuery(final SearchField field) {
+    if (field == SearchField.start) {
+      _startController.clear();
+    } else {
+      _destinationController.clear();
+    }
     context.read<HomeViewModel>().clearSearchResults();
     setState(() {});
   }
 
-  Future<void> _selectBuilding(final Building building) async {
-    _controller.text = building.name;
-    _controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: _controller.text.length),
-    );
-    context.read<HomeViewModel>().selectSearchBuilding(building);
-    widget.onBuildingSelected(building);
+  void _cancelSearch() {
+    _startController.clear();
+    _destinationController.clear();
+    _expanded = false;
+    _activeField = SearchField.destination;
+    context.read<HomeViewModel>().clearSearchResults();
+    context.read<HomeViewModel>().clearRouteSelection();
     FocusScope.of(context).unfocus();
+    setState(() {});
   }
 
-  Future<void> _selectPlace(final SearchSuggestion suggestion) async {
-    final place = suggestion.place;
-    if (place == null) return;
-    _controller.text = suggestion.title;
-    _controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: _controller.text.length),
+  Future<void> _selectSuggestion(final SearchSuggestion suggestion) async {
+    final controller = _activeField == SearchField.start
+        ? _startController
+        : _destinationController;
+    controller.text = suggestion.title;
+    controller.selection = TextSelection.fromPosition(
+      TextPosition(offset: controller.text.length),
     );
-    await context.read<HomeViewModel>().selectPlaceSuggestion(place);
+
+    await context.read<HomeViewModel>().selectSearchSuggestion(
+          suggestion,
+          _activeField,
+        );
+    if (!_expanded) {
+      _expanded = true;
+    }
     FocusScope.of(context).unfocus();
   }
 
@@ -74,7 +107,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final results = context.select(
       (final HomeViewModel vm) => vm.searchResults,
     );
-    final showClear = _controller.text.isNotEmpty;
+    final showClearStart = _startController.text.isNotEmpty;
+    final showClearDestination = _destinationController.text.isNotEmpty;
     final isSearchingPlaces = context.select(
       (final HomeViewModel vm) => vm.isSearchingPlaces,
     );
@@ -88,49 +122,96 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         Material(
           elevation: 4,
           borderRadius: BorderRadius.circular(12),
-          child: TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            onChanged: _handleQueryChanged,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: "Search for a place or address",
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: isResolvingPlace
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : showClear
-                      ? IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: _clearQuery,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_expanded)
+                TextField(
+                  controller: _startController,
+                  focusNode: _startFocusNode,
+                  onChanged: (final value) => _handleQueryChanged(
+                    value,
+                    SearchField.start,
+                  ),
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    hintText: "Choose starting point",
+                    prefixIcon: const Icon(Icons.trip_origin),
+                    suffixIcon: showClearStart
+                        ? IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => _clearQuery(SearchField.start),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: const OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 12,
+                    ),
+                  ),
+                ),
+              if (_expanded) const Divider(height: 1),
+              TextField(
+                controller: _destinationController,
+                focusNode: _destinationFocusNode,
+                onChanged: (final value) => _handleQueryChanged(
+                  value,
+                  SearchField.destination,
+                ),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: _expanded
+                      ? "Choose destination"
+                      : "Search for a place or address",
+                  prefixIcon: const Icon(Icons.place_outlined),
+                  suffixIcon: isResolvingPlace
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         )
-                      : isSearchingPlaces
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
+                      : _expanded
+                          ? IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: _cancelSearch,
                             )
-                          : null,
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+                          : showClearDestination
+                              ? IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () =>
+                                      _clearQuery(SearchField.destination),
+                                )
+                              : isSearchingPlaces
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 12,
+                  ),
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 12,
-              ),
-            ),
+            ],
           ),
         ),
         if (results.isNotEmpty)
@@ -167,9 +248,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                   subtitle: suggestion.subtitle != null
                       ? Text(suggestion.subtitle!)
                       : null,
-                  onTap: () => isBuilding
-                      ? _selectBuilding(suggestion.building!)
-                      : _selectPlace(suggestion),
+                  onTap: () => _selectSuggestion(suggestion),
                 );
               },
             ),

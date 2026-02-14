@@ -14,6 +14,8 @@ import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 
+enum SearchField { start, destination }
+
 class HomeViewModel extends ChangeNotifier {
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
@@ -30,7 +32,10 @@ class HomeViewModel extends ChangeNotifier {
   String? errorMessage;
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
+  Marker? searchStartMarker;
   Marker? searchDestinationMarker;
+  Coordinate? startCoordinate;
+  Coordinate? destinationCoordinate;
 
   List<SearchSuggestion> searchResults = [];
   String _searchQuery = "";
@@ -117,9 +122,8 @@ class HomeViewModel extends ChangeNotifier {
 
   Set<Marker> get mapMarkers {
     final markers = <Marker>{...buildingMarkers};
-    if (searchDestinationMarker != null) {
-      markers.add(searchDestinationMarker!);
-    }
+    if (searchStartMarker != null) markers.add(searchStartMarker!);
+    if (searchDestinationMarker != null) markers.add(searchDestinationMarker!);
     return markers;
   }
 
@@ -168,20 +172,40 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  void selectSearchBuilding(final Building building) {
-    selectedCampusIndex = _campusIndexFor(building.campus);
-    cameraTarget = building.location;
+  void clearRouteSelection() {
+    startCoordinate = null;
+    destinationCoordinate = null;
+    searchStartMarker = null;
     searchDestinationMarker = null;
-    searchResults = [];
     notifyListeners();
   }
 
-  Future<void> selectPlaceSuggestion(final PlaceSuggestion suggestion) async {
+  Future<void> selectSearchSuggestion(
+    final SearchSuggestion suggestion,
+    final SearchField field,
+  ) async {
+    if (suggestion.type == SearchSuggestionType.building) {
+      final building = suggestion.building;
+      if (building == null) return;
+      _applySelection(
+        field: field,
+        coordinate: building.location,
+        label: building.name,
+        campus: building.campus,
+      );
+      searchResults = [];
+      notifyListeners();
+      return;
+    }
+
+    final place = suggestion.place;
+    if (place == null) return;
+
     errorMessage = null;
     isResolvingPlace = true;
     notifyListeners();
 
-    final coordinate = await placesInteractor.resolvePlace(suggestion.placeId);
+    final coordinate = await placesInteractor.resolvePlace(place.placeId);
     isResolvingPlace = false;
 
     if (coordinate == null) {
@@ -190,12 +214,11 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    cameraTarget = coordinate;
-    searchDestinationMarker = Marker(
-      markerId: const MarkerId("search-destination"),
-      position: coordinate.toLatLng(),
-      infoWindow: InfoWindow(title: suggestion.mainText),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    _applySelection(
+      field: field,
+      coordinate: coordinate,
+      label: suggestion.title,
+      campus: null,
     );
     searchResults = [];
     notifyListeners();
@@ -234,6 +257,37 @@ class HomeViewModel extends ChangeNotifier {
 
   int _campusIndexFor(final Campus campus) {
     return campus == Campus.sgw ? 0 : 1;
+  }
+
+  void _applySelection({
+    required final SearchField field,
+    required final Coordinate coordinate,
+    required final String label,
+    final Campus? campus,
+  }) {
+    if (campus != null) {
+      selectedCampusIndex = _campusIndexFor(campus);
+    }
+
+    if (field == SearchField.start) {
+      startCoordinate = coordinate;
+      searchStartMarker = Marker(
+        markerId: const MarkerId("search-start"),
+        position: coordinate.toLatLng(),
+        infoWindow: InfoWindow(title: label),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      );
+      if (destinationCoordinate == null) cameraTarget = coordinate;
+    } else {
+      destinationCoordinate = coordinate;
+      searchDestinationMarker = Marker(
+        markerId: const MarkerId("search-destination"),
+        position: coordinate.toLatLng(),
+        infoWindow: InfoWindow(title: label),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      );
+      cameraTarget = coordinate;
+    }
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {
