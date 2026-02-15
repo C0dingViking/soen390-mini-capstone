@@ -91,7 +91,7 @@ class DirectionsService {
       "mode": modeString,
       "alternatives": "false",
       "key": apiKey,
-      if (mode == RouteMode.transit) "transit_mode": "subway|bus",
+      if (mode == RouteMode.transit) "transit_mode": "subway|bus|train|rail",
       if (departureTime != null) "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000).toString(),
       if (arrivalTime != null) "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
     };

@@ -299,7 +299,7 @@ void main() {
       expect(find.text("Downtown Express"), findsOneWidget);
       expect(find.text("Board at Stop A"), findsOneWidget);
       expect(find.text("Exit at Stop B"), findsOneWidget);
-      expect(find.text("Vehicle arrives at 10:30 AM"), findsOneWidget);
+      expect(find.text("Scheduled at 10:30 AM"), findsOneWidget);
     });
 
     testWidgets("shows vehicle arrival time for transit rides", (
@@ -344,7 +344,7 @@ void main() {
       expect(find.text("Express Line A"), findsOneWidget);
       expect(find.text("Board at Main Street"), findsOneWidget);
       expect(find.text("Exit at Downtown Hub"), findsOneWidget);
-      expect(find.text("Vehicle arrives at 2:30 PM"), findsOneWidget);
+      expect(find.text("Scheduled at 2:30 PM"), findsOneWidget);
     });
 
     testWidgets("shows suggested depart time under Route Details", (

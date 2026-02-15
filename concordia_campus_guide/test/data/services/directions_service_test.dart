@@ -363,7 +363,7 @@ void main() {
 
         final uri = fakeClient.capturedUris[0];
         expect(uri.queryParameters["mode"], "transit");
-        expect(uri.queryParameters["transit_mode"], "subway|bus");
+        expect(uri.queryParameters["transit_mode"], "subway|bus|train|rail");
       });
 
       test("converts mode enum to correct string for all modes", () async {
