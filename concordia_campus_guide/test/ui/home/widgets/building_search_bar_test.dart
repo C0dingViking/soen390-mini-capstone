@@ -199,11 +199,31 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
       expect(findStartField(), findsOneWidget);
       expect(findDestinationFieldExpanded(), findsOneWidget);
+    });
+
+    testWidgets("collapses when view model requests collapse", (
+      final tester,
+    ) async {
+      await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
+      vm.selectedDestinationLabel = "Hall Building";
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(findStartField(), findsOneWidget);
+
+      vm.selectedDestinationLabel = null;
+      vm.setSearchBarExpanded(false);
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(findStartField(), findsNothing);
+      expect(findDestinationFieldCollapsed(), findsOneWidget);
     });
 
     testWidgets("typing in destination updates query", (

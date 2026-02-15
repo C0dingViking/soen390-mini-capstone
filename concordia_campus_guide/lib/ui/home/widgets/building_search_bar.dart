@@ -144,10 +144,14 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final unfocusSignal = context.select(
       (final HomeViewModel vm) => vm.unfocusSearchBarSignal,
     );
+    final isSearchBarExpanded = context.select(
+      (final HomeViewModel vm) => vm.isSearchBarExpanded,
+    );
 
     _schedulePostFrameSync(
       context: context,
       unfocusSignal: unfocusSignal,
+      isSearchBarExpanded: isSearchBarExpanded,
       selectedStartLabel: selectedStartLabel,
       selectedDestinationLabel: selectedDestinationLabel,
     );
@@ -171,15 +175,37 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   void _schedulePostFrameSync({
     required final BuildContext context,
     required final int unfocusSignal,
+    required final bool isSearchBarExpanded,
     required final String? selectedStartLabel,
     required final String? selectedDestinationLabel,
   }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _handleUnfocusSignal(context, unfocusSignal);
+      _syncExpandedState(context, isSearchBarExpanded);
       _syncStartLabel(selectedStartLabel);
       _syncDestinationLabel(selectedDestinationLabel);
       _expandIfSelected(context, selectedStartLabel, selectedDestinationLabel);
     });
+  }
+
+  void _syncExpandedState(
+    final BuildContext context,
+    final bool isSearchBarExpanded,
+  ) {
+    if (_expanded == isSearchBarExpanded) return;
+
+    setState(() {
+      _expanded = isSearchBarExpanded;
+      if (!isSearchBarExpanded) {
+        _activeField = SearchField.destination;
+      }
+    });
+
+    if (!isSearchBarExpanded) {
+      context.read<HomeViewModel>().clearSearchResults();
+      FocusScope.of(context).unfocus();
+    }
   }
 
   void _handleUnfocusSignal(
@@ -224,6 +250,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final String? selectedDestinationLabel,
   ) {
     if (_expanded) return;
+    if (!context.read<HomeViewModel>().isSearchBarExpanded) return;
     if (selectedStartLabel == null && selectedDestinationLabel == null) return;
 
     setState(() {

@@ -47,6 +47,7 @@ class _TestHomeViewModel extends HomeViewModel {
         );
 
   int refreshCallCount = 0;
+  bool exitNavigationCalled = false;
 
   void setRoutes(final Map<RouteMode, RouteOption> options) {
     routeOptions = options;
@@ -67,6 +68,12 @@ class _TestHomeViewModel extends HomeViewModel {
   Future<void> refreshRoutes() async {
     refreshCallCount++;
     return super.refreshRoutes();
+  }
+
+  @override
+  void exitNavigation() {
+    exitNavigationCalled = true;
+    super.exitNavigation();
   }
 }
 
@@ -128,6 +135,28 @@ void main() {
       await pumpPanel(tester);
       // CircularProgressIndicator appears in both the refresh button and content area
       expect(find.byType(CircularProgressIndicator), findsWidgets);
+    });
+
+    testWidgets("exit button clears routes and collapses search bar", (
+      final tester,
+    ) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.setSearchBarExpanded(true);
+      await pumpPanel(tester);
+
+      expect(find.byIcon(Icons.close), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      expect(vm.exitNavigationCalled, isTrue);
+      expect(vm.routeOptions, isEmpty);
+      expect(vm.isSearchBarExpanded, isFalse);
     });
 
     testWidgets("shows error text when route error is set", (

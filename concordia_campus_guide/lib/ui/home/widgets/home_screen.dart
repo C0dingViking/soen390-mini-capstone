@@ -100,146 +100,158 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(final BuildContext context) {
-    return Scaffold(
-      appBar: const CampusAppBar(),
-      body: Consumer<HomeViewModel>(
-        builder: (final context, final hvm, final child) {
-          final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
-          const double searchBarInset = 16;
-          const double searchBarTop = 12;
-          const double actionInset = 25;
-          const double actionBottom = 25;
-          const double actionBottomWithRoutes = 145;
-          const double toggleRadius = 30;
-          const double togglePaddingVertical = 8;
-          const double togglePaddingHorizontal = 12;
-          const double toggleIconSize = 20;
-          const double toggleIconContainer = 40;
-          const double labelFontSize = 16;
-          const double shadowBlurRadius = 6;
-          const double shadowOffsetY = 2;
-          const double spacingSm = 8;
-          final double actionBottomOffset =
-              (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
-                  ? actionBottomWithRoutes
-                  : actionBottom;
-          return Stack(
-            children: [
-              MapWrapper(
-                initialCameraPosition: CameraPosition(
-                  target: HomeViewModel.sgw.toLatLng(),
-                  zoom: 15,
+    final hasNavigation = context.select(
+      (final HomeViewModel vm) =>
+          vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
+    );
+
+    return PopScope(
+      canPop: !hasNavigation,
+      onPopInvokedWithResult: (final didPop, final result) {
+        if (didPop || !hasNavigation) return;
+        context.read<HomeViewModel>().exitNavigation();
+      },
+      child: Scaffold(
+        appBar: const CampusAppBar(),
+        body: Consumer<HomeViewModel>(
+          builder: (final context, final hvm, final child) {
+            final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
+            const double searchBarInset = 16;
+            const double searchBarTop = 12;
+            const double actionInset = 25;
+            const double actionBottom = 25;
+            const double actionBottomWithRoutes = 145;
+            const double toggleRadius = 30;
+            const double togglePaddingVertical = 8;
+            const double togglePaddingHorizontal = 12;
+            const double toggleIconSize = 20;
+            const double toggleIconContainer = 40;
+            const double labelFontSize = 16;
+            const double shadowBlurRadius = 6;
+            const double shadowOffsetY = 2;
+            const double spacingSm = 8;
+            final double actionBottomOffset =
+                (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+                    ? actionBottomWithRoutes
+                    : actionBottom;
+            return Stack(
+              children: [
+                MapWrapper(
+                  initialCameraPosition: CameraPosition(
+                    target: HomeViewModel.sgw.toLatLng(),
+                    zoom: 15,
+                  ),
+                  onMapCreated: _coords.onMapCreated,
+                  myLocationEnabled: hvm.myLocationEnabled,
+                  polygons: hvm.buildingOutlines,
+                  markers: hvm.mapMarkers,
+                  polylines: hvm.routePolylines,
+                  circles: hvm.transitChangeCircles,
+                  onPolygonTap: _onBuildingTapped,
                 ),
-                onMapCreated: _coords.onMapCreated,
-                myLocationEnabled: hvm.myLocationEnabled,
-                polygons: hvm.buildingOutlines,
-                markers: hvm.mapMarkers,
-                polylines: hvm.routePolylines,
-                circles: hvm.transitChangeCircles,
-                onPolygonTap: _onBuildingTapped,
-              ),
-              Positioned(
-                left: searchBarInset,
-                right: searchBarInset,
-                top: searchBarTop,
-                child: const BuildingSearchBar(),
-              ),
-              Positioned(
-                left: actionInset,
-                bottom: actionBottomOffset,
-                child: hvm.currentBuilding != null
-                    ? FloatingActionButton.extended(
-                        heroTag: "my_location",
-                        onPressed: () =>
-                            context.read<HomeViewModel>().goToCurrentLocation(),
-                        backgroundColor: _buttonColor,
-                        icon: const Icon(
-                          Icons.my_location,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          hvm.currentBuilding!.id.toUpperCase(),
-                          style: TextStyle(
+                Positioned(
+                  left: searchBarInset,
+                  right: searchBarInset,
+                  top: searchBarTop,
+                  child: const BuildingSearchBar(),
+                ),
+                Positioned(
+                  left: actionInset,
+                  bottom: actionBottomOffset,
+                  child: hvm.currentBuilding != null
+                      ? FloatingActionButton.extended(
+                          heroTag: "my_location",
+                          onPressed: () =>
+                              context.read<HomeViewModel>().goToCurrentLocation(),
+                          backgroundColor: _buttonColor,
+                          icon: const Icon(
+                            Icons.my_location,
                             color: Colors.white,
-                            fontSize: labelFontSize,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      )
-                    : FloatingActionButton(
-                        heroTag: "my_location",
-                        onPressed: () =>
-                            context.read<HomeViewModel>().goToCurrentLocation(),
-                        backgroundColor: _buttonColor,
-                        child: const Icon(
-                          Icons.my_location,
-                          color: Colors.white,
-                        ),
-                      ),
-              ), 
-              Positioned(
-                right: actionInset,
-                bottom: actionBottomOffset,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    key: const Key("campus_toggle_button"),
-                    borderRadius: BorderRadius.circular(toggleRadius),
-                    onTap: () => context.read<HomeViewModel>().toggleCampus(),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: togglePaddingVertical,
-                        horizontal: togglePaddingHorizontal,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _buttonColor,
-                        borderRadius: BorderRadius.circular(toggleRadius),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: shadowBlurRadius,
-                            offset: Offset(0, shadowOffsetY),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: toggleIconContainer,
-                            height: toggleIconContainer,
-                            decoration: BoxDecoration(
-                              color: _buttonColor,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Icon(
-                                selected.icon,
-                                color: Colors.white,
-                                size: toggleIconSize,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: spacingSm),
-                          Text(
-                            selected.name,
+                          label: Text(
+                            hvm.currentBuilding!.id.toUpperCase(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
                               fontSize: labelFontSize,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(width: spacingSm),
-                        ],
+                        )
+                      : FloatingActionButton(
+                          heroTag: "my_location",
+                          onPressed: () =>
+                              context.read<HomeViewModel>().goToCurrentLocation(),
+                          backgroundColor: _buttonColor,
+                          child: const Icon(
+                            Icons.my_location,
+                            color: Colors.white,
+                          ),
+                        ),
+                ), 
+                Positioned(
+                  right: actionInset,
+                  bottom: actionBottomOffset,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      key: const Key("campus_toggle_button"),
+                      borderRadius: BorderRadius.circular(toggleRadius),
+                      onTap: () => context.read<HomeViewModel>().toggleCampus(),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: togglePaddingVertical,
+                          horizontal: togglePaddingHorizontal,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _buttonColor,
+                          borderRadius: BorderRadius.circular(toggleRadius),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: shadowBlurRadius,
+                              offset: Offset(0, shadowOffsetY),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: toggleIconContainer,
+                              height: toggleIconContainer,
+                              decoration: BoxDecoration(
+                                color: _buttonColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  selected.icon,
+                                  color: Colors.white,
+                                  size: toggleIconSize,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: spacingSm),
+                            Text(
+                              selected.name,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: labelFontSize,
+                              ),
+                            ),
+                            SizedBox(width: spacingSm),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const RouteDetailsPanel(),
-            ],
-          );
-        },
+                const RouteDetailsPanel(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

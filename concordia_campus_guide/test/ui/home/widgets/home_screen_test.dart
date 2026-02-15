@@ -44,6 +44,7 @@ class TestHomeViewModel extends HomeViewModel {
   String? initPath;
   bool goToCalled = false;
   bool clearCalled = false;
+  bool exitNavigationCalled = false;
 
   TestHomeViewModel()
     : super(
@@ -110,6 +111,12 @@ class TestHomeViewModel extends HomeViewModel {
     clearCalled = true;
     cameraTarget = null;
     notifyListeners();
+  }
+
+  @override
+  void exitNavigation() {
+    exitNavigationCalled = true;
+    super.exitNavigation();
   }
 }
 
@@ -207,6 +214,31 @@ void main() {
       
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.my_location), findsOneWidget);
+    });
+
+    testWidgets("android back exits navigation and collapses search bar", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          polyline: [],
+        ),
+      };
+      vm.setSearchBarExpanded(true);
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(vm.exitNavigationCalled, isTrue);
+      expect(vm.routeOptions, isEmpty);
+      expect(vm.isSearchBarExpanded, isFalse);
     });
   });
 

@@ -51,6 +51,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
   bool get _isCollapsed => _panelHeight <= _minHeight + 1;
 
+  void _exitNavigation() {
+    context.read<HomeViewModel>().exitNavigation();
+  }
+
   @override
   Widget build(final BuildContext context) {
     final hasRoutes = context.select(
@@ -154,6 +158,14 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          IconButton(
+            onPressed: _exitNavigation,
+            icon: Icon(
+              Icons.close,
+              color: Colors.grey[600],
+            ),
+            tooltip: "Exit navigation",
+          ),
           Expanded(
             child: GestureDetector(
               onTap: _toggleExpanded,

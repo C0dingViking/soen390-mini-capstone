@@ -223,6 +223,12 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void exitNavigation() {
+    clearRouteSelection();
+    setSearchBarExpanded(false);
+    requestUnfocusSearchBar();
+  }
+
   void setSearchBarExpanded(final bool value) {
     if (isSearchBarExpanded == value) return;
     isSearchBarExpanded = value;
