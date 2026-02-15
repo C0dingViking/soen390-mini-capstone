@@ -111,6 +111,7 @@ class _ConfigurableDirectionsInteractor extends DirectionsInteractor {
   Coordinate? lastDestination;
   DateTime? lastDepartureTime;
   DateTime? lastArrivalTime;
+  int callCount = 0;
 
   @override
   Future<List<RouteOption>> getRouteOptions(
@@ -119,6 +120,7 @@ class _ConfigurableDirectionsInteractor extends DirectionsInteractor {
     final DateTime? departureTime,
     final DateTime? arrivalTime,
   }) async {
+    callCount++;
     lastStart = start;
     lastDestination = destination;
     lastDepartureTime = departureTime;
@@ -836,6 +838,87 @@ void main() {
       expect(hvm.routePolylines.length, 2);
       expect(hvm.transitChangeCircles.length, 1);
       expect(hvm.routeBounds, isNotNull);
+    });
+
+    test("refreshRoutes re-fetches routes with same origin/destination", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      final walkingOption = RouteOption(
+        mode: RouteMode.walking,
+        distanceMeters: 1000,
+        durationSeconds: 600,
+        polyline: const [],
+      );
+      interactor.options = [walkingOption];
+
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(
+            buildingLoader: (final path) async => "{}",
+          ),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+      );
+
+      // Set initial coordinates and load routes
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
+
+      // Initial routes load
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 1);
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+
+      // Refresh routes again
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 2);
+      expect(interactor.lastStart, equals(start));
+      expect(interactor.lastDestination, equals(dest));
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+
+      hvmWithInteractor.dispose();
+    });
+
+    test("refreshRoutes sets loading state during fetch", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      interactor.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [],
+        ),
+      ];
+
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(
+            buildingLoader: (final path) async => "{}",
+          ),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+      );
+
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
+
+      await hvmWithInteractor.refreshRoutes();
+      expect(hvmWithInteractor.isLoadingRoutes, false);
+
+      final refreshFuture = hvmWithInteractor.refreshRoutes();
+      // Check that loading started
+      expect(hvmWithInteractor.isLoadingRoutes, true);
+
+      await refreshFuture;
+      // Check that loading finished
+      expect(hvmWithInteractor.isLoadingRoutes, false);
+
+      hvmWithInteractor.dispose();
     });
   });
 }

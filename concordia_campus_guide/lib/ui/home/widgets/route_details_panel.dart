@@ -144,21 +144,56 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   }
 
   Widget _buildHandle() {
-    return GestureDetector(
-      onTap: _toggleExpanded,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        color: Colors.transparent,
-        child: Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
+    final isLoadingRoutes = context.select(
+      (final HomeViewModel vm) => vm.isLoadingRoutes,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      color: Colors.transparent,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: _toggleExpanded,
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          IconButton(
+            icon: isLoadingRoutes
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.grey[600]!,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.refresh,
+                    color: Colors.grey[600],
+                  ),
+            onPressed: isLoadingRoutes
+                ? null
+                : () async {
+                    final viewModel = context.read<HomeViewModel>();
+                    await viewModel.refreshRoutes();
+                  },
+            tooltip: "Refresh routes",
+          ),
+        ],
       ),
     );
   }

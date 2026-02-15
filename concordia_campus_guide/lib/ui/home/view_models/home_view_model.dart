@@ -473,6 +473,11 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Refreshes the currently displayed routes without changing origin/destination.
+  Future<void> refreshRoutes() async {
+    await _loadRoutesIfReady();
+  }
+
   void _updateRoutePolylines() {
     final option = routeOptions[selectedRouteMode];
     if (option == null || option.polyline.isEmpty) {
