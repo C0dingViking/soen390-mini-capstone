@@ -1,6 +1,24 @@
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
-enum RouteMode { walking, bicycling, driving, transit }
+enum RouteMode { 
+    walking, 
+    bicycling, 
+    driving, 
+    transit; 
+
+    String get asString {
+        switch(this) {
+            case RouteMode.walking:
+                return "walking";
+            case RouteMode.bicycling:
+                return "bicycling";
+            case RouteMode.driving:
+                return "driving";
+            case RouteMode.transit:
+                return "transit";
+        }
+    }    
+}
 
 enum TransitMode { bus, subway, train, tram, rail }
 

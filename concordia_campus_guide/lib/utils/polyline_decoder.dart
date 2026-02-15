@@ -9,24 +9,24 @@ List<Coordinate> decodePolyline(final String encoded) {
   while (index < encoded.length) {
     int result = 0;
     int shift = 0;
-    int b;
+    int encodedByte;
     do {
-      b = encoded.codeUnitAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
+      encodedByte = encoded.codeUnitAt(index++) - 63;
+      result |= (encodedByte & 0x1f) << shift;
       shift += 5;
-    } while (b >= 0x20);
-    final dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-    lat += dlat;
+    } while (encodedByte>= 0x20);
+    final deltaLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lat += deltaLat;
 
     result = 0;
     shift = 0;
     do {
-      b = encoded.codeUnitAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
+      encodedByte = encoded.codeUnitAt(index++) - 63;
+      result |= (encodedByte & 0x1f) << shift;
       shift += 5;
-    } while (b >= 0x20);
-    final dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-    lng += dlng;
+    } while (encodedByte >= 0x20);
+    final deltaLng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    lng += deltaLng;
 
     points.add(
       Coordinate(

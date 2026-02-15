@@ -47,14 +47,20 @@ class CoordinatesController {
 
     final centerLat = (bounds.northeast.latitude + bounds.southwest.latitude) / 2;
     final centerLng = (bounds.northeast.longitude + bounds.southwest.longitude) / 2;
-    final halfLat = (latSpan < minSpan ? minSpan : latSpan) / 2;
-    final halfLng = (lngSpan < minSpan ? minSpan : lngSpan) / 2;
+    final latDeltaFromCenter = (latSpan < minSpan ? minSpan : latSpan) / 2;
+    final lngDeltaFromCenter = (lngSpan < minSpan ? minSpan : lngSpan) / 2;
 
     return LatLngBounds(
-      southwest: LatLng(centerLat - halfLat, centerLng - halfLng),
-      northeast: LatLng(centerLat + halfLat, centerLng + halfLng),
-    );
-  }
+      southwest: LatLng(
+        centerLat - latDeltaFromCenter,
+        centerLng - lngDeltaFromCenter,
+      ),
+      northeast: LatLng(
+        centerLat + latDeltaFromCenter,
+        centerLng + lngDeltaFromCenter,
+      ),
+  );
+}
 
   Future<void> goToCurrentLocation(final BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);

@@ -39,12 +39,10 @@ class DirectionsService {
     }
 
     try {
-      final modeString = _toModeString(mode);
-      final origin = "${start.latitude},${start.longitude}";
-      final dest = "${destination.latitude},${destination.longitude}";
+      final modeString = mode.asString;
       final uri = _buildDirectionsUri(
-        origin,
-        dest,
+        start,
+        destination,
         mode,
         modeString,
         apiKey,
@@ -53,7 +51,7 @@ class DirectionsService {
       );
 
       logger.i(
-        "DirectionsService: requesting route with mode=$modeString from $origin to $dest",
+        "DirectionsService: requesting route with mode=$modeString from $start to $destination",
       );
 
       final response = await _httpClient.get(uri);
@@ -72,20 +70,23 @@ class DirectionsService {
 
       return routeOption;
     } catch (e, stackTrace) {
-      logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);
-      return null;
+        logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);
+        return null;
     }
   }
 
   Uri _buildDirectionsUri(
-    final String origin,
-    final String dest,
+    final Coordinate start,
+    final Coordinate destination,
     final RouteMode mode,
     final String modeString,
     final String apiKey,
     final DateTime? departureTime,
     final DateTime? arrivalTime,
   ) {
+    final origin = "${start.latitude},${start.longitude}";  
+    final dest = "${destination.latitude},${destination.longitude}";
+
     final queryParams = <String, String>{
       "origin": origin,
       "destination": dest,
@@ -196,19 +197,6 @@ class DirectionsService {
     return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
   }
 
-  String _toModeString(final RouteMode mode) {
-    switch (mode) {
-      case RouteMode.walking:
-        return "walking";
-      case RouteMode.bicycling:
-        return "bicycling";
-      case RouteMode.driving:
-        return "driving";
-      case RouteMode.transit:
-        return "transit";
-    }
-  }
-
   List<RouteStep> _parseRouteSteps(final Map<String, dynamic>? leg) {
     if (leg == null) return [];
     
@@ -294,7 +282,7 @@ class DirectionsService {
     }
   }
 
-  // not using regexp cus sonarqube doesnt like it so have to do this isntead... yuck
+  // not using regexp cus sonarqube doesn't like it so have to do this instead... yuck
   String _stripHtml(final String html) {
     final buffer = StringBuffer();
     var inTag = false;
