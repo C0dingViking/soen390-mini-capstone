@@ -9,7 +9,6 @@ import "package:http/http.dart" as http;
 class DirectionsService {
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
-  Future<String?>? _keyLookup;
   final http.Client _httpClient;
 
   DirectionsService({final http.Client? httpClient, final ApiKeyService? apiKeyService})
@@ -19,8 +18,7 @@ class DirectionsService {
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
 
-    _keyLookup ??= _apiKeyService.getGoogleMapsApiKey();
-    final key = await _keyLookup;
+    final key = await _apiKeyService.getGoogleMapsApiKey();
     _resolvedKey = (key != null && key.trim().isNotEmpty) ? key : null;
     return _resolvedKey;
   }

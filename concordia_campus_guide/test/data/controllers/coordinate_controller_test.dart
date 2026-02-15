@@ -180,7 +180,8 @@ void main() {
       );
       
       when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
-        // We can't easily extract the bounds from CameraUpdate, but we can verify it was called
+        // We can't easily extract the bounds from CameraUpdate cus google doesn't provide accessors to this object
+        // but we can verify it was called
       });
       
       await controller.fitBounds(tinyBounds);

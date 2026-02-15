@@ -55,7 +55,6 @@ class HomeViewModel extends ChangeNotifier {
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
 
-  // Departure/Arrival time state
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
   DateTime? selectedArrivalTime;
@@ -498,7 +497,7 @@ class HomeViewModel extends ChangeNotifier {
     
     switch (selectedRouteMode) {
       case RouteMode.walking:
-        polylineColor = const Color(0xFF057d78); // Concordia Turquoise
+        polylineColor = AppTheme.concordiaTurquoise;
         polylineWidth = 4;
         polylinePattern = [
           PatternItem.dot,
@@ -506,17 +505,17 @@ class HomeViewModel extends ChangeNotifier {
         ]; // Dotted line for pedestrian paths
         break;
       case RouteMode.bicycling:
-        polylineColor = const Color(0xFF057d78); // Concordia Turquoise
+        polylineColor = AppTheme.concordiaTurquoise;
         polylineWidth = 5;
         polylinePattern = []; // Solid line
         break;
       case RouteMode.driving:
-        polylineColor = const Color(0xFF912338); // Concordia Burgundy
+        polylineColor = AppTheme.concordiaMaroon;
         polylineWidth = 6;
         polylinePattern = []; // Solid line
         break;
       case RouteMode.transit:
-        polylineColor = const Color(0xFF004085); // Dark Blue
+        polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
         polylinePattern = [
           PatternItem.dash(20),
@@ -558,34 +557,34 @@ class HomeViewModel extends ChangeNotifier {
         // Color-code based on transit type (colorblind-friendly Concordia palette)
         switch (step.transitDetails!.mode) {
           case TransitMode.subway:
-            color = const Color(0xFF004085); // Dark Blue for subway/metro
+            color = AppTheme.concordiaDarkBlue;
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.bus:
-            color = const Color(0xFF00adef); // Cyan for bus (differentiates from metro)
+            color = AppTheme.concordiaBusCyan;
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.train:
-            color = const Color(0xFF573996); // Mauve for train
+            color = AppTheme.concordiaTrainMauve;
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.tram:
-            color = const Color(0xFF057d78); // Turquoise for tram
+            color = AppTheme.concordiaTurquoise;
             width = 6;
             pattern = []; // Solid line
             break;
           case TransitMode.rail:
-            color = const Color(0xFFcbb576); // Gold for rail
+            color = AppTheme.concordiaRailGold;
             width = 6;
             pattern = []; // Solid line
             break;
         }
       } else {
         // Walking segments in transit route
-        color = const Color(0xFF057d78); // Turquoise
+        color = AppTheme.concordiaTurquoise;
         width = 4;
         pattern = [
           PatternItem.dot,

@@ -8,8 +8,6 @@ class PlacesService {
   GoogleMapsPlaces? _places;
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
-  Future<String?>? _keyLookup;
-
   PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
       : _places = client,
         _apiKeyService = apiKeyService ?? ApiKeyService();
@@ -17,8 +15,7 @@ class PlacesService {
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
 
-    _keyLookup ??= _apiKeyService.getGoogleMapsApiKey();
-    final key = await _keyLookup;
+    final key = await _apiKeyService.getGoogleMapsApiKey();
     _resolvedKey = (key != null && key.trim().isNotEmpty) ? key : null;
     return _resolvedKey;
   }

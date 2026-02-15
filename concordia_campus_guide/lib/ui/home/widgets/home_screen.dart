@@ -105,6 +105,24 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
+          final double searchBarInset = 16;
+          final double searchBarTop = 12;
+          final double actionInset = 25;
+          final double actionBottom = 25;
+          final double actionBottomWithRoutes = 145;
+          final double toggleRadius = 30;
+          final double togglePaddingVertical = 8;
+          final double togglePaddingHorizontal = 12;
+          final double toggleIconSize = 20;
+          final double toggleIconContainer = 40;
+          final double labelFontSize = 16;
+          final double shadowBlurRadius = 6;
+          final double shadowOffsetY = 2;
+          final double spacingSm = 8;
+          final double actionBottomOffset =
+              (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+                  ? actionBottomWithRoutes
+                  : actionBottom;
           return Stack(
             children: [
               MapWrapper(
@@ -120,15 +138,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 circles: hvm.transitChangeCircles,
                 onPolygonTap: _onBuildingTapped,
               ),
-              const Positioned(
-                left: 16,
-                right: 16,
-                top: 12,
+              Positioned(
+                left: searchBarInset,
+                right: searchBarInset,
+                top: searchBarTop,
                 child: BuildingSearchBar(),
               ),
               Positioned(
-                left: 25,
-                bottom: (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes) ? 145 : 25,
+                left: actionInset,
+                bottom: actionBottomOffset,
                 child: hvm.currentBuilding != null
                     ? FloatingActionButton.extended(
                         heroTag: "my_location",
@@ -141,9 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         label: Text(
                           hvm.currentBuilding!.id.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: labelFontSize,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -160,27 +178,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
               ), 
               Positioned(
-                right: 25,
-                bottom: (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes) ? 145 : 25,
+                right: actionInset,
+                bottom: actionBottomOffset,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     key: const Key("campus_toggle_button"),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(toggleRadius),
                     onTap: () => context.read<HomeViewModel>().toggleCampus(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
+                      padding: EdgeInsets.symmetric(
+                        vertical: togglePaddingVertical,
+                        horizontal: togglePaddingHorizontal,
                       ),
                       decoration: BoxDecoration(
                         color: _buttonColor,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: const [
+                        borderRadius: BorderRadius.circular(toggleRadius),
+                        boxShadow: [
                           BoxShadow(
                             color: Colors.black26,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
+                            blurRadius: shadowBlurRadius,
+                            offset: Offset(0, shadowOffsetY),
                           ),
                         ],
                       ),
@@ -188,8 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: toggleIconContainer,
+                            height: toggleIconContainer,
                             decoration: BoxDecoration(
                               color: _buttonColor,
                               shape: BoxShape.circle,
@@ -198,20 +216,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Icon(
                                 selected.icon,
                                 color: Colors.white,
-                                size: 20,
+                                size: toggleIconSize,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: spacingSm),
                           Text(
                             selected.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                              fontSize: labelFontSize,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: spacingSm),
                         ],
                       ),
                     ),

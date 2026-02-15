@@ -92,6 +92,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group("PlacesService", () {
+    late _FakeGoogleMapsPlaces client;
+    late PlacesService service;
+
+    setUp(() {
+      client = _FakeGoogleMapsPlaces();
+      service = PlacesService(client: client);
+    });
+
     test("fetchAutocomplete returns empty when api key missing", () async {
       final service = PlacesService(apiKeyService: _FakeApiKeyService(null));
 
@@ -101,9 +109,6 @@ void main() {
     });
 
     test("fetchAutocomplete returns empty when response not OK", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setAutocompleteResponse(
         gmw.PlacesAutocompleteResponse.fromJson({
           "status": "ZERO_RESULTS",
@@ -117,9 +122,6 @@ void main() {
     });
 
     test("fetchAutocomplete maps predictions and filters empty ids", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setAutocompleteResponse(
         gmw.PlacesAutocompleteResponse.fromJson({
           "status": "OK",
@@ -153,9 +155,6 @@ void main() {
     });
 
     test("fetchAutocomplete returns empty on exception", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setAutocompleteResponse(null, error: Exception("boom"));
 
       final results = await service.fetchAutocomplete("hall");
@@ -172,18 +171,12 @@ void main() {
     });
 
     test("fetchPlaceCoordinate returns null when place id empty", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       final result = await service.fetchPlaceCoordinate("");
 
       expect(result, isNull);
     });
 
     test("fetchPlaceCoordinate uses details result when available", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "OK",
@@ -206,9 +199,6 @@ void main() {
     });
 
     test("fetchPlaceCoordinate falls back to text search", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "OK",
@@ -265,9 +255,6 @@ void main() {
     });
 
     test("fetchPlaceCoordinate falls back after details exception", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setDetailsResponse(null, error: Exception("details fail"));
 
       client.setSearchResponse(
@@ -315,9 +302,6 @@ void main() {
     });
 
     test("fetchPlaceCoordinate returns null without fallback query", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "ZERO_RESULTS",
@@ -342,9 +326,6 @@ void main() {
     });
 
     test("fetchPlaceCoordinate returns null when text search fails", () async {
-      final client = _FakeGoogleMapsPlaces();
-      final service = PlacesService(client: client);
-
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "ZERO_RESULTS",

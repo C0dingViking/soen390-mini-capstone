@@ -119,7 +119,7 @@ class BuildingDetailScreen extends StatelessWidget {
               if (!context.mounted) return;
               Navigator.pop(context);
             },
-            backgroundColor: const Color(0xFF004085), // Concordia Dark Blue (colorblind-safe)
+            backgroundColor: AppTheme.concordiaDarkBlue,
             icon: const Icon(Icons.place, color: Colors.white),
             label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
           ),

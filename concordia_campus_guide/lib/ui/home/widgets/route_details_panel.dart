@@ -1,4 +1,5 @@
 import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
@@ -444,23 +445,23 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       switch (transitDetails.mode) {
         case TransitMode.subway:
           icon = Icons.subway;
-          iconColor = const Color(0xFF004085); // Dark Blue for subway
+          iconColor = AppTheme.concordiaDarkBlue;
           break;
         case TransitMode.bus:
           icon = Icons.directions_bus;
-          iconColor = const Color(0xFF00adef); // Cyan for bus
+          iconColor = AppTheme.concordiaBusCyan;
           break;
         case TransitMode.train:
           icon = Icons.train;
-          iconColor = const Color(0xFF573996); // Mauve for train
+          iconColor = AppTheme.concordiaTrainMauve;
           break;
         default:
           icon = Icons.directions_transit;
-          iconColor = const Color(0xFF004085); // Dark Blue for transit
+          iconColor = AppTheme.concordiaDarkBlue;
       }
     } else {
       icon = Icons.directions_walk;
-      iconColor = const Color(0xFF057d78); // Turquoise for walking
+      iconColor = AppTheme.concordiaTurquoise;
     }
 
     return Container(
@@ -597,13 +598,13 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   Color _getModeColor(final RouteMode mode) {
     switch (mode) {
       case RouteMode.walking:
-        return const Color(0xFF057d78); // Concordia Turquoise
+        return AppTheme.concordiaTurquoise;
       case RouteMode.bicycling:
-        return const Color(0xFF057d78); // Concordia Turquoise
+        return AppTheme.concordiaTurquoise;
       case RouteMode.driving:
-        return const Color(0xFF912338); // Concordia Burgundy
+        return AppTheme.concordiaMaroon;
       case RouteMode.transit:
-        return const Color(0xFF004085); // Dark Blue
+        return AppTheme.concordiaDarkBlue;
     }
   }
 

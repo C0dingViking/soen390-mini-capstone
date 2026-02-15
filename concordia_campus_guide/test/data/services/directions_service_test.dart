@@ -55,12 +55,42 @@ class _FakeHttpClient extends http.BaseClient {
 
 void main() {
   group("DirectionsService", () {
+    const Coordinate defaultOrigin = Coordinate(
+      latitude: 45.5,
+      longitude: -73.5,
+    );
+    const Coordinate defaultDestination = Coordinate(
+      latitude: 45.6,
+      longitude: -73.6,
+    );
+
     late _FakeHttpClient fakeClient;
     late _FakeApiKeyService fakeApiKeyService;
+    late DirectionsService service;
+
+    Future<RouteOption?> fetchRoute({
+      final DirectionsService? serviceOverride,
+      final RouteMode mode = RouteMode.walking,
+      final DateTime? departureTime,
+      final DateTime? arrivalTime,
+    }) {
+      final routeService = serviceOverride ?? service;
+      return routeService.fetchRoute(
+        defaultOrigin,
+        defaultDestination,
+        mode,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+      );
+    }
 
     setUp(() {
       fakeClient = _FakeHttpClient();
       fakeApiKeyService = _FakeApiKeyService("test-api-key");
+      service = DirectionsService(
+        httpClient: fakeClient,
+        apiKeyService: fakeApiKeyService,
+      );
     });
 
     group("constructor", () {
@@ -85,11 +115,7 @@ void main() {
           apiKeyService: _FakeApiKeyService(null),
         );
 
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute(serviceOverride: service);
 
         expect(result, isNull);
         expect(fakeClient.capturedUris, isEmpty);
@@ -101,11 +127,7 @@ void main() {
           apiKeyService: _FakeApiKeyService("  "),
         );
 
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute(serviceOverride: service);
 
         expect(result, isNull);
         expect(fakeClient.capturedUris, isEmpty);
@@ -140,16 +162,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNotNull);
         expect(result?.mode, RouteMode.walking);
@@ -200,16 +213,9 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
         final departureTime = DateTime(2026, 2, 14, 10, 0);
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
+        final result = await fetchRoute(
+          mode: RouteMode.transit,
           departureTime: departureTime,
         );
 
@@ -241,16 +247,9 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
         final arrivalTime = DateTime(2026, 2, 14, 16, 0);
-        await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
+        await fetchRoute(
+          mode: RouteMode.transit,
           arrivalTime: arrivalTime,
         );
 
@@ -261,16 +260,7 @@ void main() {
       test("returns null when HTTP status is not 200", () async {
         fakeClient.setResponse(http.Response("Forbidden", 403));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNull);
       });
@@ -281,16 +271,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNull);
       });
@@ -301,16 +282,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNull);
       });
@@ -318,16 +290,7 @@ void main() {
       test("returns null when HTTP request throws exception", () async {
         fakeClient.setError(Exception("Network error"));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNull);
       });
@@ -359,16 +322,11 @@ void main() {
           apiKeyService: countingApiKeyService,
         );
 
-        await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        await fetchRoute(serviceOverride: service);
 
-        await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.bicycling,
+        await fetchRoute(
+          serviceOverride: service,
+          mode: RouteMode.bicycling,
         );
 
         expect(callCount, 1); // API key fetched only once
@@ -382,16 +340,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        await fetchRoute();
 
         final uri = fakeClient.capturedUris[0];
         expect(uri.scheme, "https");
@@ -410,16 +359,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
-        );
+        await fetchRoute(mode: RouteMode.transit);
 
         final uri = fakeClient.capturedUris[0];
         expect(uri.queryParameters["mode"], "transit");
@@ -432,11 +372,6 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
         final modes = [
           (RouteMode.walking, "walking"),
           (RouteMode.bicycling, "bicycling"),
@@ -446,11 +381,7 @@ void main() {
 
         for (final (mode, expectedString) in modes) {
           fakeClient.capturedUris.clear();
-          await service.fetchRoute(
-            const Coordinate(latitude: 45.5, longitude: -73.5),
-            const Coordinate(latitude: 45.6, longitude: -73.6),
-            mode,
-          );
+          await fetchRoute(mode: mode);
 
           final uri = fakeClient.capturedUris[0];
           expect(uri.queryParameters["mode"], expectedString,
@@ -474,16 +405,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNotNull);
         expect(result?.steps, isEmpty);
@@ -507,16 +429,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result, isNotNull);
         expect(result?.distanceMeters, isNull);
@@ -540,16 +453,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.polyline, isEmpty);
       });
@@ -589,16 +493,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.steps.length, 2);
         expect(result?.steps[0].distanceMeters, 500);
@@ -630,16 +525,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.steps.length, 1);
         expect(result?.steps[0].instruction, "");
@@ -694,16 +580,7 @@ void main() {
             200,
           ));
 
-          final service = DirectionsService(
-            httpClient: fakeClient,
-            apiKeyService: fakeApiKeyService,
-          );
-
-          final result = await service.fetchRoute(
-            const Coordinate(latitude: 45.5, longitude: -73.5),
-            const Coordinate(latitude: 45.6, longitude: -73.6),
-            RouteMode.transit,
-          );
+          final result = await fetchRoute(mode: RouteMode.transit);
 
           expect(result?.steps[0].transitDetails?.mode, expectedMode,
               reason: "Vehicle type $vehicleType should map to $expectedMode");
@@ -743,16 +620,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
-        );
+        final result = await fetchRoute(mode: RouteMode.transit);
 
         final transitDetails = result?.steps[0].transitDetails;
         expect(transitDetails?.lineName, "Green Line");
@@ -789,16 +657,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
-        );
+        final result = await fetchRoute(mode: RouteMode.transit);
 
         final transitDetails = result?.steps[0].transitDetails;
         expect(transitDetails?.lineName, "");
@@ -834,16 +693,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.steps[0].instruction, "Walk to Main St and turn left");
       });
@@ -872,16 +722,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.steps[0].instruction, 'Turn left & continue<test>"quoted"');
       });
@@ -910,16 +751,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.steps[0].instruction, "Nested tags");
       });
@@ -945,16 +777,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.transit,
-        );
+        final result = await fetchRoute(mode: RouteMode.transit);
 
         expect(result?.departureTime, DateTime.fromMillisecondsSinceEpoch(1234567890000));
         expect(result?.arrivalTime, DateTime.fromMillisecondsSinceEpoch(1234568190000));
@@ -976,16 +799,7 @@ void main() {
           200,
         ));
 
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
-
-        final result = await service.fetchRoute(
-          const Coordinate(latitude: 45.5, longitude: -73.5),
-          const Coordinate(latitude: 45.6, longitude: -73.6),
-          RouteMode.walking,
-        );
+        final result = await fetchRoute();
 
         expect(result?.departureTime, isNull);
         expect(result?.arrivalTime, isNull);
