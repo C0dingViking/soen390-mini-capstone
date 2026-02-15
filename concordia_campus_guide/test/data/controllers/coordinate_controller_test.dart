@@ -179,9 +179,7 @@ void main() {
         northeast: const LatLng(45.4973, -73.5785), // ~0.0001 degree span
       );
       
-      LatLngBounds? capturedBounds;
       when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
-        final update = invocation.positionalArguments[0] as CameraUpdate;
         // We can't easily extract the bounds from CameraUpdate, but we can verify it was called
       });
       

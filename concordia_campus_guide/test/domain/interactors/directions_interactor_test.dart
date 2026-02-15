@@ -286,7 +286,7 @@ void main() {
           departureTime: anyNamed("departureTime"),
           arrivalTime: anyNamed("arrivalTime"),
         )).thenAnswer((_) async {
-          await Future.delayed(const Duration(milliseconds: 50));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
           callOrder.add("walking");
           return null;
         });
@@ -298,7 +298,7 @@ void main() {
           departureTime: anyNamed("departureTime"),
           arrivalTime: anyNamed("arrivalTime"),
         )).thenAnswer((_) async {
-          await Future.delayed(const Duration(milliseconds: 40));
+          await Future<void>.delayed(const Duration(milliseconds: 40));
           callOrder.add("bicycling");
           return null;
         });
@@ -310,7 +310,7 @@ void main() {
           departureTime: anyNamed("departureTime"),
           arrivalTime: anyNamed("arrivalTime"),
         )).thenAnswer((_) async {
-          await Future.delayed(const Duration(milliseconds: 30));
+          await Future<void>.delayed(const Duration(milliseconds: 30));
           callOrder.add("driving");
           return null;
         });
@@ -322,7 +322,7 @@ void main() {
           departureTime: anyNamed("departureTime"),
           arrivalTime: anyNamed("arrivalTime"),
         )).thenAnswer((_) async {
-          await Future.delayed(const Duration(milliseconds: 20));
+          await Future<void>.delayed(const Duration(milliseconds: 20));
           callOrder.add("transit");
           return null;
         });

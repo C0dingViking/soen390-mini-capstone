@@ -107,7 +107,7 @@ void main() {
       client.setAutocompleteResponse(
         gmw.PlacesAutocompleteResponse.fromJson({
           "status": "ZERO_RESULTS",
-          "predictions": [],
+          "predictions": <Map<String, dynamic>>[],
         }),
       );
 
@@ -242,7 +242,7 @@ void main() {
               "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
-              "photos": [],
+              "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
               "plus_code": {
                 "compound_code": "Code",
@@ -292,7 +292,7 @@ void main() {
               "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
-              "photos": [],
+              "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
               "plus_code": {
                 "compound_code": "Code",
@@ -366,7 +366,7 @@ void main() {
       client.setSearchResponse(
         gmw.PlacesSearchResponse.fromJson({
           "status": "ZERO_RESULTS",
-          "results": [],
+          "results": <Map<String, dynamic>>[],
         }),
       );
 

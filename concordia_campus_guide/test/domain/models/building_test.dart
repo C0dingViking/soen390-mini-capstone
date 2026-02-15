@@ -173,7 +173,7 @@ void main() {
 
       test("deserializes JSON with empty buildingFeatures list", () {
         final jsonData = Map<String, dynamic>.from(completeJson);
-        jsonData["buildingFeatures"] = [];
+        jsonData["buildingFeatures"] = <String>[];
 
         final building = Building.fromJson(jsonData);
 
@@ -237,7 +237,7 @@ void main() {
 
       test("deserializes empty images list", () {
         final jsonData = Map<String, dynamic>.from(completeJson);
-        jsonData["images"] = [];
+        jsonData["images"] = <String>[];
 
         final building = Building.fromJson(jsonData);
 
@@ -384,8 +384,8 @@ void main() {
 
         final json = building.toJson();
 
-        expect(json["points"], isA<List>());
-        expect((json["points"] as List).length, 3);
+        expect(json["points"], isA<List<dynamic>>());
+        expect((json["points"] as List<dynamic>).length, 3);
       });
 
       test("serializes bounding box fields", () {
@@ -434,7 +434,7 @@ void main() {
 
         final json = building.toJson();
 
-        expect(json["buildingFeatures"], isA<List>());
+        expect(json["buildingFeatures"], isA<List<dynamic>>());
       });
 
       test("serializes null buildingFeatures", () {
@@ -602,11 +602,10 @@ void main() {
         final json = building.toJson();
 
         // Verify field name mapping: outlinePoints -> points
-        expect(json["points"], isA<List>());
-        expect((json["points"] as List).length, 2);
+        expect(json["points"], isA<List<dynamic>>());
+        expect((json["points"] as List<dynamic>).length, 2);
         expect(json.containsKey("outlinePoints"), isFalse);
       });
     });
   });
 }
-
