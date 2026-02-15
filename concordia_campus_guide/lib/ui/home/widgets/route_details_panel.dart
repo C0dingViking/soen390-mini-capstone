@@ -339,6 +339,21 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     return "$hour12:$minute $period";
   }
 
+  DateTime? _suggestedTransitDepartureTime(final List<RouteStep> steps) {
+    var secondsBeforeTransit = 0;
+    for (final step in steps) {
+      if (step.travelMode == "TRANSIT" &&
+          step.transitDetails?.departureDateTime != null) {
+        final transitDeparture = step.transitDetails!.departureDateTime!;
+        return transitDeparture.subtract(
+          Duration(seconds: secondsBeforeTransit),
+        );
+      }
+      secondsBeforeTransit += step.durationSeconds;
+    }
+    return null;
+  }
+
   Widget _buildModeSelector(
     final Map<RouteMode, RouteOption> routeOptions,
     final RouteMode selectedMode,
@@ -473,6 +488,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   }
 
   Widget _buildTransitSteps(final List<RouteStep> steps) {
+    final suggestedTransitDeparture = _suggestedTransitDepartureTime(steps);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -483,6 +499,18 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        if (suggestedTransitDeparture != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              "Suggested depart at ${_formatTime(suggestedTransitDeparture)}",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         const SizedBox(height: 8),
         ...steps.map((final step) => _buildStepItem(step)),
       ],

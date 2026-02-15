@@ -322,6 +322,57 @@ void main() {
       expect(find.text("Exit at Downtown Hub"), findsOneWidget);
       expect(find.text("Arrive at 2:55 PM"), findsOneWidget);
     });
+
+    testWidgets("shows suggested depart time under Route Details", (
+      final tester,
+    ) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to stop",
+          distanceMeters: 300,
+          durationSeconds: 300,
+          travelMode: "WALKING",
+        ),
+        RouteStep(
+          instruction: "Board bus",
+          distanceMeters: 2000,
+          durationSeconds: 900,
+          travelMode: "TRANSIT",
+          transitDetails: TransitDetails(
+            lineName: "Campus Loop",
+            shortName: "12",
+            mode: TransitMode.bus,
+            departureStop: "Stop A",
+            arrivalStop: "Stop B",
+            numStops: 5,
+            departureTime: "10:00 AM",
+            arrivalTime: "10:15 AM",
+            departureDateTime: DateTime(2025, 1, 1, 10, 0),
+          ),
+        ),
+      ];
+      vm.setRoutes({
+        RouteMode.transit: makeOption(
+          mode: RouteMode.transit,
+          distanceMeters: 2300,
+          durationSeconds: 1200,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.transit;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      final handle = find.byWidgetPredicate(
+        (final widget) => widget is GestureDetector && widget.onTap != null,
+      );
+      await tester.tap(handle.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Suggested depart at 9:55 AM"), findsOneWidget);
+    });
     testWidgets("refresh button is visible in the handle", (
       final tester,
     ) async {

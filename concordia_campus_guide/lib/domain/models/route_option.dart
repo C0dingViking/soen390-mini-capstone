@@ -31,6 +31,8 @@ class TransitDetails {
   final int? numStops;
   final String? departureTime;
   final String? arrivalTime;
+  final DateTime? departureDateTime;
+  final DateTime? arrivalDateTime;
 
   const TransitDetails({
     required this.lineName,
@@ -41,6 +43,8 @@ class TransitDetails {
     this.numStops,
     this.departureTime,
     this.arrivalTime,
+    this.departureDateTime,
+    this.arrivalDateTime,
   });
 }
 

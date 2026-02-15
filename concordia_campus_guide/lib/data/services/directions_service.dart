@@ -262,6 +262,8 @@ class DirectionsService {
       numStops: numStops,
       departureTime: departureTimeData?["text"] as String?,
       arrivalTime: arrivalTimeData?["text"] as String?,
+      departureDateTime: _parseTimeValue(departureTimeData),
+      arrivalDateTime: _parseTimeValue(arrivalTimeData),
     );
   }
 
