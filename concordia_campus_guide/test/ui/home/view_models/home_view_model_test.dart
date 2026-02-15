@@ -5,11 +5,16 @@ import "package:concordia_campus_guide/domain/interactors/map_data_interactor.da
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:flutter_google_maps_webservices/places.dart" as gmw;
+import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:logger/logger.dart";
 import "package:geolocator_platform_interface/geolocator_platform_interface.dart";
 
@@ -74,6 +79,51 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
     final DateTime? arrivalTime,
   }) async {
     return [];
+  }
+}
+
+class _TrackingPlacesInteractor extends PlacesInteractor {
+  int searchCount = 0;
+  String? lastQuery;
+  List<PlaceSuggestion> searchResults = [];
+  PlaceSuggestion? lastResolvedSuggestion;
+  Coordinate? resolveResult;
+
+  @override
+  Future<List<PlaceSuggestion>> searchPlaces(final String query) async {
+    searchCount++;
+    lastQuery = query;
+    return searchResults;
+  }
+
+  @override
+  Future<Coordinate?> resolvePlaceSuggestion(
+    final PlaceSuggestion suggestion,
+  ) async {
+    lastResolvedSuggestion = suggestion;
+    return resolveResult;
+  }
+}
+
+class _ConfigurableDirectionsInteractor extends DirectionsInteractor {
+  List<RouteOption> options = [];
+  Coordinate? lastStart;
+  Coordinate? lastDestination;
+  DateTime? lastDepartureTime;
+  DateTime? lastArrivalTime;
+
+  @override
+  Future<List<RouteOption>> getRouteOptions(
+    final Coordinate start,
+    final Coordinate destination, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
+    lastStart = start;
+    lastDestination = destination;
+    lastDepartureTime = departureTime;
+    lastArrivalTime = arrivalTime;
+    return options;
   }
 }
 
@@ -418,6 +468,374 @@ void main() {
         expect(hvm.cameraTarget, isNotNull);
         expect(hvm.cameraTarget!.latitude, equals(45.5009));
       });
+    });
+  });
+
+  group("HomeViewModel search and routing", () {
+    late HomeViewModel hvm;
+    late _TrackingPlacesInteractor places;
+    late _ConfigurableDirectionsInteractor directions;
+
+    setUp(() {
+      places = _TrackingPlacesInteractor();
+      directions = _ConfigurableDirectionsInteractor();
+      hvm = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
+        ),
+        placesInteractor: places,
+        directionsInteractor: directions,
+      );
+    });
+
+    tearDown(() {
+      hvm.dispose();
+      LocationService.resetForTesting();
+    });
+
+    test("updateSearchQuery returns building suggestions without places", () {
+      hvm.buildings = {
+        "H": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+        "LB": Building(
+          id: "LB",
+          googlePlacesId: null,
+          name: "Library",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.1, longitude: -73.1),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+      };
+
+      hvm.updateSearchQuery("ha");
+
+      expect(hvm.searchResults.length, 1);
+      expect(hvm.searchResults.first.type, SearchSuggestionType.building);
+      expect(places.searchCount, 0);
+      expect(hvm.isSearchingPlaces, isFalse);
+    });
+
+    test("updateSearchQuery merges building and place results", () async {
+      hvm.buildings = {
+        "H": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+      };
+      places.searchResults = [
+        const PlaceSuggestion(
+          placeId: "place-1",
+          description: "Hall Place",
+          mainText: "Hall Place",
+          secondaryText: "Montreal",
+        ),
+      ];
+
+      hvm.updateSearchQuery("hal");
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+
+      expect(places.searchCount, 1);
+      expect(hvm.searchResults.length, 2);
+      expect(
+        hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length,
+        1,
+      );
+    });
+
+    test("clearSearchResults resets search state", () {
+      hvm.searchResults = [
+        SearchSuggestion.place(
+          PlaceSuggestion(
+            placeId: "place-1",
+            description: "Desc",
+            mainText: "Main",
+            secondaryText: "Secondary",
+          ),
+        ),
+      ];
+      hvm.isSearchingPlaces = true;
+
+      hvm.clearSearchResults();
+
+      expect(hvm.searchResults, isEmpty);
+      expect(hvm.isSearchingPlaces, isFalse);
+    });
+
+    test("clearRouteSelection resets route state", () {
+      hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
+      hvm.selectedStartLabel = "Start";
+      hvm.selectedDestinationLabel = "Dest";
+      hvm.searchStartMarker = Marker(
+        markerId: const MarkerId("search-start"),
+        position: const LatLng(45.0, -73.0),
+      );
+      hvm.searchDestinationMarker = Marker(
+        markerId: const MarkerId("search-destination"),
+        position: const LatLng(45.1, -73.1),
+      );
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [],
+        ),
+      };
+      hvm.routeBounds = LatLngBounds(
+        southwest: const LatLng(45.0, -73.0),
+        northeast: const LatLng(45.1, -73.1),
+      );
+      hvm.isLoadingRoutes = true;
+      hvm.routeErrorMessage = "Err";
+
+      hvm.clearRouteSelection();
+
+      expect(hvm.startCoordinate, isNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.selectedStartLabel, isNull);
+      expect(hvm.selectedDestinationLabel, isNull);
+      expect(hvm.searchStartMarker, isNull);
+      expect(hvm.searchDestinationMarker, isNull);
+      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.routePolylines, isEmpty);
+      expect(hvm.transitChangeCircles, isEmpty);
+      expect(hvm.routeBounds, isNull);
+      expect(hvm.routeErrorMessage, isNull);
+      expect(hvm.isLoadingRoutes, isFalse);
+    });
+
+    test("setSearchBarExpanded and requestUnfocusSearchBar update state", () {
+      expect(hvm.isSearchBarExpanded, isFalse);
+      hvm.setSearchBarExpanded(true);
+      expect(hvm.isSearchBarExpanded, isTrue);
+
+      final signal = hvm.unfocusSearchBarSignal;
+      hvm.requestUnfocusSearchBar();
+      expect(hvm.unfocusSearchBarSignal, signal + 1);
+    });
+
+    test("mapMarkers returns building and search markers", () {
+      hvm.buildingMarkers = {
+        const Marker(
+          markerId: MarkerId("b-1"),
+          position: LatLng(45.0, -73.0),
+        ),
+      };
+      hvm.searchStartMarker = const Marker(
+        markerId: MarkerId("search-start"),
+        position: LatLng(45.1, -73.1),
+      );
+      hvm.searchDestinationMarker = const Marker(
+        markerId: MarkerId("search-destination"),
+        position: LatLng(45.2, -73.2),
+      );
+
+      expect(hvm.mapMarkers.length, 3);
+    });
+
+    test("selectSearchSuggestion applies building selection", () async {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.loyola,
+        outlinePoints: [],
+        images: [],
+        buildingFeatures: null,
+      );
+      final suggestion = SearchSuggestion.building(building);
+
+      await hvm.selectSearchSuggestion(suggestion, SearchField.start);
+
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.selectedStartLabel, equals("Hall Building"));
+      expect(hvm.searchStartMarker?.markerId.value, equals("search-start"));
+      expect(hvm.selectedCampusIndex, 1);
+    });
+
+    test("selectSearchSuggestion resolves place and loads routes", () async {
+      hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      final place = const PlaceSuggestion(
+        placeId: "place-1",
+        description: "Hall Place",
+        mainText: "Hall Place",
+        secondaryText: "Montreal",
+      );
+      final suggestion = SearchSuggestion.place(place);
+      places.resolveResult = const Coordinate(latitude: 45.1, longitude: -73.1);
+      directions.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 900,
+          durationSeconds: 540,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.1, longitude: -73.1),
+          ],
+        ),
+      ];
+
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+
+      expect(places.lastResolvedSuggestion, equals(place));
+      expect(hvm.destinationCoordinate, isNotNull);
+      expect(hvm.selectedDestinationLabel, equals("Hall Place"));
+      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+      expect(hvm.routePolylines.length, 1);
+      expect(hvm.routeBounds, isNotNull);
+    });
+
+    test("setDepartureTime and setArrivalTime update time state", () {
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.1, longitude: -73.1),
+          ],
+        ),
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+
+      final departAt = DateTime(2025, 1, 1, 9, 0);
+      hvm.setDepartureTime(departAt);
+      expect(hvm.departureMode, DepartureMode.departAt);
+      expect(hvm.selectedDepartureTime, departAt);
+      expect(hvm.selectedArrivalTime, isNull);
+
+      final arriveBy = DateTime(2025, 1, 1, 10, 0);
+      hvm.setArrivalTime(arriveBy);
+      expect(hvm.departureMode, DepartureMode.arriveBy);
+      expect(hvm.selectedArrivalTime, arriveBy);
+      expect(hvm.selectedDepartureTime, isNull);
+      expect(hvm.suggestedDepartureTime, DateTime(2025, 1, 1, 9, 50));
+    });
+
+    test("setDepartureMode now clears time state", () {
+      hvm.departureMode = DepartureMode.departAt;
+      hvm.selectedDepartureTime = DateTime(2025, 1, 1, 9, 0);
+      hvm.selectedArrivalTime = DateTime(2025, 1, 1, 10, 0);
+      hvm.suggestedDepartureTime = DateTime(2025, 1, 1, 9, 30);
+
+      hvm.setDepartureMode(DepartureMode.now);
+
+      expect(hvm.departureMode, DepartureMode.now);
+      expect(hvm.selectedDepartureTime, isNull);
+      expect(hvm.selectedArrivalTime, isNull);
+      expect(hvm.suggestedDepartureTime, isNull);
+    });
+
+    test("loadRoutes sets error when options empty", () async {
+      hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
+      directions.options = [];
+
+      hvm.setDepartureMode(DepartureMode.departAt);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(hvm.routeErrorMessage, equals("No routes available."));
+      expect(hvm.isLoadingRoutes, isFalse);
+      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.routePolylines, isEmpty);
+      expect(hvm.transitChangeCircles, isEmpty);
+      expect(hvm.routeBounds, isNull);
+    });
+
+    test("selectRouteMode updates polylines for transit", () {
+      final transitOption = RouteOption(
+        mode: RouteMode.transit,
+        distanceMeters: 1200,
+        durationSeconds: 900,
+        polyline: const [
+          Coordinate(latitude: 45.0, longitude: -73.0),
+          Coordinate(latitude: 45.1, longitude: -73.1),
+        ],
+        steps: [
+          RouteStep(
+            instruction: "Walk",
+            distanceMeters: 100,
+            durationSeconds: 120,
+            travelMode: "WALKING",
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.02, longitude: -73.02),
+            ],
+          ),
+          RouteStep(
+            instruction: "Bus",
+            distanceMeters: 1000,
+            durationSeconds: 600,
+            travelMode: "TRANSIT",
+            transitDetails: const TransitDetails(
+              lineName: "Line 105",
+              shortName: "105",
+              mode: TransitMode.bus,
+              departureStop: "Stop A",
+              arrivalStop: "Stop B",
+              numStops: 3,
+            ),
+            polyline: const [
+              Coordinate(latitude: 45.02, longitude: -73.02),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ],
+      );
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 400,
+          durationSeconds: 300,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.01, longitude: -73.01),
+          ],
+        ),
+        RouteMode.transit: transitOption,
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+
+      hvm.selectRouteMode(RouteMode.transit);
+
+      expect(hvm.routePolylines.length, 2);
+      expect(hvm.transitChangeCircles.length, 1);
+      expect(hvm.routeBounds, isNotNull);
     });
   });
 }
