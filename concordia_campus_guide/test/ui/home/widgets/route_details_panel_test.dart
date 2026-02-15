@@ -292,10 +292,7 @@ void main() {
       expect(find.text("Route Details"), findsNothing);
       expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
 
-      final handle = find.byWidgetPredicate(
-        (final widget) => widget is GestureDetector && widget.onTap != null,
-      );
-      await tester.tap(handle.first);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
       await tester.pumpAndSettle();
 
       expect(find.text("Route Details"), findsOneWidget);
@@ -340,10 +337,7 @@ void main() {
       await pumpPanel(tester);
       
       // Expand the panel to see route details
-      final handle = find.byWidgetPredicate(
-        (final widget) => widget is GestureDetector && widget.onTap != null,
-      );
-      await tester.tap(handle.first);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
       await tester.pumpAndSettle();
 
       // Verify all transit details including vehicle arrival time
@@ -394,10 +388,7 @@ void main() {
 
       await pumpPanel(tester);
 
-      final handle = find.byWidgetPredicate(
-        (final widget) => widget is GestureDetector && widget.onTap != null,
-      );
-      await tester.tap(handle.first);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
       await tester.pumpAndSettle();
 
       expect(find.text("Route Details"), findsOneWidget);

@@ -168,6 +168,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           ),
           Expanded(
             child: GestureDetector(
+              key: const Key("route_details_handle"),
               onTap: _toggleExpanded,
               child: Center(
                 child: Container(
@@ -641,7 +642,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        "scheduled at ${transitDetails.departureTime ?? transitDetails.arrivalTime}",
+                        "Vehicle arrives at ${transitDetails.departureTime ?? transitDetails.arrivalTime}",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.green[700],

@@ -262,6 +262,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
@@ -308,6 +309,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
       vm.selectedDestinationLabel = "Dest A";
       vm.notifyListeners();
@@ -339,6 +341,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
@@ -370,6 +373,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
@@ -392,6 +396,7 @@ void main() {
     ) async {
       await pumpSearchBar(tester);
       // First expand the search bar by setting a destination
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pump();
@@ -408,6 +413,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
       vm.selectedDestinationLabel = "Dest A";
       vm.notifyListeners();
@@ -421,6 +427,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
@@ -442,6 +449,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pumpAndSettle();
