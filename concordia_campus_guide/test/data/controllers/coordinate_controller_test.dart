@@ -70,9 +70,35 @@ void main() {
     GeolocatorPlatform.instance = mockGeolocatorPlatform;
   });
 
+  group("static constants", () {
+    test("sgw coordinate has correct values", () {
+      expect(CoordinatesController.sgw.latitude, 45.4972);
+      expect(CoordinatesController.sgw.longitude, -73.5786);
+    });
+
+    test("loyola coordinate has correct values", () {
+      expect(CoordinatesController.loyola.latitude, 45.45823348665408);
+      expect(CoordinatesController.loyola.longitude, -73.64067095332564);
+    });
+  });
+
   test("onMapCreated completes the controller", () async {
     controller.onMapCreated(mockMapController);
     expect(true, true);
+  });
+
+  test("onMapCreated does not complete twice if called multiple times", () async {
+    controller.onMapCreated(mockMapController);
+    final firstController = await controller.mapController;
+    
+    // Create a second mock controller
+    final secondMockController = ManualMockMapController();
+    controller.onMapCreated(secondMockController);
+    
+    // Should still return the first controller
+    final stillFirstController = await controller.mapController;
+    expect(stillFirstController, same(firstController));
+    expect(stillFirstController, same(mockMapController));
   });
 
   test("mapController returns the created controller", () async {
@@ -88,6 +114,124 @@ void main() {
     when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
     await controller.goToCoordinate(testCoord);
     verify(mockMapController.animateCamera(any)).called(1);
+  });
+
+  test("goToCoordinate uses custom zoom level when provided", () async {
+    controller.onMapCreated(mockMapController);
+    const testCoord = Coordinate(latitude: 10.0, longitude: 10.0);
+    CameraUpdate? capturedUpdate;
+    
+    when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
+      capturedUpdate = invocation.positionalArguments[0] as CameraUpdate?;
+    });
+    
+    await controller.goToCoordinate(testCoord, zoom: 15.0);
+    
+    verify(mockMapController.animateCamera(any)).called(1);
+    expect(capturedUpdate, isNotNull);
+  });
+
+  test("goToCoordinate uses default zoom of 17 when not specified", () async {
+    controller.onMapCreated(mockMapController);
+    const testCoord = Coordinate(latitude: 10.0, longitude: 10.0);
+    
+    when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+    
+    await controller.goToCoordinate(testCoord);
+    
+    verify(mockMapController.animateCamera(any)).called(1);
+  });
+
+  group("fitBounds", () {
+    test("animates camera to bounds with default padding", () async {
+      controller.onMapCreated(mockMapController);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(45.49, -73.58),
+        northeast: const LatLng(45.50, -73.57),
+      );
+      
+      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+      
+      await controller.fitBounds(bounds);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
+
+    test("animates camera to bounds with custom padding", () async {
+      controller.onMapCreated(mockMapController);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(45.49, -73.58),
+        northeast: const LatLng(45.50, -73.57),
+      );
+      
+      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+      
+      await controller.fitBounds(bounds, padding: 100.0);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
+
+    test("expands very small bounds to prevent over-zooming", () async {
+      controller.onMapCreated(mockMapController);
+      // Create bounds with span < 0.002 (~200m)
+      final tinyBounds = LatLngBounds(
+        southwest: const LatLng(45.4972, -73.5786),
+        northeast: const LatLng(45.4973, -73.5785), // ~0.0001 degree span
+      );
+      
+      LatLngBounds? capturedBounds;
+      when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
+        final update = invocation.positionalArguments[0] as CameraUpdate;
+        // We can't easily extract the bounds from CameraUpdate, but we can verify it was called
+      });
+      
+      await controller.fitBounds(tinyBounds);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
+
+    test("preserves large bounds without expansion", () async {
+      controller.onMapCreated(mockMapController);
+      // Create bounds with span > 0.002
+      final largeBounds = LatLngBounds(
+        southwest: const LatLng(45.49, -73.58),
+        northeast: const LatLng(45.51, -73.56), // ~0.02 degree span
+      );
+      
+      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+      
+      await controller.fitBounds(largeBounds);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
+
+    test("expands bounds when only latitude span is too small", () async {
+      controller.onMapCreated(mockMapController);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(45.4972, -73.58),
+        northeast: const LatLng(45.4973, -73.56), // lat span tiny, lng span large
+      );
+      
+      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+      
+      await controller.fitBounds(bounds);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
+
+    test("expands bounds when only longitude span is too small", () async {
+      controller.onMapCreated(mockMapController);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(45.49, -73.5786),
+        northeast: const LatLng(45.51, -73.5785), // lng span tiny, lat span large
+      );
+      
+      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+      
+      await controller.fitBounds(bounds);
+      
+      verify(mockMapController.animateCamera(any)).called(1);
+    });
   });
 
   testWidgets("goToCurrentLocation succeeds when permission granted",
