@@ -105,20 +105,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<HomeViewModel>(
         builder: (final context, final hvm, final child) {
           final CampusDetails selected = _campuses[hvm.selectedCampusIndex];
-          final double searchBarInset = 16;
-          final double searchBarTop = 12;
-          final double actionInset = 25;
-          final double actionBottom = 25;
-          final double actionBottomWithRoutes = 145;
-          final double toggleRadius = 30;
-          final double togglePaddingVertical = 8;
-          final double togglePaddingHorizontal = 12;
-          final double toggleIconSize = 20;
-          final double toggleIconContainer = 40;
-          final double labelFontSize = 16;
-          final double shadowBlurRadius = 6;
-          final double shadowOffsetY = 2;
-          final double spacingSm = 8;
+          const double searchBarInset = 16;
+          const double searchBarTop = 12;
+          const double actionInset = 25;
+          const double actionBottom = 25;
+          const double actionBottomWithRoutes = 145;
+          const double toggleRadius = 30;
+          const double togglePaddingVertical = 8;
+          const double togglePaddingHorizontal = 12;
+          const double toggleIconSize = 20;
+          const double toggleIconContainer = 40;
+          const double labelFontSize = 16;
+          const double shadowBlurRadius = 6;
+          const double shadowOffsetY = 2;
+          const double spacingSm = 8;
           final double actionBottomOffset =
               (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                   ? actionBottomWithRoutes
@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 left: searchBarInset,
                 right: searchBarInset,
                 top: searchBarTop,
-                child: BuildingSearchBar(),
+                child: const BuildingSearchBar(),
               ),
               Positioned(
                 left: actionInset,
