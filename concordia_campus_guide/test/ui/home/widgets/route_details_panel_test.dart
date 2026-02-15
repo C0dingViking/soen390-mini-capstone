@@ -243,6 +243,7 @@ void main() {
             departureStop: "Stop A",
             arrivalStop: "Stop B",
             numStops: 4,
+            departureTime: "10:30 AM",
             arrivalTime: "10:45 AM",
           ),
         ),
@@ -272,10 +273,10 @@ void main() {
       expect(find.text("Downtown Express"), findsOneWidget);
       expect(find.text("Board at Stop A"), findsOneWidget);
       expect(find.text("Exit at Stop B"), findsOneWidget);
-      expect(find.text("Arrive at 10:45 AM"), findsOneWidget);
+      expect(find.text("Vehicle arrives at 10:30 AM"), findsOneWidget);
     });
 
-    testWidgets("shows scheduled arrival time for transit rides", (
+    testWidgets("shows vehicle arrival time for transit rides", (
       final tester,
     ) async {
       final steps = [
@@ -316,11 +317,11 @@ void main() {
       await tester.tap(handle.first);
       await tester.pumpAndSettle();
 
-      // Verify all transit details including scheduled arrival time
+      // Verify all transit details including vehicle arrival time
       expect(find.text("Express Line A"), findsOneWidget);
       expect(find.text("Board at Main Street"), findsOneWidget);
       expect(find.text("Exit at Downtown Hub"), findsOneWidget);
-      expect(find.text("Arrive at 2:55 PM"), findsOneWidget);
+      expect(find.text("Vehicle arrives at 2:30 PM"), findsOneWidget);
     });
 
     testWidgets("shows suggested depart time under Route Details", (

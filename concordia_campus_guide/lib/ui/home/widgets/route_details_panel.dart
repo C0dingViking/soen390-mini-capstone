@@ -623,11 +623,13 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                       color: Colors.grey[700],
                     ),
                   ),
-                  if (transitDetails.arrivalTime != null)
+                  if ((transitDetails.departureTime ??
+                          transitDetails.arrivalTime) !=
+                      null)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        "Arrive at ${transitDetails.arrivalTime}",
+                        "scheduled at ${transitDetails.departureTime ?? transitDetails.arrivalTime}",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.green[700],
