@@ -207,8 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                           color: _buttonColor,
                           borderRadius: BorderRadius.circular(toggleRadius),
-                          boxShadow: [
-                            const BoxShadow(
+                          boxShadow: const [
+                             BoxShadow(
                               color: Colors.black26,
                               blurRadius: shadowBlurRadius,
                               offset: Offset(0, shadowOffsetY),
