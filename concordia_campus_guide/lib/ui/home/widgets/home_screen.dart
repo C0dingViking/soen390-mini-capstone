@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   left: searchBarInset,
                   right: searchBarInset,
                   top: searchBarTop,
-                  child: const BuildingSearchBar(),
+                  child: BuildingSearchBar(),
                 ),
                 Positioned(
                   left: actionInset,
