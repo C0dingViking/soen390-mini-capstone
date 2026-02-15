@@ -333,9 +333,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   }
 
   String _formatTime(final DateTime time) {
-    final hour = time.hour.toString().padLeft(2, "0");
+    final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
     final minute = time.minute.toString().padLeft(2, "0");
-    return "$hour:$minute";
+    final period = time.hour < 12 ? "AM" : "PM";
+    return "$hour12:$minute $period";
   }
 
   Widget _buildModeSelector(
@@ -390,6 +391,18 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
     final distance = _formatDistance(option.distanceMeters);
     final duration = _formatDuration(option.durationSeconds);
+    
+    // Calculate arrival time based on current departure time and duration
+    final viewModel = context.read<HomeViewModel>();
+    String? arrivalTimeText;
+    
+    if (option.durationSeconds != null && option.durationSeconds! > 0) {
+      final departureTime = viewModel.selectedDepartureTime ?? DateTime.now();
+      final arrivalTime = departureTime.add(
+        Duration(seconds: option.durationSeconds!),
+      );
+      arrivalTimeText = _formatTime(arrivalTime);
+    }
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -423,6 +436,15 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
+                    ),
+                  ),
+                if (arrivalTimeText != null)
+                  Text(
+                    "Arrive at $arrivalTimeText",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 if (option.summary != null)

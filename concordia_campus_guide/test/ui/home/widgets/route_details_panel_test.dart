@@ -172,6 +172,29 @@ void main() {
       expect(find.text("Main route"), findsOneWidget);
     });
 
+    testWidgets("shows arrival time in route summary", (
+      final tester,
+    ) async {
+      // Set a specific departure time for predictable testing
+      final departureTime = DateTime(2025, 1, 1, 10, 0, 0);
+      vm.selectedDepartureTime = departureTime;
+      
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600, // 10 minutes
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      
+      // Verify arrival time is displayed (10:00 + 10 minutes = 10:10 AM)
+      expect(find.text("Arrive at 10:10 AM"), findsOneWidget);
+    });
+
     testWidgets("shows time labels and suggested departure", (
       final tester,
     ) async {
@@ -190,10 +213,10 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      expect(find.text("Depart at 09:05"), findsOneWidget);
-      expect(find.text("Arrive by 09:30"), findsOneWidget);
+      expect(find.text("Depart at 9:05 AM"), findsOneWidget);
+      expect(find.text("Arrive by 9:30 AM"), findsOneWidget);
       expect(
-        find.text("Leave at 09:15 to arrive on time"),
+        find.text("Leave at 9:15 AM to arrive on time"),
         findsOneWidget,
       );
     });
