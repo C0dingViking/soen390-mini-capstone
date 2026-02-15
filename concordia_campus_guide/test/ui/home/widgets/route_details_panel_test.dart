@@ -243,6 +243,7 @@ void main() {
             departureStop: "Stop A",
             arrivalStop: "Stop B",
             numStops: 4,
+            arrivalTime: "10:45 AM",
           ),
         ),
       ];
@@ -271,6 +272,55 @@ void main() {
       expect(find.text("Downtown Express"), findsOneWidget);
       expect(find.text("Board at Stop A"), findsOneWidget);
       expect(find.text("Exit at Stop B"), findsOneWidget);
+      expect(find.text("Arrive at 10:45 AM"), findsOneWidget);
+    });
+
+    testWidgets("shows scheduled arrival time for transit rides", (
+      final tester,
+    ) async {
+      final steps = [
+        RouteStep(
+          instruction: "Board bus",
+          distanceMeters: 5000,
+          durationSeconds: 1200,
+          travelMode: "TRANSIT",
+          transitDetails: const TransitDetails(
+            lineName: "Express Line A",
+            shortName: "201",
+            mode: TransitMode.bus,
+            departureStop: "Main Street",
+            arrivalStop: "Downtown Hub",
+            numStops: 8,
+            departureTime: "2:30 PM",
+            arrivalTime: "2:55 PM",
+          ),
+        ),
+      ];
+      vm.setRoutes({
+        RouteMode.transit: makeOption(
+          mode: RouteMode.transit,
+          distanceMeters: 5000,
+          durationSeconds: 1200,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.transit;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      
+      // Expand the panel to see route details
+      final handle = find.byWidgetPredicate(
+        (final widget) => widget is GestureDetector && widget.onTap != null,
+      );
+      await tester.tap(handle.first);
+      await tester.pumpAndSettle();
+
+      // Verify all transit details including scheduled arrival time
+      expect(find.text("Express Line A"), findsOneWidget);
+      expect(find.text("Board at Main Street"), findsOneWidget);
+      expect(find.text("Exit at Downtown Hub"), findsOneWidget);
+      expect(find.text("Arrive at 2:55 PM"), findsOneWidget);
     });
     testWidgets("refresh button is visible in the handle", (
       final tester,

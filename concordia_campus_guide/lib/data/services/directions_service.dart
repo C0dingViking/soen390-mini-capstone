@@ -243,6 +243,8 @@ class DirectionsService {
     final departureStop = transitData["departure_stop"] as Map<String, dynamic>?;
     final arrivalStop = transitData["arrival_stop"] as Map<String, dynamic>?;
     final numStops = transitData["num_stops"] as int?;
+    final departureTimeData = transitData["departure_time"] as Map<String, dynamic>?;
+    final arrivalTimeData = transitData["arrival_time"] as Map<String, dynamic>?;
     
     final lineName = line?["name"] as String? ?? "";
     final shortName = line?["short_name"] as String? ?? "";
@@ -258,6 +260,8 @@ class DirectionsService {
       departureStop: departureStop?["name"] as String? ?? "",
       arrivalStop: arrivalStop?["name"] as String? ?? "",
       numStops: numStops,
+      departureTime: departureTimeData?["text"] as String?,
+      arrivalTime: arrivalTimeData?["text"] as String?,
     );
   }
 

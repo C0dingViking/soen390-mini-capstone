@@ -595,6 +595,18 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                       color: Colors.grey[700],
                     ),
                   ),
+                  if (transitDetails.arrivalTime != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        "Arrive at ${transitDetails.arrivalTime}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   if (transitDetails.numStops != null)
                     Text(
                       "${transitDetails.numStops} stops • $duration",
