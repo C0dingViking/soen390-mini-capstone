@@ -385,7 +385,7 @@ void main() {
         final json = building.toJson();
 
         expect(json["points"], isA<List>());
-        expect(json["points"].length, 3);
+        expect((json["points"] as List).length, 3);
       });
 
       test("serializes bounding box fields", () {
@@ -603,7 +603,7 @@ void main() {
 
         // Verify field name mapping: outlinePoints -> points
         expect(json["points"], isA<List>());
-        expect(json["points"].length, 2);
+        expect((json["points"] as List).length, 2);
         expect(json.containsKey("outlinePoints"), isFalse);
       });
     });
