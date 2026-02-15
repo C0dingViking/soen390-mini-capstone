@@ -132,8 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const double spacingSm = 8;
             final double actionBottomOffset =
                 (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
-                    ? actionBottomWithRoutes
-                    : actionBottom;
+                ? actionBottomWithRoutes
+                : actionBottom;
             return Stack(
               children: [
                 MapWrapper(
@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   circles: hvm.transitChangeCircles,
                   onPolygonTap: _onBuildingTapped,
                 ),
-                Positioned(
+                const Positioned(
                   left: searchBarInset,
                   right: searchBarInset,
                   top: searchBarTop,
@@ -161,8 +161,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: hvm.currentBuilding != null
                       ? FloatingActionButton.extended(
                           heroTag: "my_location",
-                          onPressed: () =>
-                              context.read<HomeViewModel>().goToCurrentLocation(),
+                          onPressed: () => context
+                              .read<HomeViewModel>()
+                              .goToCurrentLocation(),
                           backgroundColor: _buttonColor,
                           icon: const Icon(
                             Icons.my_location,
@@ -170,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           label: Text(
                             hvm.currentBuilding!.id.toUpperCase(),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: labelFontSize,
                               fontWeight: FontWeight.w600,
@@ -179,15 +180,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : FloatingActionButton(
                           heroTag: "my_location",
-                          onPressed: () =>
-                              context.read<HomeViewModel>().goToCurrentLocation(),
+                          onPressed: () => context
+                              .read<HomeViewModel>()
+                              .goToCurrentLocation(),
                           backgroundColor: _buttonColor,
                           child: const Icon(
                             Icons.my_location,
                             color: Colors.white,
                           ),
                         ),
-                ), 
+                ),
                 Positioned(
                   right: actionInset,
                   bottom: actionBottomOffset,
@@ -198,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(toggleRadius),
                       onTap: () => context.read<HomeViewModel>().toggleCampus(),
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: togglePaddingVertical,
                           horizontal: togglePaddingHorizontal,
                         ),
@@ -206,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: _buttonColor,
                           borderRadius: BorderRadius.circular(toggleRadius),
                           boxShadow: [
-                            BoxShadow(
+                            const BoxShadow(
                               color: Colors.black26,
                               blurRadius: shadowBlurRadius,
                               offset: Offset(0, shadowOffsetY),
@@ -231,16 +233,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: spacingSm),
+                            const SizedBox(width: spacingSm),
                             Text(
                               selected.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                                 fontSize: labelFontSize,
                               ),
                             ),
-                            SizedBox(width: spacingSm),
+                            const SizedBox(width: spacingSm),
                           ],
                         ),
                       ),
