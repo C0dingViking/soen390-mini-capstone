@@ -77,9 +77,9 @@ class PlacesService {
           return Coordinate(latitude: location.lat, longitude: location.lng);
         }
       }
-    } catch (e) {
+    } catch (ignored) {
       // Silently fall through to text search fallback
-      // The package may throw type cast errors on certain API responses
+      // The package may throw type cast errors on certain API responses that does not affect app behaviour. Probably unncessary logging.
     }
 
     // Fallback to text search if details lookup failed

@@ -7,6 +7,8 @@ import "package:concordia_campus_guide/utils/polyline_decoder.dart";
 import "package:http/http.dart" as http;
 
 class DirectionsService {
+  static const String _defaultTravelMode = "WALKING";
+  static const String _defaultTransitVehicle = "BUS";
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
   final http.Client _httpClient;
@@ -48,23 +50,12 @@ class DirectionsService {
         arrivalTime,
       );
 
-      logger.i(
-        "DirectionsService: requesting route with mode=$modeString from $start to $destination",
-      );
-
       final response = await _httpClient.get(uri);
       final data = _decodeResponse(response, modeString);
       if (data == null) return null;
 
       final routeOption = _parseRouteOption(data, mode, modeString);
       if (routeOption == null) return null;
-
-      logger.i(
-        "DirectionsService: successfully parsed route for mode $modeString, "
-        "points=${routeOption.polyline.length}, distance=${routeOption.distanceMeters}, "
-        "duration=${routeOption.durationSeconds}, steps=${routeOption.steps.length}, "
-        "summary=${routeOption.summary}",
-      );
 
       return routeOption;
     } catch (e, stackTrace) {
@@ -207,10 +198,9 @@ class DirectionsService {
       
       final distance = step["distance"] as Map<String, dynamic>?;
       final duration = step["duration"] as Map<String, dynamic>?;
-      final travelMode = step["travel_mode"] as String? ?? "WALKING";
+      final travelMode = step["travel_mode"] as String? ?? _defaultTravelMode;
       final instruction = _stripHtml(step["html_instructions"] as String? ?? "");
       
-      // Parse polyline for this step
       final polylineData = step["polyline"] as Map<String, dynamic>?;
       final encodedPolyline = polylineData?["points"] as String? ?? "";
       final stepPolyline = encodedPolyline.isNotEmpty 
@@ -249,7 +239,7 @@ class DirectionsService {
     final lineName = line?["name"] as String? ?? "";
     final shortName = line?["short_name"] as String? ?? "";
     final vehicleData = line?["vehicle"] as Map<String, dynamic>?;
-    final vehicleType = vehicleData?["type"] as String? ?? "BUS";
+    final vehicleType = vehicleData?["type"] as String? ?? _defaultTransitVehicle;
     
     final transitMode = _parseTransitMode(vehicleType);
     
