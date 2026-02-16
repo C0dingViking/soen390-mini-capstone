@@ -1,5 +1,7 @@
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:flutter/material.dart";
@@ -20,7 +22,9 @@ class MyApp extends StatelessWidget {
         create: (_) => HomeViewModel(
           mapInteractor: MapDataInteractor(
             buildingRepo: BuildingRepository()
-          )
+          ),
+          placesInteractor: PlacesInteractor(),
+          directionsInteractor: DirectionsInteractor(),
         )
       )],
       child: MaterialApp(

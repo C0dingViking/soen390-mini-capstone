@@ -1,12 +1,12 @@
 import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
-import "package:concordia_campus_guide/ui/directions/directions_screen.dart";
-import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 
 class BuildingDetailScreen extends StatelessWidget {
   final Building building;
@@ -99,42 +99,27 @@ class BuildingDetailScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Start From Here
-          FloatingActionButton.extended(
-            heroTag: "start_from_here",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (final context) => DirectionsScreen(
-                    buildings: context.read<HomeViewModel>().buildings,
-                    startBuilding: building,
-                  ),
-                ),
-              );
-            },
-            backgroundColor: Colors.green.shade700,
-            icon: const Icon(Icons.flag, color: Colors.white),
-            label: const Text("Start from here", style: TextStyle(color: Colors.white)),
-          ),
-
-          const SizedBox(height: 12),
-
           // Go To This Building
           FloatingActionButton.extended(
             heroTag: "go_to_here",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (final context) => DirectionsScreen(
-                    buildings: context.read<HomeViewModel>().buildings,
-                    destinationBuilding: building,
-                  ),
-                ),
+            onPressed: () async {
+              final viewModel = context.read<HomeViewModel>();
+              final suggestion = SearchSuggestion.building(
+                building,
+                subtitle: building.campus.name,
               );
+              if (!viewModel.isSearchBarExpanded) {
+                await viewModel.setStartToCurrentLocation();
+              }
+              await viewModel.selectSearchSuggestion(
+                suggestion,
+                SearchField.destination,
+              );
+              viewModel.requestUnfocusSearchBar();
+              if (!context.mounted) return;
+              Navigator.pop(context);
             },
-            backgroundColor: Colors.blue.shade700,
+            backgroundColor: AppTheme.concordiaDarkBlue,
             icon: const Icon(Icons.place, color: Colors.white),
             label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
           ),
