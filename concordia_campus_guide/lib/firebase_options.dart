@@ -64,8 +64,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '501981294191',
     projectId: 'concordia-campus-guide',
     storageBucket: 'concordia-campus-guide.firebasestorage.app',
-    androidClientId: '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
-    iosClientId: '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 
@@ -75,8 +77,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '501981294191',
     projectId: 'concordia-campus-guide',
     storageBucket: 'concordia-campus-guide.firebasestorage.app',
-    androidClientId: '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
-    iosClientId: '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 
@@ -89,5 +93,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'concordia-campus-guide.firebasestorage.app',
     measurementId: 'G-4WN8ZHBJHM',
   );
-
 }
