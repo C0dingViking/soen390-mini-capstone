@@ -4,6 +4,7 @@ import "package:concordia_campus_guide/domain/interactors/places_interactor.dart
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
+import "package:concordia_campus_guide/ui/auth/view_models/login_view_model.dart";
 import "package:firebase_ui_auth/firebase_ui_auth.dart";
 import "package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart";
 import "package:flutter/material.dart";
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(final BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(
             mapInteractor: MapDataInteractor(
