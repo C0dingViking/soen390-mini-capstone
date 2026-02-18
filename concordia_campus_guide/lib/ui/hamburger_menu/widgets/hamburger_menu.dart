@@ -7,6 +7,8 @@ import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
 import "package:concordia_campus_guide/ui/auth/view_models/login_view_model.dart";
 import "package:provider/provider.dart";
 import "package:firebase_auth/firebase_auth.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
+import "package:concordia_campus_guide/utils/app_logger.dart";
 
 class HamburgerMenu extends StatelessWidget {
   const HamburgerMenu({super.key});
@@ -50,6 +52,33 @@ class HamburgerMenu extends StatelessWidget {
               }
             },
           ),
+          if (isSignedIn)
+            ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+              leading: const Icon(Icons.calendar_today),
+              title: Text(
+                "My Calendar",
+                style: GoogleFonts.roboto(
+                  color: AppTheme.concordiaForeground,
+                  fontSize: 18.0,
+                ),
+              ),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final calendarInteractor = CalendarInteractor();
+                final events = await calendarInteractor.getUpcomingEvents(
+                  count: 5,
+                );
+
+                logger.i("Fetched ${events.length} upcoming events:");
+                for (final event in events) {
+                  final startTime = event.start?.dateTime?.toLocal();
+                  logger.i(
+                    "- ${event.summary ?? 'No title'} at ${startTime ?? 'No date'}",
+                  );
+                }
+              },
+            ),
         ],
       ),
     );

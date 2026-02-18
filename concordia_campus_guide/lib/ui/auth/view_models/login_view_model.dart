@@ -4,7 +4,7 @@ import "package:firebase_auth/firebase_auth.dart";
 class LoginViewModel extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth;
 
-  LoginViewModel({FirebaseAuth? firebaseAuth})
+  LoginViewModel({final FirebaseAuth? firebaseAuth})
     : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     _initializeAuthState();
   }

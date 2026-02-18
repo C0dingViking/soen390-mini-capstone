@@ -1,6 +1,7 @@
 import "package:firebase_ui_auth/firebase_ui_auth.dart";
 import "package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart";
 import "package:flutter/material.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -12,6 +13,7 @@ class LoginScreen extends StatelessWidget {
         GoogleProvider(
           clientId:
               "501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com",
+          scopes: [calendar.CalendarApi.calendarScope],
         ),
       ],
       actions: [
