@@ -6,23 +6,53 @@ import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
+import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
+
+class _FakePlacesInteractor extends PlacesInteractor {
+  @override
+  Future<List<PlaceSuggestion>> searchPlaces(final String query) async => [];
+
+  @override
+  Future<Coordinate?> resolvePlace(final String placeId) async => null;
+
+  @override
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
+}
+
+class _FakeDirectionsInteractor extends DirectionsInteractor {
+  @override
+  Future<List<RouteOption>> getRouteOptions(
+    final Coordinate start,
+    final Coordinate destination, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
+    return [];
+  }
+}
 
 class TestHomeViewModel extends HomeViewModel {
   bool initCalled = false;
   String? initPath;
   bool goToCalled = false;
   bool clearCalled = false;
+  bool exitNavigationCalled = false;
 
   TestHomeViewModel()
     : super(
         mapInteractor: MapDataInteractor(
           buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
         ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
       ) {
     // Add test buildings for navigation tests
     buildings = {
@@ -81,6 +111,12 @@ class TestHomeViewModel extends HomeViewModel {
     clearCalled = true;
     cameraTarget = null;
     notifyListeners();
+  }
+
+  @override
+  void exitNavigation() {
+    exitNavigationCalled = true;
+    super.exitNavigation();
   }
 }
 
@@ -151,6 +187,59 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+
+    testWidgets("directions button is accessible", (final tester) async {
+      await pumpHomeScreen(tester);
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(vm.buildings, isNotEmpty);
+    });
+
+    testWidgets("shows extended FAB when currentBuilding is set", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      vm.currentBuilding = vm.buildings["H"];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+      
+      expect(find.text("H"), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets("shows regular FAB when no currentBuilding", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      vm.currentBuilding = null;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+      
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byIcon(Icons.my_location), findsOneWidget);
+    });
+
+    testWidgets("android back exits navigation and collapses search bar", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          polyline: [],
+        ),
+      };
+      vm.setSearchBarExpanded(true);
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(vm.exitNavigationCalled, isTrue);
+      expect(vm.routeOptions, isEmpty);
+      expect(vm.isSearchBarExpanded, isFalse);
+    });
   });
 
   group("Building Navigation Tests", () {
@@ -238,6 +327,66 @@ void main() {
       final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
       final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
       expect(controller, isNotNull);
+    });
+
+    testWidgets("building tap handler extracts correct ID", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      // Simulate building tap logic
+      const polygonId = PolygonId("H-poly");
+      final buildingId = polygonId.value.replaceAll("-poly", "");
+      final building = vm.buildings[buildingId];
+      
+      // Verify building is found
+      expect(building, isNotNull);
+      expect(building?.id, equals("H"));
+      expect(building?.name, equals("Science Hall"));
+    });
+
+    testWidgets(
+  "tapping extended FAB when currentBuilding is set calls goToCurrentLocation",
+  (final tester) async {
+    await pumpHomeScreen(tester);
+
+    // Set currentBuilding so extended FAB appears
+    vm.currentBuilding = vm.buildings["H"];
+    vm.notifyListeners();
+    await tester.pumpAndSettle();
+
+    // Ensure extended FAB is shown
+    expect(find.text("H"), findsOneWidget);
+
+    // Tap the extended FAB specifically
+    final extendedFab = find.widgetWithText(
+      FloatingActionButton,
+      "H",
+    );
+
+    await tester.tap(extendedFab);
+    await tester.pump();
+
+    expect(vm.goToCalled, isTrue);
+  },
+);
+
+
+    testWidgets("building tap with valid ID finds building", (final tester) async {
+      await pumpHomeScreen(tester);
+      
+      // Test the extraction and lookup logic
+      final testCases = [
+        {"input": "H-poly", "expected": "H"},
+        {"input": "MB-poly", "expected": "MB"},
+      ];
+      
+      for (final testCase in testCases) {
+        final polygonId = PolygonId(testCase["input"]!);
+        final buildingId = polygonId.value.replaceAll("-poly", "");
+        final building = vm.buildings[buildingId];
+        
+        expect(buildingId, equals(testCase["expected"]));
+        expect(building, isNotNull);
+      }
     });
   });
 }

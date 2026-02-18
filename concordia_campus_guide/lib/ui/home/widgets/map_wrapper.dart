@@ -7,6 +7,8 @@ class MapWrapper extends StatelessWidget {
   final bool myLocationEnabled;
   final Set<Polygon> polygons;
   final Set<Marker> markers;
+  final Set<Polyline> polylines;
+  final Set<Circle> circles;
   final void Function(PolygonId)? onPolygonTap;
 
   // These are the missing definitions
@@ -21,6 +23,8 @@ class MapWrapper extends StatelessWidget {
     required this.myLocationEnabled,
     required this.polygons,
     required this.markers,
+    this.polylines = const {},
+    this.circles = const {},
     this.onPolygonTap,
     this.myLocationButtonEnabled = false,
     this.zoomControlsEnabled = false,
@@ -49,6 +53,8 @@ class MapWrapper extends StatelessWidget {
       zoomControlsEnabled: zoomControlsEnabled,
       polygons: tappablePolygons,
       markers: markers,
+      polylines: polylines,
+      circles: circles,
       fortyFiveDegreeImageryEnabled: fortyFiveDegreeImageryEnabled,
     );
   }
