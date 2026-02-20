@@ -41,4 +41,9 @@ class Room {
 
     return Room(roomNumber, floor, campus, buildingId);
   }
+
+  @override
+  String toString() {
+    return 'Room{roomNumber: $roomNumber, floor: $floor, campus: ${campus.name}, buildingId: $buildingId}';
+  }
 }

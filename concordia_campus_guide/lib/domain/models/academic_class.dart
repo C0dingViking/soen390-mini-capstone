@@ -13,7 +13,7 @@ class AcademicClass {
   /// input and attempts to create a class from it.
   ///
   /// Throw FormatException if the Event has unexpected format
-  factory AcademicClass.fromEvent(final Event calendarEvent) {
+  factory AcademicClass.fromCalendar(final Event calendarEvent) {
     final name = calendarEvent.summary ?? '';
     final startTime = calendarEvent.start?.dateTime;
     final endTime = calendarEvent.end?.dateTime;
@@ -28,12 +28,17 @@ class AcademicClass {
     if (endTime == null) {
       throw FormatException('Event end time is missing');
     }
-    if (location == null || location.isEmpty) {
+    if (location == null) {
       throw FormatException('Event location is missing');
     }
 
     final room = Room.fromLocation(location);
 
     return AcademicClass(name, startTime, endTime, room);
+  }
+
+  @override
+  String toString() {
+    return 'AcademicClass{name: $name, startTime: $startTime, endTime: $endTime, room: $room}';
   }
 }

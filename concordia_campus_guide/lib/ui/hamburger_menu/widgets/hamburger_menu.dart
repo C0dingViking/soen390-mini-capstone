@@ -66,15 +66,23 @@ class HamburgerMenu extends StatelessWidget {
               onTap: () async {
                 Navigator.of(context).pop();
                 final calendarInteractor = CalendarInteractor();
-                final events = await calendarInteractor.getUpcomingEvents(
-                  count: 5,
-                );
+                try {
+                  final now = DateTime.now();
+                  final endTime = now.add(const Duration(days: 3));
+                  final classes = await calendarInteractor.getClassInRange(
+                    startDate: now,
+                    endDate: endTime,
+                  );
 
-                logger.i("Fetched ${events.length} upcoming events:");
-                for (final event in events) {
-                  final startTime = event.start?.dateTime?.toLocal();
-                  logger.i(
-                    "- ${event.summary ?? 'No title'} at ${startTime ?? 'No date'}",
+                  logger.i("Fetched ${classes.length} upcoming classes:");
+                  for (final academicClass in classes) {
+                    logger.i(academicClass);
+                  }
+                } catch (e, stackTrace) {
+                  logger.e(
+                    "Failed to fetch calendar events",
+                    error: e,
+                    stackTrace: stackTrace,
                   );
                 }
               },
