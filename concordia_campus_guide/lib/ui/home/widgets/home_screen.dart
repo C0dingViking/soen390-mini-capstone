@@ -1,5 +1,6 @@
 import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
 import "package:concordia_campus_guide/domain/models/campus_details.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/hamburger_menu/widgets/hamburger_menu.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
@@ -11,6 +12,7 @@ import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:provider/provider.dart";
+import "package:google_fonts/google_fonts.dart";
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,6 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _coords.goToCoordinate(_viewModel.cameraTarget!);
       _viewModel.clearCameraTarget();
     }
+    if (_viewModel.showLoginSuccessMessage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showLoginSuccessMessage(context);
+      });
+      _viewModel.clearLoginSuccessMessage();
+    }
   }
 
   void _onBuildingTapped(final PolygonId polygonId) {
@@ -97,6 +106,48 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+  }
+
+  void _showLoginSuccessMessage(final BuildContext context) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (final context) => AlertDialog(
+        title: Text(
+          "Your Gmail Account is Connected!",
+          style: GoogleFonts.roboto(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.concordiaButtonCyan,
+        content: Text(
+          "You can now import your Google Calendar events into the app.",
+          style: GoogleFonts.roboto(color: Colors.white),
+        ),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              context.read<HomeViewModel>().clearLoginSuccessMessage();
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(
+              Icons.arrow_circle_left_outlined,
+              color: Colors.white,
+            ),
+            label: Text(
+              "Return to Map",
+              style: GoogleFonts.roboto(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -136,6 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                 ? actionBottomWithRoutes
                 : actionBottom;
+
             return Stack(
               children: [
                 MapWrapper(

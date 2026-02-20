@@ -1,4 +1,6 @@
+import "package:concordia_campus_guide/main.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:google_fonts/google_fonts.dart";
 
 import "package:flutter/material.dart";
@@ -34,13 +36,18 @@ class HamburgerMenu extends StatelessWidget {
                 fontSize: 18.0,
               ),
             ),
-            onTap: () {
+            onTap: () async {
               if (isSignedIn) {
                 FirebaseAuth.instance.signOut();
               } else {
+                Navigator.of(context).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (final context) => const LoginScreen(),
+                    builder: (_) => const Scaffold(
+                      appBar: CampusAppBar(),
+                      drawer: HamburgerMenu(),
+                      body: LoginScreen(),
+                    ),
                   ),
                 );
               }

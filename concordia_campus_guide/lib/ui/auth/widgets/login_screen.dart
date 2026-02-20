@@ -1,12 +1,13 @@
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:google_fonts/google_fonts.dart";
 
-import "package:firebase_auth/firebase_auth.dart";
 import "package:firebase_ui_auth/firebase_ui_auth.dart";
 import "package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart";
 import "package:flutter/material.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:google_sign_in/google_sign_in.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:provider/provider.dart";
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -32,9 +33,16 @@ class LoginScreen extends StatelessWidget {
           );
         }
 
-        return Scaffold(
-          backgroundColor: AppTheme.concordiaGold,
-          body: SignInScreen(
+        return Theme(
+          data: Theme.of(context).copyWith(
+            scaffoldBackgroundColor: AppTheme.concordiaGold,
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppTheme.concordiaMaroon,
+              surface: AppTheme.concordiaGold,
+            ),
+            textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
+          ),
+          child: SignInScreen(
             providers: [
               GoogleProvider(
                 clientId:
@@ -44,36 +52,24 @@ class LoginScreen extends StatelessWidget {
             ],
             actions: [
               AuthStateChangeAction<SignedIn>((final context, final state) {
+                context.read<HomeViewModel>().notifyLoginSuccess();
                 Navigator.of(context).pop();
               }),
               AuthStateChangeAction<UserCreated>((final context, final state) {
+                context.read<HomeViewModel>().notifyLoginSuccess();
                 Navigator.of(context).pop();
               }),
             ],
             headerBuilder:
                 (final context, final constraints, final shrinkOffset) {
                   return Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.account_circle,
-                            size: 80,
-                            color: AppTheme.concordiaMaroon,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Welcome to Concordia Campus Guide",
-                            style: GoogleFonts.roboto(
-                              fontSize: 214.0,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.concordiaForeground,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                    padding: const EdgeInsets.all(20.0),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: const Icon(
+                        Icons.account_circle,
+                        size: 100.0,
+                        color: AppTheme.concordiaMaroon,
                       ),
                     ),
                   );
