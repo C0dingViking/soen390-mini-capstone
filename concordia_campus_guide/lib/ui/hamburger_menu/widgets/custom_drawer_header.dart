@@ -2,29 +2,28 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:firebase_auth/firebase_auth.dart";
 
 class CustomDrawerHeader extends StatelessWidget {
-  //TODO: these should be replaced by a user model in the future when we implement user authentication
-  final String name;
-  final String email;
-  final String imageUrl;
+  final User? currentUser;
 
-  const CustomDrawerHeader({
-    super.key,
-    required this.name,
-    required this.email,
-    required this.imageUrl,
-  });
+  const CustomDrawerHeader({super.key, this.currentUser});
 
   @override
   Widget build(final BuildContext context) {
     final double headerHeight = MediaQuery.of(context).size.height * 0.25;
     final double screenWidth = MediaQuery.of(context).size.width;
 
+    final String name = currentUser?.displayName ?? "Guest User";
     final String firstName = name.split(" ").first;
     final String lastName = name.split(" ").length > 1
         ? name.split(" ").last
         : "";
+
+    final String email = currentUser?.email ?? "Not signed in";
+    final String imageUrl =
+        currentUser?.photoURL ??
+        "https://www.gravatar.com/avatar/placeholder?d=mp&s=200";
 
     return Container(
       height: headerHeight,

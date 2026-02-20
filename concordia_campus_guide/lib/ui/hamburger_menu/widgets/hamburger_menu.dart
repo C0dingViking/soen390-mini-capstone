@@ -23,16 +23,10 @@ class HamburgerMenu extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          CustomDrawerHeader(
-            name: currentUser?.displayName ?? "Guest",
-            email: currentUser?.email ?? "Not signed in",
-            imageUrl:
-                currentUser?.photoURL ??
-                "https://api.dicebear.com/9.x/bottts/png",
-          ),
+          CustomDrawerHeader(currentUser: currentUser),
           ListTile(
             contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
-            leading: Icon(isSignedIn ? Icons.logout : Icons.login_sharp),
+            leading: Icon(isSignedIn ? Icons.logout_sharp : Icons.login_sharp),
             title: Text(
               isSignedIn ? "Logout" : "Login",
               style: GoogleFonts.roboto(
@@ -57,7 +51,7 @@ class HamburgerMenu extends StatelessWidget {
               contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
               leading: const Icon(Icons.calendar_today),
               title: Text(
-                "My Calendar",
+                "Import Google Calendar",
                 style: GoogleFonts.roboto(
                   color: AppTheme.concordiaForeground,
                   fontSize: 18.0,
@@ -87,6 +81,39 @@ class HamburgerMenu extends StatelessWidget {
                 }
               },
             ),
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            leading: const Icon(Icons.stars_rounded),
+            title: Text(
+              "Give us a Rating",
+              style: GoogleFonts.roboto(
+                color: AppTheme.concordiaForeground,
+                fontSize: 18.0,
+              ),
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            leading: const Icon(Icons.settings),
+            title: Text(
+              "Settings",
+              style: GoogleFonts.roboto(
+                color: AppTheme.concordiaForeground,
+                fontSize: 18.0,
+              ),
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            leading: const Icon(Icons.info_outline),
+            title: Text(
+              "Version 1.0.0",
+              style: GoogleFonts.roboto(
+                color: AppTheme.concordiaForeground,
+                fontSize: 18.0,
+              ),
+            ),
+          ),
         ],
       ),
     );
