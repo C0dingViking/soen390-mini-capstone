@@ -113,36 +113,59 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierColor: Colors.transparent,
       builder: (final context) => AlertDialog(
-        title: Text(
-          "Your Gmail Account is Connected!",
-          style: GoogleFonts.roboto(color: Colors.white),
-        ),
         backgroundColor: AppTheme.concordiaButtonCyan,
-        content: Text(
-          "You can now import your Google Calendar events into the app.",
-          style: GoogleFonts.roboto(color: Colors.white),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Your Gmail Account is Connected!",
+              style: GoogleFonts.roboto(
+                color: Colors.white,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12.0),
+            Text(
+              "You can now import your Google Calendar events into the app.",
+              style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
         actions: [
-          ElevatedButton.icon(
-            onPressed: () {
-              context.read<HomeViewModel>().clearLoginSuccessMessage();
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(
-              Icons.arrow_circle_left_outlined,
-              color: Colors.white,
-            ),
-            label: Text(
-              "Return to Map",
-              style: GoogleFonts.roboto(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+          Center(
+            child: FractionallySizedBox(
+              widthFactor: 0.8,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.read<HomeViewModel>().clearLoginSuccessMessage();
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(
+                  Icons.arrow_circle_left_outlined,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  "Return to Map",
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  elevation: 0,
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              elevation: 0,
             ),
           ),
         ],
