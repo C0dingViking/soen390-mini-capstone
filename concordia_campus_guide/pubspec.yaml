@@ -60,6 +60,9 @@ dev_dependencies:
   json_serializable: ^6.8.0
   patrol: ^4.1.0
   network_image_mock: ^2.0.1
+  nock: ^1.2.3
+  mocktail_image_network: ^1.2.0
+  flutter_svg_test: ^1.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

@@ -43,7 +43,7 @@ class HamburgerMenu extends StatelessWidget {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const Scaffold(
+                    builder: (_) => Scaffold(
                       appBar: CampusAppBar(),
                       drawer: HamburgerMenu(),
                       body: LoginScreen(),

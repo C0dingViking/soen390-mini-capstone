@@ -10,13 +10,16 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:provider/provider.dart";
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+  final GoogleSignIn googleSignIn;
+
+  LoginScreen({super.key, final GoogleSignIn? googleSignIn})
+    : googleSignIn = googleSignIn ?? GoogleSignIn();
 
   /// Signs out of all cached accounts to ensure a clean login state.
   /// This is necessary because Firebase may cache previous sign-ins, which can lead to unexpected behavior when trying to sign in with a different account.
   /// This could be removed in the future if we decide that we want the accounts to be cached for convenience, but for now it allows for easier testing.
   Future<void> _signOutCachedAccounts() async {
-    await GoogleSignIn().signOut();
+    await googleSignIn.signOut();
   }
 
   @override

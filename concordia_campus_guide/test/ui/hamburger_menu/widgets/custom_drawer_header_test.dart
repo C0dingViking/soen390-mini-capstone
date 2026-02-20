@@ -12,8 +12,6 @@ import "custom_drawer_header_test.mocks.dart";
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late User testUser;
-
   group("CustomDrawerHeader Widget Tests", () {
     Future<void> pumpDrawerHeader(
       final WidgetTester tester, {
