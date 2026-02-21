@@ -14,28 +14,28 @@ class Room {
   /// Throw FormatException if the string has unexpected format
   factory Room.fromLocation(final String location) {
     // string like "Sir George Williams Campus - CL Building Rm 235"
-    final roomPattern = RegExp(r'(?:Rm)\s*(\d+)', caseSensitive: false);
+    final roomPattern = RegExp(r"(?:Rm)\s*(\d+)", caseSensitive: false);
     final roomMatch = roomPattern.firstMatch(location);
     if (roomMatch == null) {
-      throw FormatException('Room number not found in location: $location');
+      throw FormatException("Room number not found in location: $location");
     }
     final roomNumber = roomMatch.group(1)!;
 
     final floor = int.parse(roomNumber) ~/ 100;
 
     late Campus campus;
-    if (location.toLowerCase().contains('loyola')) {
+    if (location.toLowerCase().contains("loyola")) {
       campus = Campus.loyola;
-    } else if (location.toLowerCase().contains('george williams')) {
+    } else if (location.toLowerCase().contains("george williams")) {
       campus = Campus.sgw;
     } else {
-      throw FormatException('Campus not found in location: $location');
+      throw FormatException("Campus not found in location: $location");
     }
 
-    final buildingPattern = RegExp(r'(\w+)\s+Building', caseSensitive: false);
+    final buildingPattern = RegExp(r"(\w+)\s+Building", caseSensitive: false);
     final buildingMatch = buildingPattern.firstMatch(location);
     if (buildingMatch == null) {
-      throw FormatException('Building not found in location: $location');
+      throw FormatException("Building not found in location: $location");
     }
     final buildingId = buildingMatch.group(1)!.toLowerCase();
 
@@ -44,6 +44,6 @@ class Room {
 
   @override
   String toString() {
-    return 'Room{roomNumber: $roomNumber, floor: $floor, campus: ${campus.name}, buildingId: $buildingId}';
+    return "Room{roomNumber: $roomNumber, floor: $floor, campus: ${campus.name}, buildingId: $buildingId}";
   }
 }

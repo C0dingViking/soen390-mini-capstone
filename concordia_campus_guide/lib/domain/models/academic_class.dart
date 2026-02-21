@@ -14,22 +14,22 @@ class AcademicClass {
   ///
   /// Throw FormatException if the Event has unexpected format
   factory AcademicClass.fromCalendar(final Event calendarEvent) {
-    final name = calendarEvent.summary ?? '';
+    final name = calendarEvent.summary ?? "";
     final startTime = calendarEvent.start?.dateTime;
     final endTime = calendarEvent.end?.dateTime;
     final location = calendarEvent.location;
 
     if (name.isEmpty) {
-      throw FormatException('Event name is empty');
+      throw FormatException("Event name is empty");
     }
     if (startTime == null) {
-      throw FormatException('Event start time is missing');
+      throw FormatException("Event start time is missing");
     }
     if (endTime == null) {
-      throw FormatException('Event end time is missing');
+      throw FormatException("Event end time is missing");
     }
     if (location == null) {
-      throw FormatException('Event location is missing');
+      throw FormatException("Event location is missing");
     }
 
     final room = Room.fromLocation(location);
@@ -39,6 +39,6 @@ class AcademicClass {
 
   @override
   String toString() {
-    return 'AcademicClass{name: $name, startTime: $startTime, endTime: $endTime, room: $room}';
+    return "AcademicClass{name: $name, startTime: $startTime, endTime: $endTime, room: $room}";
   }
 }
