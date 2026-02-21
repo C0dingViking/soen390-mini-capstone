@@ -1,13 +1,19 @@
+// ignore_for_file: prefer_final_parameters
+
 import "dart:async";
+
+import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:mockito/mockito.dart";
 import "package:mockito/annotations.dart";
+import "package:mockito/mockito.dart";
 import "package:provider/provider.dart";
+
 import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+
 import "package:google_sign_in/google_sign_in.dart";
 import "package:firebase_ui_auth/firebase_ui_auth.dart";
 import "package:firebase_core/firebase_core.dart";
@@ -15,114 +21,223 @@ import "package:firebase_core_platform_interface/firebase_core_platform_interfac
 
 import "login_screen_test.mocks.dart";
 
-@GenerateMocks([HomeViewModel, GoogleSignIn])
+@GenerateMocks([HomeViewModel, GoogleSignIn, User, UserCredential])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group("LoginScreen Widget Tests", () {
-    late MockGoogleSignIn mockGoogleSignIn;
-    late MockHomeViewModel mockHomeViewModel;
+  late MockGoogleSignIn mockGoogleSignIn;
+  late MockHomeViewModel mockHomeViewModel;
+  late MockUser mockUser;
+  late MockUserCredential mockUserCredential;
 
-    setUpAll(() async {
-      TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    FirebasePlatform.instance = _FakeFirebasePlatform();
+    await Firebase.initializeApp();
+  });
 
-      FirebasePlatform.instance = _FakeFirebasePlatform();
+  setUp(() {
+    mockGoogleSignIn = MockGoogleSignIn();
+    mockHomeViewModel = MockHomeViewModel();
+    mockUser = MockUser();
+    mockUserCredential = MockUserCredential();
 
-      await Firebase.initializeApp();
-    });
+    when(mockHomeViewModel.notifyLoginSuccess()).thenReturn(null);
+  });
 
-    setUp(() {
-      mockGoogleSignIn = MockGoogleSignIn();
-      mockHomeViewModel = MockHomeViewModel();
-
-      when(mockGoogleSignIn.signOut()).thenAnswer((_) async => Future.value());
-      when(mockHomeViewModel.notifyLoginSuccess()).thenReturn(null);
-    });
-
-    Future<void> withMockGoogleSignIn(final Future<void> Function() body) {
-      const MethodChannel channel = MethodChannel(
-        "plugins.flutter.io/google_sign_in",
-      );
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (final call) async {
-            if (call.method == "signOut") {
-              return null;
-            }
-            return null;
-          });
-
-      return body();
-    }
-
-    Future<void> pumpLoginScreen(final WidgetTester tester) async {
-      //await runZonedGuarded(() async {
-      await tester.pumpWidget(
-        ChangeNotifierProvider<HomeViewModel>.value(
-          value: mockHomeViewModel,
-          child: MaterialApp(home: LoginScreen()),
+  Future<void> pumpLoginScreen(WidgetTester tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider<HomeViewModel>.value(
+        value: mockHomeViewModel,
+        child: MaterialApp(
+          home: Navigator(
+            pages: [MaterialPage(child: LoginScreen())],
+            // ignore: deprecated_member_use
+            onPopPage: (route, result) => route.didPop(
+              result,
+            ), // deprecated but required for Navigator to work in tests
+          ),
         ),
-      );
+      ),
+    );
 
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
-      // },
-      // (final error, final stack) {},
-      // zoneValues: {GoogleSignIn: mockGoogleSignIn},
-      //);
-    }
+    await tester.pump();
+  }
+
+  Future<void> withMockGoogleSignIn(final Future<void> Function() body) {
+    const MethodChannel channel = MethodChannel(
+      "plugins.flutter.io/google_sign_in",
+    );
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (final call) async {
+          if (call.method == "signOut") {
+            return null;
+          }
+          return null;
+        });
+
+    return body();
+  }
+
+  group("LoginScreen Widget Tests", () {
+    testWidgets("properly renders loading indicator", (tester) async {
+      await pumpLoginScreen(tester);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      final Scaffold scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+
+      expect(scaffold.backgroundColor, AppTheme.concordiaGold);
+    });
 
     testWidgets(
       "renders SignInScreen after 'googleSignIn.signOut()' completes",
-      (final tester) async {
+      (tester) async {
         await withMockGoogleSignIn(() async {
           await runZonedGuarded(
             () async {
               await pumpLoginScreen(tester);
             },
-            (final error, final stack) {},
+            (error, stackTrace) {
+              fail(
+                "LoginScreen threw an unexpected error: $error\n$stackTrace",
+              );
+            },
             zoneValues: {GoogleSignIn: mockGoogleSignIn},
           );
 
+          // pump twice to allow FutureBuilder to rebuild with new state
           await tester.pump();
           await tester.pump();
 
-          expect(find.byType(SignInScreen), findsOneWidget);
           expect(find.byIcon(Icons.account_circle), findsOneWidget);
+          expect(find.byType(SignInScreen), findsOneWidget);
         });
       },
     );
+    testWidgets("calls notifyLoginSuccess when SignedIn action fires", (
+      tester,
+    ) async {
+      await withMockGoogleSignIn(() async {
+        await runZonedGuarded(
+          () async {
+            await pumpLoginScreen(tester);
+          },
+          (error, stackTrace) {
+            fail("LoginScreen threw an unexpected error: $error\n$stackTrace");
+          },
+          zoneValues: {GoogleSignIn: mockGoogleSignIn},
+        );
 
-    testWidgets("properly renders loading indicator", (final tester) async {
-      await pumpLoginScreen(tester);
+        await tester.pump();
+        await tester.pump();
 
-      final Finder scaffoldFinder = find.byType(Scaffold);
-      expect(scaffoldFinder, findsOneWidget);
+        final signInFinder = find.byType(SignInScreen);
+        expect(signInFinder, findsOneWidget);
 
-      final Scaffold scaffold = tester.widget<Scaffold>(scaffoldFinder);
-      expect(scaffold.backgroundColor, AppTheme.concordiaGold);
+        final SignInScreen signInWidget = tester.widget(signInFinder);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        final signedInAction = signInWidget.actions
+            .whereType<AuthStateChangeAction<SignedIn>>()
+            .first;
+
+        signedInAction.callback(
+          tester.element(signInFinder),
+          SignedIn(mockUser),
+        );
+
+        verify(mockHomeViewModel.notifyLoginSuccess()).called(1);
+      });
+    });
+
+    testWidgets("calls notifyLoginSuccess when UserCreated action fires", (
+      tester,
+    ) async {
+      await withMockGoogleSignIn(() async {
+        await runZonedGuarded(
+          () async {
+            await pumpLoginScreen(tester);
+          },
+          (error, stackTrace) {
+            fail("LoginScreen threw an unexpected error: $error\n$stackTrace");
+          },
+          zoneValues: {GoogleSignIn: mockGoogleSignIn},
+        );
+
+        await tester.pump();
+        await tester.pump();
+
+        final signInFinder = find.byType(SignInScreen);
+        expect(signInFinder, findsOneWidget);
+
+        final SignInScreen signInWidget = tester.widget(signInFinder);
+
+        final userCreatedAction = signInWidget.actions
+            .whereType<AuthStateChangeAction<UserCreated>>()
+            .first;
+
+        userCreatedAction.callback(
+          tester.element(signInFinder),
+          UserCreated(mockUserCredential),
+        );
+
+        verify(mockHomeViewModel.notifyLoginSuccess()).called(1);
+      });
+    });
+
+    testWidgets("calls notifyLoginSuccess when UserCreated action fires", (
+      tester,
+    ) async {
+      await withMockGoogleSignIn(() async {
+        await runZonedGuarded(
+          () async {
+            await pumpLoginScreen(tester);
+          },
+          (error, stackTrace) {
+            fail("LoginScreen threw an unexpected error: $error\n$stackTrace");
+          },
+          zoneValues: {GoogleSignIn: mockGoogleSignIn},
+        );
+
+        await tester.pump();
+        await tester.pump();
+
+        final signInFinder = find.byType(SignInScreen);
+        expect(signInFinder, findsOneWidget);
+
+        final SignInScreen signInWidget = tester.widget(signInFinder);
+
+        final userCreatedAction = signInWidget.actions
+            .whereType<AuthStateChangeAction<UserCreated>>()
+            .first;
+
+        userCreatedAction.callback(
+          tester.element(signInFinder),
+          UserCreated(mockUserCredential),
+        );
+
+        verify(mockHomeViewModel.notifyLoginSuccess()).called(1);
+      });
     });
   });
 }
 
 class _FakeFirebasePlatform extends FirebasePlatform {
   _FakeFirebasePlatform() : super();
+
   static final FirebaseAppPlatform _defaultApp = FakeFirebaseAppPlatform(
     "[DEFAULT]",
   );
 
   @override
   Future<FirebaseAppPlatform> initializeApp({
-    final String? name,
-    final FirebaseOptions? options,
+    String? name,
+    FirebaseOptions? options,
   }) async {
     return _defaultApp;
   }
 
   @override
-  FirebaseAppPlatform app([final String name = "[DEFAULT]"]) {
+  FirebaseAppPlatform app([String name = "[DEFAULT]"]) {
     return _defaultApp;
   }
 
@@ -131,7 +246,7 @@ class _FakeFirebasePlatform extends FirebasePlatform {
 }
 
 class FakeFirebaseAppPlatform extends FirebaseAppPlatform {
-  FakeFirebaseAppPlatform(final String name)
+  FakeFirebaseAppPlatform(String name)
     : super(
         name,
         const FirebaseOptions(

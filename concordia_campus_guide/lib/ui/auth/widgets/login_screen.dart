@@ -12,6 +12,7 @@ import "package:provider/provider.dart";
 class LoginScreen extends StatelessWidget {
   final GoogleSignIn googleSignIn;
 
+  // include GoogleSignIn as field to allow injection of a mock during tests
   LoginScreen({super.key, final GoogleSignIn? googleSignIn})
     : googleSignIn = googleSignIn ?? GoogleSignIn();
 
