@@ -24,10 +24,7 @@ void main() {
       final interactor = CalendarInteractor(calendarRepo: mockRepo);
 
       await expectLater(
-        interactor.getClassInRange(
-          startDate: startDate,
-          endDate: endDate,
-        ),
+        interactor.getClassInRange(startDate: startDate, endDate: endDate),
         throwsA(isA<Exception>()),
       );
     });

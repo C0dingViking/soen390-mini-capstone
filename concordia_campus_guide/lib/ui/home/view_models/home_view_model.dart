@@ -366,8 +366,9 @@ class HomeViewModel extends ChangeNotifier {
     if (selectedArrivalTime == null || routeOptions.isEmpty) return;
 
     final selectedOption = routeOptions[selectedRouteMode];
-    if (selectedOption == null || selectedOption.durationSeconds == null)
+    if (selectedOption == null || selectedOption.durationSeconds == null) {
       return;
+    }
 
     final durationSeconds = selectedOption.durationSeconds!;
     suggestedDepartureTime = selectedArrivalTime!.subtract(

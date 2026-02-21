@@ -1,4 +1,3 @@
-import "package:concordia_campus_guide/main.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:google_fonts/google_fonts.dart";
