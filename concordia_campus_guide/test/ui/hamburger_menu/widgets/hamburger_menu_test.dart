@@ -1,10 +1,8 @@
 import "dart:async";
 import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
-import "package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart";
 import "package:firebase_core/firebase_core.dart";
 import "package:firebase_core_platform_interface/firebase_core_platform_interface.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:mockito/mockito.dart";
 import "package:mockito/annotations.dart";
@@ -247,19 +245,4 @@ class FakeFirebaseAppPlatform extends FirebaseAppPlatform {
           projectId: "test",
         ),
       );
-}
-
-class _FakeFirebaseAuthPlatform extends FirebaseAuthPlatform {
-  final MockFirebaseAuth mock;
-
-  _FakeFirebaseAuthPlatform(this.mock);
-
-  @override
-  Future<void> signOut() => mock.signOut();
-
-  @override
-  UserPlatform? get currentUser => null;
-
-  @override
-  FirebaseAuthPlatform delegateFor({final FirebaseApp? app}) => this;
 }
