@@ -86,12 +86,19 @@ jobs:
           echo "GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY" > android/local.properties
       
       - name: Restore debug keystore
+        shell: bash
+        env: 
+          SHARED_DEBUG_KEYSTORE: ${{ secrets.SHARED_DEBUG_KEYSTORE }}
         run: |
           mkdir -p android/app/debug
-          echo "$SHARED_DEBUG_KEYSTORE" | base64 --decode > android/app/debug/shared-debug.keystore
+          echo "$SHARED_DEBUG_KEYSTORE"  >> android/app/debug/shared-debug-keystore.base64
+          base64 -d android/app/debug/shared-debug-keystore.base64 >> android/app/debug/shared-debug.keystore
+
 
       - name: Build APK (debug)
         run: flutter build apk --debug
 
       - name: Remove debug keystore
-        run: rm -f android/app/debug/shared-debug.keystore 
+        run: |
+          rm -f android/app/debug/shared-debug-keystore.base64
+          rm -f android/app/debug/shared-debug.keystore 
