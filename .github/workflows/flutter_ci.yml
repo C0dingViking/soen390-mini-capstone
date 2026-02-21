@@ -85,5 +85,9 @@ jobs:
         run: |
           echo "GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY" > android/local.properties
       
+      - name: Restore debug keystore
+        run: |
+          echo "$SHARED_DEBUG_KEYSTORE" | base64 --decode > android/app/debug/shared-debug.keystore
+
       - name: Build APK (debug)
         run: flutter build apk --debug
