@@ -56,42 +56,46 @@ void main() {
     }
 
     Future<void> pumpLoginScreen(final WidgetTester tester) async {
-      await runZonedGuarded(
-        () async {
-          await tester.pumpWidget(
-            ChangeNotifierProvider<HomeViewModel>.value(
-              value: mockHomeViewModel,
-              child: MaterialApp(home: LoginScreen()),
-            ),
+      //await runZonedGuarded(() async {
+      await tester.pumpWidget(
+        ChangeNotifierProvider<HomeViewModel>.value(
+          value: mockHomeViewModel,
+          child: MaterialApp(home: LoginScreen()),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      // },
+      // (final error, final stack) {},
+      // zoneValues: {GoogleSignIn: mockGoogleSignIn},
+      //);
+    }
+
+    testWidgets(
+      "renders SignInScreen after 'googleSignIn.signOut()' completes",
+      (final tester) async {
+        await withMockGoogleSignIn(() async {
+          await runZonedGuarded(
+            () async {
+              await pumpLoginScreen(tester);
+            },
+            (final error, final stack) {},
+            zoneValues: {GoogleSignIn: mockGoogleSignIn},
           );
 
           await tester.pump();
-          await tester.pump(const Duration(seconds: 1));
-        },
-        (final error, final stack) {},
-        zoneValues: {GoogleSignIn: mockGoogleSignIn},
-      );
-    }
+          await tester.pump();
 
-    testWidgets("renders SignInScreen after signOut completes", (
-      final tester,
-    ) async {
-      await withMockGoogleSignIn(() async {
-        await pumpLoginScreen(tester);
-
-        // allow FutureBuilder to rebuild
-        await tester.pump();
-        await tester.pump();
-
-        expect(find.byType(SignInScreen), findsOneWidget);
-        expect(find.byIcon(Icons.account_circle), findsOneWidget);
-      });
-    });
+          expect(find.byType(SignInScreen), findsOneWidget);
+          expect(find.byIcon(Icons.account_circle), findsOneWidget);
+        });
+      },
+    );
 
     testWidgets("properly renders loading indicator", (final tester) async {
       await pumpLoginScreen(tester);
 
-      // Find the Scaffold that wraps the SignInScreen
       final Finder scaffoldFinder = find.byType(Scaffold);
       expect(scaffoldFinder, findsOneWidget);
 
