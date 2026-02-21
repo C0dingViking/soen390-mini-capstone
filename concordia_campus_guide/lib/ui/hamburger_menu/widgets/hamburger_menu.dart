@@ -26,7 +26,7 @@ class HamburgerMenu extends StatelessWidget {
         children: [
           CustomDrawerHeader(currentUser: currentUser),
           ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             leading: Icon(isSignedIn ? Icons.logout_sharp : Icons.login_sharp),
             title: Text(
               isSignedIn ? "Logout" : "Login",
@@ -43,8 +43,8 @@ class HamburgerMenu extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => Scaffold(
-                      appBar: CampusAppBar(),
-                      drawer: HamburgerMenu(),
+                      appBar: const CampusAppBar(),
+                      drawer: const HamburgerMenu(),
                       body: LoginScreen(),
                     ),
                   ),
@@ -54,7 +54,7 @@ class HamburgerMenu extends StatelessWidget {
           ),
           if (isSignedIn)
             ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
               leading: const Icon(Icons.calendar_today),
               title: Text(
                 "Import Google Calendar",
@@ -88,7 +88,7 @@ class HamburgerMenu extends StatelessWidget {
               },
             ),
           ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             leading: const Icon(Icons.stars_rounded),
             title: Text(
               "Give us a Rating",
@@ -99,7 +99,7 @@ class HamburgerMenu extends StatelessWidget {
             ),
           ),
           ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             leading: const Icon(Icons.settings),
             title: Text(
               "Settings",
@@ -110,7 +110,7 @@ class HamburgerMenu extends StatelessWidget {
             ),
           ),
           ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             leading: const Icon(Icons.info_outline),
             title: Text(
               "Version 1.0.0",

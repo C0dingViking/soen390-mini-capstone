@@ -20,16 +20,16 @@ class AcademicClass {
     final location = calendarEvent.location;
 
     if (name.isEmpty) {
-      throw FormatException("Event name is empty");
+      throw const FormatException("Event name is empty");
     }
     if (startTime == null) {
-      throw FormatException("Event start time is missing");
+      throw const FormatException("Event start time is missing");
     }
     if (endTime == null) {
-      throw FormatException("Event end time is missing");
+      throw const FormatException("Event end time is missing");
     }
     if (location == null) {
-      throw FormatException("Event location is missing");
+      throw const FormatException("Event location is missing");
     }
 
     final room = Room.fromLocation(location);

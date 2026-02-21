@@ -14,8 +14,8 @@ class Room {
   /// Throw FormatException if the string has unexpected format
   factory Room.fromLocation(final String location) {
     // string like "Sir George Williams Campus - CL Building Rm 235"
-    final roomPattern = RegExp(r"(?:Rm)\s*(\d+)", caseSensitive: false);
-    final roomMatch = roomPattern.firstMatch(location);
+    final Pattern roomPattern = RegExp(r"(?:Rm)\s*(\d+)", caseSensitive: false);
+    final roomMatch = roomPattern.allMatches(location).firstOrNull;
     if (roomMatch == null) {
       throw FormatException("Room number not found in location: $location");
     }
@@ -32,8 +32,11 @@ class Room {
       throw FormatException("Campus not found in location: $location");
     }
 
-    final buildingPattern = RegExp(r"(\w+)\s+Building", caseSensitive: false);
-    final buildingMatch = buildingPattern.firstMatch(location);
+    final Pattern buildingPattern = RegExp(
+      r"(\w+)\s+Building",
+      caseSensitive: false,
+    );
+    final buildingMatch = buildingPattern.allMatches(location).firstOrNull;
     if (buildingMatch == null) {
       throw FormatException("Building not found in location: $location");
     }

@@ -66,11 +66,11 @@ class LoginScreen extends StatelessWidget {
             ],
             headerBuilder:
                 (final context, final constraints, final shrinkOffset) {
-                  return Padding(
-                    padding: const EdgeInsets.all(20.0),
+                  return const Padding(
+                    padding: EdgeInsets.all(20.0),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: const Icon(
+                      child: Icon(
                         Icons.account_circle,
                         size: 100.0,
                         color: AppTheme.concordiaMaroon,
