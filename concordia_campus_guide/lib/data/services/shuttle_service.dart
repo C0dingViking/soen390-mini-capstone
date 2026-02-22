@@ -63,13 +63,13 @@ class ShuttleService {
         bestTotal = total;
 
         final shuttleLeg = RouteStep(
-          instruction: 'Take shuttle from ${board.name} to ${alight.name}',
+          instruction: "Take shuttle from ${board.name} to ${alight.name}",
           distanceMeters: 0,
           durationSeconds: wait + shuttleRide,
-          travelMode: 'SHUTTLE',
+          travelMode: "SHUTTLE",
           transitDetails: TransitDetails(
-            lineName: 'Campus Shuttle',
-            shortName: 'SH',
+            lineName: "Campus Shuttle",
+            shortName: "SH",
             mode: TransitMode.bus,
             departureStop: board.name,
             arrivalStop: alight.name,
@@ -84,7 +84,7 @@ class ShuttleService {
           durationSeconds: total,
           polyline: [...walkToBoard.polyline, ...walkFromAlight.polyline],
           steps: [...walkToBoard.steps, shuttleLeg, ...walkFromAlight.steps],
-          summary: 'Walk → Shuttle → Walk',
+          summary: "Walk → Shuttle → Walk",
         );
       }
     }
