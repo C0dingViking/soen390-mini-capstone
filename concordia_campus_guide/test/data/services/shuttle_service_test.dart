@@ -40,10 +40,13 @@ void main() {
       directionsService: _FakeDirectionsService(walkSeconds: 300),
     );
 
-    test("no service after 18:30 returns null", () async {
+    test('after 18:30 wraps to next day 9:15', () async {
       final late = DateTime(2024, 1, 1, 19, 0);
-      final result = await shuttle.createShuttleRoute(start, end, departureTime: late);
-      expect(result, isNull);
+      final route = await shuttle.createShuttleRoute(start, end, departureTime: late);
+      expect(route, isNotNull);
+      // walk 5 min + wait until next day 09:15 + ride 30 + walk 5
+      // difference is ~14 hours
+      expect(route!.durationSeconds, greaterThan(50000)); // rough sanity check
     });
 
     test("before 9:15 waits until 9:15", () async {

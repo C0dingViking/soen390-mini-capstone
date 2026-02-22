@@ -11,19 +11,16 @@ class ShuttleService {
   ShuttleService({final DirectionsService? directionsService})
       : _directionsService = directionsService ?? DirectionsService();
 
-  /// Tries both directions and picks the fastest combination of walking +
-  /// shuttle + walking.  Returns null if shuttle isn't available at the given time or if fail to produce a route.
+  /// Tries both directions and picks the fastest combination of walking + shuttle + walking. 
   Future<RouteOption?> createShuttleRoute(
     final Coordinate start,
     final Coordinate destination, {
     final DateTime? departureTime,
   }) async {
-    const shuttleRide = 1800; // fixed 30‑minute ride
+    const shuttleRide = 1800;
 
-    // helper to compute next departure and waiting time for a given arrival
     int waitSeconds(final DateTime arrival) {
       final next = _nextShuttleDeparture(arrival);
-      if (next == null) return -1; // indicates no service
       return next.difference(arrival).inSeconds;
     }
 
@@ -32,7 +29,7 @@ class ShuttleService {
     RouteOption? best;
     int bestTotal = 1 << 30;
 
-    // evaluate both boarding/alighting orders
+    // evaluate both sgw -> loyola and loyola -> sgw orders
     final candidates = [
       [sgwShuttleStop, loyolaShuttleStop],
       [loyolaShuttleStop, sgwShuttleStop],
@@ -58,7 +55,6 @@ class ShuttleService {
 
       final arriveBoard = leave.add(Duration(seconds: walkToBoard.durationSeconds!));
       final wait = waitSeconds(arriveBoard);
-      if (wait < 0) continue; // no shuttle service for this day/time
 
       final total = (walkToBoard.durationSeconds ?? 0) + wait + shuttleRide +
           (walkFromAlight.durationSeconds ?? 0);
@@ -96,13 +92,14 @@ class ShuttleService {
     return best;
   }
 
-  /// Shuttle runs from 09:15 to 18:30 every 15 minutes.  Returns the DateTime
-  /// of the first departure at or after or null if none remain.
-  DateTime? _nextShuttleDeparture(final DateTime when) {
+  /// Shuttle runs from 09:15 to 18:30 every 15 minutes. Wraps to next day at 09:15 if after 18:30. Returns the next departure DateTime.
+  DateTime _nextShuttleDeparture(final DateTime when) {
     final dayStart = DateTime(when.year, when.month, when.day);
     final start = dayStart.add(const Duration(hours: 9, minutes: 15));
     final end = dayStart.add(const Duration(hours: 18, minutes: 30));
-    if (when.isAfter(end)) return null;
+    if (when.isAfter(end)) {
+      return start.add(const Duration(days: 1));
+    }
     if (when.isBefore(start)) return start;
     final minutes = when.difference(start).inMinutes;
     final remainder = minutes % 15;
