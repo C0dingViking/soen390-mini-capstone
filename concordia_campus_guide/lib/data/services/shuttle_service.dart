@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_double_quotes
+
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/shuttle_stop.dart";
@@ -12,14 +14,14 @@ class ShuttleService {
   /// Tries both directions and picks the fastest combination of walking +
   /// shuttle + walking.  Returns null if shuttle isn't available at the given time or if fail to produce a route.
   Future<RouteOption?> createShuttleRoute(
-    Coordinate start,
-    Coordinate destination, {
-    DateTime? departureTime,
+    final Coordinate start,
+    final Coordinate destination, {
+    final DateTime? departureTime,
   }) async {
     const shuttleRide = 1800; // fixed 30‑minute ride
 
     // helper to compute next departure and waiting time for a given arrival
-    int _waitSeconds(DateTime arrival) {
+    int waitSeconds(final DateTime arrival) {
       final next = _nextShuttleDeparture(arrival);
       if (next == null) return -1; // indicates no service
       return next.difference(arrival).inSeconds;
@@ -55,7 +57,7 @@ class ShuttleService {
       if (walkToBoard.durationSeconds == null) continue;
 
       final arriveBoard = leave.add(Duration(seconds: walkToBoard.durationSeconds!));
-      final wait = _waitSeconds(arriveBoard);
+      final wait = waitSeconds(arriveBoard);
       if (wait < 0) continue; // no shuttle service for this day/time
 
       final total = (walkToBoard.durationSeconds ?? 0) + wait + shuttleRide +
@@ -96,7 +98,7 @@ class ShuttleService {
 
   /// Shuttle runs from 09:15 to 18:30 every 15 minutes.  Returns the DateTime
   /// of the first departure at or after or null if none remain.
-  DateTime? _nextShuttleDeparture(DateTime when) {
+  DateTime? _nextShuttleDeparture(final DateTime when) {
     final dayStart = DateTime(when.year, when.month, when.day);
     final start = dayStart.add(const Duration(hours: 9, minutes: 15));
     final end = dayStart.add(const Duration(hours: 18, minutes: 30));
