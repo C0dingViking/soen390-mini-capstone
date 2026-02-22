@@ -34,8 +34,12 @@ class DirectionsInteractor {
           ),
     );
 
-    // Add shuttle route
-    final shuttle = await _shuttleService.createShuttleRoute(start, destination);
+    // Added shuttle route – supply departure time so waiting is calculated
+    final shuttle = await _shuttleService.createShuttleRoute(
+      start,
+      destination,
+      departureTime: departureTime,
+    );
     final allRoutes = results.whereType<RouteOption>().toList();
     if (shuttle != null) {
       allRoutes.add(shuttle);
