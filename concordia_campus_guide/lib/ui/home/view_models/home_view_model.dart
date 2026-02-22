@@ -24,6 +24,9 @@ class HomeViewModel extends ChangeNotifier {
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
+  bool _showLoginSuccessMessage = false;
+
+  bool get showLoginSuccessMessage => _showLoginSuccessMessage;
 
   HomeViewModel({
     required this.mapInteractor,
@@ -70,8 +73,14 @@ class HomeViewModel extends ChangeNotifier {
 
   int get unfocusSearchBarSignal => _unfocusSearchBarSignal;
 
-  static const Coordinate sgw = Coordinate(latitude: 45.4972, longitude: -73.5786);
-  static const Coordinate loyola = Coordinate(latitude: 45.45823348665408, longitude: -73.64067095332564);
+  static const Coordinate sgw = Coordinate(
+    latitude: 45.4972,
+    longitude: -73.5786,
+  );
+  static const Coordinate loyola = Coordinate(
+    latitude: 45.45823348665408,
+    longitude: -73.64067095332564,
+  );
   final List<Coordinate> campuses = [sgw, loyola];
 
   int selectedCampusIndex = 0;
@@ -82,37 +91,43 @@ class HomeViewModel extends ChangeNotifier {
   set buildingOutlineColor(final Color color) {
     _buildingOutlineColor = color;
     if (buildings.isNotEmpty) {
-      buildingOutlines = mapInteractor.generateBuildingPolygons(buildings.values, color);
+      buildingOutlines = mapInteractor.generateBuildingPolygons(
+        buildings.values,
+        color,
+      );
     }
     notifyListeners();
   }
 
   Future<void> initializeBuildingsData(final String path) async {
-  isLoading = true;
-  errorMessage = null;
-  notifyListeners();
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
 
-  final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(path, _buildingOutlineColor);
+    final BuildingMapDataDTO payload = await mapInteractor
+        .loadBuildingsWithMapElements(path, _buildingOutlineColor);
 
-  if (payload.errorMessage == null) {
-    buildings = payload.buildings;
-    buildingOutlines = payload.buildingOutlines;
-    buildingMarkers = payload.buildingMarkers;
-    // start location service and subscribe to updates
-    await LocationService.instance.start();
-    _locationSubscription?.cancel();
-    _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
-  } else {
-    errorMessage = payload.errorMessage;
-    logger.e(
-      "HomeViewModel: something went wrong loading building data",
-      error: payload.errorMessage
-    );
+    if (payload.errorMessage == null) {
+      buildings = payload.buildings;
+      buildingOutlines = payload.buildingOutlines;
+      buildingMarkers = payload.buildingMarkers;
+      // start location service and subscribe to updates
+      await LocationService.instance.start();
+      _locationSubscription?.cancel();
+      _locationSubscription = LocationService.instance.positionStream.listen(
+        _handleLocationUpdate,
+      );
+    } else {
+      errorMessage = payload.errorMessage;
+      logger.e(
+        "HomeViewModel: something went wrong loading building data",
+        error: payload.errorMessage,
+      );
+    }
+
+    isLoading = false;
+    notifyListeners();
   }
-
-  isLoading = false;
-  notifyListeners();
-}
 
   Future<void> goToCurrentLocation() async {
     errorMessage = null;
@@ -349,10 +364,12 @@ class HomeViewModel extends ChangeNotifier {
 
   void _calculateSuggestedDeparture() {
     if (selectedArrivalTime == null || routeOptions.isEmpty) return;
-    
+
     final selectedOption = routeOptions[selectedRouteMode];
-    if (selectedOption == null || selectedOption.durationSeconds == null) return;
-    
+    if (selectedOption == null || selectedOption.durationSeconds == null) {
+      return;
+    }
+
     final durationSeconds = selectedOption.durationSeconds!;
     suggestedDepartureTime = selectedArrivalTime!.subtract(
       Duration(seconds: durationSeconds),
@@ -433,7 +450,7 @@ class HomeViewModel extends ChangeNotifier {
     // Determine time parameters based on departure mode
     DateTime? departureParam;
     DateTime? arrivalParam;
-    
+
     if (departureMode == DepartureMode.departAt) {
       departureParam = selectedDepartureTime;
     } else if (departureMode == DepartureMode.arriveBy) {
@@ -501,11 +518,11 @@ class HomeViewModel extends ChangeNotifier {
 
     // For non-transit routes, use single polyline with mode-specific styling
     final points = option.polyline.map((final c) => c.toLatLng()).toList();
-    
+
     Color polylineColor;
     int polylineWidth;
     List<PatternItem> polylinePattern;
-    
+
     switch (selectedRouteMode) {
       case RouteMode.walking:
         polylineColor = AppTheme.concordiaTurquoise;
@@ -534,7 +551,7 @@ class HomeViewModel extends ChangeNotifier {
         ]; // Dashed line for transit
         break;
     }
-    
+
     routePolylines = {
       Polyline(
         polylineId: PolylineId("route-${selectedRouteMode.name}"),
@@ -604,13 +621,20 @@ class HomeViewModel extends ChangeNotifier {
       }
 
       // Check if travel mode changed - add circle at transition point
-      if (previousTravelMode != null && previousTravelMode != step.travelMode && points.isNotEmpty) {
+      if (previousTravelMode != null &&
+          previousTravelMode != step.travelMode &&
+          points.isNotEmpty) {
         circles.add(
           Circle(
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
             radius: 7,
-            fillColor: const Color.fromARGB(255, 134, 134, 134).withValues(alpha: 1.0), // Opaque
+            fillColor: const Color.fromARGB(
+              255,
+              134,
+              134,
+              134,
+            ).withValues(alpha: 1.0), // Opaque
             strokeWidth: 3,
             strokeColor: const Color.fromARGB(255, 207, 207, 207),
           ),
@@ -697,5 +721,15 @@ class HomeViewModel extends ChangeNotifier {
     _locationSubscription?.cancel();
     LocationService.instance.dispose();
     super.dispose();
+  }
+
+  void notifyLoginSuccess() {
+    _showLoginSuccessMessage = true;
+    notifyListeners();
+  }
+
+  void clearLoginSuccessMessage() {
+    _showLoginSuccessMessage = false;
+    notifyListeners();
   }
 }

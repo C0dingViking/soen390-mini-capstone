@@ -45,6 +45,12 @@ dependencies:
   flutter_google_maps_webservices: ^1.1.1
   json_annotation: ^4.9.0
   google_fonts: ^8.0.1
+  firebase_core: ^4.4.0
+  firebase_ui_auth: ^3.0.1
+  firebase_auth: ^6.1.4
+  firebase_ui_oauth_google: ^2.0.1
+  google_sign_in: ^6.3.0
+  googleapis: ^16.0.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -53,6 +59,10 @@ dev_dependencies:
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
   patrol: ^4.1.0
+  network_image_mock: ^2.0.1
+  nock: ^1.2.3
+  mocktail_image_network: ^1.2.0
+  flutter_svg_test: ^1.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -66,6 +76,9 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+  firebase_core_platform_interface: any
+  google_sign_in_platform_interface: any
+  firebase_auth_platform_interface: any
 flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
