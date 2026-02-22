@@ -5,6 +5,7 @@
         android:label="Concordia Campus Guide"
         android:name="${applicationName}"
         android:usesCleartextTraffic="false"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
