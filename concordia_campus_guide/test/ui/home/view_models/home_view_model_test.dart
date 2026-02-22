@@ -920,5 +920,303 @@ void main() {
 
       hvmWithInteractor.dispose();
     });
+
+    test("setStartToCurrentLocation success sets start coordinate and enables location", () async {
+      final geolocator = _FakeGeolocator();
+      geolocator.serviceEnabled = true;
+      geolocator.checkPermissionResult = LocationPermission.always;
+      geolocator.lat = 45.4972;
+      geolocator.lng = -73.5786;
+      final previousPlatform = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = geolocator;
+
+      try {
+        directions.options = [
+          RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 500,
+            durationSeconds: 300,
+            polyline: const [
+              Coordinate(latitude: 45.4972, longitude: -73.5786),
+              Coordinate(latitude: 45.5, longitude: -73.57),
+            ],
+          ),
+        ];
+        hvm.destinationCoordinate = const Coordinate(latitude: 45.5, longitude: -73.57);
+        hvm.selectedDestinationLabel = "Destination";
+
+        await hvm.setStartToCurrentLocation();
+
+        expect(hvm.startCoordinate, isNotNull);
+        expect(hvm.startCoordinate!.latitude, equals(45.4972));
+        expect(hvm.startCoordinate!.longitude, equals(-73.5786));
+        expect(hvm.selectedStartLabel, equals("Current location"));
+        expect(hvm.isResolvingStartLocation, isFalse);
+        expect(hvm.errorMessage, isNull);
+        expect(hvm.myLocationEnabled, isTrue);
+        expect(hvm.routeOptions.isNotEmpty, isTrue);
+      } finally {
+        GeolocatorPlatform.instance = previousPlatform;
+        LocationService.resetForTesting();
+      }
+    });
+
+    test("setStartToCurrentLocation error sets error message", () async {
+      final geolocator = _FakeGeolocator();
+      geolocator.serviceEnabled = true;
+      geolocator.checkPermissionResult = LocationPermission.always;
+      geolocator.throwOnGet = true;
+      final previousPlatform = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = geolocator;
+
+      try {
+        await hvm.setStartToCurrentLocation();
+
+        expect(hvm.isResolvingStartLocation, isFalse);
+        expect(hvm.errorMessage, contains("boom"));
+        expect(hvm.startCoordinate, isNull);
+      } finally {
+        GeolocatorPlatform.instance = previousPlatform;
+        LocationService.resetForTesting();
+      }
+    });
+
+    test("selectSearchSuggestion with unresolvable place shows error", () async {
+      final place = const PlaceSuggestion(
+        placeId: "place-1",
+        description: "Hall Place",
+        mainText: "Hall Place",
+        secondaryText: "Montreal",
+      );
+      final suggestion = SearchSuggestion.place(place);
+      places.resolveResult = null;
+
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+
+      expect(hvm.errorMessage, equals("Unable to resolve that address."));
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.isResolvingPlace, isFalse);
+    });
+
+    test("exitNavigation clears routes and search bar", () {
+      hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
+      hvm.selectedStartLabel = "Start";
+      hvm.isSearchBarExpanded = true;
+      final signal = hvm.unfocusSearchBarSignal;
+
+      hvm.exitNavigation();
+
+      expect(hvm.startCoordinate, isNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.selectedStartLabel, isNull);
+      expect(hvm.isSearchBarExpanded, isFalse);
+      expect(hvm.unfocusSearchBarSignal, signal + 1);
+    });
+
+    test("selectRouteMode for shuttle updates polylines with shuttle styling", () {
+      final shuttleOption = RouteOption(
+        mode: RouteMode.shuttle,
+        distanceMeters: 2000,
+        durationSeconds: 1800,
+        polyline: const [
+          Coordinate(latitude: 45.0, longitude: -73.0),
+          Coordinate(latitude: 45.1, longitude: -73.1),
+        ],
+        steps: [
+          RouteStep(
+            instruction: "Walk to shuttle stop",
+            distanceMeters: 100,
+            durationSeconds: 120,
+            travelMode: "WALKING",
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.01, longitude: -73.01),
+            ],
+          ),
+          RouteStep(
+            instruction: "Take shuttle",
+            distanceMeters: 1500,
+            durationSeconds: 1800,
+            travelMode: "SHUTTLE",
+            transitDetails: const TransitDetails(
+              lineName: "Campus Shuttle",
+              shortName: "SH",
+              mode: TransitMode.bus,
+              departureStop: "SGW",
+              arrivalStop: "LOY",
+            ),
+            polyline: const [
+              Coordinate(latitude: 45.01, longitude: -73.01),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ],
+      );
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 3000,
+          durationSeconds: 1800,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.1, longitude: -73.1),
+          ],
+          steps: [],
+        ),
+        RouteMode.shuttle: shuttleOption,
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+
+      hvm.selectRouteMode(RouteMode.shuttle);
+
+      expect(hvm.selectedRouteMode, equals(RouteMode.shuttle));
+      expect(hvm.routePolylines.length, 2);
+      expect(hvm.routeBounds, isNotNull);
+    });
+
+    test("refreshRoutes passes time parameters to directions interactor", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      interactor.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [],
+        ),
+      ];
+
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(
+            buildingLoader: (final path) async => "{}",
+          ),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+      );
+
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      final departTime = DateTime(2025, 1, 15, 9, 0);
+
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
+      hvmWithInteractor.departureMode = DepartureMode.departAt;
+      hvmWithInteractor.selectedDepartureTime = departTime;
+
+      await hvmWithInteractor.refreshRoutes();
+
+      expect(interactor.lastStart, equals(start));
+      expect(interactor.lastDestination, equals(dest));
+      expect(interactor.lastDepartureTime, equals(departTime));
+      expect(interactor.lastArrivalTime, isNull);
+
+      hvmWithInteractor.dispose();
+    });
+
+    test("setSearchBarExpanded does not notify if already set to same value", () {
+      hvm.isSearchBarExpanded = false;
+      int notifyCount = 0;
+      hvm.addListener(() => notifyCount++);
+
+      hvm.setSearchBarExpanded(false);
+      expect(notifyCount, 0);
+
+      hvm.setSearchBarExpanded(true);
+      expect(notifyCount, 1);
+    });
+
+    test("selectRouteMode does not update if already selected", () {
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [],
+          steps: [],
+        ),
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+      int notifyCount = 0;
+      hvm.addListener(() => notifyCount++);
+
+      hvm.selectRouteMode(RouteMode.walking);
+      expect(notifyCount, 0);
+    });
+
+    test("stopLocationTracking disables location and disposes service", () async {
+      final geolocator = _FakeGeolocator();
+      geolocator.serviceEnabled = true;
+      geolocator.checkPermissionResult = LocationPermission.always;
+      geolocator.lat = 45.5;
+      geolocator.lng = -73.5;
+      final previousPlatform = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = geolocator;
+
+      try {
+        hvm.myLocationEnabled = true;
+        expect(hvm.myLocationEnabled, isTrue);
+
+        hvm.stopLocationTracking();
+
+        expect(hvm.myLocationEnabled, isFalse);
+      } finally {
+        GeolocatorPlatform.instance = previousPlatform;
+        LocationService.resetForTesting();
+      }
+    });
+
+    test("setDepartureMode now clears all time-related state", () {
+      hvm.departureMode = DepartureMode.departAt;
+      hvm.selectedDepartureTime = DateTime(2025, 1, 1, 9, 0);
+      hvm.selectedArrivalTime = DateTime(2025, 1, 1, 10, 0);
+      hvm.suggestedDepartureTime = DateTime(2025, 1, 1, 9, 30);
+
+      hvm.setDepartureMode(DepartureMode.now);
+
+      expect(hvm.departureMode, equals(DepartureMode.now));
+      expect(hvm.selectedDepartureTime, isNull);
+      expect(hvm.selectedArrivalTime, isNull);
+      expect(hvm.suggestedDepartureTime, isNull);
+    });
+
+    test("selectRouteMode updates suggested departure when arrival time set", () {
+      final arrivalTime = DateTime(2025, 1, 1, 10, 0);
+      const walkDurationSeconds = 1800; // 30 minutes
+      const bikeDurationSeconds = 1200; // 20 minutes
+
+      hvm.selectedArrivalTime = arrivalTime;
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: walkDurationSeconds,
+          polyline: const [],
+        ),
+        RouteMode.bicycling: RouteOption(
+          mode: RouteMode.bicycling,
+          distanceMeters: 1000,
+          durationSeconds: bikeDurationSeconds,
+          polyline: const [],
+        ),
+      };
+      hvm.selectedRouteMode = RouteMode.bicycling;
+
+      // Switch to walking - this should trigger _calculateSuggestedDeparture
+      hvm.selectRouteMode(RouteMode.walking);
+
+      expect(hvm.selectedRouteMode, equals(RouteMode.walking));
+      expect(hvm.suggestedDepartureTime, equals(DateTime(2025, 1, 1, 9, 30)));
+    });
+
+    test("clearCameraTarget sets cameraTarget to null", () {
+      hvm.cameraTarget = const Coordinate(latitude: 45.0, longitude: -73.0);
+      expect(hvm.cameraTarget, isNotNull);
+
+      hvm.clearCameraTarget();
+
+      expect(hvm.cameraTarget, isNull);
+    });
   });
 }
