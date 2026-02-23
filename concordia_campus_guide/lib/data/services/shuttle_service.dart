@@ -62,6 +62,13 @@ class ShuttleService {
       if (total < bestTotal) {
         bestTotal = total;
 
+        final shuttleRoute = await _directionsService.fetchRoute(
+          board.location,
+          alight.location,
+          RouteMode.driving,
+        );
+        final shuttlePolyline = shuttleRoute?.polyline ?? [board.location, alight.location];
+
         final shuttleLeg = RouteStep(
           instruction: "Take shuttle from ${board.name} to ${alight.name}",
           distanceMeters: 0,
@@ -74,7 +81,7 @@ class ShuttleService {
             departureStop: board.name,
             arrivalStop: alight.name,
           ),
-          polyline: [board.location, alight.location],
+          polyline: shuttlePolyline,
         );
 
         best = RouteOption(
@@ -82,7 +89,7 @@ class ShuttleService {
           distanceMeters: (walkToBoard.distanceMeters ?? 0) +
               (walkFromAlight.distanceMeters ?? 0),
           durationSeconds: total,
-          polyline: [...walkToBoard.polyline, ...walkFromAlight.polyline],
+          polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
           steps: [...walkToBoard.steps, shuttleLeg, ...walkFromAlight.steps],
           summary: "Walk → Shuttle → Walk",
         );
