@@ -33,12 +33,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      # - name: Install junitreport
-      #   run: dart pub global activate junitreport
-
       - name: Static analysis
         run: flutter analyze
 
@@ -55,9 +49,8 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Flutter Tests
-          file_reporters:
-            json: ./concordia_campus_guide/test-report.json
-          fail-on-error: true
+          reporter: expanded
+          path: ./concordia_campus_guide/test-report.json
 
       - name: Run tests & collect coverage
         run: flutter test --coverage
