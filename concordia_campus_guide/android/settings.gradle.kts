@@ -27,3 +27,5 @@ plugins {
 }
 
 include(":app")
+
+rootProject.name = "concordia_campus_guide"
