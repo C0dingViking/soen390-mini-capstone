@@ -689,7 +689,7 @@ class HomeViewModel extends ChangeNotifier {
 
       // SHUTTLE segment
       if (step.travelMode == "SHUTTLE") {
-        color = AppTheme.concordiaBusCyan;
+        color = const Color.fromARGB(128, 139, 3, 44);
         width = 6;                              
         pattern = [];                           
       } 
