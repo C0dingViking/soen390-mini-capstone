@@ -36,27 +36,27 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install junitreport
-        run: dart pub global activate junitreport
+      # - name: Install junitreport
+      #   run: dart pub global activate junitreport
 
       - name: Static analysis
         run: flutter analyze
 
-      - name: Run tests & generate JUnit report
-        run: flutter test --machine | tee result.json | tojunit > test-report.xml
+      - name: Run tests & generate report
+        run: flutter test --machine > test-report.json
 
       - name: Upload test report
         uses: actions/upload-artifact@v4
         with:
           name: flutter-test-report
-          path: ./concordia_campus_guide/test-report.xml
+          path: ./concordia_campus_guide/test-report.json
 
       - name: Publish test results to GitHub
         uses: dorny/test-reporter@v1
         with:
           name: Flutter Tests
-          path: ./concordia_campus_guide/test-report.xml
-          reporter: github-test-suites
+          file_reporters:
+            json: ./concordia_campus_guide/test-report.json
           fail-on-error: true
 
       - name: Run tests & collect coverage
