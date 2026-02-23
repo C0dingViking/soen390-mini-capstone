@@ -7,6 +7,10 @@ on:
         - "Sprint-*"
     types: [opened, synchronize, reopened]
 
+permissions:
+  checks: write
+  contents: read
+
 jobs:
   test:
     name: Analyze & Test
@@ -35,6 +39,22 @@ jobs:
 
       - name: Static analysis
         run: flutter analyze
+
+      - name: Run tests & generate report
+        run: flutter test --machine > test-report.json
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-test-report
+          path: ./concordia_campus_guide/test-report.json
+
+      - name: Publish test results to GitHub
+        uses: dorny/test-reporter@v1
+        with:
+          name: Flutter Tests
+          reporter: flutter-json
+          path: ./concordia_campus_guide/test-report.json
 
       - name: Run tests & collect coverage
         run: flutter test --coverage
