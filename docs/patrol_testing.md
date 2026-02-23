@@ -46,7 +46,6 @@ For a specific device, execute `patrol devices` to find the device id then use:
 ```bash
 patrol test --device <device-id>
 ```
-```
 
 Tests filles are located in `concordia_campus_guide/patrol_test`
 

@@ -21,6 +21,10 @@ void main() {
             as CoordinatesController;
     final controller = await coordsController.mapController;
 
+    if (await $.platform.mobile.isPermissionDialogVisible()) {
+      await $.platform.mobile.grantPermissionWhenInUse();
+    }
+
     // The tests use the southwest corner of the visible map as reference to determine whether movement has occurred.
 
     final initialRegion = await controller.getVisibleRegion();

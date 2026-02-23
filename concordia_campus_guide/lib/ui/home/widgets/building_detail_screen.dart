@@ -1,9 +1,12 @@
 import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
 
 class BuildingDetailScreen extends StatelessWidget {
   final Building building;
@@ -19,7 +22,7 @@ class BuildingDetailScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
+              minHeight: MediaQuery.of(context).size.height + 300,
             ),
             child: Column(
               spacing: 10,
@@ -81,11 +84,46 @@ class BuildingDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAccessibilityDialog(context),
-        tooltip: "Accessibility Information",
-        backgroundColor: AppTheme.concordiaMaroon,
-        child: const Icon(Icons.info, color: Colors.white),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Accessibility Info
+          FloatingActionButton(
+            heroTag: "accessibility_info",
+            onPressed: () => _showAccessibilityDialog(context),
+            tooltip: "Accessibility Information",
+            backgroundColor: AppTheme.concordiaMaroon,
+            child: const Icon(Icons.info, color: Colors.white),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Go To This Building
+          FloatingActionButton.extended(
+            heroTag: "go_to_here",
+            onPressed: () async {
+              final viewModel = context.read<HomeViewModel>();
+              final suggestion = SearchSuggestion.building(
+                building,
+                subtitle: building.campus.name,
+              );
+              if (!viewModel.isSearchBarExpanded) {
+                await viewModel.setStartToCurrentLocation();
+              }
+              await viewModel.selectSearchSuggestion(
+                suggestion,
+                SearchField.destination,
+              );
+              viewModel.requestUnfocusSearchBar();
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            },
+            backgroundColor: AppTheme.concordiaDarkBlue,
+            icon: const Icon(Icons.place, color: Colors.white),
+            label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
