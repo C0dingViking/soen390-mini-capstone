@@ -57,12 +57,16 @@ void main() {
       expect(route!.durationSeconds, 300 + 1200 + 1800 + 300);
     });
 
-    test("during service rounds up to next quarter", () async {
-      // leave at 09:20, walk 5 -> arrive 09:25, next departure 09:30
+    test('during service rounds up to next quarter and includes wait step', () async {
+      // leave at 09:20, walk 5 -> arrive 09:25, next departure 09:30 (5 min wait)
       final mid = DateTime(2024, 1, 1, 9, 20);
       final route = await shuttle.createShuttleRoute(start, end, departureTime: mid);
       expect(route, isNotNull);
       expect(route!.durationSeconds, 300 + 300 + 1800 + 300);
+      // should have a wait step before shuttle leg
+      expect(route.steps.any((s) => s.travelMode == 'WAIT'), isTrue);
+      final waitStep = route.steps.firstWhere((s) => s.travelMode == 'WAIT');
+      expect(waitStep.durationSeconds, equals(300));
     });
 
     test("exact quarter departure has zero wait", () async {

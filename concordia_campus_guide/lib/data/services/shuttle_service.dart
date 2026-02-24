@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_double_quotes
-
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/shuttle_stop.dart";
@@ -10,7 +8,7 @@ class ShuttleService {
 
   ShuttleService({final DirectionsService? directionsService})
       : _directionsService = directionsService ?? DirectionsService();
-  /// Tries both directions and picks the fastest combination of walking + shuttle + walking. 
+  // Tries both directions and picks the fastest combination of walking + shuttle + walking. 
   Future<RouteOption?> createShuttleRoute(
     final Coordinate start,
     final Coordinate destination, {
@@ -69,10 +67,23 @@ class ShuttleService {
         );
         final shuttlePolyline = shuttleRoute?.polyline ?? [board.location, alight.location];
 
-        final shuttleLeg = RouteStep(
+      // added waiting step if needed
+      final stepList = <RouteStep>[];
+      stepList.addAll(walkToBoard.steps);
+      if (waitTimeSeconds > 0) {
+        stepList.add(RouteStep(
+          instruction: "Wait for shuttle",
+          distanceMeters: 0,
+          durationSeconds: waitTimeSeconds,
+          travelMode: "WAIT",
+          polyline: [board.location],
+        ));
+      }
+
+      final shuttleLeg = RouteStep(
           instruction: "Take shuttle from ${board.name} to ${alight.name}",
           distanceMeters: 0,
-          durationSeconds: waitTimeSeconds + shuttleRide,
+          durationSeconds: shuttleRide,
           travelMode: "SHUTTLE",
           transitDetails: TransitDetails(
             lineName: "Campus Shuttle",
@@ -83,6 +94,8 @@ class ShuttleService {
           ),
           polyline: shuttlePolyline,
         );
+      stepList.add(shuttleLeg);
+      stepList.addAll(walkFromAlight.steps);
 
         bestRouteOption = RouteOption(
           mode: RouteMode.shuttle,
@@ -90,7 +103,7 @@ class ShuttleService {
               (walkFromAlight.distanceMeters ?? 0),
           durationSeconds: totalTimeSeconds,
           polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
-          steps: [...walkToBoard.steps, shuttleLeg, ...walkFromAlight.steps],
+          steps: stepList,
           summary: "Walk → Shuttle → Walk",
         );
       }
@@ -113,9 +126,5 @@ class ShuttleService {
     if (remainder == 0) return when;
     return when.add(Duration(minutes: 15 - remainder));
   }
-
-
-
-
 
 }
