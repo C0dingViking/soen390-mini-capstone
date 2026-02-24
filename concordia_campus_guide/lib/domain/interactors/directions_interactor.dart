@@ -34,14 +34,14 @@ class DirectionsInteractor {
           ),
     );
 
-    final shuttle = await _shuttleService.createShuttleRoute(
+    final shuttleRoute = await _shuttleService.createShuttleRoute(
       start,
       destination,
       departureTime: departureTime,
     );
     final allRoutes = results.whereType<RouteOption>().toList();
-    if (shuttle != null) {
-      allRoutes.add(shuttle);
+    if (shuttleRoute != null) {
+      allRoutes.add(shuttleRoute);
     }
 
     return allRoutes;
