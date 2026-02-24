@@ -100,7 +100,7 @@ class ShuttleService {
         final summaryParts = <String>["Walk"];
         if (waitTimeSeconds > 0) {
           final minutes = (waitTimeSeconds / 60).round();
-          summaryParts.add("Wait ${minutes} min");
+          summaryParts.add("Wait $minutes min");
         }
         summaryParts.addAll(["Shuttle", "Walk"]);
         final summaryString = summaryParts.join(" → ");
