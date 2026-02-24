@@ -44,7 +44,7 @@ jobs:
         run: flutter analyze
       
       - name: Verify formatting
-        run: dart format --output=none --set-exit-code-if-changed .
+        run: dart format --output=none --set-exit-if-changed .
 
       - name: Run tests & generate report
         run: flutter test --machine > test-report.json
