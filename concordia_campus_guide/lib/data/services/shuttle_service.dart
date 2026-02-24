@@ -97,6 +97,14 @@ class ShuttleService {
       stepList.add(shuttleLeg);
       stepList.addAll(walkFromAlight.steps);
 
+        final summaryParts = <String>["Walk"];
+        if (waitTimeSeconds > 0) {
+          final minutes = (waitTimeSeconds / 60).round();
+          summaryParts.add("Wait ${minutes} min");
+        }
+        summaryParts.addAll(["Shuttle", "Walk"]);
+        final summaryString = summaryParts.join(" → ");
+
         bestRouteOption = RouteOption(
           mode: RouteMode.shuttle,
           distanceMeters: (walkToBoard.distanceMeters ?? 0) +
@@ -104,7 +112,7 @@ class ShuttleService {
           durationSeconds: totalTimeSeconds,
           polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
           steps: stepList,
-          summary: "Walk → Shuttle → Walk",
+          summary: summaryString,
         );
       }
     }
