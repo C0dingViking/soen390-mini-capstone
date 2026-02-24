@@ -30,10 +30,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: Icon(isSignedIn ? Icons.logout_sharp : Icons.login_sharp),
             title: Text(
               isSignedIn ? "Logout" : "Login",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
             onTap: () async {
               if (isSignedIn) {
@@ -58,10 +55,7 @@ class HamburgerMenu extends StatelessWidget {
               leading: const Icon(Icons.calendar_today),
               title: Text(
                 "Import Google Calendar",
-                style: GoogleFonts.roboto(
-                  color: AppTheme.concordiaForeground,
-                  fontSize: 18.0,
-                ),
+                style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
               ),
               onTap: () async {
                 Navigator.of(context).pop();
@@ -79,11 +73,7 @@ class HamburgerMenu extends StatelessWidget {
                     logger.i(academicClass);
                   }
                 } catch (e, stackTrace) {
-                  logger.e(
-                    "Failed to fetch calendar events",
-                    error: e,
-                    stackTrace: stackTrace,
-                  );
+                  logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
                 }
               },
             ),
@@ -92,10 +82,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.stars_rounded),
             title: Text(
               "Give us a Rating",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
           ListTile(
@@ -103,10 +90,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.settings),
             title: Text(
               "Settings",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
           ListTile(
@@ -114,10 +98,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: Text(
               "Version 1.0.0",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
         ],

@@ -19,13 +19,10 @@ class _FakeGeolocator extends GeolocatorPlatform {
   Future<LocationPermission> checkPermission() async => checkPermissionResult;
 
   @override
-  Future<LocationPermission> requestPermission() async =>
-      requestPermissionResult;
+  Future<LocationPermission> requestPermission() async => requestPermissionResult;
 
   @override
-  Future<Position> getCurrentPosition({
-    final LocationSettings? locationSettings,
-  }) async {
+  Future<Position> getCurrentPosition({final LocationSettings? locationSettings}) async {
     if (positionsToStream.isEmpty) {
       return Position(
         latitude: 45.5,
@@ -44,9 +41,7 @@ class _FakeGeolocator extends GeolocatorPlatform {
   }
 
   @override
-  Stream<Position> getPositionStream({
-    final LocationSettings? locationSettings,
-  }) {
+  Stream<Position> getPositionStream({final LocationSettings? locationSettings}) {
     streamCallCount++;
     if (throwOnGetStream) {
       return Stream.error(Exception("Stream error"));
@@ -79,26 +74,20 @@ void main() {
       expect(identical(instance1, instance2), isTrue);
     });
 
-    test(
-      "getCurrentPosition returns coordinate when service enabled",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+    test("getCurrentPosition returns coordinate when service enabled", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.always;
 
-        final coord = await LocationService.instance.getCurrentPosition();
+      final coord = await LocationService.instance.getCurrentPosition();
 
-        expect(coord.latitude, 45.5);
-        expect(coord.longitude, -73.5);
-      },
-    );
+      expect(coord.latitude, 45.5);
+      expect(coord.longitude, -73.5);
+    });
 
     test("getCurrentPosition throws when location service disabled", () async {
       fakeGeolocator.serviceEnabled = false;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("getCurrentPosition throws when permission denied", () async {
@@ -106,20 +95,14 @@ void main() {
       fakeGeolocator.checkPermissionResult = LocationPermission.denied;
       fakeGeolocator.requestPermissionResult = LocationPermission.denied;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("getCurrentPosition throws when permission deniedForever", () async {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.deniedForever;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("start streams positions when permissions granted", () async {
@@ -202,54 +185,48 @@ void main() {
       expect(LocationService.instance.positionStream, isNotNull);
     });
 
-    test(
-      "positionStream is broadcast stream allowing multiple listeners",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.always;
-        fakeGeolocator.positionsToStream = [
-          Position(
-            latitude: 45.5,
-            longitude: -73.5,
-            timestamp: DateTime.now(),
-            accuracy: 5.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          ),
-        ];
+    test("positionStream is broadcast stream allowing multiple listeners", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.always;
+      fakeGeolocator.positionsToStream = [
+        Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 5.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        ),
+      ];
 
-        await LocationService.instance.start();
+      await LocationService.instance.start();
 
-        final coords1 = <Coordinate>[];
-        final coords2 = <Coordinate>[];
+      final coords1 = <Coordinate>[];
+      final coords2 = <Coordinate>[];
 
-        LocationService.instance.positionStream.listen((final coord) {
-          coords1.add(coord);
-        });
+      LocationService.instance.positionStream.listen((final coord) {
+        coords1.add(coord);
+      });
 
-        LocationService.instance.positionStream.listen((final coord) {
-          coords2.add(coord);
-        });
+      LocationService.instance.positionStream.listen((final coord) {
+        coords2.add(coord);
+      });
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        expect(coords1.length, 1);
-        expect(coords2.length, 1);
-      },
-    );
+      expect(coords1.length, 1);
+      expect(coords2.length, 1);
+    });
 
     test("start with custom accuracy and distance filter", () async {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.always;
 
-      await LocationService.instance.start(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      );
+      await LocationService.instance.start(accuracy: LocationAccuracy.high, distanceFilter: 10);
 
       // Verify stream was started (streamCallCount incremented)
       expect(fakeGeolocator.streamCallCount, 1);

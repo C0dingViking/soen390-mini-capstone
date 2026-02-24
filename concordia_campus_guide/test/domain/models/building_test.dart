@@ -54,44 +54,32 @@ void main() {
       expect(b.maxLongitude, equals(3.0));
     });
 
-    test(
-      "isInsideBBox returns true for inside point and false for outside",
-      () {
-        final b = Building(
-          id: "b3",
-          name: "Box",
-          description: "Box building",
-          street: "3 Box Rd",
-          postalCode: "H0H0H0",
-          location: const Coordinate(latitude: 0.0, longitude: 0.0),
-          hours: OpeningHoursDetail(),
-          campus: Campus.sgw,
-          outlinePoints: [
-            const Coordinate(latitude: 1.0, longitude: 1.0),
-            const Coordinate(latitude: 1.0, longitude: -1.0),
-            const Coordinate(latitude: -1.0, longitude: -1.0),
-            const Coordinate(latitude: -1.0, longitude: 1.0),
-          ],
-          images: const [],
-        );
+    test("isInsideBBox returns true for inside point and false for outside", () {
+      final b = Building(
+        id: "b3",
+        name: "Box",
+        description: "Box building",
+        street: "3 Box Rd",
+        postalCode: "H0H0H0",
+        location: const Coordinate(latitude: 0.0, longitude: 0.0),
+        hours: OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [
+          const Coordinate(latitude: 1.0, longitude: 1.0),
+          const Coordinate(latitude: 1.0, longitude: -1.0),
+          const Coordinate(latitude: -1.0, longitude: -1.0),
+          const Coordinate(latitude: -1.0, longitude: 1.0),
+        ],
+        images: const [],
+      );
 
-        b.computeOutlineBBox();
+      b.computeOutlineBBox();
 
-        expect(
-          b.isInsideBBox(const Coordinate(latitude: 0.0, longitude: 0.0)),
-          isTrue,
-        );
-        expect(
-          b.isInsideBBox(const Coordinate(latitude: 2.0, longitude: 0.0)),
-          isFalse,
-        );
-        // point on edge: considered inside by bbox
-        expect(
-          b.isInsideBBox(const Coordinate(latitude: 1.0, longitude: 0.0)),
-          isTrue,
-        );
-      },
-    );
+      expect(b.isInsideBBox(const Coordinate(latitude: 0.0, longitude: 0.0)), isTrue);
+      expect(b.isInsideBBox(const Coordinate(latitude: 2.0, longitude: 0.0)), isFalse);
+      // point on edge: considered inside by bbox
+      expect(b.isInsideBBox(const Coordinate(latitude: 1.0, longitude: 0.0)), isTrue);
+    });
   });
 
   group("Building.fromJson and toJson", () {
@@ -306,11 +294,7 @@ void main() {
           postalCode: "H3G 1M8",
           images: ["image1.jpg", "image2.jpg"],
           location: const Coordinate(latitude: 45.497, longitude: -73.578),
-          hours: OpeningHoursDetail(
-            periods: [],
-            openNow: true,
-            weekdayText: [],
-          ),
+          hours: OpeningHoursDetail(periods: [], openNow: true, weekdayText: []),
           campus: Campus.sgw,
           outlinePoints: [
             const Coordinate(latitude: 45.496, longitude: -73.576),
@@ -421,10 +405,7 @@ void main() {
           campus: Campus.sgw,
           outlinePoints: [],
           images: [],
-          buildingFeatures: [
-            BuildingFeature.elevator,
-            BuildingFeature.wheelChairAccess,
-          ],
+          buildingFeatures: [BuildingFeature.elevator, BuildingFeature.wheelChairAccess],
         );
 
         final json = building.toJson();
@@ -546,10 +527,7 @@ void main() {
       });
 
       test("deserializes building with many outline points", () {
-        final points = List.generate(
-          50,
-          (final i) => [45.0 + i * 0.001, -73.0 + i * 0.001],
-        );
+        final points = List.generate(50, (final i) => [45.0 + i * 0.001, -73.0 + i * 0.001]);
         final jsonData = Map<String, dynamic>.from(completeJson);
         jsonData["points"] = points;
 

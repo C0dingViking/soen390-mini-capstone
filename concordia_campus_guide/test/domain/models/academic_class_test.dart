@@ -33,10 +33,7 @@ void main() {
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
 
-      expect(
-        () => AcademicClass.fromCalendar(event),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
     });
 
     test("throws when start time is missing", () {
@@ -46,10 +43,7 @@ void main() {
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
 
-      expect(
-        () => AcademicClass.fromCalendar(event),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
     });
 
     test("throws when end time is missing", () {
@@ -59,10 +53,7 @@ void main() {
         start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
       );
 
-      expect(
-        () => AcademicClass.fromCalendar(event),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
     });
 
     test("throws when location is missing", () {
@@ -72,18 +63,13 @@ void main() {
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
 
-      expect(
-        () => AcademicClass.fromCalendar(event),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
     });
   });
 
   group("AcademicClass.toString", () {
     test("includes class fields", () {
-      final room = Room.fromLocation(
-        "Sir George Williams Campus - H Building Rm 101",
-      );
+      final room = Room.fromLocation("Sir George Williams Campus - H Building Rm 101");
       final academicClass = AcademicClass(
         "ENCS 282",
         DateTime.parse("2025-02-01T09:00:00Z"),

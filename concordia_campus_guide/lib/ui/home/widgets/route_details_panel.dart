@@ -53,21 +53,11 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
   @override
   Widget build(final BuildContext context) {
-    final hasRoutes = context.select(
-      (final HomeViewModel vm) => vm.routeOptions.isNotEmpty,
-    );
-    final isLoadingRoutes = context.select(
-      (final HomeViewModel vm) => vm.isLoadingRoutes,
-    );
-    final routeOptions = context.select(
-      (final HomeViewModel vm) => vm.routeOptions,
-    );
-    final selectedMode = context.select(
-      (final HomeViewModel vm) => vm.selectedRouteMode,
-    );
-    final routeError = context.select(
-      (final HomeViewModel vm) => vm.routeErrorMessage,
-    );
+    final hasRoutes = context.select((final HomeViewModel vm) => vm.routeOptions.isNotEmpty);
+    final isLoadingRoutes = context.select((final HomeViewModel vm) => vm.isLoadingRoutes);
+    final routeOptions = context.select((final HomeViewModel vm) => vm.routeOptions);
+    final selectedMode = context.select((final HomeViewModel vm) => vm.selectedRouteMode);
+    final routeError = context.select((final HomeViewModel vm) => vm.routeErrorMessage);
 
     if (!hasRoutes && !isLoadingRoutes) {
       return const SizedBox.shrink();
@@ -89,10 +79,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           });
         },
         onVerticalDragUpdate: (final details) {
-          final nextHeight = (_panelHeight - details.delta.dy).clamp(
-            _minHeight,
-            maxHeight,
-          );
+          final nextHeight = (_panelHeight - details.delta.dy).clamp(_minHeight, maxHeight);
           setState(() {
             _panelHeight = nextHeight;
           });
@@ -106,9 +93,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         },
         child: AnimatedContainer(
           height: clampedHeight,
-          duration: _isDragging
-              ? Duration.zero
-              : const Duration(milliseconds: 300),
+          duration: _isDragging ? Duration.zero : const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -142,9 +127,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   }
 
   Widget _buildHandle() {
-    final isLoadingRoutes = context.select(
-      (final HomeViewModel vm) => vm.isLoadingRoutes,
-    );
+    final isLoadingRoutes = context.select((final HomeViewModel vm) => vm.isLoadingRoutes);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -180,9 +163,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.grey[600]!,
-                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
                     ),
                   )
                 : Icon(Icons.refresh, color: Colors.grey[600]),
@@ -233,9 +214,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           _buildModeSelector(routeOptions, selectedMode),
           const SizedBox(height: 12),
           _buildRouteSummary(option, selectedMode),
-          if (!_isCollapsed &&
-              selectedMode == RouteMode.transit &&
-              option != null) ...[
+          if (!_isCollapsed && selectedMode == RouteMode.transit && option != null) ...[
             const SizedBox(height: 16),
             _buildTransitSteps(option.steps),
           ],
@@ -268,18 +247,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   final now = DateTime.now();
                   final time = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay.fromDateTime(
-                      viewModel.selectedDepartureTime ?? now,
-                    ),
+                    initialTime: TimeOfDay.fromDateTime(viewModel.selectedDepartureTime ?? now),
                   );
                   if (time != null) {
-                    final dateTime = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                      time.hour,
-                      time.minute,
-                    );
+                    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
                     viewModel.setDepartureTime(dateTime);
                   }
                 },
@@ -293,18 +264,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   final now = DateTime.now();
                   final time = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay.fromDateTime(
-                      viewModel.selectedArrivalTime ?? now,
-                    ),
+                    initialTime: TimeOfDay.fromDateTime(viewModel.selectedArrivalTime ?? now),
                   );
                   if (time != null) {
-                    final dateTime = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                      time.hour,
-                      time.minute,
-                    );
+                    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
                     viewModel.setArrivalTime(dateTime);
                   }
                 },
@@ -321,9 +284,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 "Leave at ${_formatTime(viewModel.suggestedDepartureTime!)} to arrive on time",
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ),
         ],
@@ -341,12 +302,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   DateTime? _suggestedTransitDepartureTime(final List<RouteStep> steps) {
     var secondsBeforeTransit = 0;
     for (final step in steps) {
-      if (step.travelMode == "TRANSIT" &&
-          step.transitDetails?.departureDateTime != null) {
+      if (step.travelMode == "TRANSIT" && step.transitDetails?.departureDateTime != null) {
         final transitDeparture = step.transitDetails!.departureDateTime!;
-        return transitDeparture.subtract(
-          Duration(seconds: secondsBeforeTransit),
-        );
+        return transitDeparture.subtract(Duration(seconds: secondsBeforeTransit));
       }
       secondsBeforeTransit += step.durationSeconds;
     }
@@ -379,31 +337,23 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   _formatDuration(option.durationSeconds) ?? "",
                   style: TextStyle(
                     fontSize: 10,
-                    color: selectedMode == mode
-                        ? Colors.white70
-                        : Colors.grey[600],
+                    color: selectedMode == mode ? Colors.white70 : Colors.grey[600],
                   ),
                 ),
             ],
           ),
           selected: selectedMode == mode,
-          onSelected: (_) =>
-              context.read<HomeViewModel>().selectRouteMode(mode),
+          onSelected: (_) => context.read<HomeViewModel>().selectRouteMode(mode),
           selectedColor: _getModeColor(mode),
           backgroundColor: Colors.grey[200],
-          labelStyle: TextStyle(
-            color: selectedMode == mode ? Colors.white : Colors.black87,
-          ),
+          labelStyle: TextStyle(color: selectedMode == mode ? Colors.white : Colors.black87),
           showCheckmark: false,
         );
       }).toList(),
     );
   }
 
-  Widget _buildRouteSummary(
-    final RouteOption? option,
-    final RouteMode selectedMode,
-  ) {
+  Widget _buildRouteSummary(final RouteOption? option, final RouteMode selectedMode) {
     if (option == null) return const SizedBox.shrink();
 
     final distance = _formatDistance(option.distanceMeters);
@@ -415,18 +365,13 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
     if (option.durationSeconds != null && option.durationSeconds! > 0) {
       final departureTime = viewModel.selectedDepartureTime ?? DateTime.now();
-      final arrivalTime = departureTime.add(
-        Duration(seconds: option.durationSeconds!),
-      );
+      final arrivalTime = departureTime.add(Duration(seconds: option.durationSeconds!));
       arrivalTimeText = _formatTime(arrivalTime);
     }
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
           Icon(Icons.access_time, size: 20, color: Colors.grey[700]),
@@ -436,18 +381,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (duration != null)
-                  Text(
-                    duration,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(duration, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 if (distance != null)
-                  Text(
-                    distance,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
+                  Text(distance, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                 if (arrivalTimeText != null)
                   Text(
                     "Arrive at $arrivalTimeText",
@@ -467,9 +403,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               ],
             ),
           ),
-          if (_isCollapsed &&
-              selectedMode == RouteMode.transit &&
-              option.steps.isNotEmpty)
+          if (_isCollapsed && selectedMode == RouteMode.transit && option.steps.isNotEmpty)
             Icon(Icons.keyboard_arrow_up, color: Colors.grey[700]),
         ],
       ),
@@ -481,20 +415,13 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Route Details",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        const Text("Route Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         if (suggestedTransitDeparture != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               "Suggested depart at ${_formatTime(suggestedTransitDeparture)}",
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
             ),
           ),
         const SizedBox(height: 8),
@@ -563,10 +490,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: iconColor,
                           borderRadius: BorderRadius.circular(4),
@@ -584,10 +508,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                       Expanded(
                         child: Text(
                           transitDetails.lineName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -603,9 +524,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     "Exit at ${transitDetails.arrivalStop}",
                     style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                   ),
-                  if ((transitDetails.departureTime ??
-                          transitDetails.arrivalTime) !=
-                      null)
+                  if ((transitDetails.departureTime ?? transitDetails.arrivalTime) != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
@@ -629,10 +548,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                 ] else ...[
                   Text(instruction, style: const TextStyle(fontSize: 13)),
                   if (duration != null)
-                    Text(
-                      duration,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
+                    Text(duration, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                 ],
               ],
             ),

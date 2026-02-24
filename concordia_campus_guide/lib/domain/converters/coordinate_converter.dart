@@ -18,16 +18,13 @@ class CoordinateConverter implements JsonConverter<Coordinate, List<dynamic>> {
   }
 }
 
-class CoordinateListConverter
-    implements JsonConverter<List<Coordinate>, List<dynamic>> {
+class CoordinateListConverter implements JsonConverter<List<Coordinate>, List<dynamic>> {
   const CoordinateListConverter();
 
   @override
   List<Coordinate> fromJson(final List<dynamic> json) {
     const converter = CoordinateConverter();
-    return json
-        .map((final p) => converter.fromJson(p as List<dynamic>))
-        .toList();
+    return json.map((final p) => converter.fromJson(p as List<dynamic>)).toList();
   }
 
   @override

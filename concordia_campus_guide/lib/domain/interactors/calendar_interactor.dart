@@ -11,10 +11,7 @@ class CalendarInteractor {
     required final DateTime startDate,
     required final DateTime endDate,
   }) async {
-    final events = await _calendarRepo.getEventsInRange(
-      startDate: startDate,
-      endDate: endDate,
-    );
+    final events = await _calendarRepo.getEventsInRange(startDate: startDate, endDate: endDate);
 
     final academicClasses = <AcademicClass>[];
     for (final event in events) {

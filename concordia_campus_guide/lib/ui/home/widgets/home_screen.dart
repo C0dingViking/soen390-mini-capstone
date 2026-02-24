@@ -29,16 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   CoordinatesController get coordsController => _coords;
 
   final List<CampusDetails> _campuses = [
-    const CampusDetails(
-      name: "SGW",
-      coord: HomeViewModel.sgw,
-      icon: Icons.location_city,
-    ),
-    const CampusDetails(
-      name: "LOY",
-      coord: HomeViewModel.loyola,
-      icon: Icons.school,
-    ),
+    const CampusDetails(name: "SGW", coord: HomeViewModel.sgw, icon: Icons.location_city),
+    const CampusDetails(name: "LOY", coord: HomeViewModel.loyola, icon: Icons.school),
   ];
 
   @override
@@ -46,9 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<HomeViewModel>().initializeBuildingsData(
-        "assets/maps/building_data.json",
-      );
+      context.read<HomeViewModel>().initializeBuildingsData("assets/maps/building_data.json");
     });
   }
 
@@ -68,9 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onViewModelChange() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
     if (_viewModel.routeBounds != null) {
       _coords.fitBounds(_viewModel.routeBounds!);
@@ -146,23 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   context.read<HomeViewModel>().clearLoginSuccessMessage();
                   Navigator.of(context).pop();
                 },
-                icon: const Icon(
-                  Icons.arrow_circle_left_outlined,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  "Return to Map",
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
+                icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
+                label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   elevation: 0,
                 ),
               ),
@@ -176,8 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     final hasNavigation = context.select(
-      (final HomeViewModel vm) =>
-          vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
+      (final HomeViewModel vm) => vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
     );
 
     return PopScope(
@@ -206,8 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
             const double spacingSm = 8;
-            final double actionBottomOffset =
-                (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+            final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                 ? actionBottomWithRoutes
                 : actionBottom;
 
@@ -238,14 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: hvm.currentBuilding != null
                       ? FloatingActionButton.extended(
                           heroTag: "my_location",
-                          onPressed: () => context
-                              .read<HomeViewModel>()
-                              .goToCurrentLocation(),
+                          onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          icon: const Icon(
-                            Icons.my_location,
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(Icons.my_location, color: Colors.white),
                           label: Text(
                             hvm.currentBuilding!.id.toUpperCase(),
                             style: const TextStyle(
@@ -257,14 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : FloatingActionButton(
                           heroTag: "my_location",
-                          onPressed: () => context
-                              .read<HomeViewModel>()
-                              .goToCurrentLocation(),
+                          onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          child: const Icon(
-                            Icons.my_location,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.my_location, color: Colors.white),
                         ),
                 ),
                 Positioned(

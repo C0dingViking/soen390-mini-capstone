@@ -18,10 +18,7 @@ class SearchSuggestion {
     this.place,
   });
 
-  factory SearchSuggestion.building(
-    final Building building, {
-    final String? subtitle,
-  }) {
+  factory SearchSuggestion.building(final Building building, {final String? subtitle}) {
     return SearchSuggestion._(
       type: SearchSuggestionType.building,
       title: building.name,
@@ -31,9 +28,7 @@ class SearchSuggestion {
   }
 
   factory SearchSuggestion.place(final PlaceSuggestion place) {
-    final subtitle = place.secondaryText.isNotEmpty
-        ? place.secondaryText
-        : null;
+    final subtitle = place.secondaryText.isNotEmpty ? place.secondaryText : null;
     return SearchSuggestion._(
       type: SearchSuggestionType.place,
       title: place.mainText.isNotEmpty ? place.mainText : place.description,

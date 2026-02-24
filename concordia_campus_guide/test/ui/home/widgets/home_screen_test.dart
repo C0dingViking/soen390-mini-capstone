@@ -24,9 +24,7 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -135,10 +133,7 @@ void main() {
     Future<void> pumpHomeScreen(final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<HomeViewModel>.value(
-            value: vm,
-            child: const HomeScreen(),
-          ),
+          home: ChangeNotifierProvider<HomeViewModel>.value(value: vm, child: const HomeScreen()),
         ),
       );
       await tester.pump();
@@ -149,18 +144,14 @@ void main() {
       expect(vm.initCalled, isTrue);
     });
 
-    testWidgets("pressing my location FAB calls goToCurrentLocation", (
-      final tester,
-    ) async {
+    testWidgets("pressing my location FAB calls goToCurrentLocation", (final tester) async {
       await pumpHomeScreen(tester);
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pump();
       expect(vm.goToCalled, isTrue);
     });
 
-    testWidgets("pressing campus toggle toggles campus label", (
-      final tester,
-    ) async {
+    testWidgets("pressing campus toggle toggles campus label", (final tester) async {
       await pumpHomeScreen(tester);
       expect(find.text("SGW"), findsOneWidget);
       await tester.tap(find.byKey(const Key("campus_toggle_button")));
@@ -168,9 +159,7 @@ void main() {
       expect(find.text("LOY"), findsOneWidget);
     });
 
-    testWidgets("shows SnackBar when view model has errorMessage", (
-      final tester,
-    ) async {
+    testWidgets("shows SnackBar when view model has errorMessage", (final tester) async {
       await pumpHomeScreen(tester);
       vm.errorMessage = "test-error";
       vm.notifyListeners();
@@ -178,17 +167,16 @@ void main() {
       expect(find.text("test-error"), findsOneWidget);
     });
 
-    testWidgets(
-      "when cameraTarget set, view model clearCameraTarget is called",
-      (final tester) async {
-        await pumpHomeScreen(tester);
-        vm.cameraTarget = HomeViewModel.sgw;
-        vm.notifyListeners();
-        await tester.pump();
-        expect(vm.clearCalled, isTrue);
-        await tester.pumpAndSettle();
-      },
-    );
+    testWidgets("when cameraTarget set, view model clearCameraTarget is called", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+      vm.cameraTarget = HomeViewModel.sgw;
+      vm.notifyListeners();
+      await tester.pump();
+      expect(vm.clearCalled, isTrue);
+      await tester.pumpAndSettle();
+    });
 
     testWidgets("directions button is accessible", (final tester) async {
       await pumpHomeScreen(tester);
@@ -196,9 +184,7 @@ void main() {
       expect(vm.buildings, isNotEmpty);
     });
 
-    testWidgets("shows extended FAB when currentBuilding is set", (
-      final tester,
-    ) async {
+    testWidgets("shows extended FAB when currentBuilding is set", (final tester) async {
       await pumpHomeScreen(tester);
 
       vm.currentBuilding = vm.buildings["H"];
@@ -209,9 +195,7 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets("shows regular FAB when no currentBuilding", (
-      final tester,
-    ) async {
+    testWidgets("shows regular FAB when no currentBuilding", (final tester) async {
       await pumpHomeScreen(tester);
 
       vm.currentBuilding = null;
@@ -222,9 +206,7 @@ void main() {
       expect(find.byIcon(Icons.my_location), findsOneWidget);
     });
 
-    testWidgets("android back exits navigation and collapses search bar", (
-      final tester,
-    ) async {
+    testWidgets("android back exits navigation and collapses search bar", (final tester) async {
       await pumpHomeScreen(tester);
 
       vm.routeOptions = {
@@ -258,35 +240,29 @@ void main() {
     Future<void> pumpHomeScreen(final WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<HomeViewModel>.value(
-            value: vm,
-            child: const HomeScreen(),
-          ),
+          home: ChangeNotifierProvider<HomeViewModel>.value(value: vm, child: const HomeScreen()),
         ),
       );
       await tester.pump();
     }
 
-    testWidgets(
-      "_onBuildingTapped navigates to BuildingDetailScreen with correct building",
-      (final tester) async {
-        await pumpHomeScreen(tester);
-
-        // Get the home screen state to call the method directly
-        tester.state<State<HomeScreen>>(find.byType(HomeScreen));
-
-        // Find MapWrapper and verify it has an onPolygonTap callback
-        expect(find.byType(HomeScreen), findsOneWidget);
-
-        // Verify buildings are available in view model
-        expect(vm.buildings.containsKey("H"), isTrue);
-        expect(vm.buildings["H"]?.name, equals("Science Hall"));
-      },
-    );
-
-    testWidgets("extracting building ID from polygon ID works correctly", (
+    testWidgets("_onBuildingTapped navigates to BuildingDetailScreen with correct building", (
       final tester,
     ) async {
+      await pumpHomeScreen(tester);
+
+      // Get the home screen state to call the method directly
+      tester.state<State<HomeScreen>>(find.byType(HomeScreen));
+
+      // Find MapWrapper and verify it has an onPolygonTap callback
+      expect(find.byType(HomeScreen), findsOneWidget);
+
+      // Verify buildings are available in view model
+      expect(vm.buildings.containsKey("H"), isTrue);
+      expect(vm.buildings["H"]?.name, equals("Science Hall"));
+    });
+
+    testWidgets("extracting building ID from polygon ID works correctly", (final tester) async {
       await pumpHomeScreen(tester);
 
       // Test the building ID extraction logic
@@ -297,9 +273,7 @@ void main() {
       expect(vm.buildings.containsKey(buildingId), isTrue);
     });
 
-    testWidgets("polygon with invalid building ID does not crash", (
-      final tester,
-    ) async {
+    testWidgets("polygon with invalid building ID does not crash", (final tester) async {
       await pumpHomeScreen(tester);
 
       const polygonId = PolygonId("INVALID-poly");
@@ -310,9 +284,7 @@ void main() {
       expect(vm.buildings[buildingId], isNull);
     });
 
-    testWidgets("all test buildings are accessible in view model", (
-      final tester,
-    ) async {
+    testWidgets("all test buildings are accessible in view model", (final tester) async {
       await pumpHomeScreen(tester);
 
       expect(vm.buildings.length, equals(2));
@@ -336,9 +308,7 @@ void main() {
       expect(controller, isNotNull);
     });
 
-    testWidgets("building tap handler extracts correct ID", (
-      final tester,
-    ) async {
+    testWidgets("building tap handler extracts correct ID", (final tester) async {
       await pumpHomeScreen(tester);
 
       // Simulate building tap logic
@@ -352,32 +322,29 @@ void main() {
       expect(building?.name, equals("Science Hall"));
     });
 
-    testWidgets(
-      "tapping extended FAB when currentBuilding is set calls goToCurrentLocation",
-      (final tester) async {
-        await pumpHomeScreen(tester);
-
-        // Set currentBuilding so extended FAB appears
-        vm.currentBuilding = vm.buildings["H"];
-        vm.notifyListeners();
-        await tester.pumpAndSettle();
-
-        // Ensure extended FAB is shown
-        expect(find.text("H"), findsOneWidget);
-
-        // Tap the extended FAB specifically
-        final extendedFab = find.widgetWithText(FloatingActionButton, "H");
-
-        await tester.tap(extendedFab);
-        await tester.pump();
-
-        expect(vm.goToCalled, isTrue);
-      },
-    );
-
-    testWidgets("building tap with valid ID finds building", (
+    testWidgets("tapping extended FAB when currentBuilding is set calls goToCurrentLocation", (
       final tester,
     ) async {
+      await pumpHomeScreen(tester);
+
+      // Set currentBuilding so extended FAB appears
+      vm.currentBuilding = vm.buildings["H"];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      // Ensure extended FAB is shown
+      expect(find.text("H"), findsOneWidget);
+
+      // Tap the extended FAB specifically
+      final extendedFab = find.widgetWithText(FloatingActionButton, "H");
+
+      await tester.tap(extendedFab);
+      await tester.pump();
+
+      expect(vm.goToCalled, isTrue);
+    });
+
+    testWidgets("building tap with valid ID finds building", (final tester) async {
       await pumpHomeScreen(tester);
 
       // Test the extraction and lookup logic

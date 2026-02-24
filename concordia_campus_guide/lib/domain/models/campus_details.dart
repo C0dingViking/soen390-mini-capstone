@@ -6,9 +6,5 @@ class CampusDetails {
   final Coordinate coord;
   final IconData icon;
 
-  const CampusDetails({
-    required this.name,
-    required this.coord,
-    required this.icon,
-  });
+  const CampusDetails({required this.name, required this.coord, required this.icon});
 }

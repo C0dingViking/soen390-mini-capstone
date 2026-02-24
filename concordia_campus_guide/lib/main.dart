@@ -28,9 +28,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(
-            mapInteractor: MapDataInteractor(
-              buildingRepo: BuildingRepository(),
-            ),
+            mapInteractor: MapDataInteractor(buildingRepo: BuildingRepository()),
             placesInteractor: PlacesInteractor(),
             directionsInteractor: DirectionsInteractor(),
           ),

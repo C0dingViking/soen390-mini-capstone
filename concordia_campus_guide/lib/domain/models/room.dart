@@ -32,10 +32,7 @@ class Room {
       throw FormatException("Campus not found in location: $location");
     }
 
-    final Pattern buildingPattern = RegExp(
-      r"(\w+)\s+Building",
-      caseSensitive: false,
-    );
+    final Pattern buildingPattern = RegExp(r"(\w+)\s+Building", caseSensitive: false);
     final buildingMatch = buildingPattern.allMatches(location).firstOrNull;
     if (buildingMatch == null) {
       throw FormatException("Building not found in location: $location");

@@ -8,11 +8,9 @@ class PlacesService {
   GoogleMapsPlaces? _places;
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
-  PlacesService({
-    final GoogleMapsPlaces? client,
-    final ApiKeyService? apiKeyService,
-  }) : _places = client,
-       _apiKeyService = apiKeyService ?? ApiKeyService();
+  PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
+    : _places = client,
+      _apiKeyService = apiKeyService ?? ApiKeyService();
 
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
@@ -71,10 +69,7 @@ class PlacesService {
     if (client == null || placeId.isEmpty) return null;
 
     try {
-      final details = await client.getDetailsByPlaceId(
-        placeId,
-        fields: const ["geometry"],
-      );
+      final details = await client.getDetailsByPlaceId(placeId, fields: const ["geometry"]);
 
       if (details.isOkay) {
         final location = details.result.geometry?.location;
@@ -107,10 +102,7 @@ class PlacesService {
 
       return Coordinate(latitude: location.lat, longitude: location.lng);
     } catch (e) {
-      logger.w(
-        "PlacesService: both place details and text search failed",
-        error: e,
-      );
+      logger.w("PlacesService: both place details and text search failed", error: e);
       return null;
     }
   }

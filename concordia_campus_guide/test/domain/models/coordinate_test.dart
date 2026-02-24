@@ -11,15 +11,9 @@ void main() {
     });
 
     test("invalid coordinate values are rejected", () {
-      expect(
-        () => Coordinate(latitude: 100, longitude: 0),
-        throwsA(isA<AssertionError>()),
-      );
+      expect(() => Coordinate(latitude: 100, longitude: 0), throwsA(isA<AssertionError>()));
 
-      expect(
-        () => Coordinate(latitude: 0, longitude: 200),
-        throwsA(isA<AssertionError>()),
-      );
+      expect(() => Coordinate(latitude: 0, longitude: 200), throwsA(isA<AssertionError>()));
     });
   });
 }

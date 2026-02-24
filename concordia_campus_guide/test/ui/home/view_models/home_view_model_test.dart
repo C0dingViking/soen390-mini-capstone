@@ -34,13 +34,10 @@ class _FakeGeolocator extends GeolocatorPlatform {
   Future<LocationPermission> checkPermission() async => checkPermissionResult;
 
   @override
-  Future<LocationPermission> requestPermission() async =>
-      requestPermissionResult;
+  Future<LocationPermission> requestPermission() async => requestPermissionResult;
 
   @override
-  Future<Position> getCurrentPosition({
-    final LocationSettings? locationSettings,
-  }) async {
+  Future<Position> getCurrentPosition({final LocationSettings? locationSettings}) async {
     if (throwOnGet) throw Exception("boom");
     return Position(
       latitude: lat,
@@ -57,9 +54,7 @@ class _FakeGeolocator extends GeolocatorPlatform {
   }
 
   @override
-  Stream<Position> getPositionStream({
-    final LocationSettings? locationSettings,
-  }) {
+  Stream<Position> getPositionStream({final LocationSettings? locationSettings}) {
     return Stream.fromIterable(positionsToStream);
   }
 }
@@ -72,9 +67,7 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -104,9 +97,7 @@ class _TrackingPlacesInteractor extends PlacesInteractor {
   }
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async {
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async {
     lastResolvedSuggestion = suggestion;
     return resolveResult;
   }
@@ -236,16 +227,13 @@ void main() {
       expect(hvm.cameraTarget, isNull);
     });
 
-    test(
-      "goToCurrentLocation when permission denied and request denied",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.denied;
-        fakeGeolocator.requestPermissionResult = LocationPermission.denied;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, equals("Error: Location permission denied"));
-      },
-    );
+    test("goToCurrentLocation when permission denied and request denied", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.denied;
+      fakeGeolocator.requestPermissionResult = LocationPermission.denied;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, equals("Error: Location permission denied"));
+    });
 
     test("goToCurrentLocation when permission denied forever", () async {
       fakeGeolocator.serviceEnabled = true;
@@ -253,38 +241,30 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals(
-          "Error: Location permission deniedForever. Please enable it in settings.",
-        ),
+        equals("Error: Location permission deniedForever. Please enable it in settings."),
       );
     });
 
-    test(
-      "goToCurrentLocation success sets cameraTarget and enables location",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
-        fakeGeolocator.lat = 12.34;
-        fakeGeolocator.lng = 56.78;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, isNull);
-        expect(hvm.cameraTarget, isNotNull);
-        expect(hvm.cameraTarget!.latitude, equals(12.34));
-        expect(hvm.cameraTarget!.longitude, equals(56.78));
-        expect(hvm.myLocationEnabled, isTrue);
-      },
-    );
+    test("goToCurrentLocation success sets cameraTarget and enables location", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
+      fakeGeolocator.lat = 12.34;
+      fakeGeolocator.lng = 56.78;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, isNull);
+      expect(hvm.cameraTarget, isNotNull);
+      expect(hvm.cameraTarget!.latitude, equals(12.34));
+      expect(hvm.cameraTarget!.longitude, equals(56.78));
+      expect(hvm.myLocationEnabled, isTrue);
+    });
 
-    test(
-      "goToCurrentLocation when getCurrentPosition throws sets error message",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
-        fakeGeolocator.throwOnGet = true;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, contains("boom"));
-      },
-    );
+    test("goToCurrentLocation when getCurrentPosition throws sets error message", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
+      fakeGeolocator.throwOnGet = true;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, contains("boom"));
+    });
 
     group("Building detection with location stream", () {
       test("initializeBuildingsData starts location tracking", () async {
@@ -314,36 +294,31 @@ void main() {
         expect(hvm.cameraTarget!.latitude, 45.5);
       });
 
-      test(
-        "currentBuilding is null when user is outside all buildings",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          // Position far from any building
-          fakeGeolocator.positionsToStream = [
-            Position(
-              latitude: 0.0,
-              longitude: 0.0,
-              timestamp: DateTime.now(),
-              accuracy: 0.0,
-              altitude: 0.0,
-              heading: 0.0,
-              speed: 0.0,
-              speedAccuracy: 0.0,
-              altitudeAccuracy: 0.0,
-              headingAccuracy: 0.0,
-            ),
-          ];
+      test("currentBuilding is null when user is outside all buildings", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        // Position far from any building
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 0.0,
+            longitude: 0.0,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-          expect(hvm.currentBuilding, isNull);
-        },
-      );
+        expect(hvm.currentBuilding, isNull);
+      });
 
       test("stopLocationTracking stops position updates", () async {
         fakeGeolocator.serviceEnabled = true;
@@ -402,115 +377,100 @@ void main() {
         expect(hvm.myLocationEnabled, isTrue);
       });
 
-      test(
-        "loaded buildings have bbox precomputed and isInsideBBox works",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
+      test("loaded buildings have bbox precomputed and isInsideBBox works", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          // get first building and ensure bbox fields are present
-          final b = hvm.buildings.values.first;
-          expect(b.minLatitude, isNotNull);
-          expect(b.maxLatitude, isNotNull);
-          expect(b.minLongitude, isNotNull);
-          expect(b.maxLongitude, isNotNull);
+        // get first building and ensure bbox fields are present
+        final b = hvm.buildings.values.first;
+        expect(b.minLatitude, isNotNull);
+        expect(b.maxLatitude, isNotNull);
+        expect(b.minLongitude, isNotNull);
+        expect(b.maxLongitude, isNotNull);
 
-          // a far away coordinate should be outside the bbox
-          final outside = Coordinate(latitude: 0.0, longitude: 0.0);
-          expect(b.isInsideBBox(outside), isFalse);
-        },
-      );
+        // a far away coordinate should be outside the bbox
+        final outside = Coordinate(latitude: 0.0, longitude: 0.0);
+        expect(b.isInsideBBox(outside), isFalse);
+      });
 
-      test(
-        "cameraTarget only updates when coordinate changes (identical positions)",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          final pos = Position(
-            latitude: 45.5,
-            longitude: -73.5,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
+      test("cameraTarget only updates when coordinate changes (identical positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
 
-          // two identical positions should cause only one cameraTarget update
-          fakeGeolocator.positionsToStream = [pos, pos];
+        // two identical positions should cause only one cameraTarget update
+        fakeGeolocator.positionsToStream = [pos, pos];
 
-          int notifyCount = 0;
-          hvm.addListener(() => notifyCount++);
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-          // initializeBuildingsData triggers two notifications (start + end),
-          // plus one from the first position update -> total 3
-          expect(notifyCount, equals(3));
-          expect(hvm.cameraTarget, isNotNull);
-          expect(hvm.cameraTarget!.latitude, equals(45.5));
-        },
-      );
+        // initializeBuildingsData triggers two notifications (start + end),
+        // plus one from the first position update -> total 3
+        expect(notifyCount, equals(3));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5));
+      });
 
-      test(
-        "cameraTarget updates again when coordinate changes (different positions)",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          final pos1 = Position(
-            latitude: 45.5,
-            longitude: -73.5,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          final pos2 = Position(
-            latitude: 45.5009,
-            longitude: -73.5009,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
+      test("cameraTarget updates again when coordinate changes (different positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos1 = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+        final pos2 = Position(
+          latitude: 45.5009,
+          longitude: -73.5009,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
 
-          // two different positions should cause two cameraTarget updates
-          fakeGeolocator.positionsToStream = [pos1, pos2];
+        // two different positions should cause two cameraTarget updates
+        fakeGeolocator.positionsToStream = [pos1, pos2];
 
-          int notifyCount = 0;
-          hvm.addListener(() => notifyCount++);
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 150));
+        await Future<void>.delayed(const Duration(milliseconds: 150));
 
-          // start + end + two position updates = 4
-          expect(notifyCount, equals(4));
-          expect(hvm.cameraTarget, isNotNull);
-          expect(hvm.cameraTarget!.latitude, equals(45.5009));
-        },
-      );
+        // start + end + two position updates = 4
+        expect(notifyCount, equals(4));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5009));
+      });
     });
   });
 
@@ -607,12 +567,7 @@ void main() {
 
       expect(places.searchCount, 1);
       expect(hvm.searchResults.length, 2);
-      expect(
-        hvm.searchResults
-            .where((final s) => s.type == SearchSuggestionType.place)
-            .length,
-        1,
-      );
+      expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
     });
 
     test("clearSearchResults resets search state", () {
@@ -636,10 +591,7 @@ void main() {
 
     test("clearRouteSelection resets route state", () {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
-      hvm.destinationCoordinate = const Coordinate(
-        latitude: 45.1,
-        longitude: -73.1,
-      );
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       hvm.selectedStartLabel = "Start";
       hvm.selectedDestinationLabel = "Dest";
       hvm.searchStartMarker = Marker(
@@ -808,10 +760,7 @@ void main() {
 
     test("loadRoutes sets error when options empty", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
-      hvm.destinationCoordinate = const Coordinate(
-        latitude: 45.1,
-        longitude: -73.1,
-      );
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       directions.options = [];
 
       hvm.setDepartureMode(DepartureMode.departAt);
@@ -886,49 +835,44 @@ void main() {
       expect(hvm.routeBounds, isNotNull);
     });
 
-    test(
-      "refreshRoutes re-fetches routes with same origin/destination",
-      () async {
-        final interactor = _ConfigurableDirectionsInteractor();
-        final start = Coordinate(latitude: 45.0, longitude: -73.0);
-        final dest = Coordinate(latitude: 45.1, longitude: -73.1);
-        final walkingOption = RouteOption(
-          mode: RouteMode.walking,
-          distanceMeters: 1000,
-          durationSeconds: 600,
-          polyline: const [],
-        );
-        interactor.options = [walkingOption];
+    test("refreshRoutes re-fetches routes with same origin/destination", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      final walkingOption = RouteOption(
+        mode: RouteMode.walking,
+        distanceMeters: 1000,
+        durationSeconds: 600,
+        polyline: const [],
+      );
+      interactor.options = [walkingOption];
 
-        final hvmWithInteractor = HomeViewModel(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(
-              buildingLoader: (final path) async => "{}",
-            ),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: interactor,
-        );
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+      );
 
-        // Set initial coordinates and load routes
-        hvmWithInteractor.startCoordinate = start;
-        hvmWithInteractor.destinationCoordinate = dest;
+      // Set initial coordinates and load routes
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
 
-        // Initial routes load
-        await hvmWithInteractor.refreshRoutes();
-        expect(interactor.callCount, 1);
-        expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+      // Initial routes load
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 1);
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
 
-        // Refresh routes again
-        await hvmWithInteractor.refreshRoutes();
-        expect(interactor.callCount, 2);
-        expect(interactor.lastStart, equals(start));
-        expect(interactor.lastDestination, equals(dest));
-        expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+      // Refresh routes again
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 2);
+      expect(interactor.lastStart, equals(start));
+      expect(interactor.lastDestination, equals(dest));
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
 
-        hvmWithInteractor.dispose();
-      },
-    );
+      hvmWithInteractor.dispose();
+    });
 
     test("refreshRoutes sets loading state during fetch", () async {
       final interactor = _ConfigurableDirectionsInteractor();
@@ -945,9 +889,7 @@ void main() {
 
       final hvmWithInteractor = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,
