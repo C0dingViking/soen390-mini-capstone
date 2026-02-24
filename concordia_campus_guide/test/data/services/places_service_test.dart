@@ -129,18 +129,12 @@ void main() {
             {
               "description": "Ignore me",
               "place_id": "",
-              "structured_formatting": {
-                "main_text": "Ignore",
-                "secondary_text": "",
-              },
+              "structured_formatting": {"main_text": "Ignore", "secondary_text": ""},
             },
             {
               "description": "Hall Building",
               "place_id": "place-1",
-              "structured_formatting": {
-                "main_text": "Hall Building",
-                "secondary_text": "Montreal",
-              },
+              "structured_formatting": {"main_text": "Hall Building", "secondary_text": "Montreal"},
             },
           ],
         }),
@@ -202,11 +196,7 @@ void main() {
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "OK",
-          "result": {
-            "place_id": "place-1",
-            "name": "Hall",
-            "formatted_address": "Montreal",
-          },
+          "result": {"place_id": "place-1", "name": "Hall", "formatted_address": "Montreal"},
         }),
       );
 
@@ -220,8 +210,8 @@ void main() {
                 {
                   "long_name": "Montreal",
                   "short_name": "Montreal",
-                  "types": ["locality"]
-                }
+                  "types": ["locality"],
+                },
               ],
               "adr_address": "Montreal",
               "business_status": "OPERATIONAL",
@@ -234,20 +224,14 @@ void main() {
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
-              "plus_code": {
-                "compound_code": "Code",
-                "global_code": "GlobalCode"
-              },
+              "plus_code": {"compound_code": "Code", "global_code": "GlobalCode"},
               "types": ["point_of_interest", "establishment"],
             },
           ],
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate(
-        "place-1",
-        fallbackQuery: "Hall Building",
-      );
+      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
 
       expect(result, isNotNull);
       expect(result!.latitude, 45.6);
@@ -267,8 +251,8 @@ void main() {
                 {
                   "long_name": "Montreal",
                   "short_name": "Montreal",
-                  "types": ["locality"]
-                }
+                  "types": ["locality"],
+                },
               ],
               "adr_address": "Montreal",
               "business_status": "OPERATIONAL",
@@ -281,20 +265,14 @@ void main() {
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
-              "plus_code": {
-                "compound_code": "Code",
-                "global_code": "GlobalCode"
-              },
+              "plus_code": {"compound_code": "Code", "global_code": "GlobalCode"},
               "types": ["point_of_interest"],
             },
           ],
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate(
-        "place-1",
-        fallbackQuery: "Hall Building",
-      );
+      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
 
       expect(result, isNotNull);
       expect(result!.latitude, 45.7);
@@ -351,10 +329,7 @@ void main() {
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate(
-        "place-1",
-        fallbackQuery: "Hall Building",
-      );
+      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
 
       expect(result, isNull);
     });

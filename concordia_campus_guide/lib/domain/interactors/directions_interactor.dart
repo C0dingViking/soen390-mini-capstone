@@ -6,7 +6,7 @@ class DirectionsInteractor {
   final DirectionsService _service;
 
   DirectionsInteractor({final DirectionsService? service})
-      : _service = service ?? DirectionsService();
+    : _service = service ?? DirectionsService();
 
   Future<List<RouteOption>> getRouteOptions(
     final Coordinate start,

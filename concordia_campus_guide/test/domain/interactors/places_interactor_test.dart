@@ -37,8 +37,7 @@ void main() {
     group("searchPlaces", () {
       test("calls fetchAutocomplete with query", () async {
         final suggestions = <PlaceSuggestion>[];
-        when(mockService.fetchAutocomplete("hall"))
-            .thenAnswer((_) async => suggestions);
+        when(mockService.fetchAutocomplete("hall")).thenAnswer((_) async => suggestions);
 
         await interactor.searchPlaces("hall");
 
@@ -60,8 +59,7 @@ void main() {
             secondaryText: "Montreal",
           ),
         ];
-        when(mockService.fetchAutocomplete("hall"))
-            .thenAnswer((_) async => suggestions);
+        when(mockService.fetchAutocomplete("hall")).thenAnswer((_) async => suggestions);
 
         final result = await interactor.searchPlaces("hall");
 
@@ -72,8 +70,7 @@ void main() {
       });
 
       test("returns empty list when no suggestions found", () async {
-        when(mockService.fetchAutocomplete("xyz"))
-            .thenAnswer((_) async => []);
+        when(mockService.fetchAutocomplete("xyz")).thenAnswer((_) async => []);
 
         final result = await interactor.searchPlaces("xyz");
 
@@ -81,18 +78,13 @@ void main() {
       });
 
       test("propagates exceptions from service", () async {
-        when(mockService.fetchAutocomplete("error"))
-            .thenThrow(Exception("API error"));
+        when(mockService.fetchAutocomplete("error")).thenThrow(Exception("API error"));
 
-        expect(
-          () => interactor.searchPlaces("error"),
-          throwsException,
-        );
+        expect(() => interactor.searchPlaces("error"), throwsException);
       });
 
       test("handles empty query string", () async {
-        when(mockService.fetchAutocomplete(""))
-            .thenAnswer((_) async => []);
+        when(mockService.fetchAutocomplete("")).thenAnswer((_) async => []);
 
         final result = await interactor.searchPlaces("");
 
@@ -103,8 +95,7 @@ void main() {
 
     group("resolvePlace", () {
       test("calls fetchPlaceCoordinate with placeId", () async {
-        when(mockService.fetchPlaceCoordinate("place-1"))
-            .thenAnswer((_) async => null);
+        when(mockService.fetchPlaceCoordinate("place-1")).thenAnswer((_) async => null);
 
         await interactor.resolvePlace("place-1");
 
@@ -113,8 +104,7 @@ void main() {
 
       test("returns coordinate from service", () async {
         final coordinate = Coordinate(latitude: 45.497, longitude: -73.578);
-        when(mockService.fetchPlaceCoordinate("place-1"))
-            .thenAnswer((_) async => coordinate);
+        when(mockService.fetchPlaceCoordinate("place-1")).thenAnswer((_) async => coordinate);
 
         final result = await interactor.resolvePlace("place-1");
 
@@ -124,8 +114,7 @@ void main() {
       });
 
       test("returns null when coordinate not found", () async {
-        when(mockService.fetchPlaceCoordinate("unknown"))
-            .thenAnswer((_) async => null);
+        when(mockService.fetchPlaceCoordinate("unknown")).thenAnswer((_) async => null);
 
         final result = await interactor.resolvePlace("unknown");
 
@@ -133,18 +122,15 @@ void main() {
       });
 
       test("propagates exceptions from service", () async {
-        when(mockService.fetchPlaceCoordinate("error"))
-            .thenThrow(Exception("Coordinate resolution failed"));
+        when(
+          mockService.fetchPlaceCoordinate("error"),
+        ).thenThrow(Exception("Coordinate resolution failed"));
 
-        expect(
-          () => interactor.resolvePlace("error"),
-          throwsException,
-        );
+        expect(() => interactor.resolvePlace("error"), throwsException);
       });
 
       test("handles empty placeId", () async {
-        when(mockService.fetchPlaceCoordinate(""))
-            .thenAnswer((_) async => null);
+        when(mockService.fetchPlaceCoordinate("")).thenAnswer((_) async => null);
 
         final result = await interactor.resolvePlace("");
 
@@ -161,17 +147,15 @@ void main() {
           mainText: "Hall Building",
           secondaryText: "Montreal",
         );
-        when(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "Hall Building, Montreal",
-        )).thenAnswer((_) async => null);
+        when(
+          mockService.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building, Montreal"),
+        ).thenAnswer((_) async => null);
 
         await interactor.resolvePlaceSuggestion(suggestion);
 
-        verify(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "Hall Building, Montreal",
-        )).called(1);
+        verify(
+          mockService.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building, Montreal"),
+        ).called(1);
       });
 
       test("returns coordinate from service", () async {
@@ -182,10 +166,9 @@ void main() {
           secondaryText: "Montreal",
         );
         final coordinate = Coordinate(latitude: 45.497, longitude: -73.578);
-        when(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "Hall Building",
-        )).thenAnswer((_) async => coordinate);
+        when(
+          mockService.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building"),
+        ).thenAnswer((_) async => coordinate);
 
         final result = await interactor.resolvePlaceSuggestion(suggestion);
 
@@ -200,10 +183,9 @@ void main() {
           mainText: "Unknown",
           secondaryText: "Place",
         );
-        when(mockService.fetchPlaceCoordinate(
-          "unknown",
-          fallbackQuery: "Unknown Place",
-        )).thenAnswer((_) async => null);
+        when(
+          mockService.fetchPlaceCoordinate("unknown", fallbackQuery: "Unknown Place"),
+        ).thenAnswer((_) async => null);
 
         final result = await interactor.resolvePlaceSuggestion(suggestion);
 
@@ -218,18 +200,22 @@ void main() {
           secondaryText: "Secondary",
         );
         final coordinate = Coordinate(latitude: 48.0, longitude: -74.0);
-        when(mockService.fetchPlaceCoordinate(
-          "place-123",
-          fallbackQuery: "Custom Description For Fallback",
-        )).thenAnswer((_) async => coordinate);
+        when(
+          mockService.fetchPlaceCoordinate(
+            "place-123",
+            fallbackQuery: "Custom Description For Fallback",
+          ),
+        ).thenAnswer((_) async => coordinate);
 
         final result = await interactor.resolvePlaceSuggestion(suggestion);
 
         expect(result, coordinate);
-        verify(mockService.fetchPlaceCoordinate(
-          "place-123",
-          fallbackQuery: "Custom Description For Fallback",
-        )).called(1);
+        verify(
+          mockService.fetchPlaceCoordinate(
+            "place-123",
+            fallbackQuery: "Custom Description For Fallback",
+          ),
+        ).called(1);
       });
 
       test("propagates exceptions from service", () async {
@@ -239,15 +225,11 @@ void main() {
           mainText: "Hall",
           secondaryText: "",
         );
-        when(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "Hall",
-        )).thenThrow(Exception("Resolution failed"));
+        when(
+          mockService.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall"),
+        ).thenThrow(Exception("Resolution failed"));
 
-        expect(
-          () => interactor.resolvePlaceSuggestion(suggestion),
-          throwsException,
-        );
+        expect(() => interactor.resolvePlaceSuggestion(suggestion), throwsException);
       });
 
       test("handles suggestion with empty description", () async {
@@ -257,18 +239,14 @@ void main() {
           mainText: "Place",
           secondaryText: "",
         );
-        when(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "",
-        )).thenAnswer((_) async => null);
+        when(
+          mockService.fetchPlaceCoordinate("place-1", fallbackQuery: ""),
+        ).thenAnswer((_) async => null);
 
         final result = await interactor.resolvePlaceSuggestion(suggestion);
 
         expect(result, isNull);
-        verify(mockService.fetchPlaceCoordinate(
-          "place-1",
-          fallbackQuery: "",
-        )).called(1);
+        verify(mockService.fetchPlaceCoordinate("place-1", fallbackQuery: "")).called(1);
       });
 
       test("handles suggestion with empty placeId", () async {
@@ -278,10 +256,9 @@ void main() {
           mainText: "Hall Building",
           secondaryText: "Montreal",
         );
-        when(mockService.fetchPlaceCoordinate(
-          "",
-          fallbackQuery: "Hall Building",
-        )).thenAnswer((_) async => null);
+        when(
+          mockService.fetchPlaceCoordinate("", fallbackQuery: "Hall Building"),
+        ).thenAnswer((_) async => null);
 
         final result = await interactor.resolvePlaceSuggestion(suggestion);
 

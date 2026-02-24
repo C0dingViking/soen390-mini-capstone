@@ -29,28 +29,19 @@ void main() {
     test("throws when room number is missing", () {
       const location = "Sir George Williams Campus - CL Building";
 
-      expect(
-        () => Room.fromLocation(location),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => Room.fromLocation(location), throwsA(isA<FormatException>()));
     });
 
     test("throws when campus is missing", () {
       const location = "Downtown Campus - CL Building Rm 235";
 
-      expect(
-        () => Room.fromLocation(location),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => Room.fromLocation(location), throwsA(isA<FormatException>()));
     });
 
     test("throws when building is missing", () {
       const location = "Sir George Williams Campus - Rm 235";
 
-      expect(
-        () => Room.fromLocation(location),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => Room.fromLocation(location), throwsA(isA<FormatException>()));
     });
   });
 

@@ -63,8 +63,7 @@ class Building {
     this.buildingFeatures,
   });
 
-  factory Building.fromJson(final Map<String, dynamic> json) =>
-      _$BuildingFromJson(json);
+  factory Building.fromJson(final Map<String, dynamic> json) => _$BuildingFromJson(json);
   Map<String, dynamic> toJson() => _$BuildingToJson(this);
 
   /// Precompute axis-aligned bounding box for outlinePoints. Call after

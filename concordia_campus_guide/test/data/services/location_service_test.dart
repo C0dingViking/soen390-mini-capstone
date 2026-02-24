@@ -57,7 +57,7 @@ void main() {
 
     setUp(() {
       LocationService.resetForTesting();
-      
+
       previousPlatform = GeolocatorPlatform.instance;
       fakeGeolocator = _FakeGeolocator();
       GeolocatorPlatform.instance = fakeGeolocator;
@@ -87,10 +87,7 @@ void main() {
     test("getCurrentPosition throws when location service disabled", () async {
       fakeGeolocator.serviceEnabled = false;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("getCurrentPosition throws when permission denied", () async {
@@ -98,20 +95,14 @@ void main() {
       fakeGeolocator.checkPermissionResult = LocationPermission.denied;
       fakeGeolocator.requestPermissionResult = LocationPermission.denied;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("getCurrentPosition throws when permission deniedForever", () async {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.deniedForever;
 
-      expect(
-        () => LocationService.instance.getCurrentPosition(),
-        throwsException,
-      );
+      expect(() => LocationService.instance.getCurrentPosition(), throwsException);
     });
 
     test("start streams positions when permissions granted", () async {
@@ -235,10 +226,7 @@ void main() {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.always;
 
-      await LocationService.instance.start(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      );
+      await LocationService.instance.start(accuracy: LocationAccuracy.high, distanceFilter: 10);
 
       // Verify stream was started (streamCallCount incremented)
       expect(fakeGeolocator.streamCallCount, 1);

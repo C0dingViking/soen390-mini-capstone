@@ -93,3 +93,6 @@ analyzer:
     prefer_interpolation_to_compose_strings: warning
     prefer_function_declarations_over_variables: warning
     avoid_unnecessary_containers: warning
+
+formatter:
+  page_width: 100

@@ -18,11 +18,7 @@ class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0),
-          child: SvgPicture.asset(
-            "assets/images/app_logo.svg",
-            height: 60,
-            width: 60,
-          ),
+          child: SvgPicture.asset("assets/images/app_logo.svg", height: 60, width: 60),
         ),
       ],
     );

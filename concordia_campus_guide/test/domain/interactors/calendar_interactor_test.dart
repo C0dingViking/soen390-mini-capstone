@@ -15,10 +15,7 @@ void main() {
       final endDate = DateTime.parse("2025-01-02T00:00:00Z");
 
       when(
-        mockRepo.getEventsInRange(
-          startDate: anyNamed("startDate"),
-          endDate: anyNamed("endDate"),
-        ),
+        mockRepo.getEventsInRange(startDate: anyNamed("startDate"), endDate: anyNamed("endDate")),
       ).thenAnswer((_) async => []);
 
       final interactor = CalendarInteractor(calendarRepo: mockRepo);
