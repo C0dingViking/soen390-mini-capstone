@@ -16,15 +16,15 @@ class ShuttleStop {
 }
 
 const sgwShuttleStop = ShuttleStop(
-  id: 'sgw-shuttle',
-  name: 'SGW Shuttle Stop',
+  id: "sgw-shuttle",
+  name: "SGW Shuttle Stop",
   location: Coordinate(latitude: 45.497, longitude: -73.579),
-  campusId: 'sgw',
+  campusId: "sgw",
 );
 
 const loyolaShuttleStop = ShuttleStop(
-  id: 'loyola-shuttle',
-  name: 'Loyola Shuttle Stop',
+  id: "loyola-shuttle",
+  name: "Loyola Shuttle Stop",
   location: Coordinate(latitude: 45.458, longitude: -73.641),
-  campusId: 'loyola',
+  campusId: "loyola",
 );
