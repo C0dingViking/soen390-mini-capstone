@@ -66,8 +66,8 @@ void main() {
       expect(route, isNotNull);
       expect(route!.durationSeconds, 300 + 300 + 1800 + 300);
       // should have a wait step before shuttle leg
-      expect(route.steps.any((s) => s.travelMode == "WAIT"), isTrue);
-      final waitStep = route.steps.firstWhere((s) => s.travelMode == "WAIT");
+      expect(route.steps.any((final s) => s.travelMode == "WAIT"), isTrue);
+      final waitStep = route.steps.firstWhere((final s) => s.travelMode == "WAIT");
       expect(waitStep.durationSeconds, equals(300));
       // summary should also indicate a 5‑minute wait
       expect(route.summary, equals("Walk → Wait 5 min → Shuttle → Walk"));
