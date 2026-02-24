@@ -566,7 +566,7 @@ class HomeViewModel extends ChangeNotifier {
         polylinePattern = [PatternItem.dash(20), PatternItem.gap(10)]; // Dashed line for transit
         break;
       case RouteMode.shuttle:
-        polylineColor = AppTheme.concordiaBusCyan;
+        polylineColor = AppTheme.concordiaMaroon;
         polylineWidth = 5;
         polylinePattern = [
 
@@ -691,7 +691,7 @@ class HomeViewModel extends ChangeNotifier {
 
       // SHUTTLE segment
       if (step.travelMode == "SHUTTLE") {
-        color = const Color.fromARGB(128, 139, 3, 44);
+        color = AppTheme.concordiaMaroon;
         width = 6;                              
         pattern = [];                           
       } 

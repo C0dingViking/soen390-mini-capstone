@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_double_quotes
-
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
 

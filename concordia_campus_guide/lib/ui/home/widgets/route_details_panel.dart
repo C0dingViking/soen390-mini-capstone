@@ -609,7 +609,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       case RouteMode.transit:
         return AppTheme.concordiaDarkBlue;
       case RouteMode.shuttle:
-        return AppTheme.concordiaBusCyan;
+        return AppTheme.concordiaMaroon;
     }
   }
 

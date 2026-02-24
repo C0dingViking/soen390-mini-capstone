@@ -10,7 +10,6 @@ class ShuttleService {
 
   ShuttleService({final DirectionsService? directionsService})
       : _directionsService = directionsService ?? DirectionsService();
-
   /// Tries both directions and picks the fastest combination of walking + shuttle + walking. 
   Future<RouteOption?> createShuttleRoute(
     final Coordinate start,
@@ -20,14 +19,14 @@ class ShuttleService {
     const shuttleRide = 1800;
 
     int waitSeconds(final DateTime arrival) {
-      final next = _nextShuttleDeparture(arrival);
+      final next = _determineNextShuttleDeparture(arrival);
       return next.difference(arrival).inSeconds;
     }
 
-    final leave = departureTime ?? DateTime.now();
+    final leaveTimeSeconds = departureTime ?? DateTime.now();
 
-    RouteOption? best;
-    int bestTotal = 1 << 30;
+    RouteOption? bestRouteOption;
+    int bestTotalTimeSeconds = 1 << 30;
 
     // evaluate both sgw -> loyola and loyola -> sgw orders
     final candidates = [
@@ -52,15 +51,16 @@ class ShuttleService {
 
       if (walkToBoard == null || walkFromAlight == null) continue;
       if (walkToBoard.durationSeconds == null) continue;
+      if (walkFromAlight.durationSeconds == null) continue;
 
-      final arriveBoard = leave.add(Duration(seconds: walkToBoard.durationSeconds!));
-      final wait = waitSeconds(arriveBoard);
+      final arriveBoard = leaveTimeSeconds.add(Duration(seconds: walkToBoard.durationSeconds!));
+      final waitTimeSeconds = waitSeconds(arriveBoard);
 
-      final total = (walkToBoard.durationSeconds ?? 0) + wait + shuttleRide +
+      final totalTimeSeconds = (walkToBoard.durationSeconds ?? 0) + waitTimeSeconds + shuttleRide +
           (walkFromAlight.durationSeconds ?? 0);
 
-      if (total < bestTotal) {
-        bestTotal = total;
+      if (totalTimeSeconds < bestTotalTimeSeconds) {
+        bestTotalTimeSeconds = totalTimeSeconds;
 
         final shuttleRoute = await _directionsService.fetchRoute(
           board.location,
@@ -72,7 +72,7 @@ class ShuttleService {
         final shuttleLeg = RouteStep(
           instruction: "Take shuttle from ${board.name} to ${alight.name}",
           distanceMeters: 0,
-          durationSeconds: wait + shuttleRide,
+          durationSeconds: waitTimeSeconds + shuttleRide,
           travelMode: "SHUTTLE",
           transitDetails: TransitDetails(
             lineName: "Campus Shuttle",
@@ -84,11 +84,11 @@ class ShuttleService {
           polyline: shuttlePolyline,
         );
 
-        best = RouteOption(
+        bestRouteOption = RouteOption(
           mode: RouteMode.shuttle,
           distanceMeters: (walkToBoard.distanceMeters ?? 0) +
               (walkFromAlight.distanceMeters ?? 0),
-          durationSeconds: total,
+          durationSeconds: totalTimeSeconds,
           polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
           steps: [...walkToBoard.steps, shuttleLeg, ...walkFromAlight.steps],
           summary: "Walk → Shuttle → Walk",
@@ -96,11 +96,11 @@ class ShuttleService {
       }
     }
 
-    return best;
+    return bestRouteOption;
   }
 
   /// Shuttle runs from 09:15 to 18:30 every 15 minutes. Wraps to next day at 09:15 if after 18:30. Returns the next departure DateTime.
-  DateTime _nextShuttleDeparture(final DateTime when) {
+  DateTime _determineNextShuttleDeparture(final DateTime when) {
     final dayStart = DateTime(when.year, when.month, when.day);
     final start = dayStart.add(const Duration(hours: 9, minutes: 15));
     final end = dayStart.add(const Duration(hours: 18, minutes: 30));

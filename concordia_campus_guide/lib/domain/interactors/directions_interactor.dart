@@ -34,7 +34,6 @@ class DirectionsInteractor {
           ),
     );
 
-    // Added shuttle route – supply departure time so waiting is calculated
     final shuttle = await _shuttleService.createShuttleRoute(
       start,
       destination,
