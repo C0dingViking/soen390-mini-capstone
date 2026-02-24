@@ -121,7 +121,10 @@ class BuildingDetailScreen extends StatelessWidget {
             },
             backgroundColor: AppTheme.concordiaDarkBlue,
             icon: const Icon(Icons.place, color: Colors.white),
-            label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
+            label: const Text(
+              "Go to this building",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

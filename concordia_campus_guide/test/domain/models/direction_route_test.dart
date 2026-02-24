@@ -20,11 +20,7 @@ void main() {
         street: "1455 De Maisonneuve Blvd. W.",
         postalCode: "H3G 1M8",
         location: const Coordinate(latitude: 45.4970, longitude: -73.5790),
-        hours: OpeningHoursDetail(
-          openNow: true,
-          periods: [],
-          weekdayText: [],
-        ),
+        hours: OpeningHoursDetail(openNow: true, periods: [], weekdayText: []),
         campus: Campus.sgw,
         outlinePoints: [],
         images: [],
@@ -85,7 +81,7 @@ void main() {
     test("DirectionRoute can be created using a const Coordinate", () {
       // This test verifies that the const constructor works
       const coord = Coordinate(latitude: 45.4972, longitude: -73.5786);
-      
+
       // Note: Building cannot be const because it has mutable fields,
       // but we can verify the route can be created
       final route = DirectionRoute(
@@ -109,16 +105,19 @@ void main() {
       expect(route.estimatedDistanceMeters, equals(0.0));
     });
 
-    test("route with large distance can exist and store said large distance", () {
-      // Act - Cross-country distance
-      final route = DirectionRoute(
-        startCoordinate: testCoordinate,
-        destinationBuilding: testBuilding,
-        estimatedDistanceMeters: 5000000.0, // 5000 km
-      );
+    test(
+      "route with large distance can exist and store said large distance",
+      () {
+        // Act - Cross-country distance
+        final route = DirectionRoute(
+          startCoordinate: testCoordinate,
+          destinationBuilding: testBuilding,
+          estimatedDistanceMeters: 5000000.0, // 5000 km
+        );
 
-      // Assert
-      expect(route.estimatedDistanceMeters, equals(5000000.0));
-    });
+        // Assert
+        expect(route.estimatedDistanceMeters, equals(5000000.0));
+      },
+    );
   });
 }

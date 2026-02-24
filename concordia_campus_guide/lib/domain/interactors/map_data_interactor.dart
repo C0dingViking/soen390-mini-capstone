@@ -11,10 +11,15 @@ class MapDataInteractor {
 
   // necessary to add custom BuildingRepository for testing
   MapDataInteractor({required final BuildingRepository buildingRepo})
-      : _buildingRepo = buildingRepo;
+    : _buildingRepo = buildingRepo;
 
-  Future<BuildingMapDataDTO> loadBuildingsWithMapElements(final String path, final Color color) async {
-    final Map<String, Building> buildings = await _buildingRepo.loadBuildings(path);
+  Future<BuildingMapDataDTO> loadBuildingsWithMapElements(
+    final String path,
+    final Color color,
+  ) async {
+    final Map<String, Building> buildings = await _buildingRepo.loadBuildings(
+      path,
+    );
     Set<Polygon> buildingOutlines = {};
     Set<Marker> buildingMarkers = {};
     String? error;
@@ -22,8 +27,7 @@ class MapDataInteractor {
     if (buildings.isNotEmpty) {
       buildingOutlines = generateBuildingPolygons(buildings.values, color);
       buildingMarkers = generateBuildingMarkers(buildings.values);
-    }
-    else {
+    } else {
       error = "Failed to load building data.";
     }
 
@@ -31,30 +35,44 @@ class MapDataInteractor {
       buildings: buildings,
       buildingOutlines: buildingOutlines,
       buildingMarkers: buildingMarkers,
-      errorMessage: error
+      errorMessage: error,
     );
   }
 
-  Set<Polygon> generateBuildingPolygons(final Iterable<Building> buildings, final Color outlineColor) {
-    return buildings.map((final b) => Polygon(
-      polygonId: PolygonId("${b.id}-poly"),
-      points: b.outlinePoints.map((final c) => c.toLatLng()).toList(),
-      fillColor: outlineColor.withAlpha(50),
-      strokeColor: outlineColor,
-      strokeWidth: 2,
-    )).toSet();
+  Set<Polygon> generateBuildingPolygons(
+    final Iterable<Building> buildings,
+    final Color outlineColor,
+  ) {
+    return buildings
+        .map(
+          (final b) => Polygon(
+            polygonId: PolygonId("${b.id}-poly"),
+            points: b.outlinePoints.map((final c) => c.toLatLng()).toList(),
+            fillColor: outlineColor.withAlpha(50),
+            strokeColor: outlineColor,
+            strokeWidth: 2,
+          ),
+        )
+        .toSet();
   }
 
   Set<Marker> generateBuildingMarkers(final Iterable<Building> buildings) {
-    return buildings.map((final b) => Marker(
-      markerId: MarkerId("${b.id}-marker"),
-      position: _calculateBuildingCentroid(b.outlinePoints),
-      infoWindow: InfoWindow(title: b.name, snippet: b.address)
-    )).toSet();
+    return buildings
+        .map(
+          (final b) => Marker(
+            markerId: MarkerId("${b.id}-marker"),
+            position: _calculateBuildingCentroid(b.outlinePoints),
+            infoWindow: InfoWindow(title: b.name, snippet: b.address),
+          ),
+        )
+        .toSet();
   }
 
   /// Finds the building at the given coordinate, or null if outside all buildings.
-  Building? findBuildingAt(final Coordinate coord, final Map<String, Building> buildings) {
+  Building? findBuildingAt(
+    final Coordinate coord,
+    final Map<String, Building> buildings,
+  ) {
     for (final b in buildings.values) {
       // quick reject using precomputed bounding box
       if (b.outlinePoints.isEmpty) continue;
@@ -75,7 +93,8 @@ class MapDataInteractor {
       final current = points[i];
       final next = points[(i + 1) % points.length];
 
-      final partialArea = current.latitude * next.longitude - next.latitude * current.longitude;
+      final partialArea =
+          current.latitude * next.longitude - next.latitude * current.longitude;
       totalArea += partialArea;
 
       centroidWeightedLat += (current.latitude + next.latitude) * partialArea;
@@ -85,7 +104,7 @@ class MapDataInteractor {
     totalArea *= 0.5;
     return LatLng(
       centroidWeightedLat / (6 * totalArea),
-      centroidWeightedLng / (6 * totalArea)
+      centroidWeightedLng / (6 * totalArea),
     );
   }
 }

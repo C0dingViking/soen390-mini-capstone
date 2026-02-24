@@ -98,12 +98,12 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     );
 
     await context.read<HomeViewModel>().selectSearchSuggestion(
-          suggestion,
-          _activeField,
-        );
+      suggestion,
+      _activeField,
+    );
     if (!mounted) return;
     final shouldAutoSetStart =
-      _activeField == SearchField.destination && !_expanded;
+        _activeField == SearchField.destination && !_expanded;
     if (shouldAutoSetStart) {
       await context.read<HomeViewModel>().setStartToCurrentLocation();
       if (!mounted) return;
@@ -220,7 +220,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _syncStartLabel(final String? selectedStartLabel) {
-    if (selectedStartLabel == _lastSyncedStartLabel || _startFocusNode.hasFocus) {
+    if (selectedStartLabel == _lastSyncedStartLabel ||
+        _startFocusNode.hasFocus) {
       return;
     }
     _lastSyncedStartLabel = selectedStartLabel;
@@ -299,10 +300,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     return TextField(
       controller: _startController,
       focusNode: _startFocusNode,
-      onChanged: (final value) => _handleQueryChanged(
-        value,
-        SearchField.start,
-      ),
+      onChanged: (final value) => _handleQueryChanged(value, SearchField.start),
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         hintText: "Choose starting point",
@@ -314,9 +312,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         ),
         filled: true,
         fillColor: Colors.white,
-        border: const OutlineInputBorder(
-          borderSide: BorderSide.none,
-        ),
+        border: const OutlineInputBorder(borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 12,
           horizontal: 12,
@@ -372,10 +368,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     return TextField(
       controller: _destinationController,
       focusNode: _destinationFocusNode,
-      onChanged: (final value) => _handleQueryChanged(
-        value,
-        SearchField.destination,
-      ),
+      onChanged: (final value) =>
+          _handleQueryChanged(value, SearchField.destination),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: _expanded
@@ -389,9 +383,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         ),
         filled: true,
         fillColor: Colors.white,
-        border: const OutlineInputBorder(
-          borderSide: BorderSide.none,
-        ),
+        border: const OutlineInputBorder(borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 12,
           horizontal: 12,
@@ -455,11 +447,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: ListView.separated(
@@ -480,8 +468,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                   )
                 : const Icon(Icons.location_on_outlined),
             title: Text(suggestion.title),
-            subtitle:
-                suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
+            subtitle: suggestion.subtitle != null
+                ? Text(suggestion.subtitle!)
+                : null,
             trailing: isBuilding && suggestion.building != null
                 ? IconButton(
                     icon: const Icon(Icons.info_outline),

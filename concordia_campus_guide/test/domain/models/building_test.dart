@@ -246,12 +246,7 @@ void main() {
 
       test("deserializes many images", () {
         final jsonData = Map<String, dynamic>.from(completeJson);
-        jsonData["images"] = [
-          "img1.jpg",
-          "img2.jpg",
-          "img3.jpg",
-          "img4.jpg",
-        ];
+        jsonData["images"] = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"];
 
         final building = Building.fromJson(jsonData);
 
@@ -503,7 +498,7 @@ void main() {
     group("round-trip serialization", () {
       test("fromJson preserves required fields", () {
         final building = Building.fromJson(completeJson);
-        
+
         // Verify deserialized data matches expected structure
         expect(building.id, "building-1");
         expect(building.name, "Hall Building");
@@ -540,7 +535,9 @@ void main() {
 
       test("deserializes building with single outline point", () {
         final jsonData = Map<String, dynamic>.from(completeJson);
-        jsonData["points"] = [[45.497, -73.578]];
+        jsonData["points"] = [
+          [45.497, -73.578],
+        ];
 
         final building = Building.fromJson(jsonData);
 

@@ -13,9 +13,11 @@ class DirectionsService {
   String? _resolvedKey;
   final http.Client _httpClient;
 
-  DirectionsService({final http.Client? httpClient, final ApiKeyService? apiKeyService})
-      : _httpClient = httpClient ?? http.Client(),
-        _apiKeyService = apiKeyService ?? ApiKeyService();
+  DirectionsService({
+    final http.Client? httpClient,
+    final ApiKeyService? apiKeyService,
+  }) : _httpClient = httpClient ?? http.Client(),
+       _apiKeyService = apiKeyService ?? ApiKeyService();
 
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
@@ -59,8 +61,12 @@ class DirectionsService {
 
       return routeOption;
     } catch (e, stackTrace) {
-        logger.w("DirectionsService: route request failed", error: e, stackTrace: stackTrace);
-        return null;
+      logger.w(
+        "DirectionsService: route request failed",
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
     }
   }
 
@@ -73,7 +79,7 @@ class DirectionsService {
     final DateTime? departureTime,
     final DateTime? arrivalTime,
   ) {
-    final origin = "${start.latitude},${start.longitude}";  
+    final origin = "${start.latitude},${start.longitude}";
     final dest = "${destination.latitude},${destination.longitude}";
 
     final queryParams = <String, String>{
@@ -83,8 +89,11 @@ class DirectionsService {
       "alternatives": "false",
       "key": apiKey,
       if (mode == RouteMode.transit) "transit_mode": "subway|bus|train|rail",
-      if (departureTime != null) "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000).toString(),
-      if (arrivalTime != null) "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
+      if (departureTime != null)
+        "departure_time": (departureTime.millisecondsSinceEpoch ~/ 1000)
+            .toString(),
+      if (arrivalTime != null)
+        "arrival_time": (arrivalTime.millisecondsSinceEpoch ~/ 1000).toString(),
     };
 
     return Uri.https(
@@ -94,7 +103,10 @@ class DirectionsService {
     );
   }
 
-  Map<String, dynamic>? _decodeResponse(final http.Response response, final String modeString) {
+  Map<String, dynamic>? _decodeResponse(
+    final http.Response response,
+    final String modeString,
+  ) {
     if (response.statusCode != 200) {
       logger.w(
         "DirectionsService: HTTP error ${response.statusCode}",
@@ -105,7 +117,9 @@ class DirectionsService {
 
     final data = json.decode(response.body);
     if (data is! Map<String, dynamic>) {
-      logger.w("DirectionsService: invalid response payload for mode $modeString");
+      logger.w(
+        "DirectionsService: invalid response payload for mode $modeString",
+      );
       return null;
     }
 
@@ -140,7 +154,10 @@ class DirectionsService {
     );
   }
 
-  Map<String, dynamic>? _firstRoute(final Map<String, dynamic> data, final String modeString) {
+  Map<String, dynamic>? _firstRoute(
+    final Map<String, dynamic> data,
+    final String modeString,
+  ) {
     final status = data["status"] as String?;
     if (status != "OK") {
       logger.w(
@@ -167,7 +184,8 @@ class DirectionsService {
   }
 
   List<Coordinate> _parseOverviewPolyline(final Map<String, dynamic> route) {
-    final overviewPolyline = route["overview_polyline"] as Map<String, dynamic>?;
+    final overviewPolyline =
+        route["overview_polyline"] as Map<String, dynamic>?;
     final encoded = overviewPolyline?["points"] as String? ?? "";
     return encoded.isNotEmpty ? decodePolyline(encoded) : <Coordinate>[];
   }
@@ -175,8 +193,12 @@ class DirectionsService {
   _LegTimes _parseLegTimes(final Map<String, dynamic>? leg) {
     if (leg == null) return const _LegTimes();
 
-    final departure = _parseTimeValue(leg["departure_time"] as Map<String, dynamic>?);
-    final arrival = _parseTimeValue(leg["arrival_time"] as Map<String, dynamic>?);
+    final departure = _parseTimeValue(
+      leg["departure_time"] as Map<String, dynamic>?,
+    );
+    final arrival = _parseTimeValue(
+      leg["arrival_time"] as Map<String, dynamic>?,
+    );
     return _LegTimes(departureTime: departure, arrivalTime: arrival);
   }
 
@@ -188,61 +210,69 @@ class DirectionsService {
 
   List<RouteStep> _parseRouteSteps(final Map<String, dynamic>? leg) {
     if (leg == null) return [];
-    
+
     final stepsData = leg["steps"] as List<dynamic>?;
     if (stepsData == null || stepsData.isEmpty) return [];
-    
+
     final steps = <RouteStep>[];
     for (final stepData in stepsData) {
       final step = stepData as Map<String, dynamic>;
-      
+
       final distance = step["distance"] as Map<String, dynamic>?;
       final duration = step["duration"] as Map<String, dynamic>?;
       final travelMode = step["travel_mode"] as String? ?? _defaultTravelMode;
-      final instruction = _stripHtml(step["html_instructions"] as String? ?? "");
-      
+      final instruction = _stripHtml(
+        step["html_instructions"] as String? ?? "",
+      );
+
       final polylineData = step["polyline"] as Map<String, dynamic>?;
       final encodedPolyline = polylineData?["points"] as String? ?? "";
-      final stepPolyline = encodedPolyline.isNotEmpty 
-          ? decodePolyline(encodedPolyline) 
+      final stepPolyline = encodedPolyline.isNotEmpty
+          ? decodePolyline(encodedPolyline)
           : <Coordinate>[];
-      
+
       TransitDetails? transitDetails;
       if (travelMode == "TRANSIT") {
         transitDetails = _parseTransitDetails(step);
       }
-      
-      steps.add(RouteStep(
-        instruction: instruction,
-        distanceMeters: (distance?["value"] as num?)?.toDouble() ?? 0,
-        durationSeconds: (duration?["value"] as num?)?.toInt() ?? 0,
-        travelMode: travelMode,
-        transitDetails: transitDetails,
-        polyline: stepPolyline,
-      ));
+
+      steps.add(
+        RouteStep(
+          instruction: instruction,
+          distanceMeters: (distance?["value"] as num?)?.toDouble() ?? 0,
+          durationSeconds: (duration?["value"] as num?)?.toInt() ?? 0,
+          travelMode: travelMode,
+          transitDetails: transitDetails,
+          polyline: stepPolyline,
+        ),
+      );
     }
-    
+
     return steps;
   }
 
   TransitDetails? _parseTransitDetails(final Map<String, dynamic> step) {
     final transitData = step["transit_details"] as Map<String, dynamic>?;
     if (transitData == null) return null;
-    
+
     final line = transitData["line"] as Map<String, dynamic>?;
-    final departureStop = transitData["departure_stop"] as Map<String, dynamic>?;
+    final departureStop =
+        transitData["departure_stop"] as Map<String, dynamic>?;
     final arrivalStop = transitData["arrival_stop"] as Map<String, dynamic>?;
     final numStops = transitData["num_stops"] as int?;
-    final departureTimeData = transitData["departure_time"] as Map<String, dynamic>?;
-    final arrivalTimeData = transitData["arrival_time"] as Map<String, dynamic>?;
-    
+    final departureTimeData =
+        transitData["departure_time"] as Map<String, dynamic>?;
+    final arrivalTimeData =
+        transitData["arrival_time"] as Map<String, dynamic>?;
+
     final lineName = line?["name"] as String? ?? "";
     final shortName = line?["short_name"] as String? ?? "";
     final vehicleData = line?["vehicle"] as Map<String, dynamic>?;
-    final vehicleType = vehicleData?["type"] as String? ?? _defaultTransitVehicle;
-    
+    final vehicleType =
+        vehicleData?["type"] as String? ?? _defaultTransitVehicle;
+
     final transitMode = _parseTransitMode(vehicleType);
-    
+
     return TransitDetails(
       lineName: lineName,
       shortName: shortName,

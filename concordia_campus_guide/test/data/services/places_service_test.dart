@@ -30,12 +30,18 @@ class _FakeGoogleMapsPlaces extends gmw.GoogleMapsPlaces {
     _autocompleteError = error;
   }
 
-  void setDetailsResponse(final gmw.PlacesDetailsResponse? resp, {final Exception? error}) {
+  void setDetailsResponse(
+    final gmw.PlacesDetailsResponse? resp, {
+    final Exception? error,
+  }) {
     _detailsResp = resp;
     _detailsError = error;
   }
 
-  void setSearchResponse(final gmw.PlacesSearchResponse? resp, {final Exception? error}) {
+  void setSearchResponse(
+    final gmw.PlacesSearchResponse? resp, {
+    final Exception? error,
+  }) {
     _searchResp = resp;
     _searchError = error;
   }
@@ -220,8 +226,8 @@ void main() {
                 {
                   "long_name": "Montreal",
                   "short_name": "Montreal",
-                  "types": ["locality"]
-                }
+                  "types": ["locality"],
+                },
               ],
               "adr_address": "Montreal",
               "business_status": "OPERATIONAL",
@@ -229,14 +235,15 @@ void main() {
               "geometry": {
                 "location": {"lat": 45.6, "lng": -73.6},
               },
-              "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
+              "icon":
+                  "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
               "plus_code": {
                 "compound_code": "Code",
-                "global_code": "GlobalCode"
+                "global_code": "GlobalCode",
               },
               "types": ["point_of_interest", "establishment"],
             },
@@ -267,8 +274,8 @@ void main() {
                 {
                   "long_name": "Montreal",
                   "short_name": "Montreal",
-                  "types": ["locality"]
-                }
+                  "types": ["locality"],
+                },
               ],
               "adr_address": "Montreal",
               "business_status": "OPERATIONAL",
@@ -276,14 +283,15 @@ void main() {
               "geometry": {
                 "location": {"lat": 45.7, "lng": -73.7},
               },
-              "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
+              "icon":
+                  "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
               "plus_code": {
                 "compound_code": "Code",
-                "global_code": "GlobalCode"
+                "global_code": "GlobalCode",
               },
               "types": ["point_of_interest"],
             },

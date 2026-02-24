@@ -31,7 +31,9 @@ class SearchSuggestion {
   }
 
   factory SearchSuggestion.place(final PlaceSuggestion place) {
-    final subtitle = place.secondaryText.isNotEmpty ? place.secondaryText : null;
+    final subtitle = place.secondaryText.isNotEmpty
+        ? place.secondaryText
+        : null;
     return SearchSuggestion._(
       type: SearchSuggestionType.place,
       title: place.mainText.isNotEmpty ? place.mainText : place.description,

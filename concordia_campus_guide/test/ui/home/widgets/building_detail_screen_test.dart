@@ -132,8 +132,12 @@ void main() {
     testWidgets("opens and closes accessibility dialog", (final tester) async {
       await pumpBuildingDetailScreen(tester);
 
-      await tester.tap(find.byWidgetPredicate(
-            (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info", ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (final w) =>
+              w is FloatingActionButton && w.heroTag == "accessibility_info",
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text("Accessibility Features"), findsOneWidget);
 
@@ -168,8 +172,12 @@ void main() {
         ],
       );
       await pumpBuildingDetailScreen(tester);
-      await tester.tap(find.byWidgetPredicate(
-            (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info", ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (final w) =>
+              w is FloatingActionButton && w.heroTag == "accessibility_info",
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text("Wheelchair Accessible"), findsOneWidget);

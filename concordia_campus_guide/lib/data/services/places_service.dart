@@ -8,9 +8,11 @@ class PlacesService {
   GoogleMapsPlaces? _places;
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
-  PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
-      : _places = client,
-        _apiKeyService = apiKeyService ?? ApiKeyService();
+  PlacesService({
+    final GoogleMapsPlaces? client,
+    final ApiKeyService? apiKeyService,
+  }) : _places = client,
+       _apiKeyService = apiKeyService ?? ApiKeyService();
 
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
@@ -43,15 +45,18 @@ class PlacesService {
 
       if (!response.isOkay) return [];
 
-      return response.predictions.map((final prediction) {
-        final structured = prediction.structuredFormatting;
-        return PlaceSuggestion(
-          placeId: prediction.placeId ?? "",
-          description: prediction.description ?? "",
-          mainText: structured?.mainText ?? prediction.description ?? "",
-          secondaryText: structured?.secondaryText ?? "",
-        );
-      }).where((final suggestion) => suggestion.placeId.isNotEmpty).toList();
+      return response.predictions
+          .map((final prediction) {
+            final structured = prediction.structuredFormatting;
+            return PlaceSuggestion(
+              placeId: prediction.placeId ?? "",
+              description: prediction.description ?? "",
+              mainText: structured?.mainText ?? prediction.description ?? "",
+              secondaryText: structured?.secondaryText ?? "",
+            );
+          })
+          .where((final suggestion) => suggestion.placeId.isNotEmpty)
+          .toList();
     } catch (e) {
       logger.w("PlacesService: autocomplete failed", error: e);
       return [];
@@ -102,7 +107,10 @@ class PlacesService {
 
       return Coordinate(latitude: location.lat, longitude: location.lng);
     } catch (e) {
-      logger.w("PlacesService: both place details and text search failed", error: e);
+      logger.w(
+        "PlacesService: both place details and text search failed",
+        error: e,
+      );
       return null;
     }
   }

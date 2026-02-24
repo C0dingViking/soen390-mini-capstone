@@ -6,7 +6,7 @@ class PlacesInteractor {
   final PlacesService _service;
 
   PlacesInteractor({final PlacesService? service})
-      : _service = service ?? PlacesService();
+    : _service = service ?? PlacesService();
 
   Future<List<PlaceSuggestion>> searchPlaces(final String query) {
     return _service.fetchAutocomplete(query);

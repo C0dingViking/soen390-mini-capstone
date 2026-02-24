@@ -14,7 +14,7 @@ List<Coordinate> decodePolyline(final String encoded) {
       encodedByte = encoded.codeUnitAt(index++) - 63;
       result |= (encodedByte & 0x1f) << shift;
       shift += 5;
-    } while (encodedByte>= 0x20);
+    } while (encodedByte >= 0x20);
     final deltaLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
     lat += deltaLat;
 
@@ -28,12 +28,7 @@ List<Coordinate> decodePolyline(final String encoded) {
     final deltaLng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
     lng += deltaLng;
 
-    points.add(
-      Coordinate(
-        latitude: lat / 1e5,
-        longitude: lng / 1e5,
-      ),
-    );
+    points.add(Coordinate(latitude: lat / 1e5, longitude: lng / 1e5));
   }
 
   return points;

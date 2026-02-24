@@ -27,7 +27,9 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(
+    final PlaceSuggestion suggestion,
+  ) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -63,13 +65,13 @@ class _FakeAssetBundle extends CachingAssetBundle {
 
 class _TestHomeViewModel extends HomeViewModel {
   _TestHomeViewModel()
-      : super(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: _FakeDirectionsInteractor(),
-        );
+    : super(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+      );
 
   String? lastQuery;
   bool clearSearchResultsCalled = false;
@@ -166,22 +168,22 @@ void main() {
     }
 
     Finder findStartField() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Choose starting point",
-        );
+      (final widget) =>
+          widget is TextField &&
+          widget.decoration?.hintText == "Choose starting point",
+    );
 
     Finder findDestinationFieldCollapsed() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Search for a place or address",
-        );
+      (final widget) =>
+          widget is TextField &&
+          widget.decoration?.hintText == "Search for a place or address",
+    );
 
     Finder findDestinationFieldExpanded() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Choose destination",
-        );
+      (final widget) =>
+          widget is TextField &&
+          widget.decoration?.hintText == "Choose destination",
+    );
 
     TextField getField(final WidgetTester tester, final Finder finder) {
       return tester.widget<TextField>(finder);
@@ -195,9 +197,7 @@ void main() {
       expect(findStartField(), findsNothing);
     });
 
-    testWidgets("expands when selection labels are set", (
-      final tester,
-    ) async {
+    testWidgets("expands when selection labels are set", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -226,14 +226,9 @@ void main() {
       expect(findDestinationFieldCollapsed(), findsOneWidget);
     });
 
-    testWidgets("typing in destination updates query", (
-      final tester,
-    ) async {
+    testWidgets("typing in destination updates query", (final tester) async {
       await pumpSearchBar(tester);
-      await tester.enterText(
-        findDestinationFieldCollapsed(),
-        "Dest query",
-      );
+      await tester.enterText(findDestinationFieldCollapsed(), "Dest query");
       await tester.pumpAndSettle();
       expect(vm.lastQuery, equals("Dest query"));
     });
@@ -242,10 +237,7 @@ void main() {
       final tester,
     ) async {
       await pumpSearchBar(tester);
-      await tester.enterText(
-        findDestinationFieldCollapsed(),
-        "Clear me",
-      );
+      await tester.enterText(findDestinationFieldCollapsed(), "Clear me");
       await tester.pumpAndSettle();
 
       final closeButton = find.byIcon(Icons.close);
@@ -391,9 +383,7 @@ void main() {
       expect(startField.controller?.text, equals("Current location"));
     });
 
-    testWidgets("shows resolving start spinner", (
-      final tester,
-    ) async {
+    testWidgets("shows resolving start spinner", (final tester) async {
       await pumpSearchBar(tester);
       // First expand the search bar by setting a destination
       vm.setSearchBarExpanded(true);
@@ -409,9 +399,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets("syncs labels when not focused", (
-      final tester,
-    ) async {
+    testWidgets("syncs labels when not focused", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
@@ -423,9 +411,7 @@ void main() {
       expect(startField.controller?.text, equals("Start A"));
     });
 
-    testWidgets("does not override text while focused", (
-      final tester,
-    ) async {
+    testWidgets("does not override text while focused", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -445,9 +431,7 @@ void main() {
       expect(startField.controller?.text, equals("User start"));
     });
 
-    testWidgets("unfocus signal clears focus", (
-      final tester,
-    ) async {
+    testWidgets("unfocus signal clears focus", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";

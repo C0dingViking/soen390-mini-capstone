@@ -24,7 +24,9 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(
+    final PlaceSuggestion suggestion,
+  ) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -194,24 +196,28 @@ void main() {
       expect(vm.buildings, isNotEmpty);
     });
 
-    testWidgets("shows extended FAB when currentBuilding is set", (final tester) async {
+    testWidgets("shows extended FAB when currentBuilding is set", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester);
-      
+
       vm.currentBuilding = vm.buildings["H"];
       vm.notifyListeners();
       await tester.pumpAndSettle();
-      
+
       expect(find.text("H"), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets("shows regular FAB when no currentBuilding", (final tester) async {
+    testWidgets("shows regular FAB when no currentBuilding", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester);
-      
+
       vm.currentBuilding = null;
       vm.notifyListeners();
       await tester.pumpAndSettle();
-      
+
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.my_location), findsOneWidget);
     });
@@ -325,18 +331,21 @@ void main() {
     testWidgets("exposes coordsController getter", (final tester) async {
       await pumpHomeScreen(tester);
       final State<HomeScreen> state = tester.state(find.byType(HomeScreen));
-      final CoordinatesController controller = (state as dynamic).coordsController as CoordinatesController;
+      final CoordinatesController controller =
+          (state as dynamic).coordsController as CoordinatesController;
       expect(controller, isNotNull);
     });
 
-    testWidgets("building tap handler extracts correct ID", (final tester) async {
+    testWidgets("building tap handler extracts correct ID", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester);
-      
+
       // Simulate building tap logic
       const polygonId = PolygonId("H-poly");
       final buildingId = polygonId.value.replaceAll("-poly", "");
       final building = vm.buildings[buildingId];
-      
+
       // Verify building is found
       expect(building, isNotNull);
       expect(building?.id, equals("H"));
@@ -344,46 +353,44 @@ void main() {
     });
 
     testWidgets(
-  "tapping extended FAB when currentBuilding is set calls goToCurrentLocation",
-  (final tester) async {
-    await pumpHomeScreen(tester);
+      "tapping extended FAB when currentBuilding is set calls goToCurrentLocation",
+      (final tester) async {
+        await pumpHomeScreen(tester);
 
-    // Set currentBuilding so extended FAB appears
-    vm.currentBuilding = vm.buildings["H"];
-    vm.notifyListeners();
-    await tester.pumpAndSettle();
+        // Set currentBuilding so extended FAB appears
+        vm.currentBuilding = vm.buildings["H"];
+        vm.notifyListeners();
+        await tester.pumpAndSettle();
 
-    // Ensure extended FAB is shown
-    expect(find.text("H"), findsOneWidget);
+        // Ensure extended FAB is shown
+        expect(find.text("H"), findsOneWidget);
 
-    // Tap the extended FAB specifically
-    final extendedFab = find.widgetWithText(
-      FloatingActionButton,
-      "H",
+        // Tap the extended FAB specifically
+        final extendedFab = find.widgetWithText(FloatingActionButton, "H");
+
+        await tester.tap(extendedFab);
+        await tester.pump();
+
+        expect(vm.goToCalled, isTrue);
+      },
     );
 
-    await tester.tap(extendedFab);
-    await tester.pump();
-
-    expect(vm.goToCalled, isTrue);
-  },
-);
-
-
-    testWidgets("building tap with valid ID finds building", (final tester) async {
+    testWidgets("building tap with valid ID finds building", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester);
-      
+
       // Test the extraction and lookup logic
       final testCases = [
         {"input": "H-poly", "expected": "H"},
         {"input": "MB-poly", "expected": "MB"},
       ];
-      
+
       for (final testCase in testCases) {
         final polygonId = PolygonId(testCase["input"]!);
         final buildingId = polygonId.value.replaceAll("-poly", "");
         final building = vm.buildings[buildingId];
-        
+
         expect(buildingId, equals(testCase["expected"]));
         expect(building, isNotNull);
       }
