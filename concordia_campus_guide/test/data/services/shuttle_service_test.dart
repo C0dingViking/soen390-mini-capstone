@@ -55,6 +55,8 @@ void main() {
       expect(route, isNotNull);
       // walk to board takes 5 min -> arrive 8:55, wait 20 min to 9:15, ride 30, walk 5
       expect(route!.durationSeconds, 300 + 1200 + 1800 + 300);
+      // summary should mention the wait period
+      expect(route.summary, startsWith("Walk → Wait"));
     });
 
     test('during service rounds up to next quarter and includes wait step', () async {
@@ -67,6 +69,8 @@ void main() {
       expect(route.steps.any((s) => s.travelMode == 'WAIT'), isTrue);
       final waitStep = route.steps.firstWhere((s) => s.travelMode == 'WAIT');
       expect(waitStep.durationSeconds, equals(300));
+      // summary should also indicate a 5‑minute wait
+      expect(route.summary, equals('Walk → Wait 5 min → Shuttle → Walk'));
     });
 
     test("exact quarter departure has zero wait", () async {
