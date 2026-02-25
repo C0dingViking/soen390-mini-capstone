@@ -637,7 +637,7 @@ class HomeViewModel extends ChangeNotifier {
             radius: transitionCircleRadius,
             fillColor: const Color.fromARGB(223, 98, 106, 114).withValues(alpha: 0.8),
             strokeWidth: 3,
-            strokeColor: Color.fromARGB(223, 98, 106, 114),
+            strokeColor: const Color.fromARGB(223, 98, 106, 114),
           ),
         );
       }
