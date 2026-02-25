@@ -280,6 +280,48 @@ void main() {
       expect(find.text("Scheduled at 10:30 AM"), findsOneWidget);
     });
 
+    testWidgets("shows walking route details when expanded", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Head east on Sherbrooke St",
+          distanceMeters: 250,
+          durationSeconds: 180,
+          travelMode: "WALKING",
+        ),
+        RouteStep(
+          instruction: "Turn right onto Guy St",
+          distanceMeters: 120,
+          durationSeconds: 90,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 370,
+          durationSeconds: 270,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Route Details"), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Head east on Sherbrooke St"), findsOneWidget);
+      expect(find.text("250 m • 3 min"), findsOneWidget);
+      expect(find.text("Turn right onto Guy St"), findsOneWidget);
+      expect(find.text("120 m • 2 min"), findsOneWidget);
+    });
+
     testWidgets("shows vehicle arrival time for transit rides", (final tester) async {
       final steps = [
         RouteStep(

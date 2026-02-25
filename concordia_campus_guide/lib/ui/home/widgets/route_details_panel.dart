@@ -214,9 +214,12 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           _buildModeSelector(routeOptions, selectedMode),
           const SizedBox(height: 12),
           _buildRouteSummary(option, selectedMode),
-          if (!_isCollapsed && selectedMode == RouteMode.transit && option != null) ...[
+          if (!_isCollapsed &&
+              option != null &&
+              option.steps.isNotEmpty &&
+              (selectedMode == RouteMode.transit || selectedMode == RouteMode.walking)) ...[
             const SizedBox(height: 16),
-            _buildTransitSteps(option.steps),
+            _buildRouteSteps(option.steps, selectedMode),
           ],
         ],
       ),
@@ -403,15 +406,19 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               ],
             ),
           ),
-          if (_isCollapsed && selectedMode == RouteMode.transit && option.steps.isNotEmpty)
+          if (_isCollapsed &&
+              option.steps.isNotEmpty &&
+              (selectedMode == RouteMode.transit || selectedMode == RouteMode.walking))
             Icon(Icons.keyboard_arrow_up, color: Colors.grey[700]),
         ],
       ),
     );
   }
 
-  Widget _buildTransitSteps(final List<RouteStep> steps) {
-    final suggestedTransitDeparture = _suggestedTransitDepartureTime(steps);
+  Widget _buildRouteSteps(final List<RouteStep> steps, final RouteMode selectedMode) {
+    final suggestedTransitDeparture = selectedMode == RouteMode.transit
+        ? _suggestedTransitDepartureTime(steps)
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -434,6 +441,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final travelMode = step.travelMode;
     final instruction = step.instruction;
     final duration = _formatDuration(step.durationSeconds);
+    final distance = _formatDistance(step.distanceMeters);
+    final nonTransitMeta = [distance, duration].whereType<String>().join(" • ");
     final transitDetails = step.transitDetails;
 
     IconData icon;
@@ -547,8 +556,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     ),
                 ] else ...[
                   Text(instruction, style: const TextStyle(fontSize: 13)),
-                  if (duration != null)
-                    Text(duration, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                  if (nonTransitMeta.isNotEmpty)
+                    Text(nonTransitMeta, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                 ],
               ],
             ),
