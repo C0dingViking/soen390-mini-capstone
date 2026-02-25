@@ -193,6 +193,42 @@ void main() {
         verify(mockHomeViewModel.toggleNextClassFabVisibility(true)).called(1);
       });
     });
+
+    testWidgets("tapping Logout hides Next Class FAB", (final tester) async {
+      await mockNetworkImages(() async {
+        final mockLoginViewModel = MockLoginViewModel();
+        final mockHomeViewModel = MockHomeViewModel();
+        final mockUser = MockUser();
+
+        when(mockLoginViewModel.isSignedIn).thenReturn(true);
+        when(mockLoginViewModel.currentUser).thenReturn(mockUser);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
+                ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
+              ],
+              child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+        scaffoldState.openDrawer();
+        await tester.pumpAndSettle();
+
+        final logoutTile = find.widgetWithText(ListTile, "Logout");
+        expect(logoutTile, findsOneWidget);
+
+        await tester.tap(logoutTile);
+        await tester.pumpAndSettle();
+
+        verify(mockHomeViewModel.toggleNextClassFabVisibility(false)).called(1);
+      });
+    });
   });
 }
 

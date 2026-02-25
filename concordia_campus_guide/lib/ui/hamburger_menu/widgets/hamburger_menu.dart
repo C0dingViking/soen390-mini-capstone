@@ -33,7 +33,8 @@ class HamburgerMenu extends StatelessWidget {
             ),
             onTap: () async {
               if (isSignedIn) {
-                FirebaseAuth.instance.signOut();
+                context.read<HomeViewModel?>()?.toggleNextClassFabVisibility(false);
+                await FirebaseAuth.instance.signOut();
               } else {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(

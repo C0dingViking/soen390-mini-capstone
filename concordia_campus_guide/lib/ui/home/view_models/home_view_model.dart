@@ -728,9 +728,9 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> showNextClass() async {
-    // Get the next class from the user's calendar and navigate to it
-    final calendarInteractor = CalendarInteractor();
     try {
+      // Get the next class from the user's calendar and navigate to it
+      final calendarInteractor = CalendarInteractor();
       // Only get 1 class and set a limit of 7 days in the future to avoid showing irrelevant classes
       final now = DateTime.now();
       final sevenDaysFromNow = now.add(const Duration(days: 7));
@@ -752,6 +752,8 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e, stackTrace) {
       logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
+      final errorMessageText = e.toString();
+      infoMessage = "$errorMessageText Please use search to find your destination.";
       notifyListeners();
     }
   }

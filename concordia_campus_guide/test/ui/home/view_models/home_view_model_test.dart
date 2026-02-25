@@ -949,10 +949,5 @@ void main() {
 
       expect(hvm.showNextClassDialog, isFalse);
     });
-
-    test("showNextClass throws when Firebase is not initialized in unit tests", () async {
-      await expectLater(hvm.showNextClass(), throwsA(isA<Exception>()));
-      expect(hvm.showNextClassDialog, isFalse);
-    });
   });
 }
