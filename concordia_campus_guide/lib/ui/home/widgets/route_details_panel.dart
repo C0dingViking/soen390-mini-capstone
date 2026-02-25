@@ -217,7 +217,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           if (!_isCollapsed &&
               option != null &&
               option.steps.isNotEmpty &&
-              (selectedMode == RouteMode.transit || selectedMode == RouteMode.walking)) ...[
+              (selectedMode == RouteMode.transit ||
+                  selectedMode == RouteMode.walking ||
+                  selectedMode == RouteMode.bicycling)) ...[
             const SizedBox(height: 16),
             _buildRouteSteps(option.steps, selectedMode),
           ],
@@ -408,7 +410,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           ),
           if (_isCollapsed &&
               option.steps.isNotEmpty &&
-              (selectedMode == RouteMode.transit || selectedMode == RouteMode.walking))
+              (selectedMode == RouteMode.transit ||
+                  selectedMode == RouteMode.walking ||
+                  selectedMode == RouteMode.bicycling))
             Icon(Icons.keyboard_arrow_up, color: Colors.grey[700]),
         ],
       ),
@@ -466,6 +470,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           icon = Icons.directions_transit;
           iconColor = AppTheme.concordiaDarkBlue;
       }
+    } else if (travelMode == "BICYCLING") {
+      icon = Icons.directions_bike;
+      iconColor = AppTheme.concordiaTurquoise;
     } else {
       icon = Icons.directions_walk;
       iconColor = AppTheme.concordiaTurquoise;
