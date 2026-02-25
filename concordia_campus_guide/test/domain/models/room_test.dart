@@ -76,6 +76,17 @@ void main() {
       expect(room.campus, Campus.sgw);
       expect(room.buildingId, "cl");
     });
+
+    test("parses alphanumeric room number starting with letter", () {
+      const location = "Sir George Williams Campus - H Building Rm A101";
+
+      final room = Room.fromLocation(location);
+
+      expect(room.roomNumber, "A101");
+      expect(room.floor, "A");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "h");
+    });
   });
 
   group("Room.toString", () {

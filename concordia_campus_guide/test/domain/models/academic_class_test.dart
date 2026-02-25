@@ -188,5 +188,65 @@ void main() {
 
       expect(academicClass.getFormattedDateTime(), "Tuesday, 1/6/2026 at 12:00 AM - 12:00 PM");
     });
+
+    test("formats Wednesday correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-07T09:30:00"),
+        DateTime.parse("2026-01-07T11:00:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Wednesday, 1/7/2026 at 9:30 AM - 11:00 AM");
+    });
+
+    test("formats Thursday correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-08T14:00:00"),
+        DateTime.parse("2026-01-08T15:30:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Thursday, 1/8/2026 at 2:00 PM - 3:30 PM");
+    });
+
+    test("formats Friday correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-09T10:00:00"),
+        DateTime.parse("2026-01-09T11:30:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Friday, 1/9/2026 at 10:00 AM - 11:30 AM");
+    });
+
+    test("formats Saturday correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-10T08:00:00"),
+        DateTime.parse("2026-01-10T09:30:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Saturday, 1/10/2026 at 8:00 AM - 9:30 AM");
+    });
+
+    test("formats Sunday correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-11T16:00:00"),
+        DateTime.parse("2026-01-11T17:30:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Sunday, 1/11/2026 at 4:00 PM - 5:30 PM");
+    });
   });
 }
