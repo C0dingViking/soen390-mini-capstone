@@ -17,7 +17,7 @@ class Room {
     // Extract room number: accepts digits/letters + optional dots/dashes
     // Matches: "235", "S2.330", "MB-1.210", "101"
     final roomMatch = RegExp(
-      r'\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)',
+      r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)",
       caseSensitive: false,
     ).firstMatch(loc);
 
@@ -29,18 +29,18 @@ class Room {
     // Determine floor from room number
     late String floor;
 
-    if (roomNumber.contains('.')) {
+    if (roomNumber.contains(".")) {
       // Format like "S2.330" -> floor is "S2"
-      floor = roomNumber.split('.').first;
-    } else if (RegExp(r'^\d{3,}$').hasMatch(roomNumber)) {
+      floor = roomNumber.split(".").first;
+    } else if (RegExp(r"^\d{3,}$").hasMatch(roomNumber)) {
       // Pure numeric like "235" -> floor is "2" (hundreds digit)
       floor = (int.parse(roomNumber) ~/ 100).toString();
-    } else if (RegExp(r'^\d{2}$').hasMatch(roomNumber)) {
+    } else if (RegExp(r"^\d{2}$").hasMatch(roomNumber)) {
       // Two digit like "05" -> floor is "0"
       floor = (int.parse(roomNumber) ~/ 10).toString();
     } else {
       // Non-numeric format with letters, use as-is or extract prefix
-      floor = roomNumber.replaceAll(RegExp(r'\d.*'), ''); // Extract letter prefix
+      floor = roomNumber.replaceAll(RegExp(r"\d.*"), ""); // Extract letter prefix
       if (floor.isEmpty) {
         floor = roomNumber; // Fallback to whole room number
       }
@@ -58,7 +58,7 @@ class Room {
 
     // Extract building name: everything between '-' and 'Rm'
     // This handles both "CL Building" and "John Molson School of Business"
-    final buildingMatch = RegExp(r'-\s*(.+?)\s*Rm\b', caseSensitive: false).firstMatch(loc);
+    final buildingMatch = RegExp(r"-\s*(.+?)\s*Rm\b", caseSensitive: false).firstMatch(loc);
 
     if (buildingMatch == null) {
       throw FormatException("Building not found in location: $location");
@@ -67,7 +67,7 @@ class Room {
     final buildingName = buildingMatch.group(1)!.trim();
     // Remove trailing "Building" keyword if present for cleaner building ID
     final cleanBuildingName = buildingName
-        .replaceAll(RegExp(r'\s+Building\s*$', caseSensitive: false), '')
+        .replaceAll(RegExp(r"\s+Building\s*$", caseSensitive: false), "")
         .trim();
     String buildingId = cleanBuildingName.toLowerCase();
     if (buildingName == "John Molson School of Business") {
