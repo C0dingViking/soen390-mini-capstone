@@ -609,11 +609,12 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
   String? _formatDistance(final double? meters) {
     if (meters == null) return null;
-    if (meters >= 1000) {
-      final km = meters / 1000;
+    final roundedMeters = (meters / 10).round() * 10.0;
+    if (roundedMeters >= 1000) {
+      final km = roundedMeters / 1000;
       return "${km.toStringAsFixed(1)} km";
     }
-    return "${meters.toStringAsFixed(0)} m";
+    return "${roundedMeters.toStringAsFixed(0)} m";
   }
 
   String? _formatDuration(final int? seconds) {
