@@ -59,27 +59,16 @@ class HamburgerMenu extends StatelessWidget {
                 style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
               ),
               onTap: () async {
-                // Make sure classes are retievable before showing the FAB
-                final calendarInteractor = CalendarInteractor();
-                try {
-                  final now = DateTime.now();
-                  final endTime = now.add(const Duration(days: 1));
-                  await calendarInteractor.getClassInRange(
-                    startDate: now,
-                    endDate: endTime,
-                  );
+                if (!context.mounted) return;
 
-                  if (!context.mounted) return;
+                // Enable the FAB for the next class since we have successfully imported calendar events
+                context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
+                // Notify user with a subtle message that the calendar was imported successfully
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Google Calendar imported successfully!")),
+                ); 
 
-                  // Enable the FAB for the next class since we have successfully imported calendar events
-                  context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Google Calendar imported successfully!")),
-                  );
-                  Navigator.of(context).pop();
-                } catch (e, stackTrace) {
-                  logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
-                }
+                Navigator.of(context).pop();
               },
             ),
           ListTile(
