@@ -60,6 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_viewModel.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
+    if (_viewModel.infoMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.infoMessage!)));
+      _viewModel.infoMessage = null; // Auto clear
+    }
     if (_viewModel.routeBounds != null) {
       _coords.fitBounds(_viewModel.routeBounds!);
       _viewModel.clearRouteBounds();
@@ -78,6 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _showLoginSuccessMessage(context);
       });
       _viewModel.clearLoginSuccessMessage();
+    }
+    if (_viewModel.showNextClassDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showNextClassDialog(context);
+      });
+      _viewModel.clearNextClassDialog();
     }
   }
 
@@ -150,6 +161,83 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showNextClassDialog(final BuildContext context) {
+    final upcomingClass = _viewModel.upcomingClass;
+    if (upcomingClass == null) return;
+
+    final courseCode = upcomingClass.getCourseCode();
+    final classType = upcomingClass.classType();
+    final dateTime = upcomingClass.getFormattedDateTime();
+    final location =
+        "${upcomingClass.room.buildingId.toUpperCase()} ${upcomingClass.room.roomNumber}";
+
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (final context) => AlertDialog(
+        backgroundColor: AppTheme.concordiaButtonCyan,
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              courseCode,
+              style: GoogleFonts.roboto(
+                color: Colors.white,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Text(classType, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
+            const SizedBox(height: 12.0),
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    dateTime,
+                    style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Text(location, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: FractionallySizedBox(
+              widthFactor: 0.8,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
+                label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(final BuildContext context) {
     final hasNavigation = context.select(
@@ -172,6 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const double searchBarTop = 12;
             const double actionInset = 25;
             const double actionBottom = 25;
+            const double secondActionBottom = 85;
             const double actionBottomWithRoutes = 145;
             const double toggleRadius = 30;
             const double togglePaddingVertical = 8;
@@ -291,6 +380,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                if (hvm.showNextClassFab)
+                  Positioned(
+                    left: actionInset,
+                    bottom: secondActionBottom,
+                    child: FloatingActionButton.extended(
+                      heroTag: "next_class",
+                      onPressed: () => context.read<HomeViewModel>().showNextClass(),
+                      backgroundColor: _buttonColor,
+                      icon: const Icon(Icons.school, color: Colors.white),
+                      label: const Text(
+                        "Next Class",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 const RouteDetailsPanel(),
               ],
             );

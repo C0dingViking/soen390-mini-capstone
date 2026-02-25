@@ -5,7 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:concordia_campus_guide/data/repositories/google_calendar.dart' as _i2;
+import 'package:concordia_campus_guide/data/repositories/google_calendar.dart'
+    as _i2;
 import 'package:googleapis/calendar/v3.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -27,7 +28,8 @@ import 'package:mockito/mockito.dart' as _i1;
 /// A class which mocks [GoogleCalendarRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGoogleCalendarRepository extends _i1.Mock implements _i2.GoogleCalendarRepository {
+class MockGoogleCalendarRepository extends _i1.Mock
+    implements _i2.GoogleCalendarRepository {
   MockGoogleCalendarRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -54,7 +56,10 @@ class MockGoogleCalendarRepository extends _i1.Mock implements _i2.GoogleCalenda
     required DateTime? endDate,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#getEventsInRange, [], {#startDate: startDate, #endDate: endDate}),
+            Invocation.method(#getEventsInRange, [], {
+              #startDate: startDate,
+              #endDate: endDate,
+            }),
             returnValue: _i3.Future<List<_i4.Event>>.value(<_i4.Event>[]),
           )
           as _i3.Future<List<_i4.Event>>);

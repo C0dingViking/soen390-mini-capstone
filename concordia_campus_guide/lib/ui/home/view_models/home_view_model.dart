@@ -1,4 +1,6 @@
 import "dart:async";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
+import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
@@ -41,6 +43,7 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
+  String? infoMessage; // General-purpose message that user should see (auto clearing)
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
   bool isResolvingStartLocation = false;
@@ -57,7 +60,12 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polyline> routePolylines = {};
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
+
   bool showNextClassFab = false; // This is set to true when the user imports their calendar
+  AcademicClass? upcomingClass;
+  bool _showNextClassDialog = false;
+
+  bool get showNextClassDialog => _showNextClassDialog;
 
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
@@ -710,6 +718,40 @@ class HomeViewModel extends ChangeNotifier {
   void toggleNextClassFabVisibility(final bool isVisible) {
     if (showNextClassFab != isVisible) {
       showNextClassFab = isVisible;
+      notifyListeners();
+    }
+  }
+
+  void clearNextClassDialog() {
+    _showNextClassDialog = false;
+    notifyListeners();
+  }
+
+  Future<void> showNextClass() async {
+    // Get the next class from the user's calendar and navigate to it
+    final calendarInteractor = CalendarInteractor();
+    try {
+      // Only get 1 class and set a limit of 7 days in the future to avoid showing irrelevant classes
+      final now = DateTime.now();
+      final sevenDaysFromNow = now.add(const Duration(days: 7));
+      final classes = await calendarInteractor.getUpcomingClasses(
+        timeMin: now,
+        timeMax: sevenDaysFromNow,
+      );
+
+      if (classes.isEmpty) {
+        // No upcoming classes found, show a message to the user
+        infoMessage = "No upcoming classes found in the next 7 days.";
+        notifyListeners();
+        return;
+      }
+
+      // Store the class and trigger dialog
+      upcomingClass = classes.first; // only show the next upcoming class
+      _showNextClassDialog = true;
+      notifyListeners();
+    } catch (e, stackTrace) {
+      logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
       notifyListeners();
     }
   }

@@ -66,7 +66,7 @@ class HamburgerMenu extends StatelessWidget {
                 // Notify user with a subtle message that the calendar was imported successfully
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Google Calendar imported successfully!")),
-                ); 
+                );
 
                 Navigator.of(context).pop();
               },

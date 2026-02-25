@@ -1,5 +1,6 @@
 import "dart:async";
 import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:firebase_core/firebase_core.dart";
 import "package:firebase_core_platform_interface/firebase_core_platform_interface.dart";
 import "package:flutter/material.dart";
@@ -15,7 +16,7 @@ import "package:mocktail_image_network/mocktail_image_network.dart";
 import "package:google_sign_in/google_sign_in.dart";
 
 @GenerateNiceMocks([MockSpec<User>()])
-@GenerateMocks([LoginViewModel, FirebaseAuth, GoogleSignIn])
+@GenerateMocks([LoginViewModel, HomeViewModel, FirebaseAuth, GoogleSignIn])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -159,6 +160,7 @@ void main() {
     testWidgets("tapping Import Google Calendar calls CalendarInteractor", (final tester) async {
       await mockNetworkImages(() async {
         final mockLoginViewModel = MockLoginViewModel();
+        final mockHomeViewModel = MockHomeViewModel();
         final mockUser = MockUser();
 
         when(mockLoginViewModel.isSignedIn).thenReturn(true);
@@ -166,8 +168,11 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ChangeNotifierProvider<LoginViewModel>.value(
-              value: mockLoginViewModel,
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
+                ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
+              ],
               child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
             ),
           ),
@@ -184,6 +189,8 @@ void main() {
         // We can just tap; we don't need to fully fetch real classes for coverage
         await tester.tap(calendarTile);
         await tester.pumpAndSettle();
+
+        verify(mockHomeViewModel.toggleNextClassFabVisibility(true)).called(1);
       });
     });
   });

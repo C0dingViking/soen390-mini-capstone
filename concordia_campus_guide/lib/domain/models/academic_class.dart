@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:googleapis/calendar/v3.dart";
 
@@ -37,8 +38,76 @@ class AcademicClass {
     return AcademicClass(name, startTime, endTime, room);
   }
 
+  /// Returns the course code for this class (e.g. "SOEN390")
+  String getCourseCode() {
+    final regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
+    final match = regex.firstMatch(name);
+    if (match != null) {
+      return match.group(1)?.replaceAll(" ", "") ?? "Unknown Course";
+    }
+    return "Unknown Course";
+  }
+
+  /// Returns the type of class (e.g. "Lecture", "Tutorial", "Lab") based on the abbreviation in the class name (e.g. "LEC", "TUT", "LAB").
+  /// If no abbreviation is found, returns "Unknown Type".
+  String classType() {
+    final regex = RegExp(r"\b(LEC|TUT|LAB)\b", caseSensitive: false);
+    final match = regex.firstMatch(name);
+
+    if (match != null) {
+      final type = match.group(1)?.toUpperCase();
+
+      switch (type) {
+        case "LEC":
+          return "Lecture";
+        case "TUT":
+          return "Tutorial";
+        case "LAB":
+          return "Lab";
+      }
+    }
+
+    return "Unknown Type";
+  }
+
+  /// Returns a well formatted string representation of the day and time of this class (e.g. "Monday, 1/1/2026 at 10:00 AM - 11:00 AM")
+  String getFormattedDateTime() {
+    final weekDay = _getWeekday(startTime.weekday);
+    final date = "${startTime.month}/${startTime.day}/${startTime.year}";
+    final startTimeFormatted =
+        "${startTime.hourOfPeriod}:${startTime.minute.toString().padLeft(2, "0")} ${startTime.hour >= 12 ? "PM" : "AM"}";
+    final endTimeFormatted =
+        "${endTime.hourOfPeriod}:${endTime.minute.toString().padLeft(2, "0")} ${endTime.hour >= 12 ? "PM" : "AM"}";
+    return "$weekDay, $date at $startTimeFormatted - $endTimeFormatted";
+  }
+
   @override
   String toString() {
     return "AcademicClass{name: $name, startTime: $startTime, endTime: $endTime, room: $room}";
   }
+
+  String _getWeekday(final int weekDay) {
+    switch (weekDay) {
+      case DateTime.monday:
+        return "Monday";
+      case DateTime.tuesday:
+        return "Tuesday";
+      case DateTime.wednesday:
+        return "Wednesday";
+      case DateTime.thursday:
+        return "Thursday";
+      case DateTime.friday:
+        return "Friday";
+      case DateTime.saturday:
+        return "Saturday";
+      case DateTime.sunday:
+        return "Sunday";
+      default:
+        return "Unknown Day";
+    }
+  }
+}
+
+extension on DateTime {
+  get hourOfPeriod => this.hour % 12 == 0 ? 12 : this.hour % 12;
 }
