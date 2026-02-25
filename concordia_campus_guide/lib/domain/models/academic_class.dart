@@ -34,7 +34,8 @@ class AcademicClass {
 
     final room = Room.fromLocation(location);
 
-    return AcademicClass(name, startTime, endTime, room);
+    // Convert start and end times to local timezone for easier display in the UI
+    return AcademicClass(name, startTime.toLocal(), endTime.toLocal(), room);
   }
 
   /// Returns the course code for this class (e.g. "SOEN390")

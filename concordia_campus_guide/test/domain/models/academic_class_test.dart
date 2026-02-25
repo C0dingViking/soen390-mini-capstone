@@ -7,18 +7,20 @@ import "package:googleapis/calendar/v3.dart";
 void main() {
   group("AcademicClass.fromCalendar", () {
     test("creates class from valid event", () {
+      final startTimeUtc = DateTime.parse("2025-01-01T10:00:00Z");
+      final endTimeUtc = DateTime.parse("2025-01-01T11:00:00Z");
       final event = Event(
         summary: "SOEN 390",
         location: "Sir George Williams Campus - CL Building Rm 235",
-        start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
-        end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
+        start: EventDateTime(dateTime: startTimeUtc),
+        end: EventDateTime(dateTime: endTimeUtc),
       );
 
       final academicClass = AcademicClass.fromCalendar(event);
 
       expect(academicClass.name, "SOEN 390");
-      expect(academicClass.startTime, DateTime.parse("2025-01-01T10:00:00Z"));
-      expect(academicClass.endTime, DateTime.parse("2025-01-01T11:00:00Z"));
+      expect(academicClass.startTime, startTimeUtc.toLocal());
+      expect(academicClass.endTime, endTimeUtc.toLocal());
       expect(academicClass.room.roomNumber, "235");
       expect(academicClass.room.floor, "2");
       expect(academicClass.room.campus, Campus.sgw);

@@ -731,17 +731,14 @@ class HomeViewModel extends ChangeNotifier {
     try {
       // Get the next class from the user's calendar and navigate to it
       final calendarInteractor = CalendarInteractor();
-      // Only get 1 class and set a limit of 7 days in the future to avoid showing irrelevant classes
+      // Only look for classes until the end of the current day
       final now = DateTime.now();
-      final sevenDaysFromNow = now.add(const Duration(days: 7));
-      final classes = await calendarInteractor.getUpcomingClasses(
-        timeMin: now,
-        timeMax: sevenDaysFromNow,
-      );
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final classes = await calendarInteractor.getUpcomingClasses(timeMin: now, timeMax: endOfDay);
 
       if (classes.isEmpty) {
         // No upcoming classes found, show a message to the user
-        infoMessage = "No upcoming classes found in the next 7 days.";
+        infoMessage = "No more classes today.";
         notifyListeners();
         return;
       }
