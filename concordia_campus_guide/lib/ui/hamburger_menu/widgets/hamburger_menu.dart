@@ -1,5 +1,6 @@
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:google_fonts/google_fonts.dart";
 
 import "package:flutter/material.dart";
@@ -58,20 +59,24 @@ class HamburgerMenu extends StatelessWidget {
                 style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
               ),
               onTap: () async {
-                Navigator.of(context).pop();
+                // Make sure classes are retievable before showing the FAB
                 final calendarInteractor = CalendarInteractor();
                 try {
                   final now = DateTime.now();
-                  final endTime = now.add(const Duration(days: 3));
-                  final classes = await calendarInteractor.getClassInRange(
+                  final endTime = now.add(const Duration(days: 1));
+                  await calendarInteractor.getClassInRange(
                     startDate: now,
                     endDate: endTime,
                   );
 
-                  logger.i("Fetched ${classes.length} upcoming classes:");
-                  for (final academicClass in classes) {
-                    logger.i(academicClass);
-                  }
+                  if (!context.mounted) return;
+
+                  // Enable the FAB for the next class since we have successfully imported calendar events
+                  context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Google Calendar imported successfully!")),
+                  );
+                  Navigator.of(context).pop();
                 } catch (e, stackTrace) {
                   logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
                 }

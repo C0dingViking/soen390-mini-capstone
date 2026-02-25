@@ -57,6 +57,7 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polyline> routePolylines = {};
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
+  bool showNextClassFab = false; // This is set to true when the user imports their calendar
 
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
@@ -704,5 +705,12 @@ class HomeViewModel extends ChangeNotifier {
   void clearLoginSuccessMessage() {
     _showLoginSuccessMessage = false;
     notifyListeners();
+  }
+
+  void toggleNextClassFabVisibility(final bool isVisible) {
+    if (showNextClassFab != isVisible) {
+      showNextClassFab = isVisible;
+      notifyListeners();
+    }
   }
 }
