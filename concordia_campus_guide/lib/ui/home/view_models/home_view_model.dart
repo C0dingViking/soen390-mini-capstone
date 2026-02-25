@@ -604,10 +604,10 @@ class HomeViewModel extends ChangeNotifier {
           Circle(
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
-            radius: 7,
-            fillColor: const Color.fromARGB(255, 134, 134, 134).withValues(alpha: 1.0), // Opaque
+            radius: 15,
+            fillColor: AppTheme.concordiaDarkBlue.withValues(alpha: 0.8),
             strokeWidth: 3,
-            strokeColor: const Color.fromARGB(255, 207, 207, 207),
+            strokeColor: AppTheme.concordiaDarkBlue,
           ),
         );
       }
