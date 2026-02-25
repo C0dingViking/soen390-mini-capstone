@@ -9,8 +9,6 @@ import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
 import "package:concordia_campus_guide/ui/auth/view_models/login_view_model.dart";
 import "package:provider/provider.dart";
 import "package:firebase_auth/firebase_auth.dart";
-import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
-import "package:concordia_campus_guide/utils/app_logger.dart";
 
 class HamburgerMenu extends StatelessWidget {
   const HamburgerMenu({super.key});

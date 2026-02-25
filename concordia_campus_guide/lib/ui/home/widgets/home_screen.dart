@@ -209,7 +209,12 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Icon(Icons.location_on, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
-                Text(location, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
+                Expanded(
+                  child: Text(
+                    location,
+                    style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                  ),
+                ),
               ],
             ),
           ],

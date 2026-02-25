@@ -1,4 +1,3 @@
-import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:googleapis/calendar/v3.dart";
 
@@ -109,5 +108,5 @@ class AcademicClass {
 }
 
 extension on DateTime {
-  get hourOfPeriod => this.hour % 12 == 0 ? 12 : this.hour % 12;
+  int get hourOfPeriod => hour % 12 == 0 ? 12 : hour % 12;
 }

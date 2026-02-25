@@ -10,7 +10,7 @@ void main() {
       final room = Room.fromLocation(location);
 
       expect(room.roomNumber, "235");
-      expect(room.floor, 2);
+      expect(room.floor, "2");
       expect(room.campus, Campus.sgw);
       expect(room.buildingId, "cl");
     });
@@ -21,7 +21,7 @@ void main() {
       final room = Room.fromLocation(location);
 
       expect(room.roomNumber, "101");
-      expect(room.floor, 1);
+      expect(room.floor, "1");
       expect(room.campus, Campus.loyola);
       expect(room.buildingId, "sp");
     });
@@ -47,7 +47,7 @@ void main() {
 
   group("Room.toString", () {
     test("includes room fields", () {
-      final room = Room("321", 3, Campus.sgw, "h");
+      final room = Room("321", "3", Campus.sgw, "h");
 
       final result = room.toString();
 

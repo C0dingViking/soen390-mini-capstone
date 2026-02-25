@@ -20,7 +20,7 @@ void main() {
       expect(academicClass.startTime, DateTime.parse("2025-01-01T10:00:00Z"));
       expect(academicClass.endTime, DateTime.parse("2025-01-01T11:00:00Z"));
       expect(academicClass.room.roomNumber, "235");
-      expect(academicClass.room.floor, 2);
+      expect(academicClass.room.floor, "2");
       expect(academicClass.room.campus, Campus.sgw);
       expect(academicClass.room.buildingId, "cl");
     });
