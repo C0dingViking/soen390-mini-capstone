@@ -75,16 +75,6 @@ void main() {
           mockService.fetchRoute(
             startCoord,
             destCoord,
-            RouteMode.driving,
-            departureTime: null,
-            arrivalTime: null,
-          ),
-        ).called(1);
-
-        verify(
-          mockService.fetchRoute(
-            startCoord,
-            destCoord,
             RouteMode.transit,
             departureTime: null,
             arrivalTime: null,
@@ -130,16 +120,6 @@ void main() {
             arrivalTime: null,
           ),
         ).thenAnswer((_) async => bicyclingRoute);
-
-        when(
-          mockService.fetchRoute(
-            startCoord,
-            destCoord,
-            RouteMode.driving,
-            departureTime: null,
-            arrivalTime: null,
-          ),
-        ).thenAnswer((_) async => null);
 
         when(
           mockService.fetchRoute(
@@ -213,16 +193,6 @@ void main() {
           mockService.fetchRoute(
             startCoord,
             destCoord,
-            RouteMode.driving,
-            departureTime: departureTime,
-            arrivalTime: null,
-          ),
-        ).called(1);
-
-        verify(
-          mockService.fetchRoute(
-            startCoord,
-            destCoord,
             RouteMode.transit,
             departureTime: departureTime,
             arrivalTime: null,
@@ -260,16 +230,6 @@ void main() {
             startCoord,
             destCoord,
             RouteMode.bicycling,
-            departureTime: null,
-            arrivalTime: arrivalTime,
-          ),
-        ).called(1);
-
-        verify(
-          mockService.fetchRoute(
-            startCoord,
-            destCoord,
-            RouteMode.driving,
             departureTime: null,
             arrivalTime: arrivalTime,
           ),
@@ -363,20 +323,6 @@ void main() {
           mockService.fetchRoute(
             any,
             any,
-            RouteMode.driving,
-            departureTime: anyNamed("departureTime"),
-            arrivalTime: anyNamed("arrivalTime"),
-          ),
-        ).thenAnswer((_) async {
-          await Future<void>.delayed(const Duration(milliseconds: 30));
-          callOrder.add("driving");
-          return null;
-        });
-
-        when(
-          mockService.fetchRoute(
-            any,
-            any,
             RouteMode.transit,
             departureTime: anyNamed("departureTime"),
             arrivalTime: anyNamed("arrivalTime"),
@@ -391,10 +337,9 @@ void main() {
 
         // Verify calls completed; if sequential, would take 140ms+ total
         // If parallel with Future.wait, takes ~50ms (longest delay)
-        expect(callOrder.length, 4);
+        expect(callOrder.length, 3);
         expect(callOrder, contains("walking"));
         expect(callOrder, contains("bicycling"));
-        expect(callOrder, contains("driving"));
         expect(callOrder, contains("transit"));
       });
     });

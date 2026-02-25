@@ -564,8 +564,6 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return "Walk";
       case RouteMode.bicycling:
         return "Bike";
-      case RouteMode.driving:
-        return "Drive";
       case RouteMode.transit:
         return "Transit";
     }
@@ -577,8 +575,6 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return Icons.directions_walk;
       case RouteMode.bicycling:
         return Icons.directions_bike;
-      case RouteMode.driving:
-        return Icons.directions_car;
       case RouteMode.transit:
         return Icons.directions_transit;
     }
@@ -590,8 +586,6 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return AppTheme.concordiaTurquoise;
       case RouteMode.bicycling:
         return AppTheme.concordiaTurquoise;
-      case RouteMode.driving:
-        return AppTheme.concordiaMaroon;
       case RouteMode.transit:
         return AppTheme.concordiaDarkBlue;
     }

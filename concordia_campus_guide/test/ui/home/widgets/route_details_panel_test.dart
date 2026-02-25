@@ -183,7 +183,6 @@ void main() {
       expect(find.text("Walk"), findsOneWidget);
       expect(find.text("Transit"), findsOneWidget);
       expect(find.text("Bike"), findsNothing);
-      expect(find.text("Drive"), findsNothing);
       expect(find.text("10 min"), findsNWidgets(2));
       expect(find.text("1.2 km"), findsOneWidget);
       expect(find.text("Main route"), findsOneWidget);

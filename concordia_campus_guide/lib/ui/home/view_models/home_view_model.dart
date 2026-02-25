@@ -524,11 +524,6 @@ class HomeViewModel extends ChangeNotifier {
         polylineWidth = 5;
         polylinePattern = []; // Solid line
         break;
-      case RouteMode.driving:
-        polylineColor = AppTheme.concordiaMaroon;
-        polylineWidth = 6;
-        polylinePattern = []; // Solid line
-        break;
       case RouteMode.transit:
         polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
