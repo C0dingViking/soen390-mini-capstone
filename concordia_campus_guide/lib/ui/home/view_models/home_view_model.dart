@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
@@ -57,6 +58,7 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polyline> routePolylines = {};
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
+  double _currentMapZoom = 15;
 
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
@@ -488,6 +490,33 @@ class HomeViewModel extends ChangeNotifier {
     await _loadRoutesIfReady();
   }
 
+  void onMapCameraMove(final CameraPosition position) {
+    final zoom = position.zoom;
+    if ((_currentMapZoom - zoom).abs() < 0.25) return;
+
+    _currentMapZoom = zoom;
+
+    final option = routeOptions[selectedRouteMode];
+    if (selectedRouteMode != RouteMode.transit || option == null || option.steps.isEmpty) {
+      return;
+    }
+
+    _updateRoutePolylines();
+    notifyListeners();
+  }
+
+  double _transitChangeCircleRadiusMeters() {
+    const minRadiusMeters = 5.0;
+    const maxRadiusMeters = 600.0;
+    const baseZoom = 16.5;
+    const growthPerZoomOut = 2;
+
+    final zoomDelta = (baseZoom - _currentMapZoom).clamp(0.0, 8.0);
+    final scaled = minRadiusMeters * math.pow(growthPerZoomOut, zoomDelta).toDouble();
+
+    return scaled.clamp(minRadiusMeters, maxRadiusMeters).toDouble();
+  }
+
   void _updateRoutePolylines() {
     final option = routeOptions[selectedRouteMode];
     if (option == null || option.polyline.isEmpty) {
@@ -548,6 +577,7 @@ class HomeViewModel extends ChangeNotifier {
     final polylines = <Polyline>{};
     final circles = <Circle>{};
     final allPoints = <LatLng>[];
+    final transitionCircleRadius = _transitChangeCircleRadiusMeters();
     int segmentIndex = 0;
     String? previousTravelMode;
 
@@ -604,10 +634,10 @@ class HomeViewModel extends ChangeNotifier {
           Circle(
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
-            radius: 15,
-            fillColor: AppTheme.concordiaDarkBlue.withValues(alpha: 0.8),
+            radius: transitionCircleRadius,
+            fillColor: const Color.fromARGB(223, 98, 106, 114).withValues(alpha: 0.8),
             strokeWidth: 3,
-            strokeColor: AppTheme.concordiaDarkBlue,
+            strokeColor: Color.fromARGB(223, 98, 106, 114),
           ),
         );
       }

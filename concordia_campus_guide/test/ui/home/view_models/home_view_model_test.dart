@@ -835,6 +835,90 @@ void main() {
       expect(hvm.routeBounds, isNotNull);
     });
 
+    test("transit change circle radius grows when zooming out", () {
+      final transitOption = RouteOption(
+        mode: RouteMode.transit,
+        distanceMeters: 1200,
+        durationSeconds: 900,
+        polyline: const [
+          Coordinate(latitude: 45.0, longitude: -73.0),
+          Coordinate(latitude: 45.1, longitude: -73.1),
+        ],
+        steps: [
+          RouteStep(
+            instruction: "Walk",
+            distanceMeters: 100,
+            durationSeconds: 120,
+            travelMode: "WALKING",
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.02, longitude: -73.02),
+            ],
+          ),
+          RouteStep(
+            instruction: "Bus",
+            distanceMeters: 1000,
+            durationSeconds: 600,
+            travelMode: "TRANSIT",
+            transitDetails: const TransitDetails(
+              lineName: "Line 105",
+              shortName: "105",
+              mode: TransitMode.bus,
+              departureStop: "Stop A",
+              arrivalStop: "Stop B",
+              numStops: 3,
+            ),
+            polyline: const [
+              Coordinate(latitude: 45.02, longitude: -73.02),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ],
+      );
+
+      hvm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 400,
+          durationSeconds: 300,
+          polyline: [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.01, longitude: -73.01),
+          ],
+        ),
+        RouteMode.transit: transitOption,
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+      hvm.selectRouteMode(RouteMode.transit);
+
+      final zoomedInRadius = hvm.transitChangeCircles.first.radius;
+
+      hvm.onMapCameraMove(const CameraPosition(target: LatLng(45.0, -73.0), zoom: 10));
+      final zoomedOutRadius = hvm.transitChangeCircles.first.radius;
+
+      expect(zoomedOutRadius, greaterThan(zoomedInRadius));
+      expect(zoomedOutRadius, greaterThanOrEqualTo(150));
+    });
+
+    test("onMapCameraMove keeps circles empty for non-transit mode", () {
+      hvm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 400,
+          durationSeconds: 300,
+          polyline: [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.01, longitude: -73.01),
+          ],
+        ),
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
+
+      hvm.onMapCameraMove(const CameraPosition(target: LatLng(45.0, -73.0), zoom: 9));
+
+      expect(hvm.transitChangeCircles, isEmpty);
+    });
+
     test("refreshRoutes re-fetches routes with same origin/destination", () async {
       final interactor = _ConfigurableDirectionsInteractor();
       final start = Coordinate(latitude: 45.0, longitude: -73.0);

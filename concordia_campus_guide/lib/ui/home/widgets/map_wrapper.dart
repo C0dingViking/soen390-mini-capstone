@@ -4,6 +4,7 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 class MapWrapper extends StatelessWidget {
   final CameraPosition initialCameraPosition;
   final void Function(GoogleMapController) onMapCreated;
+  final ValueChanged<CameraPosition>? onCameraMove;
   final bool myLocationEnabled;
   final Set<Polygon> polygons;
   final Set<Marker> markers;
@@ -20,6 +21,7 @@ class MapWrapper extends StatelessWidget {
     super.key,
     required this.initialCameraPosition,
     required this.onMapCreated,
+    this.onCameraMove,
     required this.myLocationEnabled,
     required this.polygons,
     required this.markers,
@@ -48,6 +50,7 @@ class MapWrapper extends StatelessWidget {
     return GoogleMap(
       initialCameraPosition: initialCameraPosition,
       onMapCreated: onMapCreated,
+      onCameraMove: onCameraMove,
       myLocationEnabled: myLocationEnabled,
       myLocationButtonEnabled: myLocationButtonEnabled,
       zoomControlsEnabled: zoomControlsEnabled,
