@@ -912,4 +912,47 @@ void main() {
       hvmWithInteractor.dispose();
     });
   });
+
+  group("HomeViewModel next class state", () {
+    late HomeViewModel hvm;
+
+    setUp(() {
+      hvm = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+      );
+    });
+
+    tearDown(() {
+      hvm.dispose();
+      LocationService.resetForTesting();
+    });
+
+    test("toggleNextClassFabVisibility toggles only when value changes", () {
+      expect(hvm.showNextClassFab, isFalse);
+
+      hvm.toggleNextClassFabVisibility(true);
+      expect(hvm.showNextClassFab, isTrue);
+
+      hvm.toggleNextClassFabVisibility(true);
+      expect(hvm.showNextClassFab, isTrue);
+
+      hvm.toggleNextClassFabVisibility(false);
+      expect(hvm.showNextClassFab, isFalse);
+    });
+
+    test("clearNextClassDialog clears dialog flag", () {
+      hvm.clearNextClassDialog();
+
+      expect(hvm.showNextClassDialog, isFalse);
+    });
+
+    test("showNextClass throws when Firebase is not initialized in unit tests", () async {
+      await expectLater(hvm.showNextClass(), throwsA(isA<Exception>()));
+      expect(hvm.showNextClassDialog, isFalse);
+    });
+  });
 }

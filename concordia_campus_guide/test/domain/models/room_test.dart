@@ -26,6 +26,28 @@ void main() {
       expect(room.buildingId, "sp");
     });
 
+    test("parses dot room format and special MB building id", () {
+      const location = "Sir George Williams Campus - John Molson School of Business Rm S2.330";
+
+      final room = Room.fromLocation(location);
+
+      expect(room.roomNumber, "S2.330");
+      expect(room.floor, "S2");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "mb");
+    });
+
+    test("parses two-digit room format", () {
+      const location = "Loyola Campus - SP Building Rm 05";
+
+      final room = Room.fromLocation(location);
+
+      expect(room.roomNumber, "05");
+      expect(room.floor, "0");
+      expect(room.campus, Campus.loyola);
+      expect(room.buildingId, "sp");
+    });
+
     test("throws when room number is missing", () {
       const location = "Sir George Williams Campus - CL Building";
 
@@ -42,6 +64,17 @@ void main() {
       const location = "Sir George Williams Campus - Rm 235";
 
       expect(() => Room.fromLocation(location), throwsA(isA<FormatException>()));
+    });
+
+    test("parses lowercase rm token", () {
+      const location = "Sir George Williams Campus - CL Building rm 235";
+
+      final room = Room.fromLocation(location);
+
+      expect(room.roomNumber, "235");
+      expect(room.floor, "2");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "cl");
     });
   });
 

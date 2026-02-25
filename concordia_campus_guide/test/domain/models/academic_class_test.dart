@@ -85,4 +85,106 @@ void main() {
       expect(result, contains("Room"));
     });
   });
+
+  group("AcademicClass.getCourseCode", () {
+    test("extracts compact course code when class name has space", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.getCourseCode(), "SOEN390");
+    });
+
+    test("returns Unknown Course when no course code exists", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "Project Meeting",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.getCourseCode(), "Unknown Course");
+    });
+  });
+
+  group("AcademicClass.classType", () {
+    test("returns Lecture for LEC", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.classType(), "Lecture");
+    });
+
+    test("returns Tutorial for lowercase tut", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "COMP 248 tut B",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.classType(), "Tutorial");
+    });
+
+    test("returns Lab for LAB", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "COEN 243 LAB C",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.classType(), "Lab");
+    });
+
+    test("returns Unknown Type when no abbreviation exists", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "General Session",
+        DateTime.parse("2025-02-01T09:00:00Z"),
+        DateTime.parse("2025-02-01T10:00:00Z"),
+        room,
+      );
+
+      expect(academicClass.classType(), "Unknown Type");
+    });
+  });
+
+  group("AcademicClass.getFormattedDateTime", () {
+    test("formats date and time in expected weekday and AM/PM format", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-05T13:05:00"),
+        DateTime.parse("2026-01-05T14:15:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Monday, 1/5/2026 at 1:05 PM - 2:15 PM");
+    });
+
+    test("formats midnight and noon correctly", () {
+      final room = Room("101", "1", Campus.sgw, "h");
+      final academicClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.parse("2026-01-06T00:00:00"),
+        DateTime.parse("2026-01-06T12:00:00"),
+        room,
+      );
+
+      expect(academicClass.getFormattedDateTime(), "Tuesday, 1/6/2026 at 12:00 AM - 12:00 PM");
+    });
+  });
 }

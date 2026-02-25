@@ -32,14 +32,6 @@ class Room {
     if (roomNumber.contains('.')) {
       // Format like "S2.330" -> floor is "S2"
       floor = roomNumber.split('.').first;
-    } else if (roomNumber.contains('-')) {
-      // Format like "MB-1.210" -> floor is part before first dot or before dash
-      final parts = roomNumber.split('-');
-      if (parts.first.contains('.')) {
-        floor = parts.first.split('.').first;
-      } else {
-        floor = parts.first;
-      }
     } else if (RegExp(r'^\d{3,}$').hasMatch(roomNumber)) {
       // Pure numeric like "235" -> floor is "2" (hundreds digit)
       floor = (int.parse(roomNumber) ~/ 100).toString();
