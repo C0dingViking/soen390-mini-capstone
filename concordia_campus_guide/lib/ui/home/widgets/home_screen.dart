@@ -61,7 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
     }
     if (_viewModel.generateInfoMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.generateInfoMessage!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.generateInfoMessage!)));
       _viewModel.generateInfoMessage = null; // Auto clear
     }
     if (_viewModel.routeBounds != null) {

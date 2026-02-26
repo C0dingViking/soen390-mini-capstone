@@ -10,7 +10,7 @@ class Room {
 
   /// Constructor for Room. Takes a calendar event's location as
   /// input and attempts to parse the string for a valid Room
-  /// 
+  ///
   /// Throw FormatException if the string has unexpected format
   factory Room.fromLocation(final String location) {
     final loc = location.trim();
@@ -70,7 +70,7 @@ class Room {
 
   static String _determineFloorFromRoomNumber(final String roomNumber) {
     late String floor;
-    
+
     if (roomNumber.contains(".")) {
       // For formats like "S2.330"
       floor = roomNumber.split(".").first;
