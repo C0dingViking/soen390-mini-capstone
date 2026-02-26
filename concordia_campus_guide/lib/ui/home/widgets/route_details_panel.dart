@@ -568,6 +568,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return "Drive";
       case RouteMode.transit:
         return "Transit";
+      case RouteMode.shuttle:
+        return "Shuttle";
     }
   }
 
@@ -581,6 +583,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return Icons.directions_car;
       case RouteMode.transit:
         return Icons.directions_transit;
+      case RouteMode.shuttle:
+        return Icons.airport_shuttle;
     }
   }
 
@@ -594,6 +598,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return AppTheme.concordiaMaroon;
       case RouteMode.transit:
         return AppTheme.concordiaDarkBlue;
+      case RouteMode.shuttle:
+        return AppTheme.concordiaMaroon;
     }
   }
 

@@ -503,6 +503,12 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    // Special handling for shuttle routes - show dashed walking and solid shuttle segments
+    if (selectedRouteMode == RouteMode.shuttle && option.steps.isNotEmpty) {
+      _updateShuttlePolylines(option);
+      return;
+    }
+
     // For non-transit routes, use single polyline with mode-specific styling
     final points = option.polyline.map((final c) => c.toLatLng()).toList();
 
@@ -533,6 +539,11 @@ class HomeViewModel extends ChangeNotifier {
         polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
         polylinePattern = [PatternItem.dash(20), PatternItem.gap(10)]; // Dashed line for transit
+        break;
+      case RouteMode.shuttle:
+        polylineColor = AppTheme.concordiaMaroon;
+        polylineWidth = 5;
+        polylinePattern = []; // Solid line
         break;
     }
 
@@ -632,6 +643,50 @@ class HomeViewModel extends ChangeNotifier {
 
     routePolylines = polylines;
     transitChangeCircles = circles;
+    routeBounds = _calculateBounds(allPoints);
+  }
+
+  void _updateShuttlePolylines(final RouteOption option) {
+    final polylines = <Polyline>{};
+    final allPoints = <LatLng>[];
+    int segmentIndex = 0;
+
+    for (final step in option.steps) {
+      if (step.polyline.isEmpty) continue;
+
+      final points = step.polyline.map((final c) => c.toLatLng()).toList();
+      allPoints.addAll(points);
+
+      Color color;
+      int width;
+      List<PatternItem> pattern;
+
+      // SHUTTLE segment
+      if (step.travelMode == "SHUTTLE") {
+        color = AppTheme.concordiaMaroon;
+        width = 6;
+        pattern = [];
+      }
+      // WALKING segment
+      else {
+        color = AppTheme.concordiaTurquoise;
+        width = 4;
+        pattern = [PatternItem.dot, PatternItem.gap(10)];
+      }
+
+      polylines.add(
+        Polyline(
+          polylineId: PolylineId("shuttle-segment-$segmentIndex"),
+          points: points,
+          color: color,
+          width: width,
+          patterns: pattern,
+        ),
+      );
+      segmentIndex++;
+    }
+
+    routePolylines = polylines;
     routeBounds = _calculateBounds(allPoints);
   }
 
