@@ -1,6 +1,5 @@
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
-
 class ShuttleStop {
   final String id;
   final String name;
