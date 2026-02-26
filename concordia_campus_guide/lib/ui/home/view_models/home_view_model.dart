@@ -73,10 +73,7 @@ class HomeViewModel extends ChangeNotifier {
 
   int get unfocusSearchBarSignal => _unfocusSearchBarSignal;
 
-  static const Coordinate sgw = Coordinate(
-    latitude: 45.4972,
-    longitude: -73.5786,
-  );
+  static const Coordinate sgw = Coordinate(latitude: 45.4972, longitude: -73.5786);
   static const Coordinate loyola = Coordinate(
     latitude: 45.45823348665408,
     longitude: -73.64067095332564,
@@ -91,10 +88,7 @@ class HomeViewModel extends ChangeNotifier {
   set buildingOutlineColor(final Color color) {
     _buildingOutlineColor = color;
     if (buildings.isNotEmpty) {
-      buildingOutlines = mapInteractor.generateBuildingPolygons(
-        buildings.values,
-        color,
-      );
+      buildingOutlines = mapInteractor.generateBuildingPolygons(buildings.values, color);
     }
     notifyListeners();
   }
@@ -104,8 +98,10 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
-    final BuildingMapDataDTO payload = await mapInteractor
-        .loadBuildingsWithMapElements(path, _buildingOutlineColor);
+    final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(
+      path,
+      _buildingOutlineColor,
+    );
 
     if (payload.errorMessage == null) {
       buildings = payload.buildings;
@@ -114,9 +110,7 @@ class HomeViewModel extends ChangeNotifier {
       // start location service and subscribe to updates
       await LocationService.instance.start();
       _locationSubscription?.cancel();
-      _locationSubscription = LocationService.instance.positionStream.listen(
-        _handleLocationUpdate,
-      );
+      _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -290,12 +284,7 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    _applySelection(
-      field: field,
-      coordinate: coordinate,
-      label: suggestion.title,
-      campus: null,
-    );
+    _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
     await _loadRoutesIfReady();
     searchResults = [];
     notifyListeners();
@@ -371,9 +360,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final durationSeconds = selectedOption.durationSeconds!;
-    suggestedDepartureTime = selectedArrivalTime!.subtract(
-      Duration(seconds: durationSeconds),
-    );
+    suggestedDepartureTime = selectedArrivalTime!.subtract(Duration(seconds: durationSeconds));
     notifyListeners();
   }
 
@@ -551,10 +538,7 @@ class HomeViewModel extends ChangeNotifier {
       case RouteMode.transit:
         polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
-        polylinePattern = [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ]; // Dashed line for transit
+        polylinePattern = [PatternItem.dash(20), PatternItem.gap(10)]; // Dashed line for transit
         break;
       case RouteMode.shuttle:
         polylineColor = AppTheme.concordiaMaroon;
@@ -627,10 +611,7 @@ class HomeViewModel extends ChangeNotifier {
         // Walking segments in transit route
         color = AppTheme.concordiaTurquoise;
         width = 4;
-        pattern = [
-          PatternItem.dot,
-          PatternItem.gap(10),
-        ]; // Dotted line for walking
+        pattern = [PatternItem.dot, PatternItem.gap(10)]; // Dotted line for walking
       }
 
       // Check if travel mode changed - add circle at transition point
@@ -642,12 +623,7 @@ class HomeViewModel extends ChangeNotifier {
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
             radius: 7,
-            fillColor: const Color.fromARGB(
-              255,
-              134,
-              134,
-              134,
-            ).withValues(alpha: 1.0), // Opaque
+            fillColor: const Color.fromARGB(255, 134, 134, 134).withValues(alpha: 1.0), // Opaque
             strokeWidth: 3,
             strokeColor: const Color.fromARGB(255, 207, 207, 207),
           ),
@@ -733,10 +709,7 @@ class HomeViewModel extends ChangeNotifier {
       if (point.longitude > maxLng) maxLng = point.longitude;
     }
 
-    return LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
+    return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {

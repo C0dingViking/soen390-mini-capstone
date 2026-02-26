@@ -97,9 +97,7 @@ class _TrackingPlacesInteractor extends PlacesInteractor {
   }
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async {
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async {
     lastResolvedSuggestion = suggestion;
     return resolveResult;
   }
@@ -241,7 +239,10 @@ void main() {
       fakeGeolocator.serviceEnabled = true;
       fakeGeolocator.checkPermissionResult = LocationPermission.deniedForever;
       await hvm.goToCurrentLocation();
-      expect(hvm.errorMessage, equals("Error: Location permission deniedForever. Please enable it in settings."));
+      expect(
+        hvm.errorMessage,
+        equals("Error: Location permission deniedForever. Please enable it in settings."),
+      );
     });
 
     test("goToCurrentLocation success sets cameraTarget and enables location", () async {
@@ -566,10 +567,7 @@ void main() {
 
       expect(places.searchCount, 1);
       expect(hvm.searchResults.length, 2);
-      expect(
-        hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length,
-        1,
-      );
+      expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
     });
 
     test("clearSearchResults resets search state", () {
@@ -647,10 +645,7 @@ void main() {
 
     test("mapMarkers returns building and search markers", () {
       hvm.buildingMarkers = {
-        const Marker(
-          markerId: MarkerId("b-1"),
-          position: LatLng(45.0, -73.0),
-        ),
+        const Marker(markerId: MarkerId("b-1"), position: LatLng(45.0, -73.0)),
       };
       hvm.searchStartMarker = const Marker(
         markerId: MarkerId("search-start"),
@@ -854,9 +849,7 @@ void main() {
 
       final hvmWithInteractor = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,
@@ -896,9 +889,7 @@ void main() {
 
       final hvmWithInteractor = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,

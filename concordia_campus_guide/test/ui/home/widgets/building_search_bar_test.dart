@@ -63,13 +63,13 @@ class _FakeAssetBundle extends CachingAssetBundle {
 
 class _TestHomeViewModel extends HomeViewModel {
   _TestHomeViewModel()
-      : super(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: _FakeDirectionsInteractor(),
-        );
+    : super(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+      );
 
   String? lastQuery;
   bool clearSearchResultsCalled = false;
@@ -166,38 +166,30 @@ void main() {
     }
 
     Finder findStartField() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Choose starting point",
-        );
+      (final widget) =>
+          widget is TextField && widget.decoration?.hintText == "Choose starting point",
+    );
 
     Finder findDestinationFieldCollapsed() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Search for a place or address",
-        );
+      (final widget) =>
+          widget is TextField && widget.decoration?.hintText == "Search for a place or address",
+    );
 
     Finder findDestinationFieldExpanded() => find.byWidgetPredicate(
-          (final widget) =>
-              widget is TextField &&
-              widget.decoration?.hintText == "Choose destination",
-        );
+      (final widget) => widget is TextField && widget.decoration?.hintText == "Choose destination",
+    );
 
     TextField getField(final WidgetTester tester, final Finder finder) {
       return tester.widget<TextField>(finder);
     }
 
-    testWidgets("starts collapsed with destination field only", (
-      final tester,
-    ) async {
+    testWidgets("starts collapsed with destination field only", (final tester) async {
       await pumpSearchBar(tester);
       expect(findDestinationFieldCollapsed(), findsOneWidget);
       expect(findStartField(), findsNothing);
     });
 
-    testWidgets("expands when selection labels are set", (
-      final tester,
-    ) async {
+    testWidgets("expands when selection labels are set", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -207,9 +199,7 @@ void main() {
       expect(findDestinationFieldExpanded(), findsOneWidget);
     });
 
-    testWidgets("collapses when view model requests collapse", (
-      final tester,
-    ) async {
+    testWidgets("collapses when view model requests collapse", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -226,26 +216,16 @@ void main() {
       expect(findDestinationFieldCollapsed(), findsOneWidget);
     });
 
-    testWidgets("typing in destination updates query", (
-      final tester,
-    ) async {
+    testWidgets("typing in destination updates query", (final tester) async {
       await pumpSearchBar(tester);
-      await tester.enterText(
-        findDestinationFieldCollapsed(),
-        "Dest query",
-      );
+      await tester.enterText(findDestinationFieldCollapsed(), "Dest query");
       await tester.pumpAndSettle();
       expect(vm.lastQuery, equals("Dest query"));
     });
 
-    testWidgets("clear destination query clears text and results", (
-      final tester,
-    ) async {
+    testWidgets("clear destination query clears text and results", (final tester) async {
       await pumpSearchBar(tester);
-      await tester.enterText(
-        findDestinationFieldCollapsed(),
-        "Clear me",
-      );
+      await tester.enterText(findDestinationFieldCollapsed(), "Clear me");
       await tester.pumpAndSettle();
 
       final closeButton = find.byIcon(Icons.close);
@@ -258,9 +238,7 @@ void main() {
       expect(vm.clearSearchResultsCalled, isTrue);
     });
 
-    testWidgets("cancel search clears selection and collapses", (
-      final tester,
-    ) async {
+    testWidgets("cancel search clears selection and collapses", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -278,9 +256,7 @@ void main() {
       expect(vm.isSearchBarExpanded, isFalse);
     });
 
-    testWidgets("destination selection auto-sets start only when collapsed", (
-      final tester,
-    ) async {
+    testWidgets("destination selection auto-sets start only when collapsed", (final tester) async {
       await pumpSearchBar(tester);
       vm.searchResults = [
         SearchSuggestion.place(
@@ -305,9 +281,7 @@ void main() {
       expect(vm.isSearchBarExpanded, isTrue);
     });
 
-    testWidgets("destination selection does not auto-set when expanded", (
-      final tester,
-    ) async {
+    testWidgets("destination selection does not auto-set when expanded", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
@@ -337,9 +311,7 @@ void main() {
       expect(startField.controller?.text, equals("Start A"));
     });
 
-    testWidgets("start selection does not auto-set current location", (
-      final tester,
-    ) async {
+    testWidgets("start selection does not auto-set current location", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -369,9 +341,7 @@ void main() {
       expect(vm.setStartToCurrentLocationCalled, isFalse);
     });
 
-    testWidgets("current location button updates start field", (
-      final tester,
-    ) async {
+    testWidgets("current location button updates start field", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -391,9 +361,7 @@ void main() {
       expect(startField.controller?.text, equals("Current location"));
     });
 
-    testWidgets("shows resolving start spinner", (
-      final tester,
-    ) async {
+    testWidgets("shows resolving start spinner", (final tester) async {
       await pumpSearchBar(tester);
       // First expand the search bar by setting a destination
       vm.setSearchBarExpanded(true);
@@ -409,9 +377,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets("syncs labels when not focused", (
-      final tester,
-    ) async {
+    testWidgets("syncs labels when not focused", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
@@ -423,9 +389,7 @@ void main() {
       expect(startField.controller?.text, equals("Start A"));
     });
 
-    testWidgets("does not override text while focused", (
-      final tester,
-    ) async {
+    testWidgets("does not override text while focused", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -445,9 +409,7 @@ void main() {
       expect(startField.controller?.text, equals("User start"));
     });
 
-    testWidgets("unfocus signal clears focus", (
-      final tester,
-    ) async {
+    testWidgets("unfocus signal clears focus", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -467,9 +429,7 @@ void main() {
       expect(updatedField.focusNode?.hasFocus, isFalse);
     });
 
-    testWidgets("shows building info button and opens detail screen", (
-      final tester,
-    ) async {
+    testWidgets("shows building info button and opens detail screen", (final tester) async {
       final building = Building(
         id: "H",
         googlePlacesId: null,

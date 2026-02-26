@@ -22,15 +22,24 @@ class LocationService {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) throw const PermissionDeniedException("Location permission denied");
+      if (permission == LocationPermission.denied) {
+        throw const PermissionDeniedException("Location permission denied");
+      }
     }
-    if (permission == LocationPermission.deniedForever) throw const PermissionDeniedException("Location permission deniedForever. Please enable it in settings.");
+    if (permission == LocationPermission.deniedForever) {
+      throw const PermissionDeniedException(
+        "Location permission deniedForever. Please enable it in settings.",
+      );
+    }
 
     final pos = await Geolocator.getCurrentPosition();
     return Coordinate(latitude: pos.latitude, longitude: pos.longitude);
   }
 
-  Future<void> start({final LocationAccuracy accuracy = LocationAccuracy.bestForNavigation, final int distanceFilter = 5}) async {
+  Future<void> start({
+    final LocationAccuracy accuracy = LocationAccuracy.bestForNavigation,
+    final int distanceFilter = 5,
+  }) async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return;
 
@@ -42,16 +51,17 @@ class LocationService {
       if (permission == LocationPermission.deniedForever) return;
 
       _posSub?.cancel();
-      _posSub = Geolocator.getPositionStream(
-        locationSettings: LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter),
-      ).listen(
-        (final pos) {
-          _controller.add(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
-        },
-        onError: (final error) {
-          // swallow stream errors silently
-        },
-      );
+      _posSub =
+          Geolocator.getPositionStream(
+            locationSettings: LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter),
+          ).listen(
+            (final pos) {
+              _controller.add(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
+            },
+            onError: (final error) {
+              // swallow stream errors silently
+            },
+          );
     } catch (_) {
       // swallow errors here; callers may subscribe to stream and handle absence
     }

@@ -14,19 +14,11 @@ Building _$BuildingFromJson(Map<String, dynamic> json) =>
         description: json['description'] as String,
         street: json['street'] as String,
         postalCode: json['postalCode'] as String,
-        location: const CoordinateConverter().fromJson(
-          json['location'] as List,
-        ),
-        hours: OpeningHoursDetail.fromJson(
-          json['hours'] as Map<String, dynamic>,
-        ),
+        location: const CoordinateConverter().fromJson(json['location'] as List),
+        hours: OpeningHoursDetail.fromJson(json['hours'] as Map<String, dynamic>),
         campus: const CampusConverter().fromJson(json['campus'] as String),
-        outlinePoints: const CoordinateListConverter().fromJson(
-          json['points'] as List,
-        ),
-        images: (json['images'] as List<dynamic>)
-            .map((e) => e as String)
-            .toList(),
+        outlinePoints: const CoordinateListConverter().fromJson(json['points'] as List),
+        images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),
         buildingFeatures: const BuildingFeatureListConverter().fromJson(
           json['buildingFeatures'] as List?,
         ),
@@ -52,7 +44,5 @@ Map<String, dynamic> _$BuildingToJson(Building instance) => <String, dynamic>{
   'maxLatitude': instance.maxLatitude,
   'minLongitude': instance.minLongitude,
   'maxLongitude': instance.maxLongitude,
-  'buildingFeatures': const BuildingFeatureListConverter().toJson(
-    instance.buildingFeatures,
-  ),
+  'buildingFeatures': const BuildingFeatureListConverter().toJson(instance.buildingFeatures),
 };

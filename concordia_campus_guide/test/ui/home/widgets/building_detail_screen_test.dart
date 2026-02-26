@@ -36,18 +36,13 @@ void main() {
     });
 
     Future<void> pumpBuildingDetailScreen(final WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: BuildingDetailScreen(building: testBuilding)),
-      );
+      await tester.pumpWidget(MaterialApp(home: BuildingDetailScreen(building: testBuilding)));
     }
 
     testWidgets("displays building name and description", (final tester) async {
       await pumpBuildingDetailScreen(tester);
       expect(find.text("Science Hall"), findsOneWidget);
-      expect(
-        find.textContaining("A large, modern science teaching"),
-        findsOneWidget,
-      );
+      expect(find.textContaining("A large, modern science teaching"), findsOneWidget);
     });
 
     testWidgets("back button pops navigation", (final tester) async {
@@ -60,8 +55,7 @@ void main() {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) =>
-                          BuildingDetailScreen(building: testBuilding),
+                      builder: (_) => BuildingDetailScreen(building: testBuilding),
                     ),
                   );
                 },
@@ -89,9 +83,7 @@ void main() {
       expect(find.byIcon(Icons.wc), findsOneWidget);
     });
 
-    testWidgets("hides features section when no features", (
-      final tester,
-    ) async {
+    testWidgets("hides features section when no features", (final tester) async {
       testBuilding = Building(
         id: "H",
         googlePlacesId: null,
@@ -132,8 +124,11 @@ void main() {
     testWidgets("opens and closes accessibility dialog", (final tester) async {
       await pumpBuildingDetailScreen(tester);
 
-      await tester.tap(find.byWidgetPredicate(
-            (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info", ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info",
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text("Accessibility Features"), findsOneWidget);
 
@@ -142,9 +137,7 @@ void main() {
       expect(find.text("Accessibility Features"), findsNothing);
     });
 
-    testWidgets("accessibility dialog shows all feature descriptions", (
-      final tester,
-    ) async {
+    testWidgets("accessibility dialog shows all feature descriptions", (final tester) async {
       testBuilding = Building(
         id: "H",
         googlePlacesId: null,
@@ -168,8 +161,11 @@ void main() {
         ],
       );
       await pumpBuildingDetailScreen(tester);
-      await tester.tap(find.byWidgetPredicate(
-            (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info", ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (final w) => w is FloatingActionButton && w.heroTag == "accessibility_info",
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text("Wheelchair Accessible"), findsOneWidget);
@@ -181,9 +177,7 @@ void main() {
       expect(find.text("Shuttle Bus Stop"), findsOneWidget);
     });
 
-    testWidgets("displays OpeningHoursWidget when hours present", (
-      final tester,
-    ) async {
+    testWidgets("displays OpeningHoursWidget when hours present", (final tester) async {
       testBuilding = Building(
         id: "H",
         googlePlacesId: null,

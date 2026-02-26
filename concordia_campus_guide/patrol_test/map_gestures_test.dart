@@ -13,12 +13,9 @@ void main() {
     final mapFinder = find.byType(GoogleMap);
     await $.tester.pumpAndSettle();
 
-    final homeScreenState = $.tester.state<State<HomeScreen>>(
-      find.byType(HomeScreen),
-    );
+    final homeScreenState = $.tester.state<State<HomeScreen>>(find.byType(HomeScreen));
     final coordsController =
-        ((homeScreenState as dynamic).coordsController)
-            as CoordinatesController;
+        ((homeScreenState as dynamic).coordsController) as CoordinatesController;
     final controller = await coordsController.mapController;
 
     if (await $.platform.mobile.isPermissionDialogVisible()) {

@@ -5,10 +5,7 @@ import "../domain/models/coordinate.dart";
 
 extension LatLngToCoordinate on LatLng {
   Coordinate toCoordinate() {
-    return Coordinate(
-      latitude: latitude,
-      longitude: longitude,
-    );
+    return Coordinate(latitude: latitude, longitude: longitude);
   }
 }
 
@@ -33,8 +30,7 @@ extension PointInPolygon on Coordinate {
       final double xj = polygon[j].longitude;
       final double yj = polygon[j].latitude;
 
-      final bool intersect = ((yi > y) != (yj > y)) &&
-          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      final bool intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) inside = !inside;
     }
 

@@ -9,6 +9,6 @@ final Logger logger = Logger(
     lineLength: 80,
     colors: true,
     printEmojis: true,
-    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart
-  )
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );

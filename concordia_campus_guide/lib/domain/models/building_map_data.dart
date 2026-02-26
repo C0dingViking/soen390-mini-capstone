@@ -12,6 +12,6 @@ class BuildingMapDataDTO {
     required this.buildings,
     required this.buildingOutlines,
     required this.buildingMarkers,
-    this.errorMessage
+    this.errorMessage,
   });
 }
