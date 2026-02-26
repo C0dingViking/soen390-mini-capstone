@@ -502,6 +502,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     _updateRoutePolylines();
+    routeBounds = null;
     notifyListeners();
   }
 
