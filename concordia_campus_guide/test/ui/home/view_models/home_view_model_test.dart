@@ -1163,9 +1163,7 @@ void main() {
 
       final hvmWithInteractor = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,

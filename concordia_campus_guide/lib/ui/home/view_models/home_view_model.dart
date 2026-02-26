@@ -568,9 +568,7 @@ class HomeViewModel extends ChangeNotifier {
       case RouteMode.shuttle:
         polylineColor = AppTheme.concordiaMaroon;
         polylineWidth = 5;
-        polylinePattern = [
-
-        ]; // Solid line
+        polylinePattern = []; // Solid line
         break;
     }
 
@@ -692,17 +690,14 @@ class HomeViewModel extends ChangeNotifier {
       // SHUTTLE segment
       if (step.travelMode == "SHUTTLE") {
         color = AppTheme.concordiaMaroon;
-        width = 6;                              
-        pattern = [];                           
-      } 
+        width = 6;
+        pattern = [];
+      }
       // WALKING segment
       else {
-        color = AppTheme.concordiaTurquoise;    
-        width = 4;                              
-        pattern = [
-          PatternItem.dot,
-          PatternItem.gap(10),
-        ];                                      
+        color = AppTheme.concordiaTurquoise;
+        width = 4;
+        pattern = [PatternItem.dot, PatternItem.gap(10)];
       }
 
       polylines.add(

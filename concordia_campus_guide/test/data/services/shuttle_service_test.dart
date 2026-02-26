@@ -36,9 +36,7 @@ void main() {
   final end = Coordinate(latitude: 1, longitude: 1);
 
   group("ShuttleService scheduling", () {
-    final shuttle = ShuttleService(
-      directionsService: _FakeDirectionsService(walkSeconds: 300),
-    );
+    final shuttle = ShuttleService(directionsService: _FakeDirectionsService(walkSeconds: 300));
 
     test("after 18:30 wraps to next day 9:15", () async {
       final late = DateTime(2024, 1, 1, 19, 0);

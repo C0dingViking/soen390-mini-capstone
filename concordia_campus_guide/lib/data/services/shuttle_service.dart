@@ -7,8 +7,8 @@ class ShuttleService {
   final DirectionsService _directionsService;
 
   ShuttleService({final DirectionsService? directionsService})
-      : _directionsService = directionsService ?? DirectionsService();
-  // Tries both directions and picks the fastest combination of walking + shuttle + walking. 
+    : _directionsService = directionsService ?? DirectionsService();
+  // Tries both directions and picks the fastest combination of walking + shuttle + walking.
   Future<RouteOption?> createShuttleRoute(
     final Coordinate start,
     final Coordinate destination, {
@@ -54,7 +54,10 @@ class ShuttleService {
       final arriveBoard = leaveTimeSeconds.add(Duration(seconds: walkToBoard.durationSeconds!));
       final waitTimeSeconds = waitSeconds(arriveBoard);
 
-      final totalTimeSeconds = (walkToBoard.durationSeconds ?? 0) + waitTimeSeconds + shuttleRide +
+      final totalTimeSeconds =
+          (walkToBoard.durationSeconds ?? 0) +
+          waitTimeSeconds +
+          shuttleRide +
           (walkFromAlight.durationSeconds ?? 0);
 
       if (totalTimeSeconds < bestTotalTimeSeconds) {
@@ -67,20 +70,22 @@ class ShuttleService {
         );
         final shuttlePolyline = shuttleRoute?.polyline ?? [board.location, alight.location];
 
-      // added waiting step if needed
-      final stepList = <RouteStep>[];
-      stepList.addAll(walkToBoard.steps);
-      if (waitTimeSeconds > 0) {
-        stepList.add(RouteStep(
-          instruction: "Wait for shuttle",
-          distanceMeters: 0,
-          durationSeconds: waitTimeSeconds,
-          travelMode: "WAIT",
-          polyline: [board.location],
-        ));
-      }
+        // added waiting step if needed
+        final stepList = <RouteStep>[];
+        stepList.addAll(walkToBoard.steps);
+        if (waitTimeSeconds > 0) {
+          stepList.add(
+            RouteStep(
+              instruction: "Wait for shuttle",
+              distanceMeters: 0,
+              durationSeconds: waitTimeSeconds,
+              travelMode: "WAIT",
+              polyline: [board.location],
+            ),
+          );
+        }
 
-      final shuttleLeg = RouteStep(
+        final shuttleLeg = RouteStep(
           instruction: "Take shuttle from ${board.name} to ${alight.name}",
           distanceMeters: 0,
           durationSeconds: shuttleRide,
@@ -94,8 +99,8 @@ class ShuttleService {
           ),
           polyline: shuttlePolyline,
         );
-      stepList.add(shuttleLeg);
-      stepList.addAll(walkFromAlight.steps);
+        stepList.add(shuttleLeg);
+        stepList.addAll(walkFromAlight.steps);
 
         final summaryParts = <String>["Walk"];
         if (waitTimeSeconds > 0) {
@@ -107,8 +112,7 @@ class ShuttleService {
 
         bestRouteOption = RouteOption(
           mode: RouteMode.shuttle,
-          distanceMeters: (walkToBoard.distanceMeters ?? 0) +
-              (walkFromAlight.distanceMeters ?? 0),
+          distanceMeters: (walkToBoard.distanceMeters ?? 0) + (walkFromAlight.distanceMeters ?? 0),
           durationSeconds: totalTimeSeconds,
           polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
           steps: stepList,
@@ -134,5 +138,4 @@ class ShuttleService {
     if (remainder == 0) return when;
     return when.add(Duration(minutes: 15 - remainder));
   }
-
 }
