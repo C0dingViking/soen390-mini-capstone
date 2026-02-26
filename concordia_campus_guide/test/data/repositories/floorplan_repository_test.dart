@@ -17,11 +17,12 @@ void main() {
         floorplanLoader: (final path) async {
           return File(path).readAsString();
         },
+        manifestPath: "test/assets/test_floorplan_manifest.json",
       );
     });
 
     test("loads a set of floorplans with correct data", () async {
-      final floorplans = await repo.loadBuildingFloorplans("test/assets/testSvgs");
+      final floorplans = await repo.loadBuildingFloorplans("testSvgs");
 
       expect(floorplans.length, 2);
 
@@ -47,8 +48,15 @@ void main() {
       expect(floorplans, isEmpty);
     });
 
-    test("fails gracefully if file is named incorrectly", () async {
-      final floorplans = await repo.loadBuildingFloorplans("test/assets/wrongname_2.svg");
+    test("fails gracefully if manifest format is invalid", () async {
+      final invalidRepo = FloorplanRepository(
+        floorplanLoader: (final path) async {
+          return "{}"; // empty manifest
+        },
+        manifestPath: "test/assets/invalid_manifest.json",
+      );
+
+      final floorplans = await invalidRepo.loadBuildingFloorplans("testSvgs");
       expect(floorplans, isEmpty);
     });
   });

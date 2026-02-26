@@ -306,7 +306,9 @@ class BuildingDetailScreen extends StatelessWidget {
   void _showIndoorFloorPlans(final BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute<IndoorMapView>(builder: (final context) => const IndoorMapView()),
+      MaterialPageRoute<IndoorMapView>(
+        builder: (final context) => IndoorMapView(building: building),
+      ),
     );
   }
 }

@@ -92,7 +92,9 @@ flutter:
     - assets/images/app_logo.svg
     - assets/images/bigger_icon.png
     - assets/maps/building_data.json
-    - assets/floorplans/
+    - assets/floorplans/floorplan_manifest.json
+    - assets/floorplans/mb/
+    - assets/floorplans/h/
     - assets/images/buildings/LOY/
     - assets/images/buildings/SGW/
 

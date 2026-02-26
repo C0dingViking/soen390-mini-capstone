@@ -37,7 +37,13 @@ class Floorplan {
   late List<IndoorMapRoom> rooms;
   late List<PointOfInterest> pois;
 
-  Floorplan({required this.buildingId, required this.floorNumber, required this.svgPath});
+  Floorplan({
+    required this.buildingId,
+    required this.floorNumber,
+    required this.svgPath,
+    this.rooms = const [],
+    this.pois = const [],
+  });
 
   factory Floorplan.fromXml(
     final String buildingId,
