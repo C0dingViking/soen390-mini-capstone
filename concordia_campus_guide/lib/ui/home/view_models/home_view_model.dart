@@ -43,7 +43,7 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
-  String? infoMessage; // General-purpose message that user should see (auto clearing)
+  String? generateInfoMessage;
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
   bool isResolvingStartLocation = false;
@@ -61,7 +61,7 @@ class HomeViewModel extends ChangeNotifier {
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
 
-  bool showNextClassFab = false; // This is set to true when the user imports their calendar
+  bool showNextClassFab = false;
   AcademicClass? upcomingClass;
   bool _showNextClassDialog = false;
 
@@ -729,28 +729,25 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> showNextClass() async {
     try {
-      // Get the next class from the user's calendar and navigate to it
       final calendarInteractor = CalendarInteractor();
-      // Only look for classes until the end of the current day
+      // Acceptance Criteria: Only show classes that are upcoming today
       final now = DateTime.now();
       final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
       final classes = await calendarInteractor.getUpcomingClasses(timeMin: now, timeMax: endOfDay);
 
       if (classes.isEmpty) {
-        // No upcoming classes found, show a message to the user
-        infoMessage = "No more classes today.";
+        generateInfoMessage = "No more classes today.";
         notifyListeners();
         return;
       }
 
-      // Store the class and trigger dialog
-      upcomingClass = classes.first; // only show the next upcoming class
+      upcomingClass = classes.first;
       _showNextClassDialog = true;
       notifyListeners();
     } catch (e, stackTrace) {
       logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
       final errorMessageText = e.toString();
-      infoMessage = "$errorMessageText Please use search to find your destination.";
+      generateInfoMessage = "$errorMessageText Please use search to find your destination.";
       notifyListeners();
     }
   }

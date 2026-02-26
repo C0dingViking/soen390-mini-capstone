@@ -204,12 +204,12 @@ void main() {
       final tester,
     ) async {
       await pumpHomeScreen(tester);
-      vm.infoMessage = "test-info";
+      vm.generateInfoMessage = "test-info";
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
       expect(find.text("test-info"), findsOneWidget);
-      expect(vm.infoMessage, isNull);
+      expect(vm.generateInfoMessage, isNull);
     });
 
     testWidgets("when cameraTarget set, view model clearCameraTarget is called", (

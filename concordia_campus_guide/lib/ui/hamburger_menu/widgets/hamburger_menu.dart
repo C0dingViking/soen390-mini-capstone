@@ -60,9 +60,7 @@ class HamburgerMenu extends StatelessWidget {
               onTap: () async {
                 if (!context.mounted) return;
 
-                // Enable the FAB for the next class since we have successfully imported calendar events
                 context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
-                // Notify user with a subtle message that the calendar was imported successfully
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Google Calendar imported successfully!")),
                 );

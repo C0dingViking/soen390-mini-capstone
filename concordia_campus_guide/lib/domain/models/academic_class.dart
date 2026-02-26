@@ -38,7 +38,6 @@ class AcademicClass {
     return AcademicClass(name, startTime.toLocal(), endTime.toLocal(), room);
   }
 
-  /// Returns the course code for this class (e.g. "SOEN390")
   String getCourseCode() {
     final regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
     final match = regex.firstMatch(name);
@@ -48,8 +47,6 @@ class AcademicClass {
     return "Unknown Course";
   }
 
-  /// Returns the type of class (e.g. "Lecture", "Tutorial", "Lab") based on the abbreviation in the class name (e.g. "LEC", "TUT", "LAB").
-  /// If no abbreviation is found, returns "Unknown Type".
   String classType() {
     final regex = RegExp(r"\b(LEC|TUT|LAB)\b", caseSensitive: false);
     final match = regex.firstMatch(name);
@@ -70,7 +67,6 @@ class AcademicClass {
     return "Unknown Type";
   }
 
-  /// Returns a well formatted string representation of the day and time of this class (e.g. "Monday, 1/1/2026 at 10:00 AM - 11:00 AM")
   String getFormattedDateTime() {
     final weekDay = _getWeekday(startTime.weekday);
     final date = "${startTime.month}/${startTime.day}/${startTime.year}";

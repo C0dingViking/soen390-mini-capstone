@@ -618,7 +618,7 @@ class MockHomeViewModel extends _i1.Mock implements _i12.HomeViewModel {
       super.noSuchMethod(Invocation.setter(#errorMessage, value), returnValueForMissingStub: null);
 
   @override
-  set infoMessage(String? value) =>
+  set generateInfoMessage(String? value) =>
       super.noSuchMethod(Invocation.setter(#infoMessage, value), returnValueForMissingStub: null);
 
   @override

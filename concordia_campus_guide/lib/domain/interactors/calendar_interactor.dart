@@ -18,7 +18,7 @@ class CalendarInteractor {
       try {
         final academicClass = AcademicClass.fromCalendar(event);
         academicClasses.add(academicClass);
-      } catch (e) {
+      } catch (ignored) {
         continue;
       }
     }
@@ -46,7 +46,7 @@ class CalendarInteractor {
       try {
         final academicClass = AcademicClass.fromCalendar(event);
         academicClasses.add(academicClass);
-      } catch (e) {
+      } catch (ignored) {
         continue;
       }
     }
