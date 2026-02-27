@@ -23,16 +23,15 @@ class DirectionsInteractor {
     final DateTime? arrivalTime,
   }) async {
     final results = await Future.wait(
-      _publicRouteModes
-          .map(
-            (final mode) => _service.fetchRoute(
-              start,
-              destination,
-              mode,
-              departureTime: departureTime,
-              arrivalTime: arrivalTime,
-            ),
-          ),
+      _publicRouteModes.map(
+        (final mode) => _service.fetchRoute(
+          start,
+          destination,
+          mode,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+        ),
+      ),
     );
 
     final shuttleRoute = await _shuttleService.createShuttleRoute(
