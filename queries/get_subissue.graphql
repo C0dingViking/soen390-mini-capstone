@@ -1,0 +1,30 @@
+query($owner: String!, $repo: String!, $parentNumber: Int!) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $parentNumber) {
+      number
+      title
+      labels(first: 5) {
+        nodes {
+          name
+        }
+      }
+      subIssues(first: 10) {
+        nodes {
+          number
+          title
+          state
+          labels(first: 5) {
+            nodes {
+              name
+            }
+          }
+          projectItems(first: 1) {
+            nodes {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
