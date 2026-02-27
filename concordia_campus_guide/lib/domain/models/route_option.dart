@@ -19,6 +19,8 @@ enum RouteMode {
         return "transit";
       case RouteMode.shuttle:
         return "shuttle";
+      case RouteMode.shuttle:
+        return "shuttle";
     }
   }
 }
