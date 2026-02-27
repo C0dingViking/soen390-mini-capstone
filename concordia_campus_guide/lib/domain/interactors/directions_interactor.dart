@@ -6,6 +6,11 @@ import "package:concordia_campus_guide/domain/models/route_option.dart";
 class DirectionsInteractor {
   final DirectionsService _service;
   final ShuttleService _shuttleService;
+  static const List<RouteMode> _publicRouteModes = [
+    RouteMode.walking,
+    RouteMode.bicycling,
+    RouteMode.transit,
+  ];
 
   DirectionsInteractor({final DirectionsService? service, final ShuttleService? shuttleService})
     : _service = service ?? DirectionsService(),
@@ -18,8 +23,7 @@ class DirectionsInteractor {
     final DateTime? arrivalTime,
   }) async {
     final results = await Future.wait(
-      RouteMode.values
-          .where((final mode) => mode != RouteMode.shuttle)
+      _publicRouteModes
           .map(
             (final mode) => _service.fetchRoute(
               start,

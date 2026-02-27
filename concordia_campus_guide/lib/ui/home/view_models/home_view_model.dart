@@ -570,6 +570,8 @@ class HomeViewModel extends ChangeNotifier {
         polylineWidth = 5;
         polylinePattern = []; // Solid line
         break;
+      default:
+        throw StateError("Unsupported route mode: $selectedRouteMode");
     }
 
     routePolylines = {

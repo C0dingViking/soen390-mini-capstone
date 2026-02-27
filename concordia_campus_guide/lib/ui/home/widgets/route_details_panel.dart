@@ -584,6 +584,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return "Transit";
       case RouteMode.shuttle:
         return "Shuttle";
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
@@ -597,6 +599,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return Icons.directions_transit;
       case RouteMode.shuttle:
         return Icons.airport_shuttle;
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
@@ -610,6 +614,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return AppTheme.concordiaDarkBlue;
       case RouteMode.shuttle:
         return AppTheme.concordiaMaroon;
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
