@@ -3,7 +3,8 @@ import "package:concordia_campus_guide/domain/models/coordinate.dart";
 enum RouteMode {
   walking,
   bicycling,
-  transit;
+  transit,
+  shuttle; // custom mode for Concordia shuttle routes
 
   String get asString {
     switch (this) {
@@ -13,6 +14,8 @@ enum RouteMode {
         return "bicycling";
       case RouteMode.transit:
         return "transit";
+      case RouteMode.shuttle:
+        return "shuttle";
     }
   }
 }
