@@ -59,7 +59,7 @@ class Floorplan {
 
     final roomsLayer = xmlData
         .findAllElements("g")
-        .firstWhere((e) => e.getAttribute("inkscape:label") == "rooms");
+        .firstWhere((final e) => e.getAttribute("inkscape:label") == "rooms");
     floorplan.rooms = floorplan._parseRoomData(roomsLayer);
 
     // TODO: implement POI parsing when that data is made available
