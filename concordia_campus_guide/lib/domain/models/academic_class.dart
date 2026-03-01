@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/domain/exceptions/invalid_event_format_exception.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:googleapis/calendar/v3.dart";
 
@@ -13,38 +14,45 @@ class AcademicClass {
   /// input and attempts to create a class from it.
   ///
   /// Throw FormatException if the Event has unexpected format
-  factory AcademicClass.fromCalendar(final Event calendarEvent) {
+  factory AcademicClass.fromCalendar(final Event calendarEvent, final Room room) {
     final name = calendarEvent.summary ?? "";
     final startTime = calendarEvent.start?.dateTime;
     final endTime = calendarEvent.end?.dateTime;
-    final location = calendarEvent.location;
 
-    if (name.isEmpty) {
-      throw const FormatException("Event name is empty");
+    if (!checkEventFormat(calendarEvent)) {
+      throw FormatException("Calendar event does not match expected format");
     }
-    if (startTime == null) {
-      throw const FormatException("Event start time is missing");
-    }
-    if (endTime == null) {
-      throw const FormatException("Event end time is missing");
-    }
-    if (location == null) {
-      throw const FormatException("Event location is missing");
-    }
-
-    final room = Room.fromLocation(location);
 
     // Convert start and end times to local timezone for easier display in the UI
-    return AcademicClass(name, startTime.toLocal(), endTime.toLocal(), room);
+    return AcademicClass(name, startTime!.toLocal(), endTime!.toLocal(), room);
+  }
+
+  static bool checkEventFormat(final Event event) {
+    if (event.summary == null ||
+        event.summary!.isEmpty ||
+        RegExp(r"([A-Z]{2,4}\s?\d{3})").firstMatch(event.summary!) == null ||
+        RegExp(r"\b(LEC|TUT|LAB)\b").firstMatch(event.summary!) == null) {
+      return false;
+    }
+    if (event.start?.dateTime == null) {
+      return false;
+    }
+    if (event.end?.dateTime == null) {
+      return false;
+    }
+    if (event.location == null || event.location!.isEmpty) {
+      return false;
+    }
+    return true;
   }
 
   String getCourseCode() {
     final regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
     final match = regex.firstMatch(name);
     if (match != null) {
-      return match.group(1)?.replaceAll(" ", "") ?? "Unknown Course";
+      return match.group(0)!.replaceAll(" ", "");
     }
-    return "Unknown Course";
+    throw InvalidEventFormatException("Class name does not contain a valid course code");
   }
 
   String classType() {
@@ -64,17 +72,16 @@ class AcademicClass {
       }
     }
 
-    return "Unknown Type";
+    return "Unknown";
   }
 
-  String getFormattedDateTime() {
+  String getFormattedDayAndTime() {
     final weekDay = _getWeekday(startTime.weekday);
-    final date = "${startTime.month}/${startTime.day}/${startTime.year}";
     final startTimeFormatted =
         "${startTime.hourOfPeriod}:${startTime.minute.toString().padLeft(2, "0")} ${startTime.hour >= 12 ? "PM" : "AM"}";
     final endTimeFormatted =
         "${endTime.hourOfPeriod}:${endTime.minute.toString().padLeft(2, "0")} ${endTime.hour >= 12 ? "PM" : "AM"}";
-    return "$weekDay, $date at $startTimeFormatted - $endTimeFormatted";
+    return "${weekDay}s, \nAt $startTimeFormatted - $endTimeFormatted";
   }
 
   @override

@@ -22,9 +22,12 @@ enum SearchField { start, destination }
 enum DepartureMode { now, departAt, arriveBy }
 
 class HomeViewModel extends ChangeNotifier {
+  static const String buildingDataAssetPath = "assets/maps/building_data.json";
+
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
+  final CalendarInteractor calendarInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
   bool _showLoginSuccessMessage = false;
 
@@ -34,6 +37,7 @@ class HomeViewModel extends ChangeNotifier {
     required this.mapInteractor,
     required this.placesInteractor,
     required this.directionsInteractor,
+    required this.calendarInteractor,
   });
 
   Map<String, Building> buildings = {};
@@ -729,11 +733,14 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> showNextClass() async {
     try {
-      final calendarInteractor = CalendarInteractor();
       // Acceptance Criteria: Only show classes that are upcoming today
       final now = DateTime.now();
       final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-      final classes = await calendarInteractor.getUpcomingClasses(timeMin: now, timeMax: endOfDay);
+      final classes = await calendarInteractor.getUpcomingClasses(
+        timeMin: now,
+        timeMax: endOfDay,
+        maxResults: 100,
+      );
 
       if (classes.isEmpty) {
         generateInfoMessage = "No more classes today.";
@@ -747,7 +754,7 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e, stackTrace) {
       logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
       final errorMessageText = e.toString();
-      generateInfoMessage = "$errorMessageText Please use search to find your destination.";
+      generateInfoMessage = "$errorMessageText. Please use search to find your destination.";
       notifyListeners();
     }
   }

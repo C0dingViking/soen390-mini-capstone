@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<HomeViewModel>().initializeBuildingsData("assets/maps/building_data.json");
+      context.read<HomeViewModel>().initializeBuildingsData(HomeViewModel.buildingDataAssetPath);
     });
   }
 
@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final courseCode = upcomingClass.getCourseCode();
     final classType = upcomingClass.classType();
-    final dateTime = upcomingClass.getFormattedDateTime();
+    final dateTime = upcomingClass.getFormattedDayAndTime();
     final location =
         "${upcomingClass.room.buildingId.toUpperCase()} ${upcomingClass.room.roomNumber}";
 

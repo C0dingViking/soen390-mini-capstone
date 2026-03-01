@@ -1,6 +1,8 @@
 import "dart:convert";
 
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
@@ -17,6 +19,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:flutter_google_maps_webservices/places.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
 
 class _FakePlacesInteractor extends PlacesInteractor {
@@ -40,6 +43,25 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
   }) async {
     return [];
   }
+}
+
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
 }
 
 class _FakeAssetBundle extends CachingAssetBundle {
@@ -69,6 +91,7 @@ class _TestHomeViewModel extends HomeViewModel {
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
       );
 
   String? lastQuery;

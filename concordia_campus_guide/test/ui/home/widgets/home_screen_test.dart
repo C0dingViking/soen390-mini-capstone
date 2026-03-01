@@ -5,6 +5,8 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
@@ -17,6 +19,7 @@ import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 
 class _FakePlacesInteractor extends PlacesInteractor {
   @override
@@ -41,6 +44,25 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
   }
 }
 
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+}
+
 class TestHomeViewModel extends HomeViewModel {
   bool initCalled = false;
   String? initPath;
@@ -60,6 +82,7 @@ class TestHomeViewModel extends HomeViewModel {
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
       ) {
     // Add test buildings for navigation tests
     buildings = {

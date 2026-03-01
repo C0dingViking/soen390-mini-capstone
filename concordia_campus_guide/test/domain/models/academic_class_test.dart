@@ -1,4 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:concordia_campus_guide/domain/exceptions/invalid_event_format_exception.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
@@ -10,15 +11,16 @@ void main() {
       final startTimeUtc = DateTime.parse("2025-01-01T10:00:00Z");
       final endTimeUtc = DateTime.parse("2025-01-01T11:00:00Z");
       final event = Event(
-        summary: "SOEN 390",
+        summary: "SOEN 390 LEC",
         location: "Sir George Williams Campus - CL Building Rm 235",
         start: EventDateTime(dateTime: startTimeUtc),
         end: EventDateTime(dateTime: endTimeUtc),
       );
+      final room = Room("235", "2", Campus.sgw, "cl");
 
-      final academicClass = AcademicClass.fromCalendar(event);
+      final academicClass = AcademicClass.fromCalendar(event, room);
 
-      expect(academicClass.name, "SOEN 390");
+      expect(academicClass.name, "SOEN 390 LEC");
       expect(academicClass.startTime, startTimeUtc.toLocal());
       expect(academicClass.endTime, endTimeUtc.toLocal());
       expect(academicClass.room.roomNumber, "235");
@@ -34,44 +36,48 @@ void main() {
         start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
+      final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
     });
 
     test("throws when start time is missing", () {
       final event = Event(
-        summary: "SOEN 390",
+        summary: "SOEN 390 LEC A",
         location: "Sir George Williams Campus - CL Building Rm 235",
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
+      final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
     });
 
     test("throws when end time is missing", () {
       final event = Event(
-        summary: "SOEN 390",
+        summary: "SOEN 390 LEC",
         location: "Sir George Williams Campus - CL Building Rm 235",
         start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
       );
+      final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
     });
 
     test("throws when location is missing", () {
       final event = Event(
-        summary: "SOEN 390",
+        summary: "SOEN 390 LEC",
         start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
         end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
       );
+      final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
     });
   });
 
   group("AcademicClass.toString", () {
     test("includes class fields", () {
-      final room = Room.fromLocation("Sir George Williams Campus - H Building Rm 101");
+      final room = Room.fromLocation("Sir George Williams Campus - H Building Rm 101", "h");
       final academicClass = AcademicClass(
         "ENCS 282",
         DateTime.parse("2025-02-01T09:00:00Z"),
@@ -92,7 +98,7 @@ void main() {
     test("extracts compact course code when class name has space", () {
       final room = Room("101", "1", Campus.sgw, "h");
       final academicClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime.parse("2025-02-01T09:00:00Z"),
         DateTime.parse("2025-02-01T10:00:00Z"),
         room,
@@ -101,7 +107,7 @@ void main() {
       expect(academicClass.getCourseCode(), "SOEN390");
     });
 
-    test("returns Unknown Course when no course code exists", () {
+    test("throws when no course code exists", () {
       final room = Room("101", "1", Campus.sgw, "h");
       final academicClass = AcademicClass(
         "Project Meeting",
@@ -110,7 +116,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getCourseCode(), "Unknown Course");
+      expect(() => academicClass.getCourseCode(), throwsA(isA<InvalidEventFormatException>()));
     });
   });
 
@@ -151,7 +157,7 @@ void main() {
       expect(academicClass.classType(), "Lab");
     });
 
-    test("returns Unknown Type when no abbreviation exists", () {
+    test("returns Unknown when no abbreviation exists", () {
       final room = Room("101", "1", Campus.sgw, "h");
       final academicClass = AcademicClass(
         "General Session",
@@ -160,7 +166,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.classType(), "Unknown Type");
+      expect(academicClass.classType(), "Unknown");
     });
   });
 
@@ -174,7 +180,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Monday, 1/5/2026 at 1:05 PM - 2:15 PM");
+      expect(academicClass.getFormattedDayAndTime(), "Mondays, \nAt 1:05 PM - 2:15 PM");
     });
 
     test("formats midnight and noon correctly", () {
@@ -186,7 +192,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Tuesday, 1/6/2026 at 12:00 AM - 12:00 PM");
+      expect(academicClass.getFormattedDayAndTime(), "Tuesdays, \nAt 12:00 AM - 12:00 PM");
     });
 
     test("formats Wednesday correctly", () {
@@ -198,7 +204,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Wednesday, 1/7/2026 at 9:30 AM - 11:00 AM");
+      expect(academicClass.getFormattedDayAndTime(), "Wednesdays, \nAt 9:30 AM - 11:00 AM");
     });
 
     test("formats Thursday correctly", () {
@@ -210,7 +216,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Thursday, 1/8/2026 at 2:00 PM - 3:30 PM");
+      expect(academicClass.getFormattedDayAndTime(), "Thursdays, \nAt 2:00 PM - 3:30 PM");
     });
 
     test("formats Friday correctly", () {
@@ -222,7 +228,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Friday, 1/9/2026 at 10:00 AM - 11:30 AM");
+      expect(academicClass.getFormattedDayAndTime(), "Fridays, \nAt 10:00 AM - 11:30 AM");
     });
 
     test("formats Saturday correctly", () {
@@ -234,7 +240,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Saturday, 1/10/2026 at 8:00 AM - 9:30 AM");
+      expect(academicClass.getFormattedDayAndTime(), "Saturdays, \nAt 8:00 AM - 9:30 AM");
     });
 
     test("formats Sunday correctly", () {
@@ -246,7 +252,7 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDateTime(), "Sunday, 1/11/2026 at 4:00 PM - 5:30 PM");
+      expect(academicClass.getFormattedDayAndTime(), "Sundays, \nAt 4:00 PM - 5:30 PM");
     });
   });
 }

@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/domain/exceptions/invalid_location_format_exception.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 
 class Room {
@@ -12,46 +13,15 @@ class Room {
   /// input and attempts to parse the string for a valid Room
   ///
   /// Throw FormatException if the string has unexpected format
-  factory Room.fromLocation(final String location) {
-    final loc = location.trim();
-
-    // Extract room number: accepts digits/letters + optional dots/dashes
-    // Matches: "235", "S2.330", "MB-1.210", "101"
-    final roomMatch = RegExp(
-      r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)",
-      caseSensitive: false,
-    ).firstMatch(loc);
-
-    if (roomMatch == null) {
-      throw FormatException("Room number not found in location: $location");
+  factory Room.fromLocation(final String location, final String buildingId) {
+    if (location.isEmpty) {
+      throw InvalidLocationFormatException("Location string is empty");
     }
-    final roomNumber = roomMatch.group(1)!.trim();
+
+    final roomNumber = Room._determineRoomNumberFromBuildingId(buildingId, location);
 
     final String floor = Room._determineFloorFromRoomNumber(roomNumber);
     final Campus campus = Room._determineCampus(location);
-
-    // Extract building name: everything between '-' and 'Rm'
-    // This handles both "CL Building" and "John Molson School of Business"
-    final buildingMatch = RegExp(r"-\s*(.+?)\s*Rm\b", caseSensitive: false).firstMatch(loc);
-
-    if (buildingMatch == null) {
-      throw FormatException("Building not found in location: $location");
-    }
-
-    final buildingName = buildingMatch.group(1)!.trim();
-    // Remove trailing "Building" keyword if present for cleaner building ID
-    final cleanBuildingName = buildingName
-        .replaceAll(RegExp(r"\s+Building\s*$", caseSensitive: false), "")
-        .trim();
-    String buildingId = cleanBuildingName.toLowerCase();
-    if (buildingName == "John Molson School of Business") {
-      // Special case for John Molson School of Business to avoid overly long building ID
-      buildingId = "mb";
-    }
-
-    if (buildingId.isEmpty) {
-      throw FormatException("Building not found in location: $location");
-    }
 
     return Room(roomNumber, floor, campus, buildingId);
   }
@@ -63,9 +33,41 @@ class Room {
     } else if (location.toLowerCase().contains("george williams")) {
       campus = Campus.sgw;
     } else {
-      throw FormatException("Campus not found in location: $location");
+      throw InvalidLocationFormatException("Campus not found in location: $location");
     }
     return campus;
+  }
+
+  static String _determineRoomNumberFromBuildingId(final String buildingId, final String location) {
+    final String lowerBuildingId = buildingId.toLowerCase();
+    if (lowerBuildingId == "mb") {
+      if (RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}").hasMatch(location)) {
+        final match = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}").firstMatch(location);
+        return match!.group(0)!.split("Rm").last.trim();
+      } else {
+        throw InvalidLocationFormatException(
+          "Room number format is invalid in location: $location",
+        );
+      }
+    } else if (lowerBuildingId == "cc" || lowerBuildingId == "h") {
+      if (RegExp(r"\bRm\.?\s*(\d{3,4})").hasMatch(location)) {
+        final match = RegExp(r"\bRm\.?\s*(\d{3,4})").firstMatch(location);
+        return match!.group(1)!.split("Rm").last.trim();
+      } else {
+        throw InvalidLocationFormatException(
+          "Room number format is invalid in location: $location",
+        );
+      }
+    } else {
+      if (RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)").hasMatch(location)) {
+        final match = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)").firstMatch(location);
+        return match!.group(1)!.trim();
+      } else {
+        throw InvalidLocationFormatException(
+          "Room number format is invalid in location: $location",
+        );
+      }
+    }
   }
 
   static String _determineFloorFromRoomNumber(final String roomNumber) {
