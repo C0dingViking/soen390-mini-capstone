@@ -24,13 +24,24 @@ class TestIndoorViewModel extends IndoorViewModel {
     initCalled = true;
     initPath = path;
 
-    selectedFloorplan = Floorplan(
-      buildingId: path,
-      floorNumber: 1,
-      svgPath: "",
-      rooms: [],
-      pois: [],
-    );
+    availableFloors = [1, 2];
+    loadedFloorplans = {
+      1: Floorplan(
+        buildingId: path,
+        floorNumber: 1,
+        svgPath: "testfloor1.svg",
+        rooms: [],
+        pois: [],
+      ),
+      2: Floorplan(
+        buildingId: path,
+        floorNumber: 2,
+        svgPath: "testfloor2.svg",
+        rooms: [],
+        pois: [],
+      ),
+    };
+    selectedFloorplan = loadedFloorplans![1];
 
     notifyListeners();
   }
@@ -91,6 +102,45 @@ void main() {
       await pumpHomeScreen(tester, false);
       await tester.pumpAndSettle();
       expect(find.byType(IndoorMapView), findsNothing);
+    });
+
+    testWidgets("floor picker button displays the name of the current floor", (final tester) async {
+      await pumpHomeScreen(tester, true);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text("T1"), findsOneWidget);
+    });
+
+    testWidgets("floor picker shows available floors when clicked", (final tester) async {
+      await pumpHomeScreen(tester, true);
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      expect(find.text("Floor 1"), findsOneWidget);
+      expect(find.text("Floor 2"), findsOneWidget);
+    });
+
+    testWidgets("floor picker switches the selected floor when a floor is tapped", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Floor 2"));
+      await tester.pumpAndSettle();
+      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(find.text("T2"), findsOneWidget);
+    });
+
+    testWidgets("floor picker shows error if changing floor fails", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      // remove floor 2 to simulate failure when changing floors
+      ivm.loadedFloorplans!.remove(2);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Floor 2"));
+      await tester.pumpAndSettle();
+      expect(find.text("Failed to change floor. Please try again."), findsOneWidget);
     });
   });
 }

@@ -20,6 +20,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   final TransformationController _controller = TransformationController();
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
+  final floorPickerSpacing = 16.0;
 
   late IndoorViewModel _viewModel;
 
@@ -48,6 +49,47 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   void _onViewModelChange() {
     if (!mounted) return;
+  }
+
+  void _showFloorPicker(final BuildContext context) {
+    final ivm = context.read<IndoorViewModel>();
+    if (ivm.availableFloors == null || ivm.availableFloors!.isEmpty) {
+      // should be impossible to reach as this page doesn't open with at least one floorplan
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No floor plans available for this building.")));
+      return;
+    }
+
+    final currentFloor = ivm.selectedFloorplan?.floorNumber;
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (final BuildContext sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ivm.availableFloors!.map((final floor) {
+              final isSelected = currentFloor == floor;
+              return ListTile(
+                title: Text("Floor $floor"),
+                selected: isSelected,
+                onTap: () {
+                  final success = ivm.changeFloor(floor);
+                  Navigator.of(sheetContext).pop();
+
+                  if (!success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Failed to change floor. Please try again.")),
+                    );
+                  }
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -105,6 +147,27 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                         Navigator.of(context).pop();
                       },
                       constraints: const BoxConstraints(),
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  bottom: floorPickerSpacing,
+                  left: floorPickerSpacing,
+                  child: SafeArea(
+                    child: FloatingActionButton.extended(
+                      heroTag: "floor_picker",
+                      onPressed: () => _showFloorPicker(context),
+                      label: Text(
+                        "${widget.building.id.toUpperCase()}${ivm.selectedFloorplan!.floorNumber}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      icon: const Icon(Icons.layers, color: Colors.white),
+                      backgroundColor: AppTheme.concordiaButtonCyan,
                     ),
                   ),
                 ),

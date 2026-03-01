@@ -35,6 +35,7 @@ void main() {
       expect(ivm.loadedBuildingId, null);
       expect(ivm.loadedFloorplans, null);
       expect(ivm.selectedFloorplan, null);
+      expect(ivm.availableFloors, null);
       expect(ivm.isLoading, false);
       expect(ivm.loadFailed, false);
     });
@@ -57,6 +58,9 @@ void main() {
       expect(ivm.loadedFloorplans!.length, 1);
       expect(ivm.selectedFloorplan, isNotNull);
       expect(ivm.selectedFloorplan!.buildingId, "T");
+      expect(ivm.availableFloors, isNotNull);
+      expect(ivm.availableFloors!.length, 1);
+      expect(ivm.availableFloors!.first, 1);
       expect(ivm.isLoading, false);
       expect(ivm.loadFailed, false);
     });
@@ -78,6 +82,34 @@ void main() {
 
       await ivm.initializeBuildingFloorplans("T");
       expect(ivm.loadFailed, true);
+    });
+  });
+
+  group("changeFloor", () {
+    test("changeFloor changes selected floorplan successfully", () async {
+      ivm.loadedFloorplans = {
+        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "floor1.svg", rooms: [], pois: []),
+        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "floor2.svg", rooms: [], pois: []),
+      };
+
+      final success = ivm.changeFloor(1);
+      expect(success, true);
+      expect(ivm.selectedFloorplan, isNotNull);
+      expect(ivm.selectedFloorplan!.floorNumber, 1);
+
+      final success2 = ivm.changeFloor(2);
+      expect(success2, true);
+      expect(ivm.selectedFloorplan, isNotNull);
+      expect(ivm.selectedFloorplan!.floorNumber, 2);
+    });
+
+    test("changeFloor returns false for invalid floor number", () async {
+      await ivm.initializeBuildingFloorplans("T");
+      final success = ivm.changeFloor(2);
+
+      expect(success, false);
+      expect(ivm.selectedFloorplan, isNotNull);
+      expect(ivm.selectedFloorplan!.floorNumber, 1);
     });
   });
 }

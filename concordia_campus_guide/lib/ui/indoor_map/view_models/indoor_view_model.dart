@@ -7,6 +7,7 @@ class IndoorViewModel extends ChangeNotifier {
   String? loadedBuildingId;
 
   Map<int, Floorplan>? loadedFloorplans;
+  List<int>? availableFloors;
   Floorplan? selectedFloorplan;
   bool isLoading = false;
   bool loadFailed = false;
@@ -18,8 +19,7 @@ class IndoorViewModel extends ChangeNotifier {
         loadedBuildingId == buildingId &&
         buildingId == loadedBuildingId &&
         loadedFloorplans != null &&
-        loadedFloorplans!.isNotEmpty &&
-        selectedFloorplan != null) {
+        loadedFloorplans!.isNotEmpty) {
       // already loaded this building's floorplans, no need to reload
       return;
     }
@@ -33,6 +33,7 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans = floorplans;
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
+        availableFloors = loadedFloorplans!.keys.toList()..sort();
       }
     } catch (e) {
       loadFailed = true;
@@ -46,5 +47,17 @@ class IndoorViewModel extends ChangeNotifier {
     loadFailed = false;
     isLoading = false;
     notifyListeners();
+  }
+
+  bool changeFloor(final int floorNumber) {
+    if (loadedFloorplans == null || !loadedFloorplans!.containsKey(floorNumber)) {
+      return false;
+    }
+
+    if (selectedFloorplan!.floorNumber != floorNumber) {
+      selectedFloorplan = loadedFloorplans![floorNumber];
+      notifyListeners();
+    }
+    return true;
   }
 }
