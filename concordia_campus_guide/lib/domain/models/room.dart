@@ -1,5 +1,6 @@
 import "package:concordia_campus_guide/domain/exceptions/invalid_location_format_exception.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
+import 'package:concordia_campus_guide/utils/pattern_extensions.dart';
 
 class Room {
   String roomNumber;
@@ -40,9 +41,13 @@ class Room {
 
   static String _determineRoomNumberFromBuildingId(final String buildingId, final String location) {
     final String lowerBuildingId = buildingId.toLowerCase();
+    final Pattern mbBuildingRoomPattern = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}");
+    final Pattern ccHBuildingRoomPattern = RegExp(r"\bRm\.?\s*(\d{3,4})");
+    final Pattern otherBuildingRoomPattern = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)");
+
     if (lowerBuildingId == "mb") {
-      if (RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}").hasMatch(location)) {
-        final match = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}").firstMatch(location);
+      if (mbBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = mbBuildingRoomPattern.firstMatchOf(location);
         return match!.group(0)!.split("Rm").last.trim();
       } else {
         throw InvalidLocationFormatException(
@@ -50,17 +55,17 @@ class Room {
         );
       }
     } else if (lowerBuildingId == "cc" || lowerBuildingId == "h") {
-      if (RegExp(r"\bRm\.?\s*(\d{3,4})").hasMatch(location)) {
-        final match = RegExp(r"\bRm\.?\s*(\d{3,4})").firstMatch(location);
-        return match!.group(1)!.split("Rm").last.trim();
+      if (ccHBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = ccHBuildingRoomPattern.firstMatchOf(location);
+        return match!.group(1)!.trim();
       } else {
         throw InvalidLocationFormatException(
           "Room number format is invalid in location: $location",
         );
       }
     } else {
-      if (RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)").hasMatch(location)) {
-        final match = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)").firstMatch(location);
+      if (otherBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = otherBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
       } else {
         throw InvalidLocationFormatException(

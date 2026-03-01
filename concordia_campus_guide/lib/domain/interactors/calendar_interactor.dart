@@ -5,6 +5,7 @@ import "package:concordia_campus_guide/domain/exceptions/invalid_location_format
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
+import "package:concordia_campus_guide/utils/pattern_extensions.dart";
 
 class CalendarInteractor {
   final GoogleCalendarRepository _calendarRepo;
@@ -58,9 +59,12 @@ class CalendarInteractor {
     final allBuildings = await _buildingRepo.loadBuildings(buildingDataPath);
     final List<Building> buildings = allBuildings.values.toList();
     for (final building in buildings) {
-      final eventLocationBuildingName = RegExp(
+      final Pattern buildingNamePattern = RegExp(
         r"-\s*(.*?)\s*Rm",
-      ).firstMatch(location.trim())?.group(1);
+      );
+      final match = buildingNamePattern.firstMatchOf(location.trim());
+
+      final eventLocationBuildingName = match?.group(1);
       if (building.name.contains(eventLocationBuildingName!) ||
           eventLocationBuildingName.contains(building.name)) {
         return building.id;

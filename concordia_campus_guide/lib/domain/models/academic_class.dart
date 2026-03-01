@@ -1,5 +1,6 @@
 import "package:concordia_campus_guide/domain/exceptions/invalid_event_format_exception.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
+import "package:concordia_campus_guide/utils/pattern_extensions.dart";
 import "package:googleapis/calendar/v3.dart";
 
 class AcademicClass {
@@ -13,14 +14,14 @@ class AcademicClass {
   /// Constructor for Academic Class. Takes a calendar event as
   /// input and attempts to create a class from it.
   ///
-  /// Throw FormatException if the Event has unexpected format
+  /// Throw InvalidEventFormatException if the Event has unexpected format
   factory AcademicClass.fromCalendar(final Event calendarEvent, final Room room) {
     final name = calendarEvent.summary ?? "";
     final startTime = calendarEvent.start?.dateTime;
     final endTime = calendarEvent.end?.dateTime;
 
     if (!checkEventFormat(calendarEvent)) {
-      throw FormatException("Calendar event does not match expected format");
+      throw InvalidEventFormatException("Calendar event does not match expected format");
     }
 
     // Convert start and end times to local timezone for easier display in the UI
@@ -47,8 +48,8 @@ class AcademicClass {
   }
 
   String getCourseCode() {
-    final regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
-    final match = regex.firstMatch(name);
+    final Pattern regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
+    final match = regex.firstMatchOf(name);
     if (match != null) {
       return match.group(0)!.replaceAll(" ", "");
     }
@@ -56,8 +57,8 @@ class AcademicClass {
   }
 
   String classType() {
-    final regex = RegExp(r"\b(LEC|TUT|LAB)\b", caseSensitive: false);
-    final match = regex.firstMatch(name);
+    final Pattern regex = RegExp(r"\b(LEC|TUT|LAB)\b", caseSensitive: false);
+    final match = regex.firstMatchOf(name);
 
     if (match != null) {
       final type = match.group(1)?.toUpperCase();

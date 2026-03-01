@@ -38,7 +38,7 @@ void main() {
       );
       final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<InvalidEventFormatException>()));
     });
 
     test("throws when start time is missing", () {
@@ -49,7 +49,7 @@ void main() {
       );
       final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<InvalidEventFormatException>()));
     });
 
     test("throws when end time is missing", () {
@@ -60,7 +60,7 @@ void main() {
       );
       final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<InvalidEventFormatException>()));
     });
 
     test("throws when location is missing", () {
@@ -71,7 +71,7 @@ void main() {
       );
       final room = Room("235", "2", Campus.sgw, "cl");
 
-      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<FormatException>()));
+      expect(() => AcademicClass.fromCalendar(event, room), throwsA(isA<InvalidEventFormatException>()));
     });
   });
 
