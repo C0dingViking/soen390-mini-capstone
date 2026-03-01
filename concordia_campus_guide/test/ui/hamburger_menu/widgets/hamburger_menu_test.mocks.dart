@@ -930,6 +930,12 @@ class MockHomeViewModel extends _i1.Mock implements _i12.HomeViewModel {
   );
 
   @override
+  void clearUpcomingClass() => super.noSuchMethod(
+    Invocation.method(#clearUpcomingClass, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   void clearNextClassDialog() => super.noSuchMethod(
     Invocation.method(#clearNextClassDialog, []),
     returnValueForMissingStub: null,

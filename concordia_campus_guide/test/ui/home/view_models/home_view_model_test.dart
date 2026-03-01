@@ -1320,7 +1320,7 @@ void main() {
     });
   });
 
-  group("HomeViewModel next class state", () {
+  group("HomeViewModel next class", () {
     late HomeViewModel hvm;
 
     setUp(() {

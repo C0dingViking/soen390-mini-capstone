@@ -61,6 +61,8 @@ class HamburgerMenu extends StatelessWidget {
                 if (!context.mounted) return;
 
                 context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
+                // To clear cache and force calendar refresh
+                context.read<HomeViewModel>().clearUpcomingClass();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Google Calendar imported successfully!")),
                 );

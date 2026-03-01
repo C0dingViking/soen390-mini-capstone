@@ -1,6 +1,6 @@
 import "package:concordia_campus_guide/domain/exceptions/invalid_location_format_exception.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
-import 'package:concordia_campus_guide/utils/pattern_extensions.dart';
+import "package:concordia_campus_guide/utils/pattern_extensions.dart";
 
 class Room {
   String roomNumber;
@@ -78,17 +78,21 @@ class Room {
   static String _determineFloorFromRoomNumber(final String roomNumber) {
     late String floor;
 
+    final Pattern numberRoomPattern = RegExp(r"^\d{3,}$");
+    final Pattern twoDigitRoomPattern = RegExp(r"^\d{2}$");
+
     if (roomNumber.contains(".")) {
       // For formats like "S2.330"
       floor = roomNumber.split(".").first;
-    } else if (RegExp(r"^\d{3,}$").hasMatch(roomNumber)) {
+    } else if (numberRoomPattern.firstMatchOf(roomNumber) != null) {
       // For formats like "235"
       floor = (int.parse(roomNumber) ~/ 100).toString();
-    } else if (RegExp(r"^\d{2}$").hasMatch(roomNumber)) {
+    } else if (twoDigitRoomPattern.firstMatchOf(roomNumber) != null) {
       // For formats like "05"
       floor = (int.parse(roomNumber) ~/ 10).toString();
     } else {
-      floor = roomNumber.replaceAll(RegExp(r"\d.*"), "");
+      final Pattern replacePattern = RegExp(r"\d.*");
+      floor = roomNumber.replaceAll(replacePattern, "");
       if (floor.isEmpty) {
         floor = roomNumber;
       }

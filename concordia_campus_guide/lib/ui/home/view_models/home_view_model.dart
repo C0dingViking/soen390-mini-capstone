@@ -816,6 +816,13 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> showNextClass() async {
+    // To prevent unnecessary API calls and improve prefomance
+    if (upcomingClass != null && upcomingClass!.startTime.isAfter(DateTime.now())) {
+      _showNextClassDialog = true;
+      notifyListeners();
+      return;
+    }
+
     try {
       // Acceptance Criteria: Only show classes that are upcoming today
       final now = DateTime.now();
@@ -841,5 +848,11 @@ class HomeViewModel extends ChangeNotifier {
       generateInfoMessage = "$errorMessageText. Please use search to find your destination.";
       notifyListeners();
     }
+  }
+
+  void clearUpcomingClass() {
+    upcomingClass = null;
+    _showNextClassDialog = false;
+    notifyListeners();
   }
 }
