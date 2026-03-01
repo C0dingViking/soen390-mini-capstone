@@ -59,9 +59,7 @@ class CalendarInteractor {
     final allBuildings = await _buildingRepo.loadBuildings(buildingDataPath);
     final List<Building> buildings = allBuildings.values.toList();
     for (final building in buildings) {
-      final Pattern buildingNamePattern = RegExp(
-        r"-\s*(.*?)\s*Rm",
-      );
+      final Pattern buildingNamePattern = RegExp(r"-\s*(.*?)\s*Rm");
       final match = buildingNamePattern.firstMatchOf(location.trim());
 
       final eventLocationBuildingName = match?.group(1);
