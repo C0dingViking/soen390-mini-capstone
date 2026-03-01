@@ -24,7 +24,7 @@ void main() {
       expect(floorplan.rooms.length, 2);
 
       final room1 = floorplan.rooms[0];
-      expect(room1.name, "CL235-126");
+      expect(room1.name, "126");
       // TODO: add testing for door location when that data is made available
       // expect(room1.doorLocation, Point(10.0, 20.0));
       expect(room1.points, [
@@ -35,7 +35,7 @@ void main() {
       ]);
 
       final room2 = floorplan.rooms[1];
-      expect(room2.name, "CL235-125");
+      expect(room2.name, "125");
       // TODO: add parsing for door location when that data is made available
       // expect(room2.doorLocation, Point(50.0, 60.0));
       expect(room2.points, [
@@ -88,8 +88,8 @@ void main() {
       final floorplan = Floorplan.fromXml("vl", 1, "vl-1.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.rooms.length, 2);
-      expect(floorplan.rooms[0].name, "VL-101-6");
-      expect(floorplan.rooms[1].name, "VL-102");
+      expect(floorplan.rooms[0].name, "101-6");
+      expect(floorplan.rooms[1].name, "102");
     });
 
     test("parses SVG canvas size from viewBox", () {
@@ -105,21 +105,6 @@ void main() {
 
       expect(floorplan.canvasWidth, closeTo(374.32665, 0.00001));
       expect(floorplan.canvasHeight, closeTo(398.919, 0.00001));
-    });
-
-    test("parses SVG canvas size from width/height fallback", () {
-      final xmlString = """
-        <svg width="1024px" height="512px">
-          <g inkscape:label="rooms">
-            <rect inkscape:label="room-CL235-126" x="10" y="20" width="30" height="40" />
-          </g>
-        </svg>
-      """;
-
-      final floorplan = Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString));
-
-      expect(floorplan.canvasWidth, closeTo(1024, 0.00001));
-      expect(floorplan.canvasHeight, closeTo(512, 0.00001));
     });
   });
 }

@@ -1,4 +1,5 @@
 import "dart:math";
+import "dart:ui" show PointerDeviceKind;
 
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
@@ -38,7 +39,20 @@ class TestIndoorViewModel extends IndoorViewModel {
         buildingId: path,
         floorNumber: 1,
         svgPath: "testfloor1.svg",
-        rooms: [],
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
         pois: [],
       ),
       2: Floorplan(
@@ -46,8 +60,8 @@ class TestIndoorViewModel extends IndoorViewModel {
         floorNumber: 2,
         svgPath: "testfloor2.svg",
         canvasWidth: 100,
-      canvasHeight: 100,
-      rooms: [],
+        canvasHeight: 100,
+        rooms: [],
         pois: [],
       ),
     };
@@ -241,6 +255,29 @@ void main() {
       await tester.tap(find.text("Floor 2"));
       await tester.pumpAndSettle();
       expect(find.text("Failed to change floor. Please try again."), findsOneWidget);
+    });
+
+    testWidgets("tap on map populates destination field", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      final gestureFinder = find
+          .ancestor(
+            of: find.byType(InteractiveViewer),
+            matching: find.byType(GestureDetector),
+          )
+          .first;
+
+      final gestureWidget = tester.widget<GestureDetector>(gestureFinder);
+      final size = tester.getSize(gestureFinder);
+      final tapPosition = Offset(size.width / 2, size.height / 2);
+
+      gestureWidget.onTapUp!(
+        TapUpDetails(localPosition: tapPosition, kind: PointerDeviceKind.touch),
+      );
+      await tester.pump();
+
+      final destinationTextField = tester.widgetList<TextField>(find.byType(TextField)).last;
+      expect(destinationTextField.controller?.text, "T 110");
     });
   });
 }

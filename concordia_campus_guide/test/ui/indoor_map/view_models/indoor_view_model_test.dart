@@ -91,6 +91,7 @@ void main() {
         1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "floor1.svg", rooms: [], pois: []),
         2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "floor2.svg", rooms: [], pois: []),
       };
+      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
 
       final success = ivm.changeFloor(1);
       expect(success, true);

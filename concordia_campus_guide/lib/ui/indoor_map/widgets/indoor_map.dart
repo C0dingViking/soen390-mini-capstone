@@ -32,6 +32,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
   final floorPickerSpacing = 16.0;
+  final searchBarSpacingTop = 8.0;
+  final searchBarSpacingLeft = 64.0;
+  final searchBarSpacingRight = 16.0;
 
   late IndoorViewModel _viewModel;
 
@@ -301,9 +304,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  top: 8,
-                  left: 64,
-                  right: 16,
+                  top: searchBarSpacingTop,
+                  left: searchBarSpacingLeft,
+                  right: searchBarSpacingRight,
                   child: SafeArea(
                     child: IndoorSearchBar(destinationController: _destinationController),
                   ),
