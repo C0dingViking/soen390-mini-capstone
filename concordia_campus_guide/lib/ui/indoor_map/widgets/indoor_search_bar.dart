@@ -2,7 +2,10 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:flutter/material.dart";
 
 class IndoorSearchBar extends StatefulWidget {
-  const IndoorSearchBar({super.key});
+  final TextEditingController? startController;
+  final TextEditingController? destinationController;
+
+  const IndoorSearchBar({super.key, this.startController, this.destinationController});
 
   @override
   State<IndoorSearchBar> createState() => _IndoorSearchBarState();
@@ -12,13 +15,70 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   static const double _cardRadius = 12;
   static const double _cardElevation = 4.0;
 
-  final TextEditingController _startController = TextEditingController();
-  final TextEditingController _destinationController = TextEditingController();
+  late TextEditingController _startController;
+  late TextEditingController _destinationController;
+  late bool _ownsStartController;
+  late bool _ownsDestinationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _startController = widget.startController ?? TextEditingController();
+    _destinationController = widget.destinationController ?? TextEditingController();
+    _ownsStartController = widget.startController == null;
+    _ownsDestinationController = widget.destinationController == null;
+
+    _startController.addListener(_onFieldTextChanged);
+    _destinationController.addListener(_onFieldTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant final IndoorSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.startController != widget.startController) {
+      _startController.removeListener(_onFieldTextChanged);
+      if (_ownsStartController) {
+        _startController.dispose();
+      }
+
+      _startController = widget.startController ?? TextEditingController();
+      _ownsStartController = widget.startController == null;
+      _startController.addListener(_onFieldTextChanged);
+    }
+
+    if (oldWidget.destinationController != widget.destinationController) {
+      _destinationController.removeListener(_onFieldTextChanged);
+      if (_ownsDestinationController) {
+        _destinationController.dispose();
+      }
+
+      _destinationController = widget.destinationController ?? TextEditingController();
+      _ownsDestinationController = widget.destinationController == null;
+      _destinationController.addListener(_onFieldTextChanged);
+    }
+  }
+
+  void _onFieldTextChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
 
   @override
   void dispose() {
-    _startController.dispose();
-    _destinationController.dispose();
+    _startController.removeListener(_onFieldTextChanged);
+    _destinationController.removeListener(_onFieldTextChanged);
+
+    if (_ownsStartController) {
+      _startController.dispose();
+    }
+
+    if (_ownsDestinationController) {
+      _destinationController.dispose();
+    }
+
     super.dispose();
   }
 
@@ -38,7 +98,6 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
             children: [
               TextField(
                 controller: _startController,
-                onChanged: (_) => setState(() {}),
                 decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
                   hintText: "Current location",
                   prefixIcon: Icon(Icons.trip_origin),
@@ -56,7 +115,6 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               const Divider(height: 1),
               TextField(
                 controller: _destinationController,
-                onChanged: (_) => setState(() {}),
                 textInputAction: TextInputAction.search,
                 decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
                   hintText: "Choose destination",

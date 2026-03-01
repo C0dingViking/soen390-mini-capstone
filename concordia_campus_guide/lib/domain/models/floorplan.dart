@@ -34,6 +34,8 @@ class Floorplan {
   final String buildingId;
   final int floorNumber;
   final String svgPath;
+  final double canvasWidth;
+  final double canvasHeight;
   late List<IndoorMapRoom> rooms;
   late List<PointOfInterest> pois;
 
@@ -41,6 +43,8 @@ class Floorplan {
     required this.buildingId,
     required this.floorNumber,
     required this.svgPath,
+    this.canvasWidth = 0,
+    this.canvasHeight = 0,
     this.rooms = const [],
     this.pois = const [],
   });
@@ -51,10 +55,25 @@ class Floorplan {
     final String svgPath,
     final XmlDocument xmlData,
   ) {
+    final viewBox = xmlData.rootElement.getAttribute("viewBox");
+
+    double parsedCanvasWidth = 0;
+    double parsedCanvasHeight = 0;
+
+    if (viewBox != null && viewBox.trim().isNotEmpty) {
+      final parts = viewBox.trim().split(RegExp(r"[\s,]+"));
+      if (parts.length == 4) {
+        parsedCanvasWidth = double.tryParse(parts[2]) ?? 0;
+        parsedCanvasHeight = double.tryParse(parts[3]) ?? 0;
+      }
+    }
+
     final Floorplan floorplan = Floorplan(
       buildingId: buildingId,
       floorNumber: floorNumber,
       svgPath: svgPath,
+      canvasWidth: parsedCanvasWidth,
+      canvasHeight: parsedCanvasHeight,
     );
 
     final roomsLayer = xmlData
@@ -74,7 +93,7 @@ class Floorplan {
   }
 
   List<IndoorMapRoom> _parseRoomData(final XmlElement roomLayer) {
-    final roomRegex = RegExp(r"^room-([A-Za-z]+)(\d+)-(\d+)$");
+    final roomRegex = RegExp(r"^room-(?:.*?-)?(\d+(?:-\d+)?)$");
     final List<IndoorMapRoom> rooms = [];
 
     for (final element in [
@@ -85,7 +104,7 @@ class Floorplan {
       if (match == null) {
         continue;
       }
-      final roomNumber = match.group(3)!;
+      final roomNumber = match.group(1)!;
 
       List<Point<double>> points = [];
       if (element.name.local == "rect") {

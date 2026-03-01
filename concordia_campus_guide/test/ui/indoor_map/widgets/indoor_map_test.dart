@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
@@ -16,7 +18,13 @@ class TestIndoorViewModel extends IndoorViewModel {
 
   TestIndoorViewModel() : super(floorplanInteractor: FloorplanInteractor()) {
     // provide a dummy floorplan so the widget's initial build doesn't crash
-    selectedFloorplan = Floorplan(buildingId: "T", floorNumber: 1, svgPath: "");
+    selectedFloorplan = Floorplan(
+      buildingId: "T",
+      floorNumber: 1,
+      svgPath: "",
+      canvasWidth: 100,
+      canvasHeight: 100,
+    );
   }
 
   @override
@@ -37,7 +45,9 @@ class TestIndoorViewModel extends IndoorViewModel {
         buildingId: path,
         floorNumber: 2,
         svgPath: "testfloor2.svg",
-        rooms: [],
+        canvasWidth: 100,
+      canvasHeight: 100,
+      rooms: [],
         pois: [],
       ),
     };
@@ -102,6 +112,96 @@ void main() {
       await pumpHomeScreen(tester, false);
       await tester.pumpAndSettle();
       expect(find.byType(IndoorMapView), findsNothing);
+    });
+
+    test("maps tap position to clicked room name", () {
+      final floorplan = Floorplan(
+        buildingId: "T",
+        floorNumber: 1,
+        svgPath: "",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
+      );
+
+      final roomName = resolveRoomNameFromTapPosition(
+        const Offset(50, 50),
+        const Size(100, 100),
+        floorplan,
+      );
+
+      expect(roomName, equals("110"));
+    });
+
+    test("returns null when tap is outside room area", () {
+      final floorplan = Floorplan(
+        buildingId: "T",
+        floorNumber: 1,
+        svgPath: "",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
+      );
+
+      final roomName = resolveRoomNameFromTapPosition(
+        const Offset(150, 50),
+        const Size(100, 100),
+        floorplan,
+      );
+
+      expect(roomName, isNull);
+    });
+
+    test("returns null for taps in letterboxed area outside SVG content", () {
+      final floorplan = Floorplan(
+        buildingId: "T",
+        floorNumber: 1,
+        svgPath: "",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
+      );
+
+      final roomName = resolveRoomNameFromTapPosition(
+        const Offset(50, 25),
+        const Size(100, 200),
+        floorplan,
+      );
+
+      expect(roomName, isNull);
     });
 
     testWidgets("floor picker button displays the name of the current floor", (final tester) async {
