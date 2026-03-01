@@ -290,6 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     zoom: 15,
                   ),
                   onMapCreated: _coords.onMapCreated,
+                  onCameraMove: hvm.onMapCameraMove,
                   myLocationEnabled: hvm.myLocationEnabled,
                   polygons: hvm.buildingOutlines,
                   markers: hvm.mapMarkers,

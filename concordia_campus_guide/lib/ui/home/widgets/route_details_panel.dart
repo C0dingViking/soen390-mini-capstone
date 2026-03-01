@@ -214,9 +214,14 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           _buildModeSelector(routeOptions, selectedMode),
           const SizedBox(height: 12),
           _buildRouteSummary(option, selectedMode),
-          if (!_isCollapsed && selectedMode == RouteMode.transit && option != null) ...[
+          if (!_isCollapsed &&
+              option != null &&
+              option.steps.isNotEmpty &&
+              (selectedMode == RouteMode.transit ||
+                  selectedMode == RouteMode.walking ||
+                  selectedMode == RouteMode.bicycling)) ...[
             const SizedBox(height: 16),
-            _buildTransitSteps(option.steps),
+            _buildRouteSteps(option.steps, selectedMode),
           ],
         ],
       ),
@@ -403,15 +408,21 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               ],
             ),
           ),
-          if (_isCollapsed && selectedMode == RouteMode.transit && option.steps.isNotEmpty)
+          if (_isCollapsed &&
+              option.steps.isNotEmpty &&
+              (selectedMode == RouteMode.transit ||
+                  selectedMode == RouteMode.walking ||
+                  selectedMode == RouteMode.bicycling))
             Icon(Icons.keyboard_arrow_up, color: Colors.grey[700]),
         ],
       ),
     );
   }
 
-  Widget _buildTransitSteps(final List<RouteStep> steps) {
-    final suggestedTransitDeparture = _suggestedTransitDepartureTime(steps);
+  Widget _buildRouteSteps(final List<RouteStep> steps, final RouteMode selectedMode) {
+    final suggestedTransitDeparture = selectedMode == RouteMode.transit
+        ? _suggestedTransitDepartureTime(steps)
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -434,6 +445,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final travelMode = step.travelMode;
     final instruction = step.instruction;
     final duration = _formatDuration(step.durationSeconds);
+    final distance = _formatDistance(step.distanceMeters);
+    final nonTransitMeta = [distance, duration].whereType<String>().join(" • ");
     final transitDetails = step.transitDetails;
 
     IconData icon;
@@ -457,6 +470,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           icon = Icons.directions_transit;
           iconColor = AppTheme.concordiaDarkBlue;
       }
+    } else if (travelMode == "BICYCLING") {
+      icon = Icons.directions_bike;
+      iconColor = AppTheme.concordiaTurquoise;
     } else {
       icon = Icons.directions_walk;
       iconColor = AppTheme.concordiaTurquoise;
@@ -547,8 +563,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                     ),
                 ] else ...[
                   Text(instruction, style: const TextStyle(fontSize: 13)),
-                  if (duration != null)
-                    Text(duration, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                  if (nonTransitMeta.isNotEmpty)
+                    Text(nonTransitMeta, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                 ],
               ],
             ),
@@ -564,10 +580,12 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return "Walk";
       case RouteMode.bicycling:
         return "Bike";
-      case RouteMode.driving:
-        return "Drive";
       case RouteMode.transit:
         return "Transit";
+      case RouteMode.shuttle:
+        return "Shuttle";
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
@@ -577,10 +595,12 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return Icons.directions_walk;
       case RouteMode.bicycling:
         return Icons.directions_bike;
-      case RouteMode.driving:
-        return Icons.directions_car;
       case RouteMode.transit:
         return Icons.directions_transit;
+      case RouteMode.shuttle:
+        return Icons.airport_shuttle;
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
@@ -590,20 +610,23 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         return AppTheme.concordiaTurquoise;
       case RouteMode.bicycling:
         return AppTheme.concordiaTurquoise;
-      case RouteMode.driving:
-        return AppTheme.concordiaMaroon;
       case RouteMode.transit:
         return AppTheme.concordiaDarkBlue;
+      case RouteMode.shuttle:
+        return AppTheme.concordiaMaroon;
+      default:
+        throw StateError("Unsupported route mode: $mode");
     }
   }
 
   String? _formatDistance(final double? meters) {
     if (meters == null) return null;
-    if (meters >= 1000) {
-      final km = meters / 1000;
+    final roundedMeters = (meters / 10).round() * 10.0;
+    if (roundedMeters >= 1000) {
+      final km = roundedMeters / 1000;
       return "${km.toStringAsFixed(1)} km";
     }
-    return "${meters.toStringAsFixed(0)} m";
+    return "${roundedMeters.toStringAsFixed(0)} m";
   }
 
   String? _formatDuration(final int? seconds) {
