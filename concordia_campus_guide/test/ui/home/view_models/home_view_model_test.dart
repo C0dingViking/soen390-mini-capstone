@@ -1193,6 +1193,7 @@ void main() {
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,
+        calendarInteractor: _FakeCalendarInteractor(),
       );
 
       final start = Coordinate(latitude: 45.0, longitude: -73.0);
