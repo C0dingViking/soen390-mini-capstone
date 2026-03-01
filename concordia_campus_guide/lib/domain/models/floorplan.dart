@@ -93,7 +93,7 @@ class Floorplan {
   }
 
   List<IndoorMapRoom> _parseRoomData(final XmlElement roomLayer) {
-    final roomRegex = RegExp(r"^room-(?:.*?-)?(\d+(?:-\d+)?)$");
+    final roomRegex = RegExp(r"^room-(?:.*?-)?([A-Za-z0-9.-]+)$");
     final List<IndoorMapRoom> rooms = [];
 
     for (final element in [

@@ -301,27 +301,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  bottom: floorPickerSpacing,
-                  left: floorPickerSpacing,
-                  child: SafeArea(
-                    child: FloatingActionButton.extended(
-                      heroTag: "floor_picker",
-                      onPressed: () => _showFloorPicker(context),
-                      label: Text(
-                        "${widget.building.id.toUpperCase()}${ivm.selectedFloorplan!.floorNumber}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      icon: const Icon(Icons.layers, color: Colors.white),
-                      backgroundColor: AppTheme.concordiaButtonCyan,
-                    ),
-                  ),
-                ),
-
-                Positioned(
                   top: 8,
                   left: 64,
                   right: 16,
