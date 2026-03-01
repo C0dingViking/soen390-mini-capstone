@@ -76,6 +76,8 @@ void main() {
       await pumpHomeScreen(tester, true);
       expect(ivm.initCalled, isTrue);
       expect(ivm.initPath, equals("T"));
+      expect(find.text("Current location"), findsAtLeastNWidgets(1));
+      expect(find.text("Choose destination"), findsOneWidget);
     });
 
     testWidgets("displays loading indicator when view model is loading", (final tester) async {

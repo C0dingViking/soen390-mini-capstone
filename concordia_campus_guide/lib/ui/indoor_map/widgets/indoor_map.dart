@@ -2,6 +2,7 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
@@ -107,6 +108,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     ),
                   ),
                 ),
+
+                Positioned(top: 8, left: 64, right: 16, child: SafeArea(child: IndoorSearchBar())),
               ],
             ),
           );
