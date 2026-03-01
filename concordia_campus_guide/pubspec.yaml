@@ -94,6 +94,7 @@ flutter:
     - assets/maps/building_data.json
     - assets/floorplans/floorplan_manifest.json
     - assets/floorplans/mb/
+    - assets/floorplans/vl/
     - assets/floorplans/h/
     - assets/images/buildings/LOY/
     - assets/images/buildings/SGW/
