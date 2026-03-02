@@ -29,7 +29,7 @@ class AcademicClass {
   }
 
   static bool checkEventFormat(final Event event) {
-    final Pattern courseCodePattern = RegExp(r"([A-Z]{2,4}\s?\d{3})");
+    final Pattern courseCodePattern = RegExp(r"([A-Z]{2,4}\s?\d{3,4})");
     final Pattern classTypePattern = RegExp(r"\b(LEC|TUT|LAB)\b");
     if (event.summary == null ||
         event.summary!.isEmpty ||
@@ -50,7 +50,7 @@ class AcademicClass {
   }
 
   String getCourseCode() {
-    final Pattern regex = RegExp(r"([A-Z]{2,4}\s?\d{3})");
+    final Pattern regex = RegExp(r"([A-Z]{2,4}\s?\d{3,4})");
     final match = regex.firstMatchOf(name);
     if (match != null) {
       return match.group(0)!.replaceAll(" ", "");

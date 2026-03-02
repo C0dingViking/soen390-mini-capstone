@@ -105,6 +105,57 @@ void main() {
       expect(room.buildingId, "h");
     });
 
+    test("parses CL building with 4-digit room", () {
+      const location = "Sir George Williams Campus - CL Building Rm 1234";
+
+      final room = Room.fromLocation(location, "cl");
+
+      expect(room.roomNumber, "1234");
+      expect(room.floor, "12");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "cl");
+    });
+
+    test("parses FG building room with B prefix", () {
+      const location = "Sir George Williams Campus - Faubourg Building (FG) Rm B123";
+
+      final room = Room.fromLocation(location, "fg");
+
+      expect(room.roomNumber, "B123");
+      expect(room.floor, "B1");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "fg");
+    });
+
+    test("parses FB building room with S prefix", () {
+      const location = "Sir George Williams Campus - Faubourg Tower (FB) Rm S123";
+
+      final room = Room.fromLocation(location, "fb");
+
+      expect(room.roomNumber, "S123");
+      expect(room.floor, "S1");
+      expect(room.campus, Campus.sgw);
+      expect(room.buildingId, "fb");
+    });
+
+    test("throws for FG when room prefix is invalid", () {
+      const location = "Sir George Williams Campus - Faubourg Building (FG) Rm A123";
+
+      expect(
+        () => Room.fromLocation(location, "fg"),
+        throwsA(isA<InvalidLocationFormatException>()),
+      );
+    });
+
+    test("throws for FB when room is not 3 digits with optional S", () {
+      const location = "Sir George Williams Campus - Faubourg Tower (FB) Rm 12";
+
+      expect(
+        () => Room.fromLocation(location, "fb"),
+        throwsA(isA<InvalidLocationFormatException>()),
+      );
+    });
+
     test("throws for MB when room format is invalid", () {
       const location = "Sir George Williams Campus - John Molson School of Business Rm 820";
 

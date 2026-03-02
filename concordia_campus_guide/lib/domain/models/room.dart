@@ -42,7 +42,9 @@ class Room {
   static String _determineRoomNumberFromBuildingId(final String buildingId, final String location) {
     final String lowerBuildingId = buildingId.toLowerCase();
     final Pattern mbBuildingRoomPattern = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}");
-    final Pattern ccHBuildingRoomPattern = RegExp(r"\bRm\.?\s*(\d{3,4})");
+    final Pattern ccHClBuildingRoomPattern = RegExp(r"\bRm\.?\s*(\d{3,4})");
+    final Pattern fgBuildingRoomPattern = RegExp(r"\bRm\s*((?:[BC])?\d{3})\b");
+    final Pattern fbBuildingRoomPattern = RegExp(r"\bRm\s*((?:S)?\d{3})\b");
     final Pattern otherBuildingRoomPattern = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)");
 
     if (lowerBuildingId == "mb") {
@@ -54,9 +56,27 @@ class Room {
           "Room number format is invalid in location: $location",
         );
       }
-    } else if (lowerBuildingId == "cc" || lowerBuildingId == "h") {
-      if (ccHBuildingRoomPattern.firstMatchOf(location) != null) {
-        final match = ccHBuildingRoomPattern.firstMatchOf(location);
+    } else if (lowerBuildingId == "cc" || lowerBuildingId == "h" || lowerBuildingId == "cl") {
+      if (ccHClBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = ccHClBuildingRoomPattern.firstMatchOf(location);
+        return match!.group(1)!.trim();
+      } else {
+        throw InvalidLocationFormatException(
+          "Room number format is invalid in location: $location",
+        );
+      }
+    } else if (lowerBuildingId == "fg") {
+      if (fgBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = fgBuildingRoomPattern.firstMatchOf(location);
+        return match!.group(1)!.trim();
+      } else {
+        throw InvalidLocationFormatException(
+          "Room number format is invalid in location: $location",
+        );
+      }
+    } else if (lowerBuildingId == "fb") {
+      if (fbBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = fbBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
       } else {
         throw InvalidLocationFormatException(
@@ -80,6 +100,7 @@ class Room {
 
     final Pattern numberRoomPattern = RegExp(r"^\d{3,}$");
     final Pattern twoDigitRoomPattern = RegExp(r"^\d{2}$");
+    final Pattern letterThreeDigitRoomPattern = RegExp(r"^[A-Za-z]\d{3}$");
 
     if (roomNumber.contains(".")) {
       // For formats like "S2.330"
@@ -90,6 +111,9 @@ class Room {
     } else if (twoDigitRoomPattern.firstMatchOf(roomNumber) != null) {
       // For formats like "05"
       floor = (int.parse(roomNumber) ~/ 10).toString();
+    } else if (letterThreeDigitRoomPattern.firstMatchOf(roomNumber) != null) {
+      // For formats like "A235"
+      floor = roomNumber.substring(0, 2);
     } else {
       final Pattern replacePattern = RegExp(r"\d.*");
       floor = roomNumber.replaceAll(replacePattern, "");

@@ -107,15 +107,15 @@ void main() {
       expect(result.first.room.buildingId, "h");
     });
 
-    test("getUpcomingClasses throws when class has unknown building name", () async {
+    test("maps Faubourg Building (FG) to fg building id", () async {
       final mockRepo = MockGoogleCalendarRepository();
 
       final events = [
         Event(
-          summary: "ENGR 201 LEC D",
-          location: "Sir George Williams Campus - Unknown Building Rm 820",
-          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T12:00:00Z")),
-          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T13:00:00Z")),
+          summary: "SOEN 390 LEC",
+          location: "Sir George Williams Campus - Faubourg Building (FG) Rm B123",
+          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
+          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
         ),
       ];
 
@@ -129,8 +129,132 @@ void main() {
 
       final interactor = CalendarInteractor(calendarRepo: mockRepo);
 
-      await expectLater(
-        interactor.getUpcomingClasses(buildingDataPath: buildingDataPath),
+      final result = await interactor.getUpcomingClasses(
+        buildingDataPath: "test/assets/building_testdata.json",
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.room.buildingId, "fg");
+      expect(result.first.room.roomNumber, "B123");
+    });
+
+    test("maps Faubourg Tower (FB) to fb building id", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      final events = [
+        Event(
+          summary: "SOEN 390 LEC",
+          location: "Sir George Williams Campus - Faubourg Tower (FB) Rm S123",
+          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
+          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
+        ),
+      ];
+
+      when(
+        mockRepo.getUpcomingEvents(
+          maxResults: anyNamed("maxResults"),
+          timeMin: anyNamed("timeMin"),
+          timeMax: anyNamed("timeMax"),
+        ),
+      ).thenAnswer((_) async => events);
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      final result = await interactor.getUpcomingClasses(
+        buildingDataPath: "test/assets/building_testdata.json",
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.room.buildingId, "fb");
+      expect(result.first.room.roomNumber, "S123");
+    });
+
+    test("maps CL Building to cl building id", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      final events = [
+        Event(
+          summary: "SOEN 390 LEC",
+          location: "Sir George Williams Campus - CL Building Rm 123",
+          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
+          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
+        ),
+      ];
+
+      when(
+        mockRepo.getUpcomingEvents(
+          maxResults: anyNamed("maxResults"),
+          timeMin: anyNamed("timeMin"),
+          timeMax: anyNamed("timeMax"),
+        ),
+      ).thenAnswer((_) async => events);
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      final result = await interactor.getUpcomingClasses(
+        buildingDataPath: "test/assets/building_testdata.json",
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.room.buildingId, "cl");
+      expect(result.first.room.roomNumber, "123");
+    });
+
+    test("uses unsupported building name as building id fallback", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      final events = [
+        Event(
+          summary: "SOEN 390 LEC",
+          location: "Loyola Campus - Mystery Annex Rm A101",
+          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
+          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
+        ),
+      ];
+
+      when(
+        mockRepo.getUpcomingEvents(
+          maxResults: anyNamed("maxResults"),
+          timeMin: anyNamed("timeMin"),
+          timeMax: anyNamed("timeMax"),
+        ),
+      ).thenAnswer((_) async => events);
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      final result = await interactor.getUpcomingClasses(
+        buildingDataPath: "test/assets/building_testdata.json",
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.room.buildingId, "Mystery Annex");
+      expect(result.first.room.roomNumber, "A101");
+    });
+
+    test("throws when building name cannot be extracted from location", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      final events = [
+        Event(
+          summary: "SOEN 390 LEC",
+          location: "Sir George Williams Campus Rm 820",
+          start: EventDateTime(dateTime: DateTime.parse("2025-01-01T10:00:00Z")),
+          end: EventDateTime(dateTime: DateTime.parse("2025-01-01T11:00:00Z")),
+        ),
+      ];
+
+      when(
+        mockRepo.getUpcomingEvents(
+          maxResults: anyNamed("maxResults"),
+          timeMin: anyNamed("timeMin"),
+          timeMax: anyNamed("timeMax"),
+        ),
+      ).thenAnswer((_) async => events);
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      expect(
+        () => interactor.getUpcomingClasses(buildingDataPath: "test/assets/building_testdata.json"),
         throwsA(isA<InvalidLocationFormatException>()),
       );
     });

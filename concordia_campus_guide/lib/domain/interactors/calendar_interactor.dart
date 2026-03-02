@@ -38,7 +38,10 @@ class CalendarInteractor {
           buildingDataPath: buildingDataPath,
         );
         if (buildingId == null) {
-          throw InvalidLocationFormatException("Class location does not match any known building");
+          // We dont throw here because building name can be a building that is not fully supported
+          throw InvalidLocationFormatException(
+            "Class location does not match any known building: ${event.location}",
+          );
         }
 
         final Room room = Room.fromLocation(event.location ?? "", buildingId);
@@ -58,16 +61,33 @@ class CalendarInteractor {
   }) async {
     final allBuildings = await _buildingRepo.loadBuildings(buildingDataPath);
     final List<Building> buildings = allBuildings.values.toList();
-    for (final building in buildings) {
-      final Pattern buildingNamePattern = RegExp(r"-\s*(.*?)\s*Rm");
-      final match = buildingNamePattern.firstMatchOf(location.trim());
 
-      final eventLocationBuildingName = match?.group(1);
+    final Pattern buildingNamePattern = RegExp(r"-\s*(.*?)\s*Rm");
+    final match = buildingNamePattern.firstMatchOf(location.trim());
+
+    final eventLocationBuildingName = match?.group(1);
+
+    if (eventLocationBuildingName == null || eventLocationBuildingName.isEmpty) {
+      throw InvalidLocationFormatException(
+        "Building name could not be extracted from location: $location",
+      );
+    }
+
+    for (final building in buildings) {
       if (building.name.contains(eventLocationBuildingName!) ||
           eventLocationBuildingName.contains(building.name)) {
         return building.id;
       }
     }
-    return null;
+    if (eventLocationBuildingName.contains("Faubourg Building (FG)")) {
+      return "fg";
+    } else if (eventLocationBuildingName.contains("Faubourg Tower (FB)")) {
+      return "fb";
+    } else if (eventLocationBuildingName.contains("CL Building")) {
+      return "cl";
+    } else {
+      // Since we don't officially support every building, we handle unsupported buildings by treating their name as ID
+      return eventLocationBuildingName;
+    }
   }
 }
