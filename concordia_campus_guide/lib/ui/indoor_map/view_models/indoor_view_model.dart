@@ -19,10 +19,14 @@ class IndoorViewModel extends ChangeNotifier {
         loadedBuildingId == buildingId &&
         buildingId == loadedBuildingId &&
         loadedFloorplans != null &&
-        loadedFloorplans!.isNotEmpty) {
+        loadedFloorplans!.isNotEmpty &&
+        selectedFloorplan != null) {
       // already loaded this building's floorplans, no need to reload
       return;
     }
+
+    isLoading = true;
+    notifyListeners();
 
     try {
       final Map<int, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(buildingId);

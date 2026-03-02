@@ -15,19 +15,45 @@ enum PoiType {
   washroomMale,
   washroomFemale,
   washroomUnisex,
-  waterFountain,
   elevator,
   escalatorUp,
   escalatorDown,
-  stairwell,
+  stairs;
+
+  static PoiType fromString(final String type) {
+    switch (type) {
+      case "washroomMale":
+        return PoiType.washroomMale;
+      case "washroomFemale":
+        return PoiType.washroomFemale;
+      case "washroomUni":
+        return PoiType.washroomUnisex;
+      case "elevator":
+        return PoiType.elevator;
+      case "escalatorUp":
+        return PoiType.escalatorUp;
+      case "escalatorDown":
+        return PoiType.escalatorDown;
+      case "stairs":
+        return PoiType.stairs;
+      default:
+        throw ArgumentError("Unknown POI type: $type");
+    }
+  }
 }
 
 class PointOfInterest {
   final String name;
-  final String description;
+  final PoiType type;
   final Point<double> location;
+  final List<Point<double>> points;
 
-  const PointOfInterest({required this.name, required this.description, required this.location});
+  const PointOfInterest({
+    required this.name,
+    required this.type,
+    required this.location,
+    this.points = const [],
+  });
 }
 
 class Floorplan {
@@ -76,25 +102,37 @@ class Floorplan {
       canvasHeight: parsedCanvasHeight,
     );
 
+    final connectorsLayer = xmlData
+        .findAllElements("g")
+        .firstWhere((final e) => e.getAttribute("inkscape:label") == "connectors");
+
     final roomsLayer = xmlData
         .findAllElements("g")
         .firstWhere((final e) => e.getAttribute("inkscape:label") == "rooms");
-    floorplan.rooms = floorplan._parseRoomData(roomsLayer);
+    floorplan.rooms = floorplan._parseRoomData(
+      buildingId,
+      floorNumber,
+      roomsLayer,
+      connectorsLayer,
+    );
 
-    // TODO: implement POI parsing when that data is made available
-    /*
     final poisLayer = xmlData
         .findAllElements("g")
-        .firstWhere((e) => e.getAttribute("inkscape:label") == "pois");
-    floorplan.pois = [];
-    */
+        .firstWhere((final e) => e.getAttribute("inkscape:label") == "points-of-interest");
+    floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
 
     return floorplan;
   }
 
-  List<IndoorMapRoom> _parseRoomData(final XmlElement roomLayer) {
+  List<IndoorMapRoom> _parseRoomData(
+    final String buildingId,
+    final int floorNumber,
+    final XmlElement roomLayer,
+    final XmlElement connectorsLayer,
+  ) {
     final roomRegex = RegExp(r"^room-(?:.*?-)?([A-Za-z0-9.-]+)$");
     final List<IndoorMapRoom> rooms = [];
+    final connectors = connectorsLayer.findAllElements("ellipse");
 
     for (final element in [
       ...roomLayer.findAllElements("rect"),
@@ -113,10 +151,67 @@ class Floorplan {
         points = parsePointsFromSvgPath(element);
       }
 
-      // TODO: add parsing for door location when that data is made available
-      rooms.add(IndoorMapRoom(name: roomNumber, doorLocation: Point(0, 0), points: points));
+      final expected = "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
+      final doorElement = connectors.firstWhere((final element) {
+        final label = element.getAttribute("inkscape:label") ?? "";
+        return label == expected;
+      }, orElse: () => XmlElement(XmlName("ellipse")));
+
+      final doorLocation = parsePointFromSvgCircle(doorElement);
+
+      rooms.add(IndoorMapRoom(name: roomNumber, doorLocation: doorLocation, points: points));
     }
 
     return rooms;
+  }
+
+  List<PointOfInterest> _parsePoiData(
+    final String buildingId,
+    final int floorNumber,
+    final XmlElement poiLayer,
+    final XmlElement connectorsLayer,
+  ) {
+    final poiRegex = RegExp(r"^([A-Za-z]+)-([0-9]+)$");
+    final List<PointOfInterest> pois = [];
+    final connectors = connectorsLayer.findAllElements("ellipse");
+
+    for (final element in [
+      ...poiLayer.findAllElements("rect"),
+      ...poiLayer.findAllElements("path"),
+    ]) {
+      final match = poiRegex.firstMatch(element.getAttribute("inkscape:label") ?? "");
+      if (match == null) {
+        continue;
+      }
+
+      final poiName = match.group(1)!;
+      final instanceNum = match.group(2)!;
+
+      List<Point<double>> points = [];
+      if (element.name.local == "rect") {
+        points = parsePointsFromSvgRect(element);
+      } else if (element.name.local == "path") {
+        points = parsePointsFromSvgPath(element);
+      }
+
+      final expected = "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
+      final doorElement = connectors.firstWhere((final element) {
+        final label = element.getAttribute("inkscape:label") ?? "";
+        return label == expected;
+      }, orElse: () => XmlElement(XmlName("ellipse")));
+
+      final doorLocation = parsePointFromSvgCircle(doorElement);
+
+      pois.add(
+        PointOfInterest(
+          name: "$poiName-$instanceNum",
+          type: PoiType.fromString(match.group(1)!),
+          location: doorLocation,
+          points: points,
+        ),
+      );
+    }
+
+    return pois;
   }
 }

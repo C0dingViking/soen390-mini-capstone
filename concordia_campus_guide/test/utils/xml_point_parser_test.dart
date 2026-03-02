@@ -82,4 +82,30 @@ void main() {
       expect(points, isEmpty);
     });
   });
+
+  group("parsePointFromSvgCircle", () {
+    test("parses circle with cx and cy", () {
+      final circleElement = XmlDocument.parse('<circle cx="15" cy="25" r="5"/>').rootElement;
+
+      final point = parsePointFromSvgCircle(circleElement);
+
+      expect(point, Point(15.0, 25.0));
+    });
+
+    test("parses circle with missing attributes as zero", () {
+      final circleElement = XmlDocument.parse('<circle r="5"/>').rootElement;
+
+      final point = parsePointFromSvgCircle(circleElement);
+
+      expect(point, Point(0.0, 0.0));
+    });
+
+    test("fails gracefully with malformed svg", () {
+      final circleElement = XmlDocument.parse('<circle cx="a" cy="b" r="c"/>').rootElement;
+
+      final point = parsePointFromSvgCircle(circleElement);
+
+      expect(point, Point(0.0, 0.0));
+    });
+  });
 }

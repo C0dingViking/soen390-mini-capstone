@@ -3,6 +3,19 @@ import "dart:math";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:xml/xml.dart";
 
+Point<double> parsePointFromSvgCircle(final XmlElement circleElement) {
+  try {
+    final cx = double.parse(circleElement.getAttribute("cx") ?? "0");
+    final cy = double.parse(circleElement.getAttribute("cy") ?? "0");
+
+    return Point(cx, cy);
+  } on FormatException catch (e) {
+    logger.e("XML Parser: Invalid SVG circle attribute value", error: e);
+  }
+
+  return Point(0, 0);
+}
+
 List<Point<double>> parsePointsFromSvgRect(final XmlElement rectElement) {
   try {
     final x = double.parse(rectElement.getAttribute("x") ?? "0");
