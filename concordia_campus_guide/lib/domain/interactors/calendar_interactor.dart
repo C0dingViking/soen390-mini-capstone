@@ -38,7 +38,6 @@ class CalendarInteractor {
           buildingDataPath: buildingDataPath,
         );
         if (buildingId == null) {
-          // We dont throw here because building name can be a building that is not fully supported
           throw InvalidLocationFormatException(
             "Class location does not match any known building: ${event.location}",
           );
@@ -68,13 +67,11 @@ class CalendarInteractor {
     final eventLocationBuildingName = match?.group(1);
 
     if (eventLocationBuildingName == null || eventLocationBuildingName.isEmpty) {
-      throw InvalidLocationFormatException(
-        "Building name could not be extracted from location: $location",
-      );
+      return null;
     }
 
     for (final building in buildings) {
-      if (building.name.contains(eventLocationBuildingName!) ||
+      if (building.name.contains(eventLocationBuildingName) ||
           eventLocationBuildingName.contains(building.name)) {
         return building.id;
       }

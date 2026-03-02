@@ -164,6 +164,26 @@ void main() {
         throwsA(isA<InvalidLocationFormatException>()),
       );
     });
+
+    test("throws for other buildings when room token is invalid", () {
+      const location = "Loyola Campus - SP Building Rm #12";
+
+      expect(
+        () => Room.fromLocation(location, "sp"),
+        throwsA(isA<InvalidLocationFormatException>()),
+      );
+    });
+
+    test("uses final floor fallback branch for non-numeric room token", () {
+      const location = "Loyola Campus - SP Building Rm ABC";
+
+      final room = Room.fromLocation(location, "sp");
+
+      expect(room.roomNumber, "ABC");
+      expect(room.floor, "ABC");
+      expect(room.campus, Campus.loyola);
+      expect(room.buildingId, "sp");
+    });
   });
 
   group("Room.toString", () {
