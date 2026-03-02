@@ -29,10 +29,12 @@ class AcademicClass {
   }
 
   static bool checkEventFormat(final Event event) {
+    final Pattern courseCodePattern = RegExp(r"([A-Z]{2,4}\s?\d{3})");
+    final Pattern classTypePattern = RegExp(r"\b(LEC|TUT|LAB)\b");
     if (event.summary == null ||
         event.summary!.isEmpty ||
-        RegExp(r"([A-Z]{2,4}\s?\d{3})").firstMatch(event.summary!) == null ||
-        RegExp(r"\b(LEC|TUT|LAB)\b").firstMatch(event.summary!) == null) {
+        courseCodePattern.firstMatchOf(event.summary!) == null ||
+        classTypePattern.firstMatchOf(event.summary!) == null) {
       return false;
     }
     if (event.start?.dateTime == null) {
