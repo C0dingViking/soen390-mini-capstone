@@ -43,56 +43,31 @@ class Room {
     final String lowerBuildingId = buildingId.toLowerCase();
     final Pattern mbBuildingRoomPattern = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}");
     final Pattern ccHClBuildingRoomPattern = RegExp(r"\bRm\.?\s*(\d{3,4})");
-    final Pattern fgBuildingRoomPattern = RegExp(r"\bRm\s*((?:[BC])?\d{3})\b");
-    final Pattern fbBuildingRoomPattern = RegExp(r"\bRm\s*((?:S)?\d{3})\b");
+    final Pattern fgFbBuildingRoomPattern = RegExp(r"\bRm\s*((?:[BCS])?\d{3})\b");
     final Pattern otherBuildingRoomPattern = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)");
 
     if (lowerBuildingId == "mb") {
       if (mbBuildingRoomPattern.firstMatchOf(location) != null) {
         final match = mbBuildingRoomPattern.firstMatchOf(location);
         return match!.group(0)!.split("Rm").last.trim();
-      } else {
-        throw InvalidLocationFormatException(
-          "Room number format is invalid in location: $location",
-        );
       }
     } else if (lowerBuildingId == "cc" || lowerBuildingId == "h" || lowerBuildingId == "cl") {
       if (ccHClBuildingRoomPattern.firstMatchOf(location) != null) {
         final match = ccHClBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
-      } else {
-        throw InvalidLocationFormatException(
-          "Room number format is invalid in location: $location",
-        );
       }
-    } else if (lowerBuildingId == "fg") {
-      if (fgBuildingRoomPattern.firstMatchOf(location) != null) {
-        final match = fgBuildingRoomPattern.firstMatchOf(location);
+    } else if (lowerBuildingId == "fg" || lowerBuildingId == "fb") {
+      if (fgFbBuildingRoomPattern.firstMatchOf(location) != null) {
+        final match = fgFbBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
-      } else {
-        throw InvalidLocationFormatException(
-          "Room number format is invalid in location: $location",
-        );
-      }
-    } else if (lowerBuildingId == "fb") {
-      if (fbBuildingRoomPattern.firstMatchOf(location) != null) {
-        final match = fbBuildingRoomPattern.firstMatchOf(location);
-        return match!.group(1)!.trim();
-      } else {
-        throw InvalidLocationFormatException(
-          "Room number format is invalid in location: $location",
-        );
       }
     } else {
       if (otherBuildingRoomPattern.firstMatchOf(location) != null) {
         final match = otherBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
-      } else {
-        throw InvalidLocationFormatException(
-          "Room number format is invalid in location: $location",
-        );
       }
     }
+    throw InvalidLocationFormatException("Room number format is invalid in location: $location");
   }
 
   static String _determineFloorFromRoomNumber(final String roomNumber) {
