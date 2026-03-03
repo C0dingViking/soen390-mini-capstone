@@ -18,6 +18,9 @@ enum PoiType {
   elevator,
   escalatorUp,
   escalatorDown,
+  buildingEntrance,
+  stairsUp,
+  stairsDown,
   stairs;
 
   static PoiType fromString(final String type) {
@@ -36,6 +39,12 @@ enum PoiType {
         return PoiType.escalatorDown;
       case "stairs":
         return PoiType.stairs;
+      case "stairsUp":
+        return PoiType.stairsUp;
+      case "stairsDown":
+        return PoiType.stairsDown;
+      case "buildingEntrance":
+        return PoiType.buildingEntrance;
       default:
         throw ArgumentError("Unknown POI type: $type");
     }
