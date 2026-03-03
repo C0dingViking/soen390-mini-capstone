@@ -815,6 +815,80 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Building? _findBuildingById(final String buildingId) {
+    final normalized = buildingId.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+
+    final directMatch = buildings[buildingId] ??
+        buildings[normalized] ??
+        buildings[normalized.toUpperCase()];
+    if (directMatch != null) return directMatch;
+
+    for (final building in buildings.values) {
+      if (building.id.toLowerCase() == normalized) {
+        return building;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> setDestinationToUpcomingClassBuilding() async {
+    setSearchBarExpanded(true);
+    await setStartToCurrentLocation();
+    if (startCoordinate == null) {
+      generateInfoMessage = "Unable to determine current location for navigation start.";
+      notifyListeners();
+      return;
+    }
+
+    final upcoming = upcomingClass;
+    if (upcoming == null) {
+      generateInfoMessage = "No upcoming class selected.";
+      notifyListeners();
+      return;
+    }
+
+    final buildingId = upcoming.room.buildingId;
+    final building = _findBuildingById(buildingId);
+    if (building != null) {
+      _applySelection(
+        field: SearchField.destination,
+        coordinate: building.location,
+        label: building.name,
+        campus: building.campus,
+      );
+      cameraTarget = building.location;
+      await _loadRoutesIfReady();
+      notifyListeners();
+      return;
+    }
+
+    final query = buildingId.trim();
+    final suggestions = await placesInteractor.searchPlaces(query);
+
+    if (suggestions.isNotEmpty) {
+      final firstSuggestion = suggestions.first;
+      final coordinate = await placesInteractor.resolvePlaceSuggestion(firstSuggestion);
+      if (coordinate != null) {
+        final label = SearchSuggestion.place(firstSuggestion).title;
+        _applySelection(
+          field: SearchField.destination,
+          coordinate: coordinate,
+          label: label,
+          campus: null,
+        );
+        cameraTarget = coordinate;
+        await _loadRoutesIfReady();
+        notifyListeners();
+        return;
+      }
+    }
+
+    generateInfoMessage = "Unable to find ${buildingId.toUpperCase()} on the map.";
+    notifyListeners();
+  }
+
   Future<void> showNextClass() async {
     // To prevent unnecessary API calls and improve prefomance
     if (upcomingClass != null && upcomingClass!.startTime.isAfter(DateTime.now())) {

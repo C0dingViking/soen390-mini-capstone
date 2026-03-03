@@ -225,18 +225,42 @@ class _HomeScreenState extends State<HomeScreen> {
           Center(
             child: FractionallySizedBox(
               widthFactor: 0.8,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
-                label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  elevation: 0,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await _viewModel.setDestinationToUpcomingClassBuilding();
+                      if (!mounted) return;
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.directions, color: Colors.white),
+                    label: Text(
+                      "Go to Next Class",
+                      style: GoogleFonts.roboto(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
+                    label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
