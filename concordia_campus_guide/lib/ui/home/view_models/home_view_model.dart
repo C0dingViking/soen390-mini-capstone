@@ -819,9 +819,8 @@ class HomeViewModel extends ChangeNotifier {
     final normalized = buildingId.trim().toLowerCase();
     if (normalized.isEmpty) return null;
 
-    final directMatch = buildings[buildingId] ??
-        buildings[normalized] ??
-        buildings[normalized.toUpperCase()];
+    final directMatch =
+        buildings[buildingId] ?? buildings[normalized] ?? buildings[normalized.toUpperCase()];
     if (directMatch != null) return directMatch;
 
     for (final building in buildings.values) {

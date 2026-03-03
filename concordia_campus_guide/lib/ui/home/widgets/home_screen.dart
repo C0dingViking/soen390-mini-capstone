@@ -236,10 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       navigator.pop();
                     },
                     icon: const Icon(Icons.directions, color: Colors.white),
-                    label: Text(
-                      "Go to Next Class",
-                      style: GoogleFonts.roboto(color: Colors.white),
-                    ),
+                    label: Text("Go to Next Class", style: GoogleFonts.roboto(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

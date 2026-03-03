@@ -341,7 +341,9 @@ void main() {
       expect(find.text("SOEN390"), findsNothing);
     });
 
-    testWidgets("tapping Go to Next Class sets destination and closes dialog", (final tester) async {
+    testWidgets("tapping Go to Next Class sets destination and closes dialog", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester);
 
       vm.upcomingClass = AcademicClass(
