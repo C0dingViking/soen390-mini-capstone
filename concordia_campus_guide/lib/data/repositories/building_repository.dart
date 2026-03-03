@@ -7,12 +7,18 @@ import "package:flutter/services.dart";
 class BuildingRepository {
   // necessary to inject file paths outside lib for testing
   final Future<String> Function(String path) buildingLoader;
+  // to avoid reloading building data multiple times & to handle multiple sources
+  final Map<String, Future<Map<String, Building>>> _buildingCache = {};
 
   BuildingRepository({final Future<String> Function(String path)? buildingLoader})
     : buildingLoader = buildingLoader ?? rootBundle.loadString;
 
   // returns all supported buildings with their polygons loaded
   Future<Map<String, Building>> loadBuildings(final String jsonPath) async {
+    if (_buildingCache.containsKey(jsonPath)) {
+      return _buildingCache[jsonPath]!;
+    }
+
     final buildings = <String, Building>{};
 
     try {
@@ -31,6 +37,8 @@ class BuildingRepository {
     } catch (e) {
       logger.e("Failed to load building data", error: e);
     }
+
+    _buildingCache[jsonPath] = Future.value(buildings);
 
     return buildings;
   }

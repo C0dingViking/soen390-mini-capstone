@@ -5,6 +5,8 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
@@ -12,9 +14,12 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:concordia_campus_guide/controllers/coordinates_controller.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 
 class _FakePlacesInteractor extends PlacesInteractor {
   @override
@@ -39,12 +44,36 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
   }
 }
 
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+}
+
 class TestHomeViewModel extends HomeViewModel {
   bool initCalled = false;
   String? initPath;
   bool goToCalled = false;
+  bool showNextClassCalled = false;
   bool clearCalled = false;
   bool exitNavigationCalled = false;
+  bool forceShowLoginSuccessMessage = false;
+  bool forceShowNextClassDialog = false;
+  int clearLoginSuccessCalls = 0;
+  int clearNextClassDialogCalls = 0;
 
   TestHomeViewModel()
     : super(
@@ -53,6 +82,7 @@ class TestHomeViewModel extends HomeViewModel {
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
       ) {
     // Add test buildings for navigation tests
     buildings = {
@@ -118,6 +148,32 @@ class TestHomeViewModel extends HomeViewModel {
     exitNavigationCalled = true;
     super.exitNavigation();
   }
+
+  @override
+  Future<void> showNextClass() async {
+    showNextClassCalled = true;
+    notifyListeners();
+  }
+
+  @override
+  bool get showLoginSuccessMessage => forceShowLoginSuccessMessage;
+
+  @override
+  void clearLoginSuccessMessage() {
+    clearLoginSuccessCalls++;
+    forceShowLoginSuccessMessage = false;
+    notifyListeners();
+  }
+
+  @override
+  bool get showNextClassDialog => forceShowNextClassDialog;
+
+  @override
+  void clearNextClassDialog() {
+    clearNextClassDialogCalls++;
+    forceShowNextClassDialog = false;
+    notifyListeners();
+  }
 }
 
 void main() {
@@ -167,6 +223,18 @@ void main() {
       expect(find.text("test-error"), findsOneWidget);
     });
 
+    testWidgets("shows SnackBar when view model has infoMessage and auto clears it", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+      vm.generateInfoMessage = "test-info";
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("test-info"), findsOneWidget);
+      expect(vm.generateInfoMessage, isNull);
+    });
+
     testWidgets("when cameraTarget set, view model clearCameraTarget is called", (
       final tester,
     ) async {
@@ -204,6 +272,77 @@ void main() {
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.my_location), findsOneWidget);
+    });
+
+    testWidgets("shows Next Class FAB when showNextClassFab is true", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      vm.showNextClassFab = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("Next Class"), findsOneWidget);
+      expect(find.byIcon(Icons.school), findsOneWidget);
+    });
+
+    testWidgets("tapping Next Class FAB calls showNextClass", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      vm.showNextClassFab = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FloatingActionButton, "Next Class"));
+      await tester.pump();
+
+      expect(vm.showNextClassCalled, isTrue);
+    });
+
+    testWidgets("shows login success dialog and calls clearLoginSuccessMessage", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.forceShowLoginSuccessMessage = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("Your Gmail Account is Connected!"), findsOneWidget);
+      expect(vm.clearLoginSuccessCalls, greaterThan(0));
+    });
+
+    testWidgets("shows next class dialog and calls clearNextClassDialog", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      vm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "cl"),
+      );
+      vm.forceShowNextClassDialog = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("SOEN390"), findsOneWidget);
+      expect(find.text("Lecture"), findsOneWidget);
+      expect(find.text("CL 235"), findsOneWidget);
+      expect(vm.clearNextClassDialogCalls, greaterThan(0));
+
+      await tester.tap(find.text("Return to Map"));
+      await tester.pumpAndSettle();
+      expect(find.text("SOEN390"), findsNothing);
+    });
+
+    testWidgets("does not show next class dialog when upcomingClass is null", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      vm.upcomingClass = null;
+      vm.forceShowNextClassDialog = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("Lecture"), findsNothing);
     });
 
     testWidgets("android back exits navigation and collapses search bar", (final tester) async {

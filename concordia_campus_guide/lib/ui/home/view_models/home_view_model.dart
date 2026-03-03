@@ -1,4 +1,7 @@
 import "dart:async";
+
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
+import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
@@ -21,9 +24,12 @@ enum SearchField { start, destination }
 enum DepartureMode { now, departAt, arriveBy }
 
 class HomeViewModel extends ChangeNotifier {
+  static const String buildingDataAssetPath = "assets/maps/building_data.json";
+
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
+  final CalendarInteractor calendarInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
   bool _showLoginSuccessMessage = false;
 
@@ -33,6 +39,7 @@ class HomeViewModel extends ChangeNotifier {
     required this.mapInteractor,
     required this.placesInteractor,
     required this.directionsInteractor,
+    required this.calendarInteractor,
   });
 
   Map<String, Building> buildings = {};
@@ -42,6 +49,7 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
+  String? generateInfoMessage;
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
   bool isResolvingStartLocation = false;
@@ -59,6 +67,12 @@ class HomeViewModel extends ChangeNotifier {
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
   double _currentMapZoom = 15;
+
+  bool showNextClassFab = false;
+  AcademicClass? upcomingClass;
+  bool _showNextClassDialog = false;
+
+  bool get showNextClassDialog => _showNextClassDialog;
 
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
@@ -786,6 +800,59 @@ class HomeViewModel extends ChangeNotifier {
 
   void clearLoginSuccessMessage() {
     _showLoginSuccessMessage = false;
+    notifyListeners();
+  }
+
+  void toggleNextClassFabVisibility(final bool isVisible) {
+    if (showNextClassFab != isVisible) {
+      showNextClassFab = isVisible;
+      notifyListeners();
+    }
+  }
+
+  void clearNextClassDialog() {
+    _showNextClassDialog = false;
+    notifyListeners();
+  }
+
+  Future<void> showNextClass() async {
+    // To prevent unnecessary API calls and improve prefomance
+    if (upcomingClass != null && upcomingClass!.startTime.isAfter(DateTime.now())) {
+      _showNextClassDialog = true;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      // Acceptance Criteria: Only show classes that are upcoming today
+      final now = DateTime.now();
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final classes = await calendarInteractor.getUpcomingClasses(
+        timeMin: now,
+        timeMax: endOfDay,
+        maxResults: 100,
+      );
+
+      if (classes.isEmpty) {
+        generateInfoMessage = "No more classes today.";
+        notifyListeners();
+        return;
+      }
+
+      upcomingClass = classes.first;
+      _showNextClassDialog = true;
+      notifyListeners();
+    } catch (e, stackTrace) {
+      logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
+      final errorMessageText = e.toString();
+      generateInfoMessage = "$errorMessageText. Please use search to find your destination.";
+      notifyListeners();
+    }
+  }
+
+  void clearUpcomingClass() {
+    upcomingClass = null;
+    _showNextClassDialog = false;
     notifyListeners();
   }
 }

@@ -118,5 +118,24 @@ void main() {
       expect(featureNames.contains("invalidFeature"), false);
       expect(featureNames.contains("nonExistentFeature"), false);
     });
+
+    test("returns cached data when called twice with the same path", () async {
+      var loadCount = 0;
+      Future<String> buildingLoader(final String path) async {
+        loadCount++;
+        return File(path).readAsString();
+      }
+
+      final localRepo = BuildingRepository(buildingLoader: buildingLoader);
+
+      const path = "test/assets/building_testdata.json";
+
+      final firstBuildings = await localRepo.loadBuildings(path);
+      final secondBuildings = await localRepo.loadBuildings(path);
+
+      expect(loadCount, 1);
+      expect(firstBuildings, same(secondBuildings));
+      expect(secondBuildings, isNotEmpty);
+    });
   });
 }
