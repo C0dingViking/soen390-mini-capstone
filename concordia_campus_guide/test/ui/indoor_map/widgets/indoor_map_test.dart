@@ -26,6 +26,8 @@ class TestIndoorViewModel extends IndoorViewModel {
       canvasWidth: 100,
       canvasHeight: 100,
     );
+    // Initialize loaded room names with test data
+    loadedRoomNames = ["T 110", "T 111", "T 112"];
   }
 
   @override
@@ -67,6 +69,12 @@ class TestIndoorViewModel extends IndoorViewModel {
     };
     selectedFloorplan = loadedFloorplans![1];
 
+    notifyListeners();
+  }
+
+  @override
+  Future<void> initializeRoomNames() async {
+    loadedRoomNames = ["T 110", "T 111", "T 112"];
     notifyListeners();
   }
 }
@@ -261,10 +269,7 @@ void main() {
       await pumpHomeScreen(tester, true);
 
       final gestureFinder = find
-          .ancestor(
-            of: find.byType(InteractiveViewer),
-            matching: find.byType(GestureDetector),
-          )
+          .ancestor(of: find.byType(InteractiveViewer), matching: find.byType(GestureDetector))
           .first;
 
       final gestureWidget = tester.widget<GestureDetector>(gestureFinder);

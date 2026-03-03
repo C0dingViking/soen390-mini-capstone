@@ -2,14 +2,22 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:flutter/material.dart";
 
 class IndoorSearchBar extends StatefulWidget {
+  final List<String> queryableRooms;
   final TextEditingController? startController;
   final TextEditingController? destinationController;
 
-  const IndoorSearchBar({super.key, this.startController, this.destinationController});
+  const IndoorSearchBar({
+    super.key,
+    this.startController,
+    this.destinationController,
+    required this.queryableRooms,
+  });
 
   @override
   State<IndoorSearchBar> createState() => _IndoorSearchBarState();
 }
+
+enum FocusedField { onStart, onDestination, neither }
 
 class _IndoorSearchBarState extends State<IndoorSearchBar> {
   static const double _cardRadius = 12;
@@ -19,6 +27,11 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late TextEditingController _destinationController;
   late bool _ownsStartController;
   late bool _ownsDestinationController;
+  late FocusNode _startFocus;
+  late FocusNode _destinationFocus;
+  late FocusedField _activeField;
+
+  List<String> _filteredRoomList = [];
 
   @override
   void initState() {
@@ -27,9 +40,28 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _destinationController = widget.destinationController ?? TextEditingController();
     _ownsStartController = widget.startController == null;
     _ownsDestinationController = widget.destinationController == null;
+    _startFocus = FocusNode();
+    _destinationFocus = FocusNode();
+    _activeField = FocusedField.neither;
 
+    _startFocus.addListener(_handleFocusChange);
+    _destinationFocus.addListener(_handleFocusChange);
     _startController.addListener(_onFieldTextChanged);
     _destinationController.addListener(_onFieldTextChanged);
+  }
+
+  void _handleFocusChange() {
+    setState(() {
+      if (_startFocus.hasFocus) {
+        _activeField = FocusedField.onStart;
+      } else if (_destinationFocus.hasFocus) {
+        _activeField = FocusedField.onDestination;
+      } else {
+        _activeField = FocusedField.neither;
+      }
+
+      _filteredRoomList = [];
+    });
   }
 
   @override
@@ -63,13 +95,57 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     if (!mounted) {
       return;
     }
-    setState(() {});
+
+    TextEditingController? activeController;
+    if (_activeField == FocusedField.onStart) {
+      activeController = _startController;
+    } else if (_activeField == FocusedField.onDestination) {
+      activeController = _destinationController;
+    }
+
+    if (activeController != null) {
+      setState(() {
+        _filteredRoomList = _getFilteredRoomList(activeController!.text);
+      });
+    }
+  }
+
+  List<String> _getFilteredRoomList(final String query) {
+    if (query.isEmpty) return [];
+
+    return widget.queryableRooms
+        .where((final room) => room.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  void _selectRoomOption(final String roomName) async {
+    TextEditingController? activeController;
+
+    if (_activeField == FocusedField.onStart) {
+      activeController = _startController;
+    } else if (_activeField == FocusedField.onDestination) {
+      activeController = _destinationController;
+    }
+
+    if (activeController != null) {
+      setState(() {
+        activeController!.text = roomName;
+        activeController.selection = TextSelection.fromPosition(
+          TextPosition(offset: activeController.text.length),
+        );
+
+        _filteredRoomList = [];
+        _activeField = FocusedField.neither;
+      });
+    }
   }
 
   @override
   void dispose() {
     _startController.removeListener(_onFieldTextChanged);
     _destinationController.removeListener(_onFieldTextChanged);
+    _startFocus.removeListener(_handleFocusChange);
+    _destinationFocus.removeListener(_handleFocusChange);
 
     if (_ownsStartController) {
       _startController.dispose();
@@ -79,7 +155,38 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController.dispose();
     }
 
+    _startFocus.dispose();
+    _destinationFocus.dispose();
+
     super.dispose();
+  }
+
+  Widget _buildResultsList(final BuildContext context, final List<String> results) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      constraints: const BoxConstraints(maxHeight: 260),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
+      ),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        shrinkWrap: true,
+        itemCount: results.length,
+        separatorBuilder: (final context, final index) => const Divider(height: 1),
+        itemBuilder: (final context, final index) {
+          final room = results[index];
+          return ListTile(
+            title: Text(room),
+            onTap: () {
+              _selectRoomOption(room);
+              FocusScope.of(context).unfocus();
+            },
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -98,6 +205,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
             children: [
               TextField(
                 controller: _startController,
+                focusNode: _startFocus,
                 decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
                   hintText: "Current location",
                   prefixIcon: Icon(Icons.trip_origin),
@@ -115,6 +223,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               const Divider(height: 1),
               TextField(
                 controller: _destinationController,
+                focusNode: _destinationFocus,
                 textInputAction: TextInputAction.search,
                 decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
                   hintText: "Choose destination",
@@ -133,6 +242,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
             ],
           ),
         ),
+        if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
       ],
     );
   }

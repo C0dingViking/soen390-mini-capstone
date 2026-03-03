@@ -16,6 +16,11 @@ class _FakeFloorplanInteractor extends FloorplanInteractor {
         ? {}
         : {1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "test.svg", rooms: [], pois: [])};
   }
+
+  @override
+  Future<List<String>> loadRoomNames() async {
+    return (returnEmpty) ? [] : ["T 1", "T 2", "T 3"];
+  }
 }
 
 void main() {
@@ -40,11 +45,11 @@ void main() {
       expect(ivm.loadFailed, false);
     });
 
-    test("resetLoadState resets load state correctly", () {
+    test("resetFloorplanLoadState resets load state correctly", () {
       ivm.loadFailed = true;
       ivm.isLoading = true;
 
-      ivm.resetLoadState();
+      ivm.resetFloorplanLoadState();
       expect(ivm.loadFailed, false);
       expect(ivm.isLoading, false);
     });
@@ -111,6 +116,27 @@ void main() {
       expect(success, false);
       expect(ivm.selectedFloorplan, isNotNull);
       expect(ivm.selectedFloorplan!.floorNumber, 1);
+    });
+  });
+
+  group("initializeRoomNames", () {
+    test("initializeRoomNames loads roomNames successfully", () async {
+      await ivm.initializeRoomNames();
+      final List<String>? results = ivm.loadedRoomNames;
+
+      expect(results, isNotNull);
+      expect(results!, isNotEmpty);
+      expect(results.length, 3);
+      expect(results[0], "T 1");
+      expect(results[1], "T 2");
+      expect(results[2], "T 3");
+    });
+
+    test("initializeRoomNames handles empty returns", () async {
+      floorplanInteractor.returnEmpty = true;
+
+      await ivm.initializeRoomNames();
+      expect(ivm.listLoadFailed, true);
     });
   });
 }

@@ -34,5 +34,28 @@ void main() {
 
       expect(response, equals(mockFloorplans));
     });
+
+    test("loadRoomNames returns an empty list when no floorplans are found", () async {
+      final mockRepo = MockFloorplanRepository();
+
+      when(mockRepo.loadRoomNames()).thenAnswer((_) async => []);
+
+      final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
+      final response = await interactor.loadRoomNames();
+
+      expect(response, isEmpty);
+    });
+
+    test("loadRoomNames forwards the room names when they are found", () async {
+      final mockRepo = MockFloorplanRepository();
+      final mockRoomNames = ["T 1", "T 2", "T 3"];
+
+      when(mockRepo.loadRoomNames()).thenAnswer((_) async => mockRoomNames);
+
+      final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
+      final response = await interactor.loadRoomNames();
+
+      expect(response, equals(mockRoomNames));
+    });
   });
 }

@@ -19,6 +19,7 @@ void main() {
           return File(path).readAsString();
         },
         manifestPath: "test/assets/test_floorplan_manifest.json",
+        roomManifestPath: "test/assets/test_room_manifest.json",
       );
     });
 
@@ -51,7 +52,7 @@ void main() {
       expect(floorplan2.pois[1].name, "washroomFemale-1");
     });
 
-    test("fails gracefully if file is not found", () async {
+    test("fails gracefully if floorplan file is not found", () async {
       final floorplans = await repo.loadBuildingFloorplans("test/assets/nonexistent_directory");
       expect(floorplans, isEmpty);
     });
@@ -62,10 +63,22 @@ void main() {
           return "{}"; // empty manifest
         },
         manifestPath: "test/assets/invalid_manifest.json",
+        roomManifestPath: "test/assets/invalid_manifest.json",
       );
 
       final floorplans = await invalidRepo.loadBuildingFloorplans("testSvgs");
       expect(floorplans, isEmpty);
+      final rooms = await invalidRepo.loadRoomNames();
+      expect(rooms, isEmpty);
+    });
+
+    test("loads a set of rooms correctly", () async {
+      final rooms = await repo.loadRoomNames();
+      expect(rooms, isNotEmpty);
+      expect(rooms.length, 3);
+      expect(rooms[0], "T 1");
+      expect(rooms[1], "T 2");
+      expect(rooms[2], "T 3");
     });
   });
 }

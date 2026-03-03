@@ -93,6 +93,7 @@ flutter:
     - assets/images/bigger_icon.png
     - assets/maps/building_data.json
     - assets/floorplans/floorplan_manifest.json
+    - assets/floorplans/room_manifest.json
     - assets/floorplans/mb/
     - assets/floorplans/vl/
     - assets/floorplans/h/

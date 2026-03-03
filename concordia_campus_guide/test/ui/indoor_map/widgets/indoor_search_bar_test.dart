@@ -34,20 +34,29 @@ class _ControllerSwapHostState extends State<_ControllerSwapHost> {
     return IndoorSearchBar(
       startController: useSecondControllers ? widget.startB : widget.startA,
       destinationController: useSecondControllers ? widget.destinationB : widget.destinationA,
+      queryableRooms: [],
     );
   }
 }
 
 void main() {
   testWidgets("shows expanded fields with Current location hint", (final tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: IndoorSearchBar())));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
 
     expect(find.widgetWithText(TextField, "Current location"), findsOneWidget);
     expect(find.widgetWithText(TextField, "Choose destination"), findsOneWidget);
   });
 
   testWidgets("clear button appears when destination has text", (final tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: IndoorSearchBar())));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
 
     expect(find.byIcon(Icons.close), findsNothing);
 
@@ -58,7 +67,11 @@ void main() {
   });
 
   testWidgets("clear button appears when start has text", (final tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: IndoorSearchBar())));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
 
     expect(find.byIcon(Icons.close), findsNothing);
 
@@ -69,7 +82,11 @@ void main() {
   });
 
   testWidgets("clear button clears destination field", (final tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: IndoorSearchBar())));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
 
     await tester.enterText(find.byType(TextField).last, "H-110");
     await tester.pump();
@@ -81,7 +98,11 @@ void main() {
   });
 
   testWidgets("clear button clears start field", (final tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: IndoorSearchBar())));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
 
     await tester.enterText(find.byType(TextField).first, "Hall Building");
     await tester.pump();
@@ -99,10 +120,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(body: IndoorSearchBar(destinationController: destinationController)),
+        home: Scaffold(
+          body: IndoorSearchBar(destinationController: destinationController, queryableRooms: []),
+        ),
       ),
     );
 
+    await tester.tap(find.byType(TextField).last);
+    await tester.pump();
     expect(find.byIcon(Icons.close), findsNothing);
 
     destinationController.text = "MB 1-310";
@@ -161,6 +186,7 @@ void main() {
           body: IndoorSearchBar(
             startController: startController,
             destinationController: destinationController,
+            queryableRooms: [],
           ),
         ),
       ),
@@ -173,5 +199,141 @@ void main() {
 
     startController.dispose();
     destinationController.dispose();
+  });
+
+  testWidgets("typing filters rooms and shows matching suggestions", (final tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "H 101", "MB 1-310"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H 8");
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+    expect(find.text("H 101"), findsNothing);
+    expect(find.text("MB 1-310"), findsNothing);
+  });
+
+  testWidgets("switching focus clears suggestions", (final tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H");
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+
+    await tester.tap(destField);
+    await tester.pump();
+
+    expect(find.text("H 849"), findsNothing);
+  });
+
+  testWidgets("selecting a suggestion fills the field and hides the list", (final tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H");
+    await tester.pump();
+
+    await tester.tap(find.text("H 849"));
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+    expect(find.byType(ListTile), findsNothing);
+  });
+
+  testWidgets("refocusing a field with existing text does not show suggestions", (
+    final tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "H 101"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H");
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+
+    // tapping elsewhere to remove focus from the searchbar
+    await tester.tap(destField);
+    await tester.pump();
+
+    expect(find.text("H 849"), findsNothing);
+
+    // focusing the searchbar again shouldn"t show the suggestions unless typing occurrs
+    await tester.tap(startField);
+    await tester.pump();
+
+    expect(find.text("H 849"), findsNothing);
+  });
+
+  testWidgets("typing in one field does not affect the other field", (final tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H");
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+
+    await tester.tap(destField);
+    await tester.enterText(destField, "MB");
+    await tester.pump();
+
+    expect(find.text("MB 1-310"), findsOneWidget);
+    expect(find.text("H 849"), findsNothing);
+  });
+
+  testWidgets("clearing a field hides suggestions even while focused", (final tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H");
+    await tester.pump();
+
+    expect(find.text("H 849"), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pump();
+
+    expect(find.text("H 849"), findsNothing);
   });
 }

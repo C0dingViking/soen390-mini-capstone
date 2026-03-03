@@ -10,12 +10,15 @@ class FloorplanRepository {
   // necessary to inject file paths outside lib for testing
   final Future<String> Function(String path) floorplanLoader;
   final String manifestPath;
+  final String roomManifestPath;
 
   FloorplanRepository({
     final Future<String> Function(String path)? floorplanLoader,
     final String? manifestPath,
+    final String? roomManifestPath,
   }) : floorplanLoader = floorplanLoader ?? rootBundle.loadString,
-       manifestPath = manifestPath ?? "assets/floorplans/floorplan_manifest.json";
+       manifestPath = manifestPath ?? "assets/floorplans/floorplan_manifest.json",
+       roomManifestPath = roomManifestPath ?? "assets/floorplans/room_manifest.json";
 
   // requires a directoryPath as it parses the XML from the .svg files for all available floors to a building
   Future<Map<int, Floorplan>> loadBuildingFloorplans(final String directoryId) async {
@@ -65,5 +68,18 @@ class FloorplanRepository {
     }
 
     return floorplans;
+  }
+
+  Future<List<String>> loadRoomNames() async {
+    List<String> rooms = [];
+    try {
+      final roomManifest = await floorplanLoader(roomManifestPath);
+      final List<dynamic> manifestJson = jsonDecode(roomManifest) as List<dynamic>;
+      rooms = manifestJson.cast<String>();
+    } catch (e) {
+      logger.e("Failed to load rooms from JSON", error: e);
+    }
+
+    return rooms;
   }
 }

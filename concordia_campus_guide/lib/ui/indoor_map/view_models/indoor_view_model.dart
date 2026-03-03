@@ -6,6 +6,10 @@ class IndoorViewModel extends ChangeNotifier {
   final FloorplanInteractor floorplanInteractor;
   String? loadedBuildingId;
 
+  List<String>? loadedRoomNames;
+  bool listLoadFailed = false;
+  bool listIsLoading = false;
+
   Map<int, Floorplan>? loadedFloorplans;
   List<int>? availableFloors;
   Floorplan? selectedFloorplan;
@@ -13,6 +17,26 @@ class IndoorViewModel extends ChangeNotifier {
   bool loadFailed = false;
 
   IndoorViewModel({required this.floorplanInteractor});
+
+  Future<void> initializeRoomNames() async {
+    listIsLoading = true;
+    notifyListeners();
+
+    try {
+      final List<String> roomNames = await floorplanInteractor.loadRoomNames();
+
+      if (roomNames.isEmpty) {
+        listLoadFailed = true;
+      } else {
+        loadedRoomNames = roomNames;
+      }
+    } catch (e) {
+      listLoadFailed = true;
+    }
+
+    listIsLoading = false;
+    notifyListeners();
+  }
 
   Future<void> initializeBuildingFloorplans(final String buildingId) async {
     if (loadedBuildingId != null &&
@@ -47,7 +71,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void resetLoadState() {
+  void resetFloorplanLoadState() {
     loadFailed = false;
     isLoading = false;
     notifyListeners();

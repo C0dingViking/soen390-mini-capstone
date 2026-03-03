@@ -10,4 +10,8 @@ class FloorplanInteractor {
   Future<Map<int, Floorplan>> loadFloorplans(final String directoryId) async {
     return _floorplanRepo.loadBuildingFloorplans(directoryId);
   }
+
+  Future<List<String>> loadRoomNames() async {
+    return _floorplanRepo.loadRoomNames();
+  }
 }

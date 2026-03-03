@@ -41,9 +41,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void initState() {
     super.initState();
-    // kick off async initialization – the UI will react once the view model updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      context.read<IndoorViewModel>().initializeRoomNames();
       context.read<IndoorViewModel>().initializeBuildingFloorplans(widget.building.id);
     });
   }
@@ -218,15 +218,15 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       appBar: CampusAppBar(),
       body: Consumer<IndoorViewModel>(
         builder: (final context, final ivm, final child) {
-          if (ivm.isLoading) {
+          if (ivm.isLoading || ivm.selectedFloorplan == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (ivm.loadFailed) {
+          if (ivm.loadFailed || ivm.listLoadFailed) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
 
-              ivm.resetLoadState();
+              ivm.resetFloorplanLoadState();
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -274,7 +274,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () {
-                        ivm.resetLoadState();
+                        ivm.resetFloorplanLoadState();
                         Navigator.of(context).pop();
                       },
                       constraints: const BoxConstraints(),
@@ -308,7 +308,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                   left: searchBarSpacingLeft,
                   right: searchBarSpacingRight,
                   child: SafeArea(
-                    child: IndoorSearchBar(destinationController: _destinationController),
+                    child: IndoorSearchBar(
+                      destinationController: _destinationController,
+                      queryableRooms: ivm.loadedRoomNames!,
+                    ),
                   ),
                 ),
               ],
