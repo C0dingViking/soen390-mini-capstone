@@ -230,9 +230,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () async {
+                      final navigator = Navigator.of(context);
                       await _viewModel.setDestinationToUpcomingClassBuilding();
                       if (!mounted) return;
-                      Navigator.of(context).pop();
+                      navigator.pop();
                     },
                     icon: const Icon(Icons.directions, color: Colors.white),
                     label: Text(
