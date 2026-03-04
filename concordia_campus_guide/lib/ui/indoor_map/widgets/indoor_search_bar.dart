@@ -5,11 +5,13 @@ class IndoorSearchBar extends StatefulWidget {
   final List<String> queryableRooms;
   final TextEditingController? startController;
   final TextEditingController? destinationController;
+  final void Function(String startRoom, String destinationRoom)? onStartNavigation;
 
   const IndoorSearchBar({
     super.key,
     this.startController,
     this.destinationController,
+    this.onStartNavigation,
     required this.queryableRooms,
   });
 
@@ -22,6 +24,7 @@ enum FocusedField { onStart, onDestination, neither }
 class _IndoorSearchBarState extends State<IndoorSearchBar> {
   static const double _cardRadius = 12;
   static const double _cardElevation = 4.0;
+  static const double _buttonHeight = 8.0;
 
   late TextEditingController _startController;
   late TextEditingController _destinationController;
@@ -140,6 +143,29 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     }
   }
 
+  bool _isValidRoom(final String roomName) {
+    final normalizedRoomName = roomName.trim().toLowerCase();
+    if (normalizedRoomName.isEmpty) {
+      return false;
+    }
+
+    return widget.queryableRooms.any(
+      (final room) => room.trim().toLowerCase() == normalizedRoomName,
+    );
+  }
+
+  bool get _canStartNavigation {
+    return _isValidRoom(_startController.text) && _isValidRoom(_destinationController.text);
+  }
+
+  void _handleStartNavigationPressed() {
+    FocusScope.of(context).unfocus();
+    widget.onStartNavigation?.call(
+      _startController.text.trim(),
+      _destinationController.text.trim(),
+    );
+  }
+
   @override
   void dispose() {
     _startController.removeListener(_onFieldTextChanged);
@@ -193,6 +219,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   Widget build(final BuildContext context) {
     final showClearStart = _startController.text.isNotEmpty;
     final showClearDestination = _destinationController.text.isNotEmpty;
+    final showStartNavigationButton = _canStartNavigation;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,6 +270,18 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           ),
         ),
         if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
+        if (showStartNavigationButton) ...[
+          const SizedBox(height: _buttonHeight), 
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _handleStartNavigationPressed,
+              style: AppTheme.indoorNavigationButtonStyle,
+              icon: const Icon(Icons.navigation),
+              label: const Text("Start Navigation"),
+            ),
+          ),
+        ],
       ],
     );
   }

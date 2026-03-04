@@ -336,4 +336,68 @@ void main() {
 
     expect(find.text("H 849"), findsNothing);
   });
+
+  testWidgets("Start Navigation button appears only when both rooms are valid", (
+    final tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"])),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
+
+    expect(find.text("Start Navigation"), findsNothing);
+
+    await tester.enterText(startField, "H 849");
+    await tester.pump();
+
+    expect(find.text("Start Navigation"), findsNothing);
+
+    await tester.enterText(destField, "MB 1-310");
+    await tester.pump();
+
+    expect(find.text("Start Navigation"), findsOneWidget);
+
+    await tester.enterText(destField, "NOT A ROOM");
+    await tester.pump();
+
+    expect(find.text("Start Navigation"), findsNothing);
+  });
+
+  testWidgets("Start Navigation button triggers callback with selected rooms", (
+    final tester,
+  ) async {
+    String? selectedStartRoom;
+    String? selectedDestinationRoom;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: ["H 849", "MB 1-310"],
+            onStartNavigation: (final startRoom, final destinationRoom) {
+              selectedStartRoom = startRoom;
+              selectedDestinationRoom = destinationRoom;
+            },
+          ),
+        ),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
+
+    await tester.enterText(startField, "H 849");
+    await tester.enterText(destField, "MB 1-310");
+    await tester.pump();
+
+    await tester.tap(find.text("Start Navigation"));
+    await tester.pump();
+
+    expect(selectedStartRoom, "H 849");
+    expect(selectedDestinationRoom, "MB 1-310");
+  });
 }

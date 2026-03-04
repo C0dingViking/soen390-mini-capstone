@@ -27,7 +27,7 @@ class TestIndoorViewModel extends IndoorViewModel {
       canvasHeight: 100,
     );
     // Initialize loaded room names with test data
-    loadedRoomNames = ["T 110", "T 111", "T 112"];
+    loadedRoomNames = ["T 110", "T 111", "T 112", "T 210", "H 820"];
   }
 
   @override
@@ -35,10 +35,41 @@ class TestIndoorViewModel extends IndoorViewModel {
     initCalled = true;
     initPath = path;
 
+    final normalizedPath = path.toUpperCase();
+
+    if (normalizedPath == "H") {
+      availableFloors = [8];
+      loadedFloorplans = {
+        8: Floorplan(
+          buildingId: normalizedPath,
+          floorNumber: 8,
+          svgPath: "testfloor8.svg",
+          canvasWidth: 100,
+          canvasHeight: 100,
+          rooms: [
+            IndoorMapRoom(
+              name: "820",
+              doorLocation: const Point<double>(0, 0),
+              points: const [
+                Point<double>(0, 0),
+                Point<double>(100, 0),
+                Point<double>(100, 100),
+                Point<double>(0, 100),
+              ],
+            ),
+          ],
+          pois: [],
+        ),
+      };
+      selectedFloorplan = loadedFloorplans![8];
+      notifyListeners();
+      return;
+    }
+
     availableFloors = [1, 2];
     loadedFloorplans = {
       1: Floorplan(
-        buildingId: path,
+        buildingId: normalizedPath,
         floorNumber: 1,
         svgPath: "testfloor1.svg",
         canvasWidth: 100,
@@ -58,12 +89,23 @@ class TestIndoorViewModel extends IndoorViewModel {
         pois: [],
       ),
       2: Floorplan(
-        buildingId: path,
+        buildingId: normalizedPath,
         floorNumber: 2,
         svgPath: "testfloor2.svg",
         canvasWidth: 100,
         canvasHeight: 100,
-        rooms: [],
+        rooms: [
+          IndoorMapRoom(
+            name: "210",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
         pois: [],
       ),
     };
@@ -74,7 +116,7 @@ class TestIndoorViewModel extends IndoorViewModel {
 
   @override
   Future<void> initializeRoomNames() async {
-    loadedRoomNames = ["T 110", "T 111", "T 112"];
+    loadedRoomNames = ["T 110", "T 111", "T 112", "T 210", "H 820"];
     notifyListeners();
   }
 }
@@ -283,6 +325,44 @@ void main() {
 
       final destinationTextField = tester.widgetList<TextField>(find.byType(TextField)).last;
       expect(destinationTextField.controller?.text, "T 110");
+    });
+
+    testWidgets("Start Navigation switches to floor of current location", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 210");
+      await tester.enterText(destinationField, "T 110");
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(find.text("T2"), findsOneWidget);
+    });
+
+    testWidgets("Start Navigation switches to current location building and floor", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "H 820");
+      await tester.enterText(destinationField, "T 110");
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(ivm.initPath, "h");
+      expect(ivm.selectedFloorplan!.buildingId, "H");
+      expect(ivm.selectedFloorplan!.floorNumber, 8);
+      expect(find.text("H8"), findsOneWidget);
     });
   });
 }

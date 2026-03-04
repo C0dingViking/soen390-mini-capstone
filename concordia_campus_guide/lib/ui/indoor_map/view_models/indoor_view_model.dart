@@ -50,6 +50,7 @@ class IndoorViewModel extends ChangeNotifier {
     }
 
     isLoading = true;
+    loadFailed = false;
     notifyListeners();
 
     try {
@@ -62,6 +63,7 @@ class IndoorViewModel extends ChangeNotifier {
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
         availableFloors = loadedFloorplans!.keys.toList()..sort();
+        loadFailed = false;
       }
     } catch (e) {
       loadFailed = true;

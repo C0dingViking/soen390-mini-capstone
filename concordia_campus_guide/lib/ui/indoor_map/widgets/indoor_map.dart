@@ -66,6 +66,79 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (!mounted) return;
   }
 
+  ({String buildingId, String roomName}) _parseRoomLabel(final String roomLabel) { 
+    final trimmedLabel = roomLabel.trim();
+
+    final parts = trimmedLabel.split(RegExp(r"\s+"));
+
+    final buildingId = parts.first.toUpperCase();
+    final roomName = trimmedLabel.substring(parts.first.length).trim();
+
+    return (buildingId: buildingId, roomName: roomName);
+  }
+
+  int _findFloorForRoomName(final String roomName, final Map<int, Floorplan> floorplans) {
+    final normalizedRoomName = roomName.trim().toLowerCase();
+
+    String sanitizeRoomName(final String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r"\s+"), "")
+          .replaceAll(RegExp(r"[-.]"), "");
+    }
+
+    final sanitizedRoomName = sanitizeRoomName(normalizedRoomName);
+
+    for (final floorplanEntry in floorplans.entries) {
+      final hasRoom = floorplanEntry.value.rooms.any(
+        (final room) {
+          final candidate = room.name.trim().toLowerCase();
+          if (candidate == normalizedRoomName) {
+            return true;
+          }
+
+          return sanitizeRoomName(candidate) == sanitizedRoomName;
+        },
+      );
+      if (hasRoom) {
+        return floorplanEntry.key;
+      }
+    }
+    throw Exception("Floor not found for room: $roomName");
+  }
+
+  Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
+    final parsedStartRoom = _parseRoomLabel(startRoom);
+
+    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toUpperCase();
+    final isStartRoomInDifferentBuilding = parsedStartRoom.buildingId != currentBuildingId;
+    if (isStartRoomInDifferentBuilding) {
+      await _viewModel.initializeBuildingFloorplans(parsedStartRoom.buildingId.toLowerCase());
+      if (!mounted) {
+        return;
+      }
+    }
+
+    final floorplans = _viewModel.loadedFloorplans;
+    if (floorplans == null || floorplans.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No floor plans available for current location.")),
+      );
+      return;
+    }
+
+    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+
+    final changedFloor = _viewModel.changeFloor(startFloor);
+    if (!changedFloor) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
+      return;
+    }
+  }
+
   void _showFloorPicker(final BuildContext context) {
     final ivm = context.read<IndoorViewModel>();
     if (ivm.availableFloors == null || ivm.availableFloors!.isEmpty) {
@@ -290,7 +363,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                       heroTag: "floor_picker",
                       onPressed: () => _showFloorPicker(context),
                       label: Text(
-                        "${widget.building.id.toUpperCase()}${ivm.selectedFloorplan!.floorNumber}",
+                        "${ivm.selectedFloorplan!.buildingId.toUpperCase()}${ivm.selectedFloorplan!.floorNumber}",
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -310,6 +383,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                   child: SafeArea(
                     child: IndoorSearchBar(
                       destinationController: _destinationController,
+                      onStartNavigation: _handleStartNavigation,
                       queryableRooms: ivm.loadedRoomNames!,
                     ),
                   ),
