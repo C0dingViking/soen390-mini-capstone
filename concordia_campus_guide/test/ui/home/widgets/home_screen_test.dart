@@ -336,7 +336,7 @@ void main() {
       expect(find.text("CL 235"), findsOneWidget);
       expect(vm.clearNextClassDialogCalls, greaterThan(0));
 
-      await tester.tap(find.text("Return to Map"));
+      await tester.tap(find.byKey(const Key("next_class_dialog_close_button")));
       await tester.pumpAndSettle();
       expect(find.text("SOEN390"), findsNothing);
     });
