@@ -39,10 +39,22 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
   var currentX = 0.0;
   var currentY = 0.0;
 
-  // Tokenize the path data
   final tokens = _tokenizeSvgPath(pathData);
-
   var i = 0;
+
+  double num(final String s) => double.tryParse(s) ?? 0;
+
+  void applyPoint(final double x, final double y, final bool relative) {
+    if (relative) {
+      currentX += x;
+      currentY += y;
+    } else {
+      currentX = x;
+      currentY = y;
+    }
+    points.add(Point(currentX, currentY));
+  }
+
   while (i < tokens.length) {
     final token = tokens[i];
 
@@ -58,157 +70,80 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
     switch (command.toLowerCase()) {
       case "m":
       case "l":
-        // moveto or lineto - consume coordinate pairs
         while (i + 1 < tokens.length && _isNumber(tokens[i])) {
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "h":
-        // horizontal lineto - consume x values
         while (i < tokens.length && _isNumber(tokens[i])) {
-          final x = double.tryParse(tokens[i]) ?? 0;
-          if (isRelative) {
-            currentX += x;
-          } else {
-            currentX = x;
-          }
-          points.add(Point(currentX, currentY));
+          final x = num(tokens[i]);
+          applyPoint(x, 0, isRelative);
           i++;
         }
         break;
 
       case "v":
-        // vertical lineto - consume y values
         while (i < tokens.length && _isNumber(tokens[i])) {
-          final y = double.tryParse(tokens[i]) ?? 0;
-          if (isRelative) {
-            currentY += y;
-          } else {
-            currentY = y;
-          }
-          points.add(Point(currentX, currentY));
+          final y = num(tokens[i]);
+          applyPoint(0, y, isRelative);
           i++;
         }
         break;
 
       case "c":
-        // cubic bezier - consume 3 coordinate pairs (6 numbers)
         while (i + 5 < tokens.length && _isNumber(tokens[i])) {
-          // Skip two control points (4 numbers), use end point
-          i += 4;
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          i += 4; // skip control points
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "s":
-        // smooth cubic bezier - consume 2 coordinate pairs (4 numbers)
         while (i + 3 < tokens.length && _isNumber(tokens[i])) {
-          // Skip first control point (2 numbers), use end point
-          i += 2;
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          i += 2; // skip first control point
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "q":
-        // quadratic bezier - consume 2 coordinate pairs (4 numbers)
         while (i + 3 < tokens.length && _isNumber(tokens[i])) {
-          // Skip control point (2 numbers), use end point
-          i += 2;
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          i += 2; // skip control point
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "t":
-        // smooth quadratic bezier - consume 1 coordinate pair (2 numbers)
         while (i + 1 < tokens.length && _isNumber(tokens[i])) {
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "a":
-        // arc - consume 7 numbers per arc
         while (i + 6 < tokens.length && _isNumber(tokens[i])) {
-          // Skip rx, ry, x-axis-rotation, large-arc, sweep (5 numbers), use end point
-          i += 5;
-          final x = double.tryParse(tokens[i]) ?? 0;
-          final y = double.tryParse(tokens[i + 1]) ?? 0;
-
-          if (isRelative) {
-            currentX += x;
-            currentY += y;
-          } else {
-            currentX = x;
-            currentY = y;
-          }
-
-          points.add(Point(currentX, currentY));
+          i += 5; // skip arc params
+          final x = num(tokens[i]);
+          final y = num(tokens[i + 1]);
+          applyPoint(x, y, isRelative);
           i += 2;
         }
         break;
 
       case "z":
-        // closepath - no coordinates
         break;
     }
   }
