@@ -36,6 +36,17 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
 
   List<String> _filteredRoomList = [];
 
+  TextEditingController? get _activeController {
+    switch (_activeField) {
+      case FocusedField.onStart:
+        return _startController;
+      case FocusedField.onDestination:
+        return _destinationController;
+      case FocusedField.neither:
+        return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -99,16 +110,11 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       return;
     }
 
-    TextEditingController? activeController;
-    if (_activeField == FocusedField.onStart) {
-      activeController = _startController;
-    } else if (_activeField == FocusedField.onDestination) {
-      activeController = _destinationController;
-    }
+    final activeController = _activeController;
 
     if (activeController != null) {
       setState(() {
-        _filteredRoomList = _getFilteredRoomList(activeController!.text);
+        _filteredRoomList = _getFilteredRoomList(activeController.text);
       });
     }
   }
@@ -121,18 +127,12 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         .toList();
   }
 
-  void _selectRoomOption(final String roomName) async {
-    TextEditingController? activeController;
-
-    if (_activeField == FocusedField.onStart) {
-      activeController = _startController;
-    } else if (_activeField == FocusedField.onDestination) {
-      activeController = _destinationController;
-    }
+  void _selectRoomOption(final String roomName) {
+    final activeController = _activeController;
 
     if (activeController != null) {
       setState(() {
-        activeController!.text = roomName;
+        activeController.text = roomName;
         activeController.selection = TextSelection.fromPosition(
           TextPosition(offset: activeController.text.length),
         );
@@ -164,6 +164,11 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _startController.text.trim(),
       _destinationController.text.trim(),
     );
+  }
+
+  void _clearController(final TextEditingController controller) {
+    controller.clear();
+    setState(() {});
   }
 
   @override
@@ -215,10 +220,34 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     );
   }
 
+  Widget _buildSearchField({
+    required final TextEditingController controller,
+    required final FocusNode focusNode,
+    required final String hintText,
+    required final Widget prefixIcon,
+    final TextInputAction? textInputAction,
+  }) {
+    final showClearButton = controller.text.isNotEmpty;
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        suffixIcon: showClearButton
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => _clearController(controller),
+              )
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(final BuildContext context) {
-    final showClearStart = _startController.text.isNotEmpty;
-    final showClearDestination = _destinationController.text.isNotEmpty;
     final showStartNavigationButton = _canStartNavigation;
 
     return Column(
@@ -230,41 +259,19 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              _buildSearchField(
                 controller: _startController,
                 focusNode: _startFocus,
-                decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
-                  hintText: "Current location",
-                  prefixIcon: Icon(Icons.trip_origin),
-                  suffixIcon: showClearStart
-                      ? IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _startController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                ),
+                hintText: "Current location",
+                prefixIcon: const Icon(Icons.trip_origin),
               ),
               const Divider(height: 1),
-              TextField(
+              _buildSearchField(
                 controller: _destinationController,
                 focusNode: _destinationFocus,
                 textInputAction: TextInputAction.search,
-                decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
-                  hintText: "Choose destination",
-                  prefixIcon: const Icon(Icons.place_outlined),
-                  suffixIcon: showClearDestination
-                      ? IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _destinationController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                ),
+                hintText: "Choose destination",
+                prefixIcon: const Icon(Icons.place_outlined),
               ),
             ],
           ),
