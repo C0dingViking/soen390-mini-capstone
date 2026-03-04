@@ -68,6 +68,7 @@ class TestHomeViewModel extends HomeViewModel {
   String? initPath;
   bool goToCalled = false;
   bool showNextClassCalled = false;
+  bool setDestinationToUpcomingClassBuildingCalled = false;
   bool clearCalled = false;
   bool exitNavigationCalled = false;
   bool forceShowLoginSuccessMessage = false;
@@ -152,6 +153,12 @@ class TestHomeViewModel extends HomeViewModel {
   @override
   Future<void> showNextClass() async {
     showNextClassCalled = true;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> setDestinationToUpcomingClassBuilding() async {
+    setDestinationToUpcomingClassBuildingCalled = true;
     notifyListeners();
   }
 
@@ -329,8 +336,30 @@ void main() {
       expect(find.text("CL 235"), findsOneWidget);
       expect(vm.clearNextClassDialogCalls, greaterThan(0));
 
-      await tester.tap(find.text("Return to Map"));
+      await tester.tap(find.byKey(const Key("next_class_dialog_close_button")));
       await tester.pumpAndSettle();
+      expect(find.text("SOEN390"), findsNothing);
+    });
+
+    testWidgets("tapping Go to Next Class sets destination and closes dialog", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "cl"),
+      );
+      vm.forceShowNextClassDialog = true;
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Go to Next Class"));
+      await tester.pumpAndSettle();
+
+      expect(vm.setDestinationToUpcomingClassBuildingCalled, isTrue);
       expect(find.text("SOEN390"), findsNothing);
     });
 

@@ -12,6 +12,8 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
+import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
@@ -1322,19 +1324,29 @@ void main() {
 
   group("HomeViewModel next class", () {
     late HomeViewModel hvm;
+    late _TrackingPlacesInteractor trackingPlacesInteractor;
+    late GeolocatorPlatform previousPlatform;
+    late _FakeGeolocator fakeGeolocator;
 
     setUp(() {
+      trackingPlacesInteractor = _TrackingPlacesInteractor();
       hvm = HomeViewModel(
         mapInteractor: MapDataInteractor(
           buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
-        placesInteractor: _FakePlacesInteractor(),
+        placesInteractor: trackingPlacesInteractor,
         directionsInteractor: _FakeDirectionsInteractor(),
         calendarInteractor: _FakeCalendarInteractor(),
       );
+      previousPlatform = GeolocatorPlatform.instance;
+      fakeGeolocator = _FakeGeolocator()
+        ..lat = 45.4972
+        ..lng = -73.5786;
+      GeolocatorPlatform.instance = fakeGeolocator;
     });
 
     tearDown(() {
+      GeolocatorPlatform.instance = previousPlatform;
       hvm.dispose();
       LocationService.resetForTesting();
     });
@@ -1356,6 +1368,144 @@ void main() {
       hvm.clearNextClassDialog();
 
       expect(hvm.showNextClassDialog, isFalse);
+    });
+
+    test("setDestinationToUpcomingClassBuilding sets destination and camera target", () async {
+      final building = Building(
+        id: "MB",
+        googlePlacesId: null,
+        name: "J.W. McConnell Building",
+        description: "Engineering building",
+        street: "1400 De Maisonneuve Blvd. W",
+        postalCode: "H3G 1M8",
+        location: const Coordinate(latitude: 45.4972, longitude: -73.5786),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: const [],
+        images: const [],
+      );
+      hvm.buildings = {"MB": building};
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.destinationCoordinate, equals(building.location));
+      expect(hvm.selectedDestinationLabel, equals(building.name));
+      expect(hvm.cameraTarget, equals(building.location));
+      expect(hvm.selectedCampusIndex, equals(0));
+    });
+
+    test("setDestinationToUpcomingClassBuilding shows info when building is missing", () async {
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "x"),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
+    });
+
+    test("setDestinationToUpcomingClassBuilding falls back to first places suggestion", () async {
+      trackingPlacesInteractor.searchResults = const [
+        PlaceSuggestion(
+          placeId: "place-1",
+          description: "Concordia University EV Building, Montreal",
+          mainText: "Concordia University EV Building",
+          secondaryText: "Montreal, QC",
+        ),
+      ];
+      trackingPlacesInteractor.resolveResult = const Coordinate(
+        latitude: 45.4958,
+        longitude: -73.5779,
+      );
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "ev"),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(trackingPlacesInteractor.lastQuery, equals("ev"));
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.selectedDestinationLabel, equals("Concordia University EV Building"));
+      expect(hvm.cameraTarget, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.generateInfoMessage, isNull);
+    });
+
+    test("falls back for Richard Renaud Science Complex location", () async {
+      const buildingName = "Richard Renaud Science Complex";
+      trackingPlacesInteractor.searchResults = const [
+        PlaceSuggestion(
+          placeId: "place-richard-renaud",
+          description: "Richard Renaud Science Complex, Montreal",
+          mainText: "Richard Renaud Science Complex",
+          secondaryText: "Loyola Campus",
+        ),
+      ];
+      trackingPlacesInteractor.resolveResult = const Coordinate(
+        latitude: 45.4583,
+        longitude: -73.6407,
+      );
+      hvm.upcomingClass = AcademicClass(
+        "BIOL 201 LAB A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 15, 0),
+        Room("S110", "S1", Campus.loyola, buildingName),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(trackingPlacesInteractor.lastQuery, equals(buildingName));
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.selectedDestinationLabel, equals("Richard Renaud Science Complex"));
+      expect(hvm.generateInfoMessage, isNull);
+    });
+
+    test("falls back for HINGSTON B BUILDING location", () async {
+      const buildingName = "HINGSTON B BUILDING";
+      trackingPlacesInteractor.searchResults = const [
+        PlaceSuggestion(
+          placeId: "place-hingston-b",
+          description: "Hingston Hall B, Montreal",
+          mainText: "Hingston Hall B",
+          secondaryText: "Loyola Campus",
+        ),
+      ];
+      trackingPlacesInteractor.resolveResult = const Coordinate(
+        latitude: 45.4590,
+        longitude: -73.6401,
+      );
+      hvm.upcomingClass = AcademicClass(
+        "CHEM 205 LEC A",
+        DateTime(2026, 1, 5, 10, 0),
+        DateTime(2026, 1, 5, 11, 15),
+        Room("130", "1", Campus.loyola, buildingName),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(trackingPlacesInteractor.lastQuery, equals(buildingName));
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.selectedDestinationLabel, equals("Hingston Hall B"));
+      expect(hvm.generateInfoMessage, isNull);
     });
   });
 }

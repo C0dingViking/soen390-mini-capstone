@@ -179,45 +179,62 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (final context) => AlertDialog(
         backgroundColor: AppTheme.concordiaButtonCyan,
         contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        content: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Text(
-              courseCode,
-              style: GoogleFonts.roboto(
-                color: Colors.white,
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  courseCode,
+                  style: GoogleFonts.roboto(
+                    color: Colors.white,
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+                Text(classType, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
+                const SizedBox(height: 12.0),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        dateTime,
+                        style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        location,
+                        style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Positioned(
+              top: -12,
+              right: -12,
+              child: IconButton(
+                key: const Key("next_class_dialog_close_button"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.close, color: Colors.white),
+                tooltip: "Close",
               ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(classType, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
-            const SizedBox(height: 12.0),
-            Row(
-              children: [
-                const Icon(Icons.access_time, color: Colors.white, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    dateTime,
-                    style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Colors.white, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    location,
-                    style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -225,18 +242,26 @@ class _HomeScreenState extends State<HomeScreen> {
           Center(
             child: FractionallySizedBox(
               widthFactor: 0.8,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
-                label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  elevation: 0,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final navigator = Navigator.of(context);
+                      await _viewModel.setDestinationToUpcomingClassBuilding();
+                      if (!mounted) return;
+                      navigator.pop();
+                    },
+                    icon: const Icon(Icons.directions, color: Colors.white),
+                    label: Text("Go to Next Class", style: GoogleFonts.roboto(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
