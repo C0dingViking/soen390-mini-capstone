@@ -1,4 +1,5 @@
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
+import "package:concordia_campus_guide/ui/core/ui/search_ui.dart";
 import "package:flutter/material.dart";
 
 class IndoorSearchBar extends StatefulWidget {
@@ -193,30 +194,18 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   }
 
   Widget _buildResultsList(final BuildContext context, final List<String> results) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      constraints: const BoxConstraints(maxHeight: 260),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-      ),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        shrinkWrap: true,
-        itemCount: results.length,
-        separatorBuilder: (final context, final index) => const Divider(height: 1),
-        itemBuilder: (final context, final index) {
-          final room = results[index];
-          return ListTile(
-            title: Text(room),
-            onTap: () {
-              _selectRoomOption(room);
-              FocusScope.of(context).unfocus();
-            },
-          );
-        },
-      ),
+    return SearchResultsDropdown(
+      itemCount: results.length,
+      itemBuilder: (final context, final index) {
+        final room = results[index];
+        return ListTile(
+          title: Text(room),
+          onTap: () {
+            _selectRoomOption(room);
+            FocusScope.of(context).unfocus();
+          },
+        );
+      },
     );
   }
 
@@ -253,28 +242,25 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
+        SearchInputCard(
           elevation: _cardElevation,
-          borderRadius: BorderRadius.circular(_cardRadius),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildSearchField(
-                controller: _startController,
-                focusNode: _startFocus,
-                hintText: "Current location",
-                prefixIcon: const Icon(Icons.trip_origin),
-              ),
-              const Divider(height: 1),
-              _buildSearchField(
-                controller: _destinationController,
-                focusNode: _destinationFocus,
-                textInputAction: TextInputAction.search,
-                hintText: "Choose destination",
-                prefixIcon: const Icon(Icons.place_outlined),
-              ),
-            ],
-          ),
+          radius: _cardRadius,
+          children: [
+            _buildSearchField(
+              controller: _startController,
+              focusNode: _startFocus,
+              hintText: "Current location",
+              prefixIcon: const Icon(Icons.trip_origin),
+            ),
+            const Divider(height: 1),
+            _buildSearchField(
+              controller: _destinationController,
+              focusNode: _destinationFocus,
+              textInputAction: TextInputAction.search,
+              hintText: "Choose destination",
+              prefixIcon: const Icon(Icons.place_outlined),
+            ),
+          ],
         ),
         if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
         if (showStartNavigationButton) ...[
