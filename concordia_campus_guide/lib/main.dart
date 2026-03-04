@@ -1,5 +1,6 @@
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
             mapInteractor: MapDataInteractor(buildingRepo: BuildingRepository()),
             placesInteractor: PlacesInteractor(),
             directionsInteractor: DirectionsInteractor(),
+            calendarInteractor: CalendarInteractor(),
           ),
         ),
         ChangeNotifierProvider(

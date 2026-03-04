@@ -4,7 +4,8 @@ enum RouteMode {
   walking,
   bicycling,
   driving,
-  transit;
+  transit,
+  shuttle; // custom mode for Concordia shuttle routes
 
   String get asString {
     switch (this) {
@@ -16,6 +17,8 @@ enum RouteMode {
         return "driving";
       case RouteMode.transit:
         return "transit";
+      case RouteMode.shuttle:
+        return "shuttle";
     }
   }
 }
