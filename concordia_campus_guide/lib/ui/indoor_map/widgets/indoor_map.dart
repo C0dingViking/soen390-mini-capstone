@@ -66,7 +66,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (!mounted) return;
   }
 
-  ({String buildingId, String roomName}) _parseRoomLabel(final String roomLabel) { 
+  ({String buildingId, String roomName}) _parseRoomLabel(final String roomLabel) {
     final trimmedLabel = roomLabel.trim();
 
     final parts = trimmedLabel.split(RegExp(r"\s+"));
@@ -91,16 +91,14 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final sanitizedRoomName = sanitizeRoomName(normalizedRoomName);
 
     for (final floorplanEntry in floorplans.entries) {
-      final hasRoom = floorplanEntry.value.rooms.any(
-        (final room) {
-          final candidate = room.name.trim().toLowerCase();
-          if (candidate == normalizedRoomName) {
-            return true;
-          }
+      final hasRoom = floorplanEntry.value.rooms.any((final room) {
+        final candidate = room.name.trim().toLowerCase();
+        if (candidate == normalizedRoomName) {
+          return true;
+        }
 
-          return sanitizeRoomName(candidate) == sanitizedRoomName;
-        },
-      );
+        return sanitizeRoomName(candidate) == sanitizedRoomName;
+      });
       if (hasRoom) {
         return floorplanEntry.key;
       }

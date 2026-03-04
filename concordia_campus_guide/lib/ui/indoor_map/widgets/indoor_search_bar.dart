@@ -271,7 +271,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         ),
         if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
         if (showStartNavigationButton) ...[
-          const SizedBox(height: _buttonHeight), 
+          const SizedBox(height: _buttonHeight),
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
