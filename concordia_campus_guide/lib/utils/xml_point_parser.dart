@@ -81,7 +81,8 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
       case "h":
         while (i < tokens.length && _isNumber(tokens[i])) {
           final x = num(tokens[i]);
-          applyPoint(x, 0, isRelative);
+          final targetX = isRelative ? x : x - currentX;
+          applyPoint(targetX, 0, true);
           i++;
         }
         break;
@@ -89,7 +90,8 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
       case "v":
         while (i < tokens.length && _isNumber(tokens[i])) {
           final y = num(tokens[i]);
-          applyPoint(0, y, isRelative);
+          final targetY = isRelative ? y : y - currentY;
+          applyPoint(0, targetY, true);
           i++;
         }
         break;

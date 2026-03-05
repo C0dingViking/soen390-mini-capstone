@@ -65,6 +65,30 @@ void main() {
       expect(points[1], Point(30.0, 40.0)); // relative to the first point
     });
 
+    test("keeps current axis for absolute horizontal and vertical commands", () {
+      final pathElement = XmlDocument.parse('<path d="M 10 20 H 30 V 40"/>').rootElement;
+
+      final points = parsePointsFromSvgPath(pathElement);
+
+      expect(points.length, 3);
+      expect(points[0], Point(10.0, 20.0));
+      expect(points[1], Point(30.0, 20.0));
+      expect(points[2], Point(30.0, 40.0));
+    });
+
+    test("supports chained relative horizontal and vertical commands", () {
+      final pathElement = XmlDocument.parse('<path d="M 10 20 h 5 v 5 h -3 v -2"/>').rootElement;
+
+      final points = parsePointsFromSvgPath(pathElement);
+
+      expect(points.length, 5);
+      expect(points[0], Point(10.0, 20.0));
+      expect(points[1], Point(15.0, 20.0));
+      expect(points[2], Point(15.0, 25.0));
+      expect(points[3], Point(12.0, 25.0));
+      expect(points[4], Point(12.0, 23.0));
+    });
+
     test("ignores unsupported commands", () {
       final pathElement = XmlDocument.parse('<path d="M 10 20 J 15 25, 30 40"/>').rootElement;
 
