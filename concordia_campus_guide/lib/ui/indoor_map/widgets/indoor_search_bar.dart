@@ -203,7 +203,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     }
 
     _startFocus.dispose();
-    
+
     if (_ownsDestinationFocus) {
       _destinationFocus.dispose();
     }
