@@ -28,7 +28,9 @@ class IndoorMapView extends StatefulWidget {
 
 class _IndoorMapViewState extends State<IndoorMapView> {
   final TransformationController _controller = TransformationController();
+  final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
+  final FocusNode _destinationFocusNode = FocusNode();
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
   final floorPickerSpacing = 16.0;
@@ -58,7 +60,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChange);
+    _startController.dispose();
     _destinationController.dispose();
+    _destinationFocusNode.dispose();
     super.dispose();
   }
 
@@ -251,6 +255,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationLabel = "${floorplan.buildingId.toUpperCase()} $roomName";
     _destinationController.text = destinationLabel;
     _destinationController.selection = TextSelection.collapsed(offset: destinationLabel.length);
+    _destinationFocusNode.requestFocus();
   }
 
   static Offset? _scenePointToSvgPoint(
@@ -380,7 +385,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                   right: searchBarSpacingRight,
                   child: SafeArea(
                     child: IndoorSearchBar(
+                      startController: _startController,
                       destinationController: _destinationController,
+                      destinationFocusNode: _destinationFocusNode,
                       onStartNavigation: _handleStartNavigation,
                       queryableRooms: ivm.loadedRoomNames!,
                     ),

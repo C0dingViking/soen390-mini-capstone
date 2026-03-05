@@ -6,12 +6,14 @@ class IndoorSearchBar extends StatefulWidget {
   final List<String> queryableRooms;
   final TextEditingController? startController;
   final TextEditingController? destinationController;
+  final FocusNode? destinationFocusNode;
   final void Function(String startRoom, String destinationRoom)? onStartNavigation;
 
   const IndoorSearchBar({
     super.key,
     this.startController,
     this.destinationController,
+    this.destinationFocusNode,
     this.onStartNavigation,
     required this.queryableRooms,
   });
@@ -31,6 +33,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late TextEditingController _destinationController;
   late bool _ownsStartController;
   late bool _ownsDestinationController;
+  late bool _ownsDestinationFocus;
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
@@ -56,7 +59,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _ownsStartController = widget.startController == null;
     _ownsDestinationController = widget.destinationController == null;
     _startFocus = FocusNode();
-    _destinationFocus = FocusNode();
+    _destinationFocus = widget.destinationFocusNode ?? FocusNode();
+    _ownsDestinationFocus = widget.destinationFocusNode == null;
     _activeField = FocusedField.neither;
 
     _startFocus.addListener(_handleFocusChange);
@@ -103,6 +107,17 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController = widget.destinationController ?? TextEditingController();
       _ownsDestinationController = widget.destinationController == null;
       _destinationController.addListener(_onFieldTextChanged);
+    }
+
+    if (oldWidget.destinationFocusNode != widget.destinationFocusNode) {
+      _destinationFocus.removeListener(_handleFocusChange);
+      if (_ownsDestinationFocus) {
+        _destinationFocus.dispose();
+      }
+
+      _destinationFocus = widget.destinationFocusNode ?? FocusNode();
+      _ownsDestinationFocus = widget.destinationFocusNode == null;
+      _destinationFocus.addListener(_handleFocusChange);
     }
   }
 
@@ -188,7 +203,10 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     }
 
     _startFocus.dispose();
-    _destinationFocus.dispose();
+    
+    if (_ownsDestinationFocus) {
+      _destinationFocus.dispose();
+    }
 
     super.dispose();
   }
