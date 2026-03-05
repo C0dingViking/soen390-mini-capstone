@@ -35,14 +35,51 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
   final pathData = pathElement.getAttribute("d") ?? "";
   if (pathData.isEmpty) return [];
 
-  final points = <Point<double>>[];
-  var currentX = 0.0;
-  var currentY = 0.0;
-
   final tokens = _tokenizeSvgPath(pathData);
+  final state = _SvgPathState();
   var i = 0;
 
-  double num(final String s) => double.tryParse(s) ?? 0;
+  while (i < tokens.length) {
+    final token = tokens[i];
+
+    if (!_isCommand(token)) {
+      i++;
+      continue;
+    }
+
+    final command = token.toLowerCase();
+    final isRelative = token == token.toLowerCase();
+    i++;
+
+    final handler = _pathCommandHandlers[command];
+    if (handler != null) {
+      i = handler(tokens, i, isRelative, state);
+    }
+  }
+
+  return state.points;
+}
+
+typedef _PathCommandHandler =
+    int Function(List<String> tokens, int index, bool isRelative, _SvgPathState state);
+
+final Map<String, _PathCommandHandler> _pathCommandHandlers = {
+  "m": _handleMoveOrLine,
+  "l": _handleMoveOrLine,
+  "h": _handleHorizontal,
+  "v": _handleVertical,
+  "c": _handleCubicBezier,
+  "s": _handleSmoothCubicBezier,
+  "q": _handleQuadraticBezier,
+  "t": _handleSmoothQuadraticBezier,
+  "a": _handleArc,
+  "z": _handleClosePath,
+};
+
+class _SvgPathState {
+  var currentX = 0.0;
+  var currentY = 0.0;
+  final points = <Point<double>>[];
 
   void applyPoint(final double x, final double y, final bool relative) {
     if (relative) {
@@ -54,103 +91,141 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
     }
     points.add(Point(currentX, currentY));
   }
+}
 
-  while (i < tokens.length) {
-    final token = tokens[i];
+double _parsePathNumber(final String token) => double.tryParse(token) ?? 0;
 
-    if (!_isCommand(token)) {
-      i++;
-      continue;
-    }
-
-    final command = token;
-    final isRelative = command == command.toLowerCase();
-    i++;
-
-    switch (command.toLowerCase()) {
-      case "m":
-      case "l":
-        while (i + 1 < tokens.length && _isNumber(tokens[i])) {
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "h":
-        while (i < tokens.length && _isNumber(tokens[i])) {
-          final x = num(tokens[i]);
-          final targetX = isRelative ? x : x - currentX;
-          applyPoint(targetX, 0, true);
-          i++;
-        }
-        break;
-
-      case "v":
-        while (i < tokens.length && _isNumber(tokens[i])) {
-          final y = num(tokens[i]);
-          final targetY = isRelative ? y : y - currentY;
-          applyPoint(0, targetY, true);
-          i++;
-        }
-        break;
-
-      case "c":
-        while (i + 5 < tokens.length && _isNumber(tokens[i])) {
-          i += 4; // skip control points
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "s":
-        while (i + 3 < tokens.length && _isNumber(tokens[i])) {
-          i += 2; // skip first control point
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "q":
-        while (i + 3 < tokens.length && _isNumber(tokens[i])) {
-          i += 2; // skip control point
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "t":
-        while (i + 1 < tokens.length && _isNumber(tokens[i])) {
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "a":
-        while (i + 6 < tokens.length && _isNumber(tokens[i])) {
-          i += 5; // skip arc params
-          final x = num(tokens[i]);
-          final y = num(tokens[i + 1]);
-          applyPoint(x, y, isRelative);
-          i += 2;
-        }
-        break;
-
-      case "z":
-        break;
-    }
+int _handleMoveOrLine(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 1 < tokens.length && _isNumber(tokens[index])) {
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
   }
+  return index;
+}
 
-  return points;
+int _handleHorizontal(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index < tokens.length && _isNumber(tokens[index])) {
+    final x = _parsePathNumber(tokens[index]);
+    final targetX = isRelative ? x : x - state.currentX;
+    state.applyPoint(targetX, 0, true);
+    index++;
+  }
+  return index;
+}
+
+int _handleVertical(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index < tokens.length && _isNumber(tokens[index])) {
+    final y = _parsePathNumber(tokens[index]);
+    final targetY = isRelative ? y : y - state.currentY;
+    state.applyPoint(0, targetY, true);
+    index++;
+  }
+  return index;
+}
+
+int _handleCubicBezier(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 5 < tokens.length && _isNumber(tokens[index])) {
+    index += 4;
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
+  }
+  return index;
+}
+
+int _handleSmoothCubicBezier(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 3 < tokens.length && _isNumber(tokens[index])) {
+    index += 2;
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
+  }
+  return index;
+}
+
+int _handleQuadraticBezier(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 3 < tokens.length && _isNumber(tokens[index])) {
+    index += 2;
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
+  }
+  return index;
+}
+
+int _handleSmoothQuadraticBezier(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 1 < tokens.length && _isNumber(tokens[index])) {
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
+  }
+  return index;
+}
+
+int _handleArc(
+  final List<String> tokens,
+  int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  while (index + 6 < tokens.length && _isNumber(tokens[index])) {
+    index += 5;
+    final x = _parsePathNumber(tokens[index]);
+    final y = _parsePathNumber(tokens[index + 1]);
+    state.applyPoint(x, y, isRelative);
+    index += 2;
+  }
+  return index;
+}
+
+int _handleClosePath(
+  final List<String> tokens,
+  final int index,
+  final bool isRelative,
+  final _SvgPathState state,
+) {
+  return index;
 }
 
 List<String> _tokenizeSvgPath(final String pathData) {
