@@ -13,7 +13,7 @@ Point<double> parsePointFromSvgCircle(final XmlElement circleElement) {
     logger.e("XML Parser: Invalid SVG circle attribute value", error: e);
   }
 
-  return Point(0, 0);
+  return const Point(0, 0);
 }
 
 List<Point<double>> parsePointsFromSvgRect(final XmlElement rectElement) {

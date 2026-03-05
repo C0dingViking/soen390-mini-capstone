@@ -41,7 +41,6 @@ class IndoorViewModel extends ChangeNotifier {
   Future<void> initializeBuildingFloorplans(final String buildingId) async {
     if (loadedBuildingId != null &&
         loadedBuildingId == buildingId &&
-        buildingId == loadedBuildingId &&
         loadedFloorplans != null &&
         loadedFloorplans!.isNotEmpty &&
         selectedFloorplan != null) {

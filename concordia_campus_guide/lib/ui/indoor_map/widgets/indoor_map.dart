@@ -286,7 +286,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
-      appBar: CampusAppBar(),
+      appBar: const CampusAppBar(),
       body: Consumer<IndoorViewModel>(
         builder: (final context, final ivm, final child) {
           if (ivm.isLoading || ivm.selectedFloorplan == null) {

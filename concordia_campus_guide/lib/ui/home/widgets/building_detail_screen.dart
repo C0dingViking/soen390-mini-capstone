@@ -81,7 +81,6 @@ class BuildingDetailScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Accessibility Info
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -108,7 +107,6 @@ class BuildingDetailScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Go To This Building
           FloatingActionButton.extended(
             heroTag: "go_to_here",
             onPressed: () async {

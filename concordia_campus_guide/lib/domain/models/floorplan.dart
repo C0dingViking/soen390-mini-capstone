@@ -3,6 +3,8 @@ import "dart:math";
 import "package:concordia_campus_guide/utils/xml_point_parser.dart";
 import "package:xml/xml.dart";
 
+final String _inkscapeLabelRoot = "inkscape:label";
+
 class IndoorMapRoom {
   final String name;
   final Point<double> doorLocation;
@@ -113,11 +115,11 @@ class Floorplan {
 
     final connectorsLayer = xmlData
         .findAllElements("g")
-        .firstWhere((final e) => e.getAttribute("inkscape:label") == "connectors");
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "connectors");
 
     final roomsLayer = xmlData
         .findAllElements("g")
-        .firstWhere((final e) => e.getAttribute("inkscape:label") == "rooms");
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "rooms");
     floorplan.rooms = floorplan._parseRoomData(
       buildingId,
       floorNumber,
@@ -127,7 +129,7 @@ class Floorplan {
 
     final poisLayer = xmlData
         .findAllElements("g")
-        .firstWhere((final e) => e.getAttribute("inkscape:label") == "points-of-interest");
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "points-of-interest");
     floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
 
     return floorplan;
@@ -147,7 +149,7 @@ class Floorplan {
       ...roomLayer.findAllElements("rect"),
       ...roomLayer.findAllElements("path"),
     ]) {
-      final match = roomRegex.firstMatch(element.getAttribute("inkscape:label") ?? "");
+      final match = roomRegex.firstMatch(element.getAttribute(_inkscapeLabelRoot) ?? "");
       if (match == null) {
         continue;
       }
@@ -162,7 +164,7 @@ class Floorplan {
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
       final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute("inkscape:label") ?? "";
+        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
         return label == expected;
       }, orElse: () => XmlElement(XmlName("ellipse")));
 
@@ -188,7 +190,7 @@ class Floorplan {
       ...poiLayer.findAllElements("rect"),
       ...poiLayer.findAllElements("path"),
     ]) {
-      final match = poiRegex.firstMatch(element.getAttribute("inkscape:label") ?? "");
+      final match = poiRegex.firstMatch(element.getAttribute(_inkscapeLabelRoot) ?? "");
       if (match == null) {
         continue;
       }
@@ -205,7 +207,7 @@ class Floorplan {
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
       final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute("inkscape:label") ?? "";
+        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
         return label == expected;
       }, orElse: () => XmlElement(XmlName("ellipse")));
 
