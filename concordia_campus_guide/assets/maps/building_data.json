@@ -46,7 +46,8 @@
         ]
       },
       "buildingFeatures": ["escalator", "elevator", "wheelChairAccess", "bathroom", "food", "metroAccess", "shuttleBus"],
-      "images": ["assets/images/buildings/SGW/h.jpg"]
+      "images": ["assets/images/buildings/SGW/h.jpg"],
+      "supportedIndoorFloors": [1, 2, 8, 9]
     },
     {
       "id": "mb",
@@ -114,7 +115,8 @@
         ]
       },
       "buildingFeatures": ["elevator", "escalator", "wheelChairAccess", "bathroom", "food", "metroAccess"],
-      "images": ["assets/images/buildings/SGW/mb.jpg"]
+      "images": ["assets/images/buildings/SGW/mb.jpg"],
+      "supportedIndoorFloors": [1, 2]
     },
     {
       "id": "lb",
@@ -266,7 +268,8 @@
         ]
       },
       "buildingFeatures": ["elevator", "wheelChairAccess", "food", "metroAccess", "bathroom"],
-      "images": ["assets/images/buildings/SGW/lb.jpg"]
+      "images": ["assets/images/buildings/SGW/lb.jpg"],
+      "supportedIndoorFloors": [2, 3, 4, 5]
     },
     {
       "id": "cc",
@@ -374,7 +377,8 @@
         ]
       },
       "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom"],
-      "images": ["assets/images/buildings/LOY/cc.jpg"]
+      "images": ["assets/images/buildings/LOY/cc.jpg"],
+      "supportedIndoorFloors": [1]
     },
     {
       "id": "vl",
@@ -518,7 +522,8 @@
         ]
       },
       "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
-      "images": ["assets/images/buildings/LOY/vl.jpg"]
+      "images": ["assets/images/buildings/LOY/vl.jpg"],
+      "supportedIndoorFloors": [1, 2]
     },
     {
       "id": "ve",
@@ -582,7 +587,8 @@
         ]
       },
       "buildingFeatures": ["elevator", "wheelChairAccess", "bathroom", "shuttleBus"],
-      "images": ["assets/images/buildings/LOY/ve.jpg"]
+      "images": ["assets/images/buildings/LOY/ve.jpg"],
+      "supportedIndoorFloors": [1, 2]
     }
   ]
 }

@@ -27,6 +27,7 @@ class Building {
   final String street;
   final String postalCode;
   final List<String> images;
+  final List<int> supportedIndoorFloors;
 
   @CoordinateConverter()
   final Coordinate location;
@@ -60,6 +61,7 @@ class Building {
     required this.campus,
     required this.outlinePoints,
     required this.images,
+    this.supportedIndoorFloors = const [],
     this.buildingFeatures,
   });
 

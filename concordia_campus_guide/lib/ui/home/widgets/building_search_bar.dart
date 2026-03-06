@@ -1,4 +1,5 @@
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
+import "package:concordia_campus_guide/ui/core/ui/search_ui.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
 import "package:flutter/material.dart";
@@ -240,27 +241,22 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     required final bool isResolvingPlace,
     required final bool isSearchingPlaces,
   }) {
-    return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_expanded)
-            _buildStartField(
-              context,
-              showClearStart: showClearStart,
-              isResolvingStart: isResolvingStart,
-            ),
-          if (_expanded) const Divider(height: 1),
-          _buildDestinationField(
+    return SearchInputCard(
+      children: [
+        if (_expanded)
+          _buildStartField(
             context,
-            showClearDestination: showClearDestination,
-            isResolvingPlace: isResolvingPlace,
-            isSearchingPlaces: isSearchingPlaces,
+            showClearStart: showClearStart,
+            isResolvingStart: isResolvingStart,
           ),
-        ],
-      ),
+        if (_expanded) const Divider(height: 1),
+        _buildDestinationField(
+          context,
+          showClearDestination: showClearDestination,
+          isResolvingPlace: isResolvingPlace,
+          isSearchingPlaces: isSearchingPlaces,
+        ),
+      ],
     );
   }
 
@@ -385,47 +381,35 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   Widget _buildResultsList(final BuildContext context, final List<SearchSuggestion> results) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      constraints: const BoxConstraints(maxHeight: 260),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-      ),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        shrinkWrap: true,
-        itemCount: results.length,
-        separatorBuilder: (final context, final index) => const Divider(height: 1),
-        itemBuilder: (final context, final index) {
-          final suggestion = results[index];
-          final isBuilding = suggestion.type == SearchSuggestionType.building;
-          return ListTile(
-            leading: isBuilding
-                ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
-                : const Icon(Icons.location_on_outlined),
-            title: Text(suggestion.title),
-            subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
-            trailing: isBuilding && suggestion.building != null
-                ? IconButton(
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (final context) =>
-                              BuildingDetailScreen(building: suggestion.building!),
-                        ),
-                      );
-                    },
-                    tooltip: "View building info",
-                  )
-                : null,
-            onTap: () => _selectSuggestion(suggestion),
-          );
-        },
-      ),
+    return SearchResultsDropdown(
+      itemCount: results.length,
+      itemBuilder: (final context, final index) {
+        final suggestion = results[index];
+        final isBuilding = suggestion.type == SearchSuggestionType.building;
+        return ListTile(
+          leading: isBuilding
+              ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
+              : const Icon(Icons.location_on_outlined),
+          title: Text(suggestion.title),
+          subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
+          trailing: isBuilding && suggestion.building != null
+              ? IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (final context) =>
+                            BuildingDetailScreen(building: suggestion.building!),
+                      ),
+                    );
+                  },
+                  tooltip: "View building info",
+                )
+              : null,
+          onTap: () => _selectSuggestion(suggestion),
+        );
+      },
     );
   }
 }
