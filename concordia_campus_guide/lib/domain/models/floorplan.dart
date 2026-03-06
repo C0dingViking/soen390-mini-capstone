@@ -3,7 +3,7 @@ import "dart:math";
 import "package:concordia_campus_guide/utils/xml_point_parser.dart";
 import "package:xml/xml.dart";
 
-final String _inkscapeLabelRoot = "inkscape:label";
+final const String _inkscapeLabelRoot = "inkscape:label";
 
 class IndoorMapRoom {
   final String name;
