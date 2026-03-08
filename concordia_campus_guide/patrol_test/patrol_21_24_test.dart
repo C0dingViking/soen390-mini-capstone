@@ -6,7 +6,7 @@ import "package:patrol/patrol.dart";
 void main() {
   patrolTest(
     "[US-2.1] Select Start (Hall) and Destination (CC) [US-2.4] Support Directions between Concordia Campuses",
-        (final $) async {
+    (final $) async {
       $.log("STEP 1: Launching the app...");
       app.main();
       await $.pumpAndSettle();
@@ -36,7 +36,6 @@ void main() {
       await $.tester.tap(hallOption);
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 5));
-
 
       $.log("STEP 7: Tapping the start field...");
       final destField = find.widgetWithText(TextField, "Current location");
