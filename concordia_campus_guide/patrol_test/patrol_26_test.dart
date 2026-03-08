@@ -5,7 +5,7 @@ import "package:patrol/patrol.dart";
 
 void main() {
   patrolTest(
-    "[US-2.5] Multiple TrDriving Option",
+    "[US-2.6] Shuttle bus",
         (final $) async {
       $.log("STEP 1: Launching the app...");
       app.main();
@@ -20,8 +20,6 @@ void main() {
       $.log("STEP 3: Waiting for UI to settle...");
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 6));
-
-      // ---------------- SELECT DESTINATION = HALL ----------------
 
       $.log("STEP 4: Tapping the search bar...");
       final searchField =
@@ -40,7 +38,7 @@ void main() {
       await $.pumpAndSettle();
 
       $.log("STEP 6.1: Hiding keyboard...");
-      await $.native.tapAt(Offset(0.5, 0.85));
+      await $.tester.tapAt(Offset(0.5, 0.85));
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 1));
 

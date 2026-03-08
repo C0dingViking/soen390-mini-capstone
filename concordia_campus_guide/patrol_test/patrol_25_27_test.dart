@@ -38,7 +38,7 @@ void main() {
       await $.pumpAndSettle();
 
       $.log("STEP 6.1: Hiding keyboard...");
-      await $.native.tapAt(Offset(0.5, 0.85));
+      await $.tester.tapAt(Offset(0.5, 0.85));
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 3));
 
