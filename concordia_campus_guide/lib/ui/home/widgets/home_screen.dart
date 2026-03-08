@@ -334,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   bottom: actionBottomOffset,
                   child: hvm.currentBuilding != null
                       ? FloatingActionButton.extended(
+                          key: const Key("my_location_key"),
                           heroTag: "my_location",
                           onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
@@ -348,6 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         )
                       : FloatingActionButton(
+                          key: const Key("my_location_key"),
                           heroTag: "my_location",
                           onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
