@@ -4,6 +4,7 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
@@ -21,9 +22,7 @@ class BuildingDetailScreen extends StatelessWidget {
         color: AppTheme.concordiaGold,
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height + 300,
-            ),
+            constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height + 300),
             child: Column(
               spacing: 10,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,10 +36,7 @@ class BuildingDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        building.name,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
+                      child: Text(building.name, style: Theme.of(context).textTheme.headlineSmall),
                     ),
                   ],
                 ),
@@ -58,10 +54,7 @@ class BuildingDetailScreen extends StatelessWidget {
 
                       if (building.buildingFeatures != null &&
                           building.buildingFeatures!.isNotEmpty)
-                        Builder(
-                          builder: (final context) =>
-                              _buildFeaturesRow(context),
-                        ),
+                        Builder(builder: (final context) => _buildFeaturesRow(context)),
 
                       const SizedBox(height: 16),
 
@@ -88,18 +81,32 @@ class BuildingDetailScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Accessibility Info
-          FloatingActionButton(
-            heroTag: "accessibility_info",
-            onPressed: () => _showAccessibilityDialog(context),
-            tooltip: "Accessibility Information",
-            backgroundColor: AppTheme.concordiaMaroon,
-            child: const Icon(Icons.info, color: Colors.white),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                heroTag: "accessibility_info",
+                onPressed: () => _showAccessibilityDialog(context),
+                tooltip: "Accessibility Information",
+                backgroundColor: AppTheme.concordiaMaroon,
+                child: const Icon(Icons.info, color: Colors.white),
+              ),
+
+              if (building.supportedIndoorFloors.isNotEmpty) ...[
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: "indoor_floor_plans",
+                  onPressed: () => _showIndoorFloorPlans(context),
+                  tooltip: "Indoor Floor Plans",
+                  backgroundColor: AppTheme.concordiaMaroon,
+                  child: const Icon(Icons.schema, color: Colors.white),
+                ),
+              ],
+            ],
           ),
 
           const SizedBox(height: 12),
 
-          // Go To This Building
           FloatingActionButton.extended(
             heroTag: "go_to_here",
             onPressed: () async {
@@ -111,10 +118,7 @@ class BuildingDetailScreen extends StatelessWidget {
               if (!viewModel.isSearchBarExpanded) {
                 await viewModel.setStartToCurrentLocation();
               }
-              await viewModel.selectSearchSuggestion(
-                suggestion,
-                SearchField.destination,
-              );
+              await viewModel.selectSearchSuggestion(suggestion, SearchField.destination);
               viewModel.requestUnfocusSearchBar();
               if (!context.mounted) return;
               Navigator.pop(context);
@@ -135,8 +139,7 @@ class BuildingDetailScreen extends StatelessWidget {
         width: double.infinity,
         height: 250,
         fit: BoxFit.cover,
-        errorBuilder: (final context, final error, final stackTrace) =>
-            _buildPlaceholderImage(),
+        errorBuilder: (final context, final error, final stackTrace) => _buildPlaceholderImage(),
       );
     }
     return _buildPlaceholderImage();
@@ -188,9 +191,9 @@ class BuildingDetailScreen extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 "Close",
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppTheme.concordiaMaroon,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: AppTheme.concordiaMaroon),
               ),
             ),
           ],
@@ -199,10 +202,7 @@ class BuildingDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccessibilityFeature(
-    final BuildingFeature feature,
-    final BuildContext context,
-  ) {
+  Widget _buildAccessibilityFeature(final BuildingFeature feature, final BuildContext context) {
     IconData icon;
     String description;
 
@@ -243,12 +243,7 @@ class BuildingDetailScreen extends StatelessWidget {
         children: [
           Icon(icon, size: 32, color: AppTheme.concordiaMaroon),
           const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              description,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
+          Expanded(child: Text(description, style: Theme.of(context).textTheme.bodyLarge)),
         ],
       ),
     );
@@ -304,5 +299,14 @@ class BuildingDetailScreen extends StatelessWidget {
 
   Widget _buildOpeningHours() {
     return OpeningHoursWidget(building: building);
+  }
+
+  void _showIndoorFloorPlans(final BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<IndoorMapView>(
+        builder: (final context) => IndoorMapView(building: building),
+      ),
+    );
   }
 }

@@ -29,16 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   CoordinatesController get coordsController => _coords;
 
   final List<CampusDetails> _campuses = [
-    const CampusDetails(
-      name: "SGW",
-      coord: HomeViewModel.sgw,
-      icon: Icons.location_city,
-    ),
-    const CampusDetails(
-      name: "LOY",
-      coord: HomeViewModel.loyola,
-      icon: Icons.school,
-    ),
+    const CampusDetails(name: "SGW", coord: HomeViewModel.sgw, icon: Icons.location_city),
+    const CampusDetails(name: "LOY", coord: HomeViewModel.loyola, icon: Icons.school),
   ];
 
   @override
@@ -46,9 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<HomeViewModel>().initializeBuildingsData(
-        "assets/maps/building_data.json",
-      );
+      context.read<HomeViewModel>().initializeBuildingsData(HomeViewModel.buildingDataAssetPath);
     });
   }
 
@@ -68,9 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onViewModelChange() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+    }
+    if (_viewModel.generateInfoMessage != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      ).showSnackBar(SnackBar(content: Text(_viewModel.generateInfoMessage!)));
+      _viewModel.generateInfoMessage = null; // Auto clear
     }
     if (_viewModel.routeBounds != null) {
       _coords.fitBounds(_viewModel.routeBounds!);
@@ -90,6 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _showLoginSuccessMessage(context);
       });
       _viewModel.clearLoginSuccessMessage();
+    }
+    if (_viewModel.showNextClassDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showNextClassDialog(context);
+      });
+      _viewModel.clearNextClassDialog();
     }
   }
 
@@ -146,25 +147,121 @@ class _HomeScreenState extends State<HomeScreen> {
                   context.read<HomeViewModel>().clearLoginSuccessMessage();
                   Navigator.of(context).pop();
                 },
-                icon: const Icon(
-                  Icons.arrow_circle_left_outlined,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  "Return to Map",
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
+                icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
+                label: Text("Return to Map", style: GoogleFonts.roboto(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   elevation: 0,
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNextClassDialog(final BuildContext context) {
+    final upcomingClass = _viewModel.upcomingClass;
+    if (upcomingClass == null) return;
+
+    final courseCode = upcomingClass.getCourseCode();
+    final classType = upcomingClass.classType();
+    final dateTime = upcomingClass.getFormattedDayAndTime();
+    final location =
+        "${upcomingClass.room.buildingId.toUpperCase()} ${upcomingClass.room.roomNumber}";
+
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (final context) => AlertDialog(
+        backgroundColor: AppTheme.concordiaButtonCyan,
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        content: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  courseCode,
+                  style: GoogleFonts.roboto(
+                    color: Colors.white,
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+                Text(classType, style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0)),
+                const SizedBox(height: 12.0),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        dateTime,
+                        style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        location,
+                        style: GoogleFonts.roboto(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Positioned(
+              top: -12,
+              right: -12,
+              child: IconButton(
+                key: const Key("next_class_dialog_close_button"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.close, color: Colors.white),
+                tooltip: "Close",
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: FractionallySizedBox(
+              widthFactor: 0.8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final navigator = Navigator.of(context);
+                      await _viewModel.setDestinationToUpcomingClassBuilding();
+                      if (!mounted) return;
+                      navigator.pop();
+                    },
+                    icon: const Icon(Icons.directions, color: Colors.white),
+                    label: Text("Go to Next Class", style: GoogleFonts.roboto(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -176,8 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     final hasNavigation = context.select(
-      (final HomeViewModel vm) =>
-          vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
+      (final HomeViewModel vm) => vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
     );
 
     return PopScope(
@@ -196,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const double searchBarTop = 12;
             const double actionInset = 25;
             const double actionBottom = 25;
+            const double secondActionBottom = 85;
             const double actionBottomWithRoutes = 145;
             const double toggleRadius = 30;
             const double togglePaddingVertical = 8;
@@ -206,8 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
             const double spacingSm = 8;
-            final double actionBottomOffset =
-                (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+            final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                 ? actionBottomWithRoutes
                 : actionBottom;
 
@@ -219,6 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     zoom: 15,
                   ),
                   onMapCreated: _coords.onMapCreated,
+                  onCameraMove: hvm.onMapCameraMove,
                   myLocationEnabled: hvm.myLocationEnabled,
                   polygons: hvm.buildingOutlines,
                   markers: hvm.mapMarkers,
@@ -237,15 +334,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   bottom: actionBottomOffset,
                   child: hvm.currentBuilding != null
                       ? FloatingActionButton.extended(
+                          key: const Key("my_location_key"),
                           heroTag: "my_location",
-                          onPressed: () => context
-                              .read<HomeViewModel>()
-                              .goToCurrentLocation(),
+                          onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          icon: const Icon(
-                            Icons.my_location,
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(Icons.my_location, color: Colors.white),
                           label: Text(
                             hvm.currentBuilding!.id.toUpperCase(),
                             style: const TextStyle(
@@ -256,15 +349,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         )
                       : FloatingActionButton(
+                          key: const Key("my_location_key"),
                           heroTag: "my_location",
-                          onPressed: () => context
-                              .read<HomeViewModel>()
-                              .goToCurrentLocation(),
+                          onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          child: const Icon(
-                            Icons.my_location,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.my_location, color: Colors.white),
                         ),
                 ),
                 Positioned(
@@ -326,6 +415,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                if (hvm.showNextClassFab)
+                  Positioned(
+                    left: actionInset,
+                    bottom: secondActionBottom,
+                    child: FloatingActionButton.extended(
+                      heroTag: "next_class",
+                      onPressed: () => context.read<HomeViewModel>().showNextClass(),
+                      backgroundColor: _buttonColor,
+                      icon: const Icon(Icons.school, color: Colors.white),
+                      label: const Text(
+                        "Next Class",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 const RouteDetailsPanel(),
               ],
             );

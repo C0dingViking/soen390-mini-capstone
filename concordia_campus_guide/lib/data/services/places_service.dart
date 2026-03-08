@@ -9,8 +9,8 @@ class PlacesService {
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
   PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
-      : _places = client,
-        _apiKeyService = apiKeyService ?? ApiKeyService();
+    : _places = client,
+      _apiKeyService = apiKeyService ?? ApiKeyService();
 
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
@@ -43,15 +43,18 @@ class PlacesService {
 
       if (!response.isOkay) return [];
 
-      return response.predictions.map((final prediction) {
-        final structured = prediction.structuredFormatting;
-        return PlaceSuggestion(
-          placeId: prediction.placeId ?? "",
-          description: prediction.description ?? "",
-          mainText: structured?.mainText ?? prediction.description ?? "",
-          secondaryText: structured?.secondaryText ?? "",
-        );
-      }).where((final suggestion) => suggestion.placeId.isNotEmpty).toList();
+      return response.predictions
+          .map((final prediction) {
+            final structured = prediction.structuredFormatting;
+            return PlaceSuggestion(
+              placeId: prediction.placeId ?? "",
+              description: prediction.description ?? "",
+              mainText: structured?.mainText ?? prediction.description ?? "",
+              secondaryText: structured?.secondaryText ?? "",
+            );
+          })
+          .where((final suggestion) => suggestion.placeId.isNotEmpty)
+          .toList();
     } catch (e) {
       logger.w("PlacesService: autocomplete failed", error: e);
       return [];
@@ -66,10 +69,7 @@ class PlacesService {
     if (client == null || placeId.isEmpty) return null;
 
     try {
-      final details = await client.getDetailsByPlaceId(
-        placeId,
-        fields: const ["geometry"],
-      );
+      final details = await client.getDetailsByPlaceId(placeId, fields: const ["geometry"]);
 
       if (details.isOkay) {
         final location = details.result.geometry?.location;

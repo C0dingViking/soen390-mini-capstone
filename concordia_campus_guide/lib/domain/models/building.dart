@@ -27,6 +27,7 @@ class Building {
   final String street;
   final String postalCode;
   final List<String> images;
+  final List<int> supportedIndoorFloors;
 
   @CoordinateConverter()
   final Coordinate location;
@@ -60,11 +61,11 @@ class Building {
     required this.campus,
     required this.outlinePoints,
     required this.images,
+    this.supportedIndoorFloors = const [],
     this.buildingFeatures,
   });
 
-  factory Building.fromJson(final Map<String, dynamic> json) =>
-      _$BuildingFromJson(json);
+  factory Building.fromJson(final Map<String, dynamic> json) => _$BuildingFromJson(json);
   Map<String, dynamic> toJson() => _$BuildingToJson(this);
 
   /// Precompute axis-aligned bounding box for outlinePoints. Call after

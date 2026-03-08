@@ -46,23 +46,14 @@ class _FakeHttpClient extends http.BaseClient {
       );
     }
 
-    return http.StreamedResponse(
-      Stream.value(utf8.encode("{}")),
-      200,
-    );
+    return http.StreamedResponse(Stream.value(utf8.encode("{}")), 200);
   }
 }
 
 void main() {
   group("DirectionsService", () {
-    const Coordinate defaultOrigin = Coordinate(
-      latitude: 45.5,
-      longitude: -73.5,
-    );
-    const Coordinate defaultDestination = Coordinate(
-      latitude: 45.6,
-      longitude: -73.6,
-    );
+    const Coordinate defaultOrigin = Coordinate(latitude: 45.5, longitude: -73.5);
+    const Coordinate defaultDestination = Coordinate(latitude: 45.6, longitude: -73.6);
 
     late _FakeHttpClient fakeClient;
     late _FakeApiKeyService fakeApiKeyService;
@@ -87,10 +78,7 @@ void main() {
     setUp(() {
       fakeClient = _FakeHttpClient();
       fakeApiKeyService = _FakeApiKeyService("test-api-key");
-      service = DirectionsService(
-        httpClient: fakeClient,
-        apiKeyService: fakeApiKeyService,
-      );
+      service = DirectionsService(httpClient: fakeClient, apiKeyService: fakeApiKeyService);
     });
 
     group("constructor", () {
@@ -100,10 +88,7 @@ void main() {
       });
 
       test("initializes with provided client and api key service", () {
-        final service = DirectionsService(
-          httpClient: fakeClient,
-          apiKeyService: fakeApiKeyService,
-        );
+        final service = DirectionsService(httpClient: fakeClient, apiKeyService: fakeApiKeyService);
         expect(service, isNotNull);
       });
     });
@@ -134,33 +119,35 @@ void main() {
       });
 
       test("successfully fetches and parses walking route", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "summary": "Main St",
-                "overview_polyline": {"points": "_p~iF~ps|U"},
-                "legs": [
-                  {
-                    "distance": {"value": 1000, "text": "1.0 km"},
-                    "duration": {"value": 600, "text": "10 mins"},
-                    "steps": [
-                      {
-                        "distance": {"value": 500},
-                        "duration": {"value": 300},
-                        "travel_mode": "WALKING",
-                        "html_instructions": "Walk to <b>Main St</b>",
-                        "polyline": {"points": "gfo}EtbdwG"},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "summary": "Main St",
+                  "overview_polyline": {"points": "_p~iF~ps|U"},
+                  "legs": [
+                    {
+                      "distance": {"value": 1000, "text": "1.0 km"},
+                      "duration": {"value": 600, "text": "10 mins"},
+                      "steps": [
+                        {
+                          "distance": {"value": 500},
+                          "duration": {"value": 300},
+                          "travel_mode": "WALKING",
+                          "html_instructions": "Walk to <b>Main St</b>",
+                          "polyline": {"points": "gfo}EtbdwG"},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -174,50 +161,49 @@ void main() {
       });
 
       test("successfully fetches transit route with departure time", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": "_p~iF~ps|U"},
-                "legs": [
-                  {
-                    "distance": {"value": 5000},
-                    "duration": {"value": 1200},
-                    "departure_time": {"value": 1234567890},
-                    "arrival_time": {"value": 1234569090},
-                    "steps": [
-                      {
-                        "distance": {"value": 5000},
-                        "duration": {"value": 1200},
-                        "travel_mode": "TRANSIT",
-                        "html_instructions": "Take subway",
-                        "polyline": {"points": ""},
-                        "transit_details": {
-                          "line": {
-                            "name": "Green Line",
-                            "short_name": "G",
-                            "vehicle": {"type": "SUBWAY"},
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": "_p~iF~ps|U"},
+                  "legs": [
+                    {
+                      "distance": {"value": 5000},
+                      "duration": {"value": 1200},
+                      "departure_time": {"value": 1234567890},
+                      "arrival_time": {"value": 1234569090},
+                      "steps": [
+                        {
+                          "distance": {"value": 5000},
+                          "duration": {"value": 1200},
+                          "travel_mode": "TRANSIT",
+                          "html_instructions": "Take subway",
+                          "polyline": {"points": ""},
+                          "transit_details": {
+                            "line": {
+                              "name": "Green Line",
+                              "short_name": "G",
+                              "vehicle": {"type": "SUBWAY"},
+                            },
+                            "departure_stop": {"name": "Station A"},
+                            "arrival_stop": {"name": "Station B"},
+                            "num_stops": 5,
                           },
-                          "departure_stop": {"name": "Station A"},
-                          "arrival_stop": {"name": "Station B"},
-                          "num_stops": 5,
                         },
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final departureTime = DateTime(2026, 2, 14, 10, 0);
-        final result = await fetchRoute(
-          mode: RouteMode.transit,
-          departureTime: departureTime,
-        );
+        final result = await fetchRoute(mode: RouteMode.transit, departureTime: departureTime);
 
         expect(result, isNotNull);
         expect(result?.mode, RouteMode.transit);
@@ -232,26 +218,28 @@ void main() {
       });
 
       test("includes arrival time parameter when provided", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {"distance": {"value": 1000}, "duration": {"value": 300}}
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "distance": {"value": 1000},
+                      "duration": {"value": 300},
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final arrivalTime = DateTime(2026, 2, 14, 16, 0);
-        await fetchRoute(
-          mode: RouteMode.transit,
-          arrivalTime: arrivalTime,
-        );
+        await fetchRoute(mode: RouteMode.transit, arrivalTime: arrivalTime);
 
         final uri = fakeClient.capturedUris[0];
         expect(uri.queryParameters.containsKey("arrival_time"), isTrue);
@@ -266,10 +254,12 @@ void main() {
       });
 
       test("returns null when response status is not OK", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -277,10 +267,9 @@ void main() {
       });
 
       test("returns null when routes array is empty", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({"status": "OK", "routes": <Map<String, dynamic>>[]}),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(json.encode({"status": "OK", "routes": <Map<String, dynamic>>[]}), 200),
+        );
 
         final result = await fetchRoute();
 
@@ -302,20 +291,25 @@ void main() {
           return "test-key";
         });
 
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {"distance": {"value": 1000}, "duration": {"value": 300}}
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "distance": {"value": 1000},
+                      "duration": {"value": 300},
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final service = DirectionsService(
           httpClient: fakeClient,
@@ -324,10 +318,7 @@ void main() {
 
         await fetchRoute(serviceOverride: service);
 
-        await fetchRoute(
-          serviceOverride: service,
-          mode: RouteMode.bicycling,
-        );
+        await fetchRoute(serviceOverride: service, mode: RouteMode.bicycling);
 
         expect(callCount, 1); // API key fetched only once
       });
@@ -335,10 +326,12 @@ void main() {
 
     group("URI building", () {
       test("builds correct URI for walking mode", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            200,
+          ),
+        );
 
         await fetchRoute();
 
@@ -354,10 +347,12 @@ void main() {
       });
 
       test("includes transit_mode parameter for transit routes", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            200,
+          ),
+        );
 
         await fetchRoute(mode: RouteMode.transit);
 
@@ -367,15 +362,16 @@ void main() {
       });
 
       test("converts mode enum to correct string for all modes", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            200,
+          ),
+        );
 
         final modes = [
           (RouteMode.walking, "walking"),
           (RouteMode.bicycling, "bicycling"),
-          (RouteMode.driving, "driving"),
           (RouteMode.transit, "transit"),
         ];
 
@@ -384,26 +380,31 @@ void main() {
           await fetchRoute(mode: mode);
 
           final uri = fakeClient.capturedUris[0];
-          expect(uri.queryParameters["mode"], expectedString,
-              reason: "Mode $mode should convert to $expectedString");
+          expect(
+            uri.queryParameters["mode"],
+            expectedString,
+            reason: "Mode $mode should convert to $expectedString",
+          );
         }
       });
     });
 
     group("route parsing", () {
       test("handles route with no legs", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": <Map<String, dynamic>>[],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": <Map<String, dynamic>>[],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -412,22 +413,22 @@ void main() {
       });
 
       test("handles missing optional fields gracefully", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": <Map<String, dynamic>>[],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {"steps": <Map<String, dynamic>>[]},
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -438,20 +439,25 @@ void main() {
       });
 
       test("parses empty polyline correctly", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {"distance": {"value": 1000}, "duration": {"value": 300}}
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "distance": {"value": 1000},
+                      "duration": {"value": 300},
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -461,37 +467,39 @@ void main() {
 
     group("step parsing", () {
       test("parses multiple steps correctly", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "distance": {"value": 500},
-                        "duration": {"value": 300},
-                        "travel_mode": "WALKING",
-                        "html_instructions": "Step 1",
-                        "polyline": {"points": ""},
-                      },
-                      {
-                        "distance": {"value": 600},
-                        "duration": {"value": 400},
-                        "travel_mode": "WALKING",
-                        "html_instructions": "Step 2",
-                        "polyline": {"points": ""},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "distance": {"value": 500},
+                          "duration": {"value": 300},
+                          "travel_mode": "WALKING",
+                          "html_instructions": "Step 1",
+                          "polyline": {"points": ""},
+                        },
+                        {
+                          "distance": {"value": 600},
+                          "duration": {"value": 400},
+                          "travel_mode": "WALKING",
+                          "html_instructions": "Step 2",
+                          "polyline": {"points": ""},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -503,27 +511,29 @@ void main() {
       });
 
       test("handles step with missing fields", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "WALKING",
-                        "polyline": {"points": ""},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "travel_mode": "WALKING",
+                          "polyline": {"points": ""},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -548,7 +558,53 @@ void main() {
         ];
 
         for (final (vehicleType, expectedMode) in vehicleTypes) {
-          fakeClient.setResponse(http.Response(
+          fakeClient.setResponse(
+            http.Response(
+              json.encode({
+                "status": "OK",
+                "routes": [
+                  {
+                    "overview_polyline": {"points": ""},
+                    "legs": [
+                      {
+                        "steps": [
+                          {
+                            "travel_mode": "TRANSIT",
+                            "polyline": {"points": ""},
+                            "transit_details": {
+                              "line": {
+                                "name": "Test Line",
+                                "short_name": "T",
+                                "vehicle": {"type": vehicleType},
+                              },
+                              "departure_stop": {"name": "Stop A"},
+                              "arrival_stop": {"name": "Stop B"},
+                              "num_stops": 3,
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+              200,
+            ),
+          );
+
+          final result = await fetchRoute(mode: RouteMode.transit);
+
+          expect(
+            result?.steps[0].transitDetails?.mode,
+            expectedMode,
+            reason: "Vehicle type $vehicleType should map to $expectedMode",
+          );
+        }
+      });
+
+      test("parses complete transit details", () async {
+        fakeClient.setResponse(
+          http.Response(
             json.encode({
               "status": "OK",
               "routes": [
@@ -562,63 +618,24 @@ void main() {
                           "polyline": {"points": ""},
                           "transit_details": {
                             "line": {
-                              "name": "Test Line",
-                              "short_name": "T",
-                              "vehicle": {"type": vehicleType},
+                              "name": "Green Line",
+                              "short_name": "G",
+                              "vehicle": {"type": "SUBWAY"},
                             },
-                            "departure_stop": {"name": "Stop A"},
-                            "arrival_stop": {"name": "Stop B"},
-                            "num_stops": 3,
+                            "departure_stop": {"name": "Station A"},
+                            "arrival_stop": {"name": "Station B"},
+                            "num_stops": 5,
                           },
-                        }
+                        },
                       ],
-                    }
+                    },
                   ],
-                }
+                },
               ],
             }),
             200,
-          ));
-
-          final result = await fetchRoute(mode: RouteMode.transit);
-
-          expect(result?.steps[0].transitDetails?.mode, expectedMode,
-              reason: "Vehicle type $vehicleType should map to $expectedMode");
-        }
-      });
-
-      test("parses complete transit details", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "TRANSIT",
-                        "polyline": {"points": ""},
-                        "transit_details": {
-                          "line": {
-                            "name": "Green Line",
-                            "short_name": "G",
-                            "vehicle": {"type": "SUBWAY"},
-                          },
-                          "departure_stop": {"name": "Station A"},
-                          "arrival_stop": {"name": "Station B"},
-                          "num_stops": 5,
-                        },
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+          ),
+        );
 
         final result = await fetchRoute(mode: RouteMode.transit);
 
@@ -632,30 +649,34 @@ void main() {
       });
 
       test("handles missing transit details fields", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "TRANSIT",
-                        "polyline": {"points": ""},
-                        "transit_details": {
-                          "line": {"vehicle": {"type": "BUS"}},
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "travel_mode": "TRANSIT",
+                          "polyline": {"points": ""},
+                          "transit_details": {
+                            "line": {
+                              "vehicle": {"type": "BUS"},
+                            },
+                          },
                         },
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute(mode: RouteMode.transit);
 
@@ -670,28 +691,30 @@ void main() {
 
     group("HTML stripping", () {
       test("strips HTML tags from instructions", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "WALKING",
-                        "html_instructions": "Walk to <b>Main St</b> and turn <i>left</i>",
-                        "polyline": {"points": ""},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "travel_mode": "WALKING",
+                          "html_instructions": "Walk to <b>Main St</b> and turn <i>left</i>",
+                          "polyline": {"points": ""},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -699,28 +722,31 @@ void main() {
       });
 
       test("converts HTML entities correctly", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "WALKING",
-                        "html_instructions": "Turn&nbsp;left &amp; continue&lt;test&gt;&quot;quoted&quot;",
-                        "polyline": {"points": ""},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "travel_mode": "WALKING",
+                          "html_instructions":
+                              "Turn&nbsp;left &amp; continue&lt;test&gt;&quot;quoted&quot;",
+                          "polyline": {"points": ""},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -728,28 +754,30 @@ void main() {
       });
 
       test("handles nested HTML tags", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "steps": [
-                      {
-                        "travel_mode": "WALKING",
-                        "html_instructions": "<div><b><i>Nested</i> tags</b></div>",
-                        "polyline": {"points": ""},
-                      }
-                    ],
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "steps": [
+                        {
+                          "travel_mode": "WALKING",
+                          "html_instructions": "<div><b><i>Nested</i> tags</b></div>",
+                          "polyline": {"points": ""},
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 
@@ -759,23 +787,25 @@ void main() {
 
     group("time parsing", () {
       test("parses Unix timestamps correctly", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {
-                    "departure_time": {"value": 1234567890},
-                    "arrival_time": {"value": 1234568190},
-                  }
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "departure_time": {"value": 1234567890},
+                      "arrival_time": {"value": 1234568190},
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute(mode: RouteMode.transit);
 
@@ -784,20 +814,24 @@ void main() {
       });
 
       test("handles missing time values", () async {
-        fakeClient.setResponse(http.Response(
-          json.encode({
-            "status": "OK",
-            "routes": [
-              {
-                "overview_polyline": {"points": ""},
-                "legs": [
-                  {"distance": {"value": 1000}}
-                ],
-              }
-            ],
-          }),
-          200,
-        ));
+        fakeClient.setResponse(
+          http.Response(
+            json.encode({
+              "status": "OK",
+              "routes": [
+                {
+                  "overview_polyline": {"points": ""},
+                  "legs": [
+                    {
+                      "distance": {"value": 1000},
+                    },
+                  ],
+                },
+              ],
+            }),
+            200,
+          ),
+        );
 
         final result = await fetchRoute();
 

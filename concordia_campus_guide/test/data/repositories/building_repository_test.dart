@@ -21,9 +21,7 @@ void main() {
     });
 
     test("loads a building with correct data", () async {
-      final buildings = await repo.loadBuildings(
-        "test/assets/building_testdata.json",
-      );
+      final buildings = await repo.loadBuildings("test/assets/building_testdata.json");
       final building = buildings["t"];
 
       expect(buildings.length, 1);
@@ -94,9 +92,7 @@ void main() {
     });
 
     test("fails gracefully if file is malformed", () async {
-      final buildings = await repo.loadBuildings(
-        "test/assets/building_testdata2.json",
-      );
+      final buildings = await repo.loadBuildings("test/assets/building_testdata2.json");
       expect(buildings.length, 0);
     });
 
@@ -118,11 +114,28 @@ void main() {
       expect(building.buildingFeatures![4].name, "shuttleBus");
 
       // Verify invalid features are not present
-      final featureNames = building.buildingFeatures!
-          .map((final f) => f.name)
-          .toList();
+      final featureNames = building.buildingFeatures!.map((final f) => f.name).toList();
       expect(featureNames.contains("invalidFeature"), false);
       expect(featureNames.contains("nonExistentFeature"), false);
+    });
+
+    test("returns cached data when called twice with the same path", () async {
+      var loadCount = 0;
+      Future<String> buildingLoader(final String path) async {
+        loadCount++;
+        return File(path).readAsString();
+      }
+
+      final localRepo = BuildingRepository(buildingLoader: buildingLoader);
+
+      const path = "test/assets/building_testdata.json";
+
+      final firstBuildings = await localRepo.loadBuildings(path);
+      final secondBuildings = await localRepo.loadBuildings(path);
+
+      expect(loadCount, 1);
+      expect(firstBuildings, same(secondBuildings));
+      expect(secondBuildings, isNotEmpty);
     });
   });
 }

@@ -24,13 +24,7 @@ extension ImageStringExtension on String {
         errorBuilder: errorBuilder,
       );
     } else {
-      return Image.asset(
-        this,
-        fit: fit,
-        width: width,
-        height: height,
-        errorBuilder: errorBuilder,
-      );
+      return Image.asset(this, fit: fit, width: width, height: height, errorBuilder: errorBuilder);
     }
   }
 

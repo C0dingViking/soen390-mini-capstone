@@ -1,4 +1,6 @@
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
@@ -9,6 +11,7 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
 
 class _FakePlacesInteractor extends PlacesInteractor {
@@ -19,9 +22,7 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -36,15 +37,35 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
   }
 }
 
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+}
+
 class _TestHomeViewModel extends HomeViewModel {
   _TestHomeViewModel()
-      : super(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: _FakeDirectionsInteractor(),
-        );
+    : super(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+      );
 
   int refreshCallCount = 0;
   bool exitNavigationCalled = false;
@@ -93,11 +114,7 @@ void main() {
           home: Scaffold(
             body: ChangeNotifierProvider<HomeViewModel>.value(
               value: vm,
-              child: const Stack(
-                children: [
-                  RouteDetailsPanel(),
-                ],
-              ),
+              child: const Stack(children: [RouteDetailsPanel()]),
             ),
           ),
         ),
@@ -122,9 +139,7 @@ void main() {
       );
     }
 
-    testWidgets("renders nothing when no routes and not loading", (
-      final tester,
-    ) async {
+    testWidgets("renders nothing when no routes and not loading", (final tester) async {
       await pumpPanel(tester);
       expect(find.byType(AnimatedContainer), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsNothing);
@@ -137,9 +152,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsWidgets);
     });
 
-    testWidgets("exit button clears routes and collapses search bar", (
-      final tester,
-    ) async {
+    testWidgets("exit button clears routes and collapses search bar", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -159,9 +172,7 @@ void main() {
       expect(vm.isSearchBarExpanded, isFalse);
     });
 
-    testWidgets("shows error text when route error is set", (
-      final tester,
-    ) async {
+    testWidgets("shows error text when route error is set", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -195,19 +206,16 @@ void main() {
       expect(find.text("Walk"), findsOneWidget);
       expect(find.text("Transit"), findsOneWidget);
       expect(find.text("Bike"), findsNothing);
-      expect(find.text("Drive"), findsNothing);
       expect(find.text("10 min"), findsNWidgets(2));
       expect(find.text("1.2 km"), findsOneWidget);
       expect(find.text("Main route"), findsOneWidget);
     });
 
-    testWidgets("shows arrival time in route summary", (
-      final tester,
-    ) async {
+    testWidgets("shows arrival time in route summary", (final tester) async {
       // Set a specific departure time for predictable testing
       final departureTime = DateTime(2025, 1, 1, 10, 0, 0);
       vm.selectedDepartureTime = departureTime;
-      
+
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -219,14 +227,12 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      
+
       // Verify arrival time is displayed (10:00 + 10 minutes = 10:10 AM)
       expect(find.text("Arrive at 10:10 AM"), findsOneWidget);
     });
 
-    testWidgets("shows time labels and suggested departure", (
-      final tester,
-    ) async {
+    testWidgets("shows time labels and suggested departure", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -244,15 +250,10 @@ void main() {
       await pumpPanel(tester);
       expect(find.text("Depart at 9:05 AM"), findsOneWidget);
       expect(find.text("Arrive by 9:30 AM"), findsOneWidget);
-      expect(
-        find.text("Leave at 9:15 AM to arrive on time"),
-        findsOneWidget,
-      );
+      expect(find.text("Leave at 9:15 AM to arrive on time"), findsOneWidget);
     });
 
-    testWidgets("shows transit steps only when expanded", (
-      final tester,
-    ) async {
+    testWidgets("shows transit steps only when expanded", (final tester) async {
       final steps = [
         RouteStep(
           instruction: "Walk to stop",
@@ -302,9 +303,91 @@ void main() {
       expect(find.text("Scheduled at 10:30 AM"), findsOneWidget);
     });
 
-    testWidgets("shows vehicle arrival time for transit rides", (
-      final tester,
-    ) async {
+    testWidgets("shows walking route details when expanded", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Head east on Sherbrooke St",
+          distanceMeters: 250,
+          durationSeconds: 180,
+          travelMode: "WALKING",
+        ),
+        RouteStep(
+          instruction: "Turn right onto Guy St",
+          distanceMeters: 120,
+          durationSeconds: 90,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 370,
+          durationSeconds: 270,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Route Details"), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Head east on Sherbrooke St"), findsOneWidget);
+      expect(find.text("250 m • 3 min"), findsOneWidget);
+      expect(find.text("Turn right onto Guy St"), findsOneWidget);
+      expect(find.text("120 m • 2 min"), findsOneWidget);
+    });
+
+    testWidgets("shows bicycling route details when expanded", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Bike north on Mackay St",
+          distanceMeters: 600,
+          durationSeconds: 180,
+          travelMode: "BICYCLING",
+        ),
+        RouteStep(
+          instruction: "Continue onto de Maisonneuve Blvd",
+          distanceMeters: 1400,
+          durationSeconds: 420,
+          travelMode: "BICYCLING",
+        ),
+      ];
+
+      vm.setRoutes({
+        RouteMode.bicycling: makeOption(
+          mode: RouteMode.bicycling,
+          distanceMeters: 2000,
+          durationSeconds: 600,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.bicycling;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Route Details"), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Bike north on Mackay St"), findsOneWidget);
+      expect(find.text("600 m • 3 min"), findsOneWidget);
+      expect(find.text("Continue onto de Maisonneuve Blvd"), findsOneWidget);
+      expect(find.text("1.4 km • 7 min"), findsOneWidget);
+    });
+
+    testWidgets("shows vehicle arrival time for transit rides", (final tester) async {
       final steps = [
         RouteStep(
           instruction: "Board bus",
@@ -335,7 +418,7 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      
+
       // Expand the panel to see route details
       await tester.tap(find.byKey(const Key("route_details_handle")));
       await tester.pumpAndSettle();
@@ -347,9 +430,7 @@ void main() {
       expect(find.text("Scheduled at 2:30 PM"), findsOneWidget);
     });
 
-    testWidgets("shows suggested depart time under Route Details", (
-      final tester,
-    ) async {
+    testWidgets("shows suggested depart time under Route Details", (final tester) async {
       final steps = [
         RouteStep(
           instruction: "Walk to stop",
@@ -394,9 +475,7 @@ void main() {
       expect(find.text("Route Details"), findsOneWidget);
       expect(find.text("Suggested depart at 9:55 AM"), findsOneWidget);
     });
-    testWidgets("refresh button is visible in the handle", (
-      final tester,
-    ) async {
+    testWidgets("refresh button is visible in the handle", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -411,9 +490,7 @@ void main() {
       expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
 
-    testWidgets("refresh button shows spinner when loading", (
-      final tester,
-    ) async {
+    testWidgets("refresh button shows spinner when loading", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -436,14 +513,12 @@ void main() {
       // The refresh button should have a spinner, the content should have one too
       final allProgressIndicators = find.byType(CircularProgressIndicator);
       expect(allProgressIndicators, findsWidgets);
-      
+
       // Verify refresh icon is no longer visible
       expect(find.byIcon(Icons.refresh), findsNothing);
     });
 
-    testWidgets("refresh button is disabled while loading", (
-      final tester,
-    ) async {
+    testWidgets("refresh button is disabled while loading", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -463,8 +538,8 @@ void main() {
       // Find all IconButtons and get the one containing the spinner
       final iconButtons = find.byType(IconButton);
       expect(iconButtons, findsWidgets);
-      
-      // Find the button that is disabled (onPressed is null) 
+
+      // Find the button that is disabled (onPressed is null)
       var disabledFound = false;
       for (int i = 0; i < iconButtons.evaluate().length; i++) {
         final button = tester.widget<IconButton>(iconButtons.at(i));
@@ -476,9 +551,7 @@ void main() {
       expect(disabledFound, true);
     });
 
-    testWidgets("refresh button calls refreshRoutes when tapped", (
-      final tester,
-    ) async {
+    testWidgets("refresh button calls refreshRoutes when tapped", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -501,9 +574,7 @@ void main() {
       expect(vm.refreshCallCount, 1);
     });
 
-    testWidgets("refresh button is enabled after loading completes", (
-      final tester,
-    ) async {
+    testWidgets("refresh button is enabled after loading completes", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
@@ -518,7 +589,7 @@ void main() {
 
       // Start loading - verify refresh icon exists initially
       expect(find.byIcon(Icons.refresh), findsOneWidget);
-      
+
       vm.setLoadingRoutes(true);
       await pumpPanel(tester);
 
@@ -532,15 +603,16 @@ void main() {
       // After loading, refresh icon should be back and button enabled
       final refreshButton = find.byIcon(Icons.refresh);
       expect(refreshButton, findsOneWidget);
-      
+
       // Find the IconButton containing this icon
       final refreshIconButtonFinder = find.ancestor(
         of: refreshButton,
         matching: find.byType(IconButton),
       );
       expect(refreshIconButtonFinder, findsOneWidget);
-      
+
       final iconButton = tester.widget<IconButton>(refreshIconButtonFinder);
       expect(iconButton.onPressed, isNotNull);
-    });  });
+    });
+  });
 }
