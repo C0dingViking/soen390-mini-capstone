@@ -1,4 +1,6 @@
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
@@ -9,6 +11,7 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
 
 class _FakePlacesInteractor extends PlacesInteractor {
@@ -34,6 +37,25 @@ class _FakeDirectionsInteractor extends DirectionsInteractor {
   }
 }
 
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+}
+
 class _TestHomeViewModel extends HomeViewModel {
   _TestHomeViewModel()
     : super(
@@ -42,6 +64,7 @@ class _TestHomeViewModel extends HomeViewModel {
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
       );
 
   int refreshCallCount = 0;
@@ -183,7 +206,6 @@ void main() {
       expect(find.text("Walk"), findsOneWidget);
       expect(find.text("Transit"), findsOneWidget);
       expect(find.text("Bike"), findsNothing);
-      expect(find.text("Drive"), findsNothing);
       expect(find.text("10 min"), findsNWidgets(2));
       expect(find.text("1.2 km"), findsOneWidget);
       expect(find.text("Main route"), findsOneWidget);
@@ -279,6 +301,90 @@ void main() {
       expect(find.text("Board at Stop A"), findsOneWidget);
       expect(find.text("Exit at Stop B"), findsOneWidget);
       expect(find.text("Scheduled at 10:30 AM"), findsOneWidget);
+    });
+
+    testWidgets("shows walking route details when expanded", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Head east on Sherbrooke St",
+          distanceMeters: 250,
+          durationSeconds: 180,
+          travelMode: "WALKING",
+        ),
+        RouteStep(
+          instruction: "Turn right onto Guy St",
+          distanceMeters: 120,
+          durationSeconds: 90,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 370,
+          durationSeconds: 270,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Route Details"), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Head east on Sherbrooke St"), findsOneWidget);
+      expect(find.text("250 m • 3 min"), findsOneWidget);
+      expect(find.text("Turn right onto Guy St"), findsOneWidget);
+      expect(find.text("120 m • 2 min"), findsOneWidget);
+    });
+
+    testWidgets("shows bicycling route details when expanded", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Bike north on Mackay St",
+          distanceMeters: 600,
+          durationSeconds: 180,
+          travelMode: "BICYCLING",
+        ),
+        RouteStep(
+          instruction: "Continue onto de Maisonneuve Blvd",
+          distanceMeters: 1400,
+          durationSeconds: 420,
+          travelMode: "BICYCLING",
+        ),
+      ];
+
+      vm.setRoutes({
+        RouteMode.bicycling: makeOption(
+          mode: RouteMode.bicycling,
+          distanceMeters: 2000,
+          durationSeconds: 600,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.bicycling;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Route Details"), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Route Details"), findsOneWidget);
+      expect(find.text("Bike north on Mackay St"), findsOneWidget);
+      expect(find.text("600 m • 3 min"), findsOneWidget);
+      expect(find.text("Continue onto de Maisonneuve Blvd"), findsOneWidget);
+      expect(find.text("1.4 km • 7 min"), findsOneWidget);
     });
 
     testWidgets("shows vehicle arrival time for transit rides", (final tester) async {

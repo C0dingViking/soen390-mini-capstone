@@ -32,6 +32,7 @@ void main() {
           BuildingFeature.elevator,
           BuildingFeature.bathroom,
         ],
+        supportedIndoorFloors: [1, 2, 3],
       );
     });
 
@@ -97,6 +98,7 @@ void main() {
         outlinePoints: [],
         images: [],
         buildingFeatures: null,
+        supportedIndoorFloors: [1, 2, 3],
       );
       await pumpBuildingDetailScreen(tester);
       expect(find.byIcon(Icons.accessible), findsNothing);
@@ -116,6 +118,7 @@ void main() {
         outlinePoints: [],
         images: [],
         buildingFeatures: null,
+        supportedIndoorFloors: [1, 2, 3],
       );
       await pumpBuildingDetailScreen(tester);
       expect(find.byIcon(Icons.apartment), findsOneWidget);
@@ -159,6 +162,7 @@ void main() {
           BuildingFeature.food,
           BuildingFeature.shuttleBus,
         ],
+        supportedIndoorFloors: [1, 2, 3],
       );
       await pumpBuildingDetailScreen(tester);
       await tester.tap(
@@ -198,9 +202,53 @@ void main() {
         outlinePoints: [],
         images: [],
         buildingFeatures: null,
+        supportedIndoorFloors: [1, 2, 3],
       );
       await pumpBuildingDetailScreen(tester);
       expect(find.byType(OpeningHoursWidget), findsOneWidget);
+    });
+
+    testWidgets("indoor floor plans button is visible when floors are available", (
+      final tester,
+    ) async {
+      await pumpBuildingDetailScreen(tester);
+
+      final finder = find.byWidgetPredicate(
+        (final w) => w is FloatingActionButton && w.heroTag == "indoor_floor_plans",
+      );
+      expect(finder, findsOneWidget);
+    });
+
+    testWidgets("hides indoor floor plans button when no supported floors", (final tester) async {
+      testBuilding = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Science Hall",
+        description: "Test building.",
+        street: "7141 Rue Sherbrooke O",
+        postalCode: "H4B 1R6",
+        location: const Coordinate(latitude: 45.4572, longitude: -73.6404),
+        hours: OpeningHoursDetail(
+          periods: [
+            OpeningHoursPeriod(
+              open: OpeningHoursPeriodDate(day: 1, time: "0900"),
+              close: OpeningHoursPeriodDate(day: 1, time: "1700"),
+            ),
+          ],
+        ),
+        campus: Campus.loyola,
+        outlinePoints: [],
+        images: [],
+        buildingFeatures: null,
+        supportedIndoorFloors: [],
+      );
+
+      await pumpBuildingDetailScreen(tester);
+
+      final finder = find.byWidgetPredicate(
+        (final w) => w is FloatingActionButton && w.heroTag == "indoor_floor_plans",
+      );
+      expect(finder, findsNothing);
     });
   });
 }

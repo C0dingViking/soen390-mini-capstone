@@ -1,4 +1,8 @@
 import "dart:async";
+
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
+import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
@@ -20,9 +24,12 @@ enum SearchField { start, destination }
 enum DepartureMode { now, departAt, arriveBy }
 
 class HomeViewModel extends ChangeNotifier {
+  static const String buildingDataAssetPath = "assets/maps/building_data.json";
+
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
+  final CalendarInteractor calendarInteractor;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
   bool _showLoginSuccessMessage = false;
 
@@ -32,6 +39,7 @@ class HomeViewModel extends ChangeNotifier {
     required this.mapInteractor,
     required this.placesInteractor,
     required this.directionsInteractor,
+    required this.calendarInteractor,
   });
 
   Map<String, Building> buildings = {};
@@ -41,6 +49,7 @@ class HomeViewModel extends ChangeNotifier {
   StreamSubscription<Coordinate>? _locationSubscription;
   bool isLoading = false;
   String? errorMessage;
+  String? generateInfoMessage;
   bool isSearchingPlaces = false;
   bool isResolvingPlace = false;
   bool isResolvingStartLocation = false;
@@ -57,6 +66,13 @@ class HomeViewModel extends ChangeNotifier {
   Set<Polyline> routePolylines = {};
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
+  double _currentMapZoom = 15;
+
+  bool showNextClassFab = false;
+  AcademicClass? upcomingClass;
+  bool _showNextClassDialog = false;
+
+  bool get showNextClassDialog => _showNextClassDialog;
 
   DepartureMode departureMode = DepartureMode.now;
   DateTime? selectedDepartureTime;
@@ -488,6 +504,34 @@ class HomeViewModel extends ChangeNotifier {
     await _loadRoutesIfReady();
   }
 
+  void onMapCameraMove(final CameraPosition position) {
+    final zoom = position.zoom;
+    if ((_currentMapZoom - zoom).abs() < 0.25) return;
+
+    _currentMapZoom = zoom;
+
+    final option = routeOptions[selectedRouteMode];
+    if (selectedRouteMode != RouteMode.transit || option == null || option.steps.isEmpty) {
+      return;
+    }
+
+    _updateRoutePolylines();
+    routeBounds = null;
+    notifyListeners();
+  }
+
+  double _transitChangeCircleRadiusMeters() {
+    const minRadiusMeters = 5.0;
+    const maxRadiusMeters = 600.0;
+    const baseZoom = 16.5;
+    const growthPerZoomOut = 2;
+
+    final zoomDelta = (baseZoom - _currentMapZoom).clamp(0.0, 8.0);
+    final scaled = minRadiusMeters * math.pow(growthPerZoomOut, zoomDelta).toDouble();
+
+    return scaled.clamp(minRadiusMeters, maxRadiusMeters).toDouble();
+  }
+
   void _updateRoutePolylines() {
     final option = routeOptions[selectedRouteMode];
     if (option == null || option.polyline.isEmpty) {
@@ -500,6 +544,12 @@ class HomeViewModel extends ChangeNotifier {
     // Special handling for transit routes - show distinct segments
     if (selectedRouteMode == RouteMode.transit && option.steps.isNotEmpty) {
       _updateTransitPolylines(option);
+      return;
+    }
+
+    // Special handling for shuttle routes - show dashed walking and solid shuttle segments
+    if (selectedRouteMode == RouteMode.shuttle && option.steps.isNotEmpty) {
+      _updateShuttlePolylines(option);
       return;
     }
 
@@ -524,16 +574,18 @@ class HomeViewModel extends ChangeNotifier {
         polylineWidth = 5;
         polylinePattern = []; // Solid line
         break;
-      case RouteMode.driving:
-        polylineColor = AppTheme.concordiaMaroon;
-        polylineWidth = 6;
-        polylinePattern = []; // Solid line
-        break;
       case RouteMode.transit:
         polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
         polylinePattern = [PatternItem.dash(20), PatternItem.gap(10)]; // Dashed line for transit
         break;
+      case RouteMode.shuttle:
+        polylineColor = AppTheme.concordiaMaroon;
+        polylineWidth = 5;
+        polylinePattern = []; // Solid line
+        break;
+      default:
+        throw StateError("Unsupported route mode: $selectedRouteMode");
     }
 
     routePolylines = {
@@ -553,6 +605,7 @@ class HomeViewModel extends ChangeNotifier {
     final polylines = <Polyline>{};
     final circles = <Circle>{};
     final allPoints = <LatLng>[];
+    final transitionCircleRadius = _transitChangeCircleRadiusMeters();
     int segmentIndex = 0;
     String? previousTravelMode;
 
@@ -609,10 +662,10 @@ class HomeViewModel extends ChangeNotifier {
           Circle(
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
-            radius: 7,
-            fillColor: const Color.fromARGB(255, 134, 134, 134).withValues(alpha: 1.0), // Opaque
+            radius: transitionCircleRadius,
+            fillColor: const Color.fromARGB(223, 98, 106, 114).withValues(alpha: 0.8),
             strokeWidth: 3,
-            strokeColor: const Color.fromARGB(255, 207, 207, 207),
+            strokeColor: const Color.fromARGB(223, 98, 106, 114),
           ),
         );
       }
@@ -632,6 +685,50 @@ class HomeViewModel extends ChangeNotifier {
 
     routePolylines = polylines;
     transitChangeCircles = circles;
+    routeBounds = _calculateBounds(allPoints);
+  }
+
+  void _updateShuttlePolylines(final RouteOption option) {
+    final polylines = <Polyline>{};
+    final allPoints = <LatLng>[];
+    int segmentIndex = 0;
+
+    for (final step in option.steps) {
+      if (step.polyline.isEmpty) continue;
+
+      final points = step.polyline.map((final c) => c.toLatLng()).toList();
+      allPoints.addAll(points);
+
+      Color color;
+      int width;
+      List<PatternItem> pattern;
+
+      // SHUTTLE segment
+      if (step.travelMode == "SHUTTLE") {
+        color = AppTheme.concordiaMaroon;
+        width = 6;
+        pattern = [];
+      }
+      // WALKING segment
+      else {
+        color = AppTheme.concordiaTurquoise;
+        width = 4;
+        pattern = [PatternItem.dot, PatternItem.gap(10)];
+      }
+
+      polylines.add(
+        Polyline(
+          polylineId: PolylineId("shuttle-segment-$segmentIndex"),
+          points: points,
+          color: color,
+          width: width,
+          patterns: pattern,
+        ),
+      );
+      segmentIndex++;
+    }
+
+    routePolylines = polylines;
     routeBounds = _calculateBounds(allPoints);
   }
 
@@ -703,6 +800,132 @@ class HomeViewModel extends ChangeNotifier {
 
   void clearLoginSuccessMessage() {
     _showLoginSuccessMessage = false;
+    notifyListeners();
+  }
+
+  void toggleNextClassFabVisibility(final bool isVisible) {
+    if (showNextClassFab != isVisible) {
+      showNextClassFab = isVisible;
+      notifyListeners();
+    }
+  }
+
+  void clearNextClassDialog() {
+    _showNextClassDialog = false;
+    notifyListeners();
+  }
+
+  Building? _findBuildingById(final String buildingId) {
+    final normalized = buildingId.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+
+    final directMatch =
+        buildings[buildingId] ?? buildings[normalized] ?? buildings[normalized.toUpperCase()];
+    if (directMatch != null) return directMatch;
+
+    for (final building in buildings.values) {
+      if (building.id.toLowerCase() == normalized) {
+        return building;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> setDestinationToUpcomingClassBuilding() async {
+    setSearchBarExpanded(true);
+    await setStartToCurrentLocation();
+    if (startCoordinate == null) {
+      generateInfoMessage = "Unable to determine current location for navigation start.";
+      notifyListeners();
+      return;
+    }
+
+    final upcoming = upcomingClass;
+    if (upcoming == null) {
+      generateInfoMessage = "No upcoming class selected.";
+      notifyListeners();
+      return;
+    }
+
+    final buildingId = upcoming.room.buildingId;
+    final building = _findBuildingById(buildingId);
+    if (building != null) {
+      _applySelection(
+        field: SearchField.destination,
+        coordinate: building.location,
+        label: building.name,
+        campus: building.campus,
+      );
+      cameraTarget = building.location;
+      await _loadRoutesIfReady();
+      notifyListeners();
+      return;
+    }
+
+    final query = buildingId.trim();
+    final suggestions = await placesInteractor.searchPlaces(query);
+
+    if (suggestions.isNotEmpty) {
+      final firstSuggestion = suggestions.first;
+      final coordinate = await placesInteractor.resolvePlaceSuggestion(firstSuggestion);
+      if (coordinate != null) {
+        final label = SearchSuggestion.place(firstSuggestion).title;
+        _applySelection(
+          field: SearchField.destination,
+          coordinate: coordinate,
+          label: label,
+          campus: null,
+        );
+        cameraTarget = coordinate;
+        await _loadRoutesIfReady();
+        notifyListeners();
+        return;
+      }
+    }
+
+    generateInfoMessage = "Unable to find ${buildingId.toUpperCase()} on the map.";
+    notifyListeners();
+  }
+
+  Future<void> showNextClass() async {
+    // To prevent unnecessary API calls and improve prefomance
+    if (upcomingClass != null && upcomingClass!.startTime.isAfter(DateTime.now())) {
+      _showNextClassDialog = true;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      // Acceptance Criteria: Only show classes that are upcoming today
+      final now = DateTime.now();
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final classes = await calendarInteractor.getUpcomingClasses(
+        timeMin: now,
+        timeMax: endOfDay,
+        maxResults: 100,
+      );
+
+      if (classes.isEmpty) {
+        generateInfoMessage = "No more classes today.";
+        notifyListeners();
+        return;
+      }
+
+      upcomingClass = classes.first;
+      _showNextClassDialog = true;
+      notifyListeners();
+    } catch (e, stackTrace) {
+      logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
+      final errorMessageText = e.toString();
+      generateInfoMessage = "$errorMessageText. Please use search to find your destination.";
+      notifyListeners();
+    }
+  }
+
+  void clearUpcomingClass() {
+    upcomingClass = null;
+    _showNextClassDialog = false;
     notifyListeners();
   }
 }

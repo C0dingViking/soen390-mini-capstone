@@ -4,6 +4,7 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/opening_hours_widget.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:concordia_campus_guide/utils/image_helper.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
@@ -80,18 +81,32 @@ class BuildingDetailScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Accessibility Info
-          FloatingActionButton(
-            heroTag: "accessibility_info",
-            onPressed: () => _showAccessibilityDialog(context),
-            tooltip: "Accessibility Information",
-            backgroundColor: AppTheme.concordiaMaroon,
-            child: const Icon(Icons.info, color: Colors.white),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                heroTag: "accessibility_info",
+                onPressed: () => _showAccessibilityDialog(context),
+                tooltip: "Accessibility Information",
+                backgroundColor: AppTheme.concordiaMaroon,
+                child: const Icon(Icons.info, color: Colors.white),
+              ),
+
+              if (building.supportedIndoorFloors.isNotEmpty) ...[
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: "indoor_floor_plans",
+                  onPressed: () => _showIndoorFloorPlans(context),
+                  tooltip: "Indoor Floor Plans",
+                  backgroundColor: AppTheme.concordiaMaroon,
+                  child: const Icon(Icons.schema, color: Colors.white),
+                ),
+              ],
+            ],
           ),
 
           const SizedBox(height: 12),
 
-          // Go To This Building
           FloatingActionButton.extended(
             heroTag: "go_to_here",
             onPressed: () async {
@@ -284,5 +299,14 @@ class BuildingDetailScreen extends StatelessWidget {
 
   Widget _buildOpeningHours() {
     return OpeningHoursWidget(building: building);
+  }
+
+  void _showIndoorFloorPlans(final BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<IndoorMapView>(
+        builder: (final context) => IndoorMapView(building: building),
+      ),
+    );
   }
 }

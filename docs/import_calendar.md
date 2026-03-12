@@ -13,7 +13,7 @@ The application can only process events that have been imported into a user's go
 > It is recommended to either use an account with an empty calendar or a new dummy account to not interfere with your personal calendar
 1. Connect to your [Student Center](https://campus.concordia.ca/psp/pscsprd/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.SSS_STUDENT_CENTER.GBL?gh_deep_link=1)
 2. Navigate to the Visual Schedule Builder
-3. Select teh Winter 2026 semester
+3. Select the Winter 2026 semester
 4. Export the Visual Schedule Builder calendar into your desired Google Calendar via the export button
 5. Open the app and log into your google account with which you exported your schedule to
 6. Import your Calendar via the Import Calendar option in the hamburger menu

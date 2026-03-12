@@ -1,10 +1,13 @@
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/home_screen.dart";
 import "package:concordia_campus_guide/ui/auth/view_models/login_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
@@ -31,7 +34,11 @@ class MyApp extends StatelessWidget {
             mapInteractor: MapDataInteractor(buildingRepo: BuildingRepository()),
             placesInteractor: PlacesInteractor(),
             directionsInteractor: DirectionsInteractor(),
+            calendarInteractor: CalendarInteractor(),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => IndoorViewModel(floorplanInteractor: FloorplanInteractor()),
         ),
       ],
       child: MaterialApp(

@@ -372,7 +372,6 @@ void main() {
         final modes = [
           (RouteMode.walking, "walking"),
           (RouteMode.bicycling, "bicycling"),
-          (RouteMode.driving, "driving"),
           (RouteMode.transit, "transit"),
         ];
 
