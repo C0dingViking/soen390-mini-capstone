@@ -1,6 +1,6 @@
-query($owner: String!, $repo: String!, $parentNumber: Int!) {
+query($owner: String!, $repo: String!, $issueNb: Int!) {
   repository(owner: $owner, name: $repo) {
-    issue(number: $parentNumber) {
+    issue(number: $issueNb) {
       number
       title
       labels(first: 5) {
@@ -8,7 +8,7 @@ query($owner: String!, $repo: String!, $parentNumber: Int!) {
           name
         }
       }
-      subIssues(first: 10) {
+      subIssues(first: 5) {
         nodes {
           number
           title
