@@ -1,0 +1,16 @@
+query($owner: String!, $repo: String!, $prNb: Int!) {
+    repository(owner: $owner, name: $repo) {
+        pullRequest(number: $prNb) {
+            closingIssuesReferences(first: 5) {
+                nodes {
+                    number
+                    labels(first: 5) {
+                        nodes {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

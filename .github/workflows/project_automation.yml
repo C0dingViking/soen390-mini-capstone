@@ -1,0 +1,33 @@
+name: Move Acceptance Test Card in GitHUb Project
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [Sprint-*]
+
+jobs:
+  move-acceptance-test-card:
+    name: Move Acceptance Test Card
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v3
+        with:
+          version: '1.8.1'
+
+      - name: Check jq version
+        run: |
+          which jq
+          jq --version
+
+      - name: Move card in GitHub Project
+        env:
+          GH_TOKEN: ${{ secrets.PAT_KANBAN_AUTOMATION }}
+        run: |
+          echo "..."
+
+
