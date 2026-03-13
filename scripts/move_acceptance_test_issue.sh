@@ -16,9 +16,8 @@ echo -e "INFO: Moving issue associated ATs to 'Awaiting PO Approval' column"
 
 echo "Getting current PR's associated issue's number..."
 
-
 RESPONSE=$(gh api graphql \
-  -f query="$(cat ../queries/get_pr_issue_number.graphql)" \
+  -f query="$(cat queries/get_pr_issue_number.graphql)" \
   -F prNb=${PR_NUMBER} \
   -F owner="${OWNER}" \
   -F repo="${REPO}")
@@ -42,7 +41,7 @@ for ISSUE_NUMBER in "${USER_STORY_ISSUES[@]}"; do
   echo "Getting ${ISSUE_NUMBER} associated subissues..."
 
   RESPONSE=$(gh api graphql \
-    -f query="$(cat ../queries/get_subissue.graphql)" \
+    -f query="$(cat queries/get_subissue.graphql)" \
     -F issueNb=${ISSUE_NUMBER} \
     -F owner="${OWNER}" \
     -F repo="${REPO}")
@@ -78,7 +77,7 @@ for ISSUE_NUMBER in "${USER_STORY_ISSUES[@]}"; do
   AT_PROJECT_CARD_ID=$(jq -r '.[0].projectItems.nodes[0].id' <<< "$AT_SUB_ISSUES")
 
   RESPONSE=$(gh api graphql \
-    -f query="$(cat ../queries/mutate_project_card.graphql)" \
+    -f query="$(cat queries/mutate_project_card.graphql)" \
     -F projectId="${PROJECT_ID}" \
     -F itemId="${AT_PROJECT_CARD_ID}" \
     -F fieldId="${STATUS_FIELD_ID}" \

@@ -1,4 +1,4 @@
-name: Move Acceptance Test Card in GitHUb Project
+name: Move Acceptance Test Card in GitHub Project
 
 on:
   pull_request:
@@ -14,20 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 'Setup jq'
-        uses: dcarbone/install-jq-action@v3
-        with:
-          version: '1.8.1'
-
       - name: Check jq version
         run: |
           which jq
           jq --version
 
+      - name: Make move script executable
+        run: chmod +x ./scripts/move_acceptance_test_issue.sh
+
       - name: Move card in GitHub Project
         env:
           GH_TOKEN: ${{ secrets.PAT_KANBAN_AUTOMATION }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "..."
-
-
+          echo "Running script to move card in GitHub Project"
+          ./scripts/move_acceptance_test_issue.sh $PR_NUMBER
