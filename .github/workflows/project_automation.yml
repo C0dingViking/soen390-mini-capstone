@@ -1,0 +1,31 @@
+name: Move Acceptance Test Card in GitHub Project
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [Sprint-*]
+
+jobs:
+  move-acceptance-test-card:
+    name: Move Acceptance Test Card
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check jq version
+        run: |
+          which jq
+          jq --version
+
+      - name: Make move script executable
+        run: chmod +x ./scripts/move_acceptance_test_issue.sh
+
+      - name: Move card in GitHub Project
+        env:
+          GH_TOKEN: ${{ secrets.PAT_KANBAN_AUTOMATION }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Running script to move card in GitHub Project"
+          ./scripts/move_acceptance_test_issue.sh $PR_NUMBER
