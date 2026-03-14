@@ -23,6 +23,7 @@ void main() {
             <rect inkscape:label="stairs-1" x="100" y="100" width="50" height="50" />
             <path inkscape:label="washroomMale-1" d="M 200 200 L 50 30 L 10 20 L 30 50 Z" />
           </g>
+          <g inkscape:label="walkable"></g>
         </svg>
       """;
 
@@ -89,6 +90,7 @@ void main() {
           </g>
           <g inkscape:label="connectors"></g>
           <g inkscape:label="points-of-interest"></g>
+          <g inkscape:label="walkable"></g>
         </svg>
       """;
 
@@ -105,6 +107,7 @@ void main() {
           </g>
           <g inkscape:label="connectors"></g>
           <g inkscape:label="points-of-interest"></g>
+          <g inkscape:label="walkable"></g>
         </svg>
       """;
 
@@ -123,6 +126,7 @@ void main() {
           </g>
           <g inkscape:label="connectors"></g>
           <g inkscape:label="points-of-interest"></g>
+          <g inkscape:label="walkable"></g>
         </svg>
       """;
 
@@ -130,6 +134,51 @@ void main() {
 
       expect(floorplan.canvasWidth, closeTo(374.32665, 0.00001));
       expect(floorplan.canvasHeight, closeTo(398.919, 0.00001));
+    });
+
+    test('parses walkable areas from SVG layer', () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms">
+    <rect inkscape:label="room-CL235-126" x="10" y="20" width="30" height="40" />
+  </g>
+  <g inkscape:label="connectors"></g>
+  <g inkscape:label="points-of-interest"></g>
+  <g inkscape:label="walkable">
+    <path inkscape:label="walkable-1"
+          d="M 0 70 L 400 70 L 400 100 L 0 100 Z"/>
+    <path inkscape:label="walkable-2"
+          d="M 0 120 L 400 120 L 400 150 L 0 150 Z"/>
+    <path inkscape:label="walkable-3"
+          d="M 70 60 L 90 60 L 90 160 L 70 160 Z"/>
+    <path inkscape:label="walkable-4"
+          d="M 190 60 L 210 60 L 210 160 L 190 160 Z"/>
+    <path inkscape:label="walkable-5"
+          d="M 310 60 L 330 60 L 330 160 L 310 160 Z"/>
+  </g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString));
+      final result = floorplan.corridors;
+
+      expect(result.length, 5);
+
+      expect(result[0].bounds.length, 4);
+      expect(result[1].bounds.length, 4);
+      expect(result[2].bounds.length, 4);
+      expect(result[3].bounds.length, 4);
+      expect(result[4].bounds.length, 4);
+
+      expect(result[0].bounds[0], const Point(0, 70));
+      expect(result[0].bounds[1], const Point(400, 70));
+      expect(result[0].bounds[2], const Point(400, 100));
+      expect(result[0].bounds[3], const Point(0, 100));
+
+      expect(result[1].bounds[0], const Point(0, 120));
+      expect(result[1].bounds[1], const Point(400, 120));
+      expect(result[1].bounds[2], const Point(400, 150));
+      expect(result[1].bounds[3], const Point(0, 150));
     });
   });
 

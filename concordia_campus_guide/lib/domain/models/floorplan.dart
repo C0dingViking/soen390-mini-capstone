@@ -5,6 +5,12 @@ import "package:xml/xml.dart";
 
 const String _inkscapeLabelRoot = "inkscape:label";
 
+class Corridor {
+  final List<Point<double>> bounds;
+
+  const Corridor({required this.bounds});
+}
+
 class IndoorMapRoom {
   final String name;
   final Point<double> doorLocation;
@@ -75,6 +81,7 @@ class Floorplan {
   final double canvasHeight;
   late List<IndoorMapRoom> rooms;
   late List<PointOfInterest> pois;
+  late List<Corridor> corridors;
 
   Floorplan({
     required this.buildingId,
@@ -84,6 +91,7 @@ class Floorplan {
     this.canvasHeight = 0,
     this.rooms = const [],
     this.pois = const [],
+    this.corridors = const [],
   });
 
   factory Floorplan.fromXml(
@@ -127,12 +135,37 @@ class Floorplan {
       connectorsLayer,
     );
 
+    final corridorLayer = xmlData
+        .findAllElements("g")
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "walkable");
+    floorplan.corridors = floorplan._parseCorridorData(corridorLayer);
+
     final poisLayer = xmlData
         .findAllElements("g")
         .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "points-of-interest");
     floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
 
     return floorplan;
+  }
+
+  List<Corridor> _parseCorridorData(final XmlElement walkableLayer) {
+    final walkableRegex = RegExp(r"^walkable-(\d+)$");
+    final areas = <Corridor>[];
+
+    for (final element in walkableLayer.findAllElements("path")) {
+      final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
+      final match = walkableRegex.firstMatch(label);
+
+      if (match == null) {
+        continue;
+      }
+
+      final points = parsePointsFromSvgPath(element);
+
+      areas.add(Corridor(bounds: points));
+    }
+
+    return areas;
   }
 
   List<IndoorMapRoom> _parseRoomData(
