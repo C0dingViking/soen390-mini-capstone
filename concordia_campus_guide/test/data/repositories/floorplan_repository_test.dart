@@ -53,7 +53,9 @@ void main() {
     });
 
     test("fails gracefully if floorplan file is not found", () async {
-      final floorplans = await repo.loadBuildingFloorplans("test/assets/nonexistent_directory");
+      final floorplans = await repo.loadBuildingFloorplans(
+        "test/assets/nonexistent_directory",
+      );
       expect(floorplans, isEmpty);
     });
 

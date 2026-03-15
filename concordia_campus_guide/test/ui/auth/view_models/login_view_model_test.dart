@@ -19,7 +19,9 @@ void main() {
   group("LoginViewModel tests", () {
     test("initial state uses currentUser", () {
       when(mockAuth.currentUser).thenReturn(mockUser);
-      when(mockAuth.authStateChanges()).thenAnswer((_) => const Stream<User?>.empty());
+      when(
+        mockAuth.authStateChanges(),
+      ).thenAnswer((_) => const Stream<User?>.empty());
 
       final vm = LoginViewModel(firebaseAuth: mockAuth);
 

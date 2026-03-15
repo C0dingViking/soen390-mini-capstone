@@ -11,7 +11,9 @@ class BuildingFeatureListConverter
     return json
         .map((final f) {
           try {
-            return BuildingFeature.values.firstWhere((final e) => e.name == f.toString());
+            return BuildingFeature.values.firstWhere(
+              (final e) => e.name == f.toString(),
+            );
           } catch (e) {
             return null;
           }

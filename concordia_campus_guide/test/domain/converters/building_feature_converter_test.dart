@@ -8,7 +8,11 @@ void main() {
 
     group("fromJson", () {
       test("converts list of feature strings to BuildingFeature list", () {
-        final result = converter.fromJson(["escalator", "elevator", "wheelChairAccess"]);
+        final result = converter.fromJson([
+          "escalator",
+          "elevator",
+          "wheelChairAccess",
+        ]);
 
         expect(result, hasLength(3));
         expect(result![0], equals(BuildingFeature.escalator));
@@ -61,7 +65,10 @@ void main() {
       });
 
       test("handles all invalid features gracefully", () {
-        final result = converter.fromJson(["invalidFeature1", "invalidFeature2"]);
+        final result = converter.fromJson([
+          "invalidFeature1",
+          "invalidFeature2",
+        ]);
 
         expect(result, isEmpty);
       });

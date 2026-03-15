@@ -83,7 +83,9 @@ void main() {
         images: [],
       );
 
-      final polygons = mdi.generateBuildingPolygons([b], AppTheme.concordiaMaroon);
+      final polygons = mdi.generateBuildingPolygons([
+        b,
+      ], AppTheme.concordiaMaroon);
       expect(polygons.length, 1);
 
       final poly = polygons.first;

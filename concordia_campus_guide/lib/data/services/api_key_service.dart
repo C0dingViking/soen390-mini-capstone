@@ -3,7 +3,9 @@ import "package:flutter/services.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 
 class ApiKeyService {
-  static const MethodChannel _channel = MethodChannel("concordia_campus_guide/api_keys");
+  static const MethodChannel _channel = MethodChannel(
+    "concordia_campus_guide/api_keys",
+  );
 
   Future<String?> getGoogleMapsApiKey() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {

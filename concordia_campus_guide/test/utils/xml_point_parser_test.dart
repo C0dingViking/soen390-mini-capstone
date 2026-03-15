@@ -24,7 +24,9 @@ void main() {
     });
 
     test("parses rect with missing attributes as zero", () {
-      final rectElement = XmlDocument.parse('<rect width="30" height="40"/>').rootElement;
+      final rectElement = XmlDocument.parse(
+        '<rect width="30" height="40"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgRect(rectElement);
 
@@ -36,7 +38,9 @@ void main() {
     });
 
     test("fails gracefully with malformed svg", () {
-      final rectElement = XmlDocument.parse('<rect x="a" y="b" width="c" height="d"/>').rootElement;
+      final rectElement = XmlDocument.parse(
+        '<rect x="a" y="b" width="c" height="d"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgRect(rectElement);
 
@@ -46,7 +50,9 @@ void main() {
 
   group("parsePointsFromSvgPath", () {
     test("parses simple moveto and lineto commands", () {
-      final pathElement = XmlDocument.parse('<path d="M 10 20 L 30 40"/>').rootElement;
+      final pathElement = XmlDocument.parse(
+        '<path d="M 10 20 L 30 40"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgPath(pathElement);
 
@@ -56,7 +62,9 @@ void main() {
     });
 
     test("parses relative commands", () {
-      final pathElement = XmlDocument.parse('<path d="M 10 20 l 20 20"/>').rootElement;
+      final pathElement = XmlDocument.parse(
+        '<path d="M 10 20 l 20 20"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgPath(pathElement);
 
@@ -65,19 +73,26 @@ void main() {
       expect(points[1], Point(30.0, 40.0)); // relative to the first point
     });
 
-    test("keeps current axis for absolute horizontal and vertical commands", () {
-      final pathElement = XmlDocument.parse('<path d="M 10 20 H 30 V 40"/>').rootElement;
+    test(
+      "keeps current axis for absolute horizontal and vertical commands",
+      () {
+        final pathElement = XmlDocument.parse(
+          '<path d="M 10 20 H 30 V 40"/>',
+        ).rootElement;
 
-      final points = parsePointsFromSvgPath(pathElement);
+        final points = parsePointsFromSvgPath(pathElement);
 
-      expect(points.length, 3);
-      expect(points[0], Point(10.0, 20.0));
-      expect(points[1], Point(30.0, 20.0));
-      expect(points[2], Point(30.0, 40.0));
-    });
+        expect(points.length, 3);
+        expect(points[0], Point(10.0, 20.0));
+        expect(points[1], Point(30.0, 20.0));
+        expect(points[2], Point(30.0, 40.0));
+      },
+    );
 
     test("supports chained relative horizontal and vertical commands", () {
-      final pathElement = XmlDocument.parse('<path d="M 10 20 h 5 v 5 h -3 v -2"/>').rootElement;
+      final pathElement = XmlDocument.parse(
+        '<path d="M 10 20 h 5 v 5 h -3 v -2"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgPath(pathElement);
 
@@ -90,7 +105,9 @@ void main() {
     });
 
     test("ignores unsupported commands", () {
-      final pathElement = XmlDocument.parse('<path d="M 10 20 J 15 25, 30 40"/>').rootElement;
+      final pathElement = XmlDocument.parse(
+        '<path d="M 10 20 J 15 25, 30 40"/>',
+      ).rootElement;
 
       final points = parsePointsFromSvgPath(pathElement);
 
@@ -109,7 +126,9 @@ void main() {
 
   group("parsePointFromSvgCircle", () {
     test("parses circle with cx and cy", () {
-      final circleElement = XmlDocument.parse('<circle cx="15" cy="25" r="5"/>').rootElement;
+      final circleElement = XmlDocument.parse(
+        '<circle cx="15" cy="25" r="5"/>',
+      ).rootElement;
 
       final point = parsePointFromSvgCircle(circleElement);
 
@@ -125,7 +144,9 @@ void main() {
     });
 
     test("fails gracefully with malformed svg", () {
-      final circleElement = XmlDocument.parse('<circle cx="a" cy="b" r="c"/>').rootElement;
+      final circleElement = XmlDocument.parse(
+        '<circle cx="a" cy="b" r="c"/>',
+      ).rootElement;
 
       final point = parsePointFromSvgCircle(circleElement);
 

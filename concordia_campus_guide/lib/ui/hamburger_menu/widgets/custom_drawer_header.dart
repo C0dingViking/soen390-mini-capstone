@@ -16,16 +16,22 @@ class CustomDrawerHeader extends StatelessWidget {
 
     final String name = currentUser?.displayName ?? "Guest User";
     final String firstName = name.split(" ").first;
-    final String lastName = name.split(" ").length > 1 ? name.split(" ").last : "";
+    final String lastName = name.split(" ").length > 1
+        ? name.split(" ").last
+        : "";
 
     final String email = currentUser?.email ?? "Not signed in";
     final String imageUrl =
-        currentUser?.photoURL ?? "https://www.gravatar.com/avatar/placeholder?d=mp&s=200";
+        currentUser?.photoURL ??
+        "https://www.gravatar.com/avatar/placeholder?d=mp&s=200";
 
     return Container(
       height: headerHeight,
       color: AppTheme.concordiaMaroon,
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: headerHeight * 0.01),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: headerHeight * 0.01,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +48,9 @@ class CustomDrawerHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: AppTheme.concordiaGold,
                 ),
-                child: ClipOval(child: Image.network(imageUrl, fit: BoxFit.cover)),
+                child: ClipOval(
+                  child: Image.network(imageUrl, fit: BoxFit.cover),
+                ),
               ),
               SizedBox(width: screenWidth * 0.04),
               Column(

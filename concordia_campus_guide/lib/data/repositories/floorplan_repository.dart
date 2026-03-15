@@ -17,11 +17,15 @@ class FloorplanRepository {
     final String? manifestPath,
     final String? roomManifestPath,
   }) : floorplanLoader = floorplanLoader ?? rootBundle.loadString,
-       manifestPath = manifestPath ?? "assets/floorplans/floorplan_manifest.json",
-       roomManifestPath = roomManifestPath ?? "assets/floorplans/room_manifest.json";
+       manifestPath =
+           manifestPath ?? "assets/floorplans/floorplan_manifest.json",
+       roomManifestPath =
+           roomManifestPath ?? "assets/floorplans/room_manifest.json";
 
   // requires a directoryPath as it parses the XML from the .svg files for all available floors to a building
-  Future<Map<int, Floorplan>> loadBuildingFloorplans(final String directoryId) async {
+  Future<Map<int, Floorplan>> loadBuildingFloorplans(
+    final String directoryId,
+  ) async {
     final Map<int, Floorplan> floorplans = {};
 
     try {
@@ -40,7 +44,9 @@ class FloorplanRepository {
 
       final List<String> fileList = List<String>.from(rawList.cast<dynamic>());
       if (fileList.isEmpty) {
-        throw FileSystemException("No floorplans defined for building ID: $directoryId");
+        throw FileSystemException(
+          "No floorplans defined for building ID: $directoryId",
+        );
       }
 
       for (final svg in fileList) {
@@ -57,7 +63,12 @@ class FloorplanRepository {
 
         final buildingCode = match.group(1)!;
         final floorNumber = int.parse(match.group(2)!);
-        floorplans[floorNumber] = Floorplan.fromXml(buildingCode, floorNumber, svg, xmlData);
+        floorplans[floorNumber] = Floorplan.fromXml(
+          buildingCode,
+          floorNumber,
+          svg,
+          xmlData,
+        );
       }
     } on PathNotFoundException catch (e) {
       logger.e("Failed to resolve a file path", error: e);
@@ -74,7 +85,8 @@ class FloorplanRepository {
     List<String> rooms = [];
     try {
       final roomManifest = await floorplanLoader(roomManifestPath);
-      final List<dynamic> manifestJson = jsonDecode(roomManifest) as List<dynamic>;
+      final List<dynamic> manifestJson =
+          jsonDecode(roomManifest) as List<dynamic>;
       rooms = manifestJson.cast<String>();
     } catch (e) {
       logger.e("Failed to load rooms from JSON", error: e);

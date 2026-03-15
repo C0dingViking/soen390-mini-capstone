@@ -94,7 +94,10 @@ class HomeViewModel extends ChangeNotifier {
 
   int get unfocusSearchBarSignal => _unfocusSearchBarSignal;
 
-  static const Coordinate sgw = Coordinate(latitude: 45.4972, longitude: -73.5786);
+  static const Coordinate sgw = Coordinate(
+    latitude: 45.4972,
+    longitude: -73.5786,
+  );
   static const Coordinate loyola = Coordinate(
     latitude: 45.45823348665408,
     longitude: -73.64067095332564,
@@ -109,7 +112,10 @@ class HomeViewModel extends ChangeNotifier {
   set buildingOutlineColor(final Color color) {
     _buildingOutlineColor = color;
     if (buildings.isNotEmpty) {
-      buildingOutlines = mapInteractor.generateBuildingPolygons(buildings.values, color);
+      buildingOutlines = mapInteractor.generateBuildingPolygons(
+        buildings.values,
+        color,
+      );
     }
     notifyListeners();
   }
@@ -119,10 +125,8 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
-    final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(
-      path,
-      _buildingOutlineColor,
-    );
+    final BuildingMapDataDTO payload = await mapInteractor
+        .loadBuildingsWithMapElements(path, _buildingOutlineColor);
 
     if (payload.errorMessage == null) {
       buildings = payload.buildings;
@@ -131,7 +135,9 @@ class HomeViewModel extends ChangeNotifier {
       // start location service and subscribe to updates
       await LocationService.instance.start();
       _locationSubscription?.cancel();
-      _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
+      _locationSubscription = LocationService.instance.positionStream.listen(
+        _handleLocationUpdate,
+      );
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -246,7 +252,9 @@ class HomeViewModel extends ChangeNotifier {
       }
 
       nearbySearchResults = nearbyResults;
-      final nearbyPlaceIds = nearbyResults.map((final place) => place.placeId).toSet();
+      final nearbyPlaceIds = nearbyResults
+          .map((final place) => place.placeId)
+          .toSet();
       final autocompleteSuggestions = autocompleteResults
           .where((final place) => !nearbyPlaceIds.contains(place.placeId))
           .map(SearchSuggestion.place);
@@ -265,7 +273,10 @@ class HomeViewModel extends ChangeNotifier {
   void clearSearchResults() {
     _searchDebounce?.cancel();
     _searchQuery = "";
-    if (searchResults.isNotEmpty || nearbySearchResults.isNotEmpty || isSearchingPlaces || isSearchingNearbyPlaces) {
+    if (searchResults.isNotEmpty ||
+        nearbySearchResults.isNotEmpty ||
+        isSearchingPlaces ||
+        isSearchingNearbyPlaces) {
       searchResults = [];
       nearbySearchResults = [];
       isSearchingPlaces = false;
@@ -353,11 +364,18 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    if (field == SearchField.destination && startCoordinate == null && place.coordinate != null) {
+    if (field == SearchField.destination &&
+        startCoordinate == null &&
+        place.coordinate != null) {
       await _applyCurrentLocationAsStart();
     }
 
-    _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
+    _applySelection(
+      field: field,
+      coordinate: coordinate,
+      label: suggestion.title,
+      campus: null,
+    );
     cameraTarget = coordinate;
     await _loadRoutesIfReady();
     searchResults = [];
@@ -435,7 +453,9 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final durationSeconds = selectedOption.durationSeconds!;
-    suggestedDepartureTime = selectedArrivalTime!.subtract(Duration(seconds: durationSeconds));
+    suggestedDepartureTime = selectedArrivalTime!.subtract(
+      Duration(seconds: durationSeconds),
+    );
     notifyListeners();
   }
 
@@ -570,7 +590,9 @@ class HomeViewModel extends ChangeNotifier {
     _currentMapZoom = zoom;
 
     final option = routeOptions[selectedRouteMode];
-    if (selectedRouteMode != RouteMode.transit || option == null || option.steps.isEmpty) {
+    if (selectedRouteMode != RouteMode.transit ||
+        option == null ||
+        option.steps.isEmpty) {
       return;
     }
 
@@ -586,7 +608,8 @@ class HomeViewModel extends ChangeNotifier {
     const growthPerZoomOut = 2;
 
     final zoomDelta = (baseZoom - _currentMapZoom).clamp(0.0, 8.0);
-    final scaled = minRadiusMeters * math.pow(growthPerZoomOut, zoomDelta).toDouble();
+    final scaled =
+        minRadiusMeters * math.pow(growthPerZoomOut, zoomDelta).toDouble();
 
     return scaled.clamp(minRadiusMeters, maxRadiusMeters).toDouble();
   }
@@ -636,7 +659,10 @@ class HomeViewModel extends ChangeNotifier {
       case RouteMode.transit:
         polylineColor = AppTheme.concordiaDarkBlue;
         polylineWidth = 5;
-        polylinePattern = [PatternItem.dash(20), PatternItem.gap(10)]; // Dashed line for transit
+        polylinePattern = [
+          PatternItem.dash(20),
+          PatternItem.gap(10),
+        ]; // Dashed line for transit
         break;
       case RouteMode.shuttle:
         polylineColor = AppTheme.concordiaMaroon;
@@ -710,7 +736,10 @@ class HomeViewModel extends ChangeNotifier {
         // Walking segments in transit route
         color = AppTheme.concordiaTurquoise;
         width = 4;
-        pattern = [PatternItem.dot, PatternItem.gap(10)]; // Dotted line for walking
+        pattern = [
+          PatternItem.dot,
+          PatternItem.gap(10),
+        ]; // Dotted line for walking
       }
 
       // Check if travel mode changed - add circle at transition point
@@ -722,7 +751,12 @@ class HomeViewModel extends ChangeNotifier {
             circleId: CircleId("transit-change-$segmentIndex"),
             center: points.first,
             radius: transitionCircleRadius,
-            fillColor: const Color.fromARGB(223, 98, 106, 114).withValues(alpha: 0.8),
+            fillColor: const Color.fromARGB(
+              223,
+              98,
+              106,
+              114,
+            ).withValues(alpha: 0.8),
             strokeWidth: 3,
             strokeColor: const Color.fromARGB(223, 98, 106, 114),
           ),
@@ -805,7 +839,10 @@ class HomeViewModel extends ChangeNotifier {
       if (point.longitude > maxLng) maxLng = point.longitude;
     }
 
-    return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
   }
 
   List<SearchSuggestion> _buildingSuggestions(final String query) {
@@ -833,7 +870,6 @@ class HomeViewModel extends ChangeNotifier {
       );
     }).toList();
   }
-
 
   Future<List<PlaceSuggestion>> _searchNearbyPlaces(final String query) async {
     try {
@@ -871,9 +907,13 @@ class HomeViewModel extends ChangeNotifier {
             position: coordinate.toLatLng(),
             infoWindow: InfoWindow(
               title: place.mainText,
-              snippet: place.secondaryText.isNotEmpty ? place.secondaryText : null,
+              snippet: place.secondaryText.isNotEmpty
+                  ? place.secondaryText
+                  : null,
             ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueOrange,
+            ),
           );
         })
         .toSet();
@@ -924,7 +964,9 @@ class HomeViewModel extends ChangeNotifier {
     if (normalized.isEmpty) return null;
 
     final directMatch =
-        buildings[buildingId] ?? buildings[normalized] ?? buildings[normalized.toUpperCase()];
+        buildings[buildingId] ??
+        buildings[normalized] ??
+        buildings[normalized.toUpperCase()];
     if (directMatch != null) return directMatch;
 
     for (final building in buildings.values) {
@@ -940,7 +982,8 @@ class HomeViewModel extends ChangeNotifier {
     setSearchBarExpanded(true);
     await setStartToCurrentLocation();
     if (startCoordinate == null) {
-      generateInfoMessage = "Unable to determine current location for navigation start.";
+      generateInfoMessage =
+          "Unable to determine current location for navigation start.";
       notifyListeners();
       return;
     }
@@ -972,7 +1015,9 @@ class HomeViewModel extends ChangeNotifier {
 
     if (suggestions.isNotEmpty) {
       final firstSuggestion = suggestions.first;
-      final coordinate = await placesInteractor.resolvePlaceSuggestion(firstSuggestion);
+      final coordinate = await placesInteractor.resolvePlaceSuggestion(
+        firstSuggestion,
+      );
       if (coordinate != null) {
         final label = SearchSuggestion.place(firstSuggestion).title;
         _applySelection(
@@ -988,13 +1033,15 @@ class HomeViewModel extends ChangeNotifier {
       }
     }
 
-    generateInfoMessage = "Unable to find ${buildingId.toUpperCase()} on the map.";
+    generateInfoMessage =
+        "Unable to find ${buildingId.toUpperCase()} on the map.";
     notifyListeners();
   }
 
   Future<void> showNextClass() async {
     // To prevent unnecessary API calls and improve prefomance
-    if (upcomingClass != null && upcomingClass!.startTime.isAfter(DateTime.now())) {
+    if (upcomingClass != null &&
+        upcomingClass!.startTime.isAfter(DateTime.now())) {
       _showNextClassDialog = true;
       notifyListeners();
       return;
@@ -1020,9 +1067,14 @@ class HomeViewModel extends ChangeNotifier {
       _showNextClassDialog = true;
       notifyListeners();
     } catch (e, stackTrace) {
-      logger.e("Failed to fetch calendar events", error: e, stackTrace: stackTrace);
+      logger.e(
+        "Failed to fetch calendar events",
+        error: e,
+        stackTrace: stackTrace,
+      );
       final errorMessageText = e.toString();
-      generateInfoMessage = "$errorMessageText. Please use search to find your destination.";
+      generateInfoMessage =
+          "$errorMessageText. Please use search to find your destination.";
       notifyListeners();
     }
   }

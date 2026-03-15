@@ -8,7 +8,8 @@ import "package:flutter_test/flutter_test.dart";
 
 Finder findRichTextContaining(final String text) {
   return find.byWidgetPredicate(
-    (final widget) => widget is RichText && widget.text.toPlainText().contains(text),
+    (final widget) =>
+        widget is RichText && widget.text.toPlainText().contains(text),
     description: 'RichText containing "$text"',
   );
 }
@@ -34,7 +35,10 @@ void main() {
       );
     }
 
-    Future<void> pumpWidget(final WidgetTester tester, final Building building) async {
+    Future<void> pumpWidget(
+      final WidgetTester tester,
+      final Building building,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: OpeningHoursWidget(building: building)),
@@ -42,7 +46,9 @@ void main() {
       );
     }
 
-    testWidgets("returns empty container when schedule is empty", (final tester) async {
+    testWidgets("returns empty container when schedule is empty", (
+      final tester,
+    ) async {
       final building = createBuildingWithHours([]);
       await pumpWidget(tester, building);
 
@@ -92,7 +98,10 @@ void main() {
 
       expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.keyboard_arrow_down), warnIfMissed: false);
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
@@ -114,7 +123,10 @@ void main() {
       await pumpWidget(tester, building);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.keyboard_arrow_down), warnIfMissed: false);
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.text("9 a.m. - 5:30 p.m."), findsOneWidget);
@@ -139,7 +151,10 @@ void main() {
       await pumpWidget(tester, building);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.keyboard_arrow_down), warnIfMissed: false);
+      await tester.tap(
+        find.byIcon(Icons.keyboard_arrow_down),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.text("Mon"), findsOneWidget);

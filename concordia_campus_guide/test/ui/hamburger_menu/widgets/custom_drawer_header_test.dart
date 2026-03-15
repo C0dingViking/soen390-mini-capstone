@@ -71,7 +71,9 @@ void main() {
       expect(find.text("john.doe@example.com"), findsOneWidget);
     });
 
-    testWidgets("renders profile image using Image.network", (final tester) async {
+    testWidgets("renders profile image using Image.network", (
+      final tester,
+    ) async {
       await pumpDrawerHeader(
         tester,
         name: "John Doe",
@@ -102,7 +104,9 @@ void main() {
       expect(container.color, AppTheme.concordiaMaroon);
     });
 
-    testWidgets("header height is proportional to screen height", (final tester) async {
+    testWidgets("header height is proportional to screen height", (
+      final tester,
+    ) async {
       await pumpDrawerHeader(
         tester,
         name: "John Doe",

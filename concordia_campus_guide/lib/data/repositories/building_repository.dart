@@ -10,8 +10,9 @@ class BuildingRepository {
   // to avoid reloading building data multiple times & to handle multiple sources
   final Map<String, Future<Map<String, Building>>> _buildingCache = {};
 
-  BuildingRepository({final Future<String> Function(String path)? buildingLoader})
-    : buildingLoader = buildingLoader ?? rootBundle.loadString;
+  BuildingRepository({
+    final Future<String> Function(String path)? buildingLoader,
+  }) : buildingLoader = buildingLoader ?? rootBundle.loadString;
 
   // returns all supported buildings with their polygons loaded
   Future<Map<String, Building>> loadBuildings(final String jsonPath) async {
@@ -23,7 +24,8 @@ class BuildingRepository {
 
     try {
       final buildingJson = await buildingLoader(jsonPath);
-      final Map<String, dynamic> buildingData = jsonDecode(buildingJson) as Map<String, dynamic>;
+      final Map<String, dynamic> buildingData =
+          jsonDecode(buildingJson) as Map<String, dynamic>;
 
       for (Map<String, dynamic> buildingEntry
           in (buildingData["buildings"] as List).cast<Map<String, dynamic>>()) {

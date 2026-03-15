@@ -18,7 +18,10 @@ class SearchSuggestion {
     this.place,
   });
 
-  factory SearchSuggestion.building(final Building building, {final String? subtitle}) {
+  factory SearchSuggestion.building(
+    final Building building, {
+    final String? subtitle,
+  }) {
     return SearchSuggestion._(
       type: SearchSuggestionType.building,
       title: building.name,

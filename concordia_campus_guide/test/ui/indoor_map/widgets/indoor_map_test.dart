@@ -144,7 +144,10 @@ void main() {
     ivm = TestIndoorViewModel();
   });
 
-  Future<void> pumpHomeScreen(final WidgetTester tester, final bool supportsFloors) async {
+  Future<void> pumpHomeScreen(
+    final WidgetTester tester,
+    final bool supportsFloors,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<IndoorViewModel>.value(
@@ -157,7 +160,9 @@ void main() {
   }
 
   group("IndoorMap Widget Tests", () {
-    testWidgets("initializes view model with correct building ID", (final tester) async {
+    testWidgets("initializes view model with correct building ID", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester, true);
       expect(ivm.initCalled, isTrue);
       expect(ivm.initPath, equals("T"));
@@ -165,13 +170,17 @@ void main() {
       expect(find.text("Choose destination"), findsOneWidget);
     });
 
-    testWidgets("displays loading indicator when view model is loading", (final tester) async {
+    testWidgets("displays loading indicator when view model is loading", (
+      final tester,
+    ) async {
       ivm.isLoading = true;
       await pumpHomeScreen(tester, true);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets("pops back to previous screen when load fails", (final tester) async {
+    testWidgets("pops back to previous screen when load fails", (
+      final tester,
+    ) async {
       ivm.loadFailed = true;
       await pumpHomeScreen(tester, false);
       await tester.pumpAndSettle();
@@ -268,13 +277,17 @@ void main() {
       expect(roomName, isNull);
     });
 
-    testWidgets("floor picker button displays the name of the current floor", (final tester) async {
+    testWidgets("floor picker button displays the name of the current floor", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester, true);
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.text("T1"), findsOneWidget);
     });
 
-    testWidgets("floor picker shows available floors when clicked", (final tester) async {
+    testWidgets("floor picker shows available floors when clicked", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester, true);
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
@@ -282,19 +295,22 @@ void main() {
       expect(find.text("Floor 2"), findsOneWidget);
     });
 
-    testWidgets("floor picker switches the selected floor when a floor is tapped", (
+    testWidgets(
+      "floor picker switches the selected floor when a floor is tapped",
+      (final tester) async {
+        await pumpHomeScreen(tester, true);
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text("Floor 2"));
+        await tester.pumpAndSettle();
+        expect(ivm.selectedFloorplan!.floorNumber, 2);
+        expect(find.text("T2"), findsOneWidget);
+      },
+    );
+
+    testWidgets("floor picker shows error if changing floor fails", (
       final tester,
     ) async {
-      await pumpHomeScreen(tester, true);
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Floor 2"));
-      await tester.pumpAndSettle();
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
-      expect(find.text("T2"), findsOneWidget);
-    });
-
-    testWidgets("floor picker shows error if changing floor fails", (final tester) async {
       await pumpHomeScreen(tester, true);
 
       // remove floor 2 to simulate failure when changing floors
@@ -304,14 +320,20 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text("Floor 2"));
       await tester.pumpAndSettle();
-      expect(find.text("Failed to change floor. Please try again."), findsOneWidget);
+      expect(
+        find.text("Failed to change floor. Please try again."),
+        findsOneWidget,
+      );
     });
 
     testWidgets("tap on map populates destination field", (final tester) async {
       await pumpHomeScreen(tester, true);
 
       final gestureFinder = find
-          .ancestor(of: find.byType(InteractiveViewer), matching: find.byType(GestureDetector))
+          .ancestor(
+            of: find.byType(InteractiveViewer),
+            matching: find.byType(GestureDetector),
+          )
           .first;
 
       final gestureWidget = tester.widget<GestureDetector>(gestureFinder);
@@ -323,11 +345,15 @@ void main() {
       );
       await tester.pump();
 
-      final destinationTextField = tester.widgetList<TextField>(find.byType(TextField)).last;
+      final destinationTextField = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .last;
       expect(destinationTextField.controller?.text, "T 110");
     });
 
-    testWidgets("Start Navigation switches to floor of current location", (final tester) async {
+    testWidgets("Start Navigation switches to floor of current location", (
+      final tester,
+    ) async {
       await pumpHomeScreen(tester, true);
 
       final startField = find.byType(TextField).first;
@@ -344,25 +370,26 @@ void main() {
       expect(find.text("T2"), findsOneWidget);
     });
 
-    testWidgets("Start Navigation switches to current location building and floor", (
-      final tester,
-    ) async {
-      await pumpHomeScreen(tester, true);
+    testWidgets(
+      "Start Navigation switches to current location building and floor",
+      (final tester) async {
+        await pumpHomeScreen(tester, true);
 
-      final startField = find.byType(TextField).first;
-      final destinationField = find.byType(TextField).last;
+        final startField = find.byType(TextField).first;
+        final destinationField = find.byType(TextField).last;
 
-      await tester.enterText(startField, "H 820");
-      await tester.enterText(destinationField, "T 110");
-      await tester.pumpAndSettle();
+        await tester.enterText(startField, "H 820");
+        await tester.enterText(destinationField, "T 110");
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text("Start Navigation"));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text("Start Navigation"));
+        await tester.pumpAndSettle();
 
-      expect(ivm.initPath, "h");
-      expect(ivm.selectedFloorplan!.buildingId, "H");
-      expect(ivm.selectedFloorplan!.floorNumber, 8);
-      expect(find.text("H8"), findsOneWidget);
-    });
+        expect(ivm.initPath, "h");
+        expect(ivm.selectedFloorplan!.buildingId, "H");
+        expect(ivm.selectedFloorplan!.floorNumber, 8);
+        expect(find.text("H8"), findsOneWidget);
+      },
+    );
   });
 }

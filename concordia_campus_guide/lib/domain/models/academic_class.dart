@@ -15,13 +15,18 @@ class AcademicClass {
   /// input and attempts to create a class from it.
   ///
   /// Throw InvalidEventFormatException if the Event has unexpected format
-  factory AcademicClass.fromCalendar(final Event calendarEvent, final Room room) {
+  factory AcademicClass.fromCalendar(
+    final Event calendarEvent,
+    final Room room,
+  ) {
     final name = calendarEvent.summary ?? "";
     final startTime = calendarEvent.start?.dateTime;
     final endTime = calendarEvent.end?.dateTime;
 
     if (!checkEventFormat(calendarEvent)) {
-      throw InvalidEventFormatException("Calendar event does not match expected format");
+      throw InvalidEventFormatException(
+        "Calendar event does not match expected format",
+      );
     }
 
     // Convert start and end times to local timezone for easier display in the UI
@@ -55,7 +60,9 @@ class AcademicClass {
     if (match != null) {
       return match.group(0)!.replaceAll(" ", "");
     }
-    throw InvalidEventFormatException("Class name does not contain a valid course code");
+    throw InvalidEventFormatException(
+      "Class name does not contain a valid course code",
+    );
   }
 
   String classType() {

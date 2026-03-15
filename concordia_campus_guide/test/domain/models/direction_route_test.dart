@@ -105,16 +105,19 @@ void main() {
       expect(route.estimatedDistanceMeters, equals(0.0));
     });
 
-    test("route with large distance can exist and store said large distance", () {
-      // Act - Cross-country distance
-      final route = DirectionRoute(
-        startCoordinate: testCoordinate,
-        destinationBuilding: testBuilding,
-        estimatedDistanceMeters: 5000000.0, // 5000 km
-      );
+    test(
+      "route with large distance can exist and store said large distance",
+      () {
+        // Act - Cross-country distance
+        final route = DirectionRoute(
+          startCoordinate: testCoordinate,
+          destinationBuilding: testBuilding,
+          estimatedDistanceMeters: 5000000.0, // 5000 km
+        );
 
-      // Assert
-      expect(route.estimatedDistanceMeters, equals(5000000.0));
-    });
+        // Assert
+        expect(route.estimatedDistanceMeters, equals(5000000.0));
+      },
+    );
   });
 }

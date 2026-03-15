@@ -66,7 +66,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets("renders Login tile when user is signed out", (final tester) async {
+    testWidgets("renders Login tile when user is signed out", (
+      final tester,
+    ) async {
       await mockNetworkImages(() async {
         final mockLoginViewModel = MockLoginViewModel();
         final mockUser = MockUser();
@@ -85,7 +87,9 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+        final ScaffoldState scaffoldState = tester.firstState(
+          find.byType(Scaffold),
+        );
         scaffoldState.openDrawer();
         await tester.pumpAndSettle();
 
@@ -94,26 +98,29 @@ void main() {
       });
     });
 
-    testWidgets("renders Logout and Import Google Calendar tiles when signed in", (
-      final tester,
-    ) async {
-      await mockNetworkImages(() async {
-        await pumpHamburgerMenu(tester, isSignedIn: true);
+    testWidgets(
+      "renders Logout and Import Google Calendar tiles when signed in",
+      (final tester) async {
+        await mockNetworkImages(() async {
+          await pumpHamburgerMenu(tester, isSignedIn: true);
 
-        await tester.pumpAndSettle();
+          await tester.pumpAndSettle();
 
-        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+          final ScaffoldState scaffoldState = tester.firstState(
+            find.byType(Scaffold),
+          );
 
-        scaffoldState.openDrawer();
-        await tester.pumpAndSettle();
+          scaffoldState.openDrawer();
+          await tester.pumpAndSettle();
 
-        expect(find.text("Logout"), findsOneWidget);
-        expect(find.byIcon(Icons.logout_sharp), findsOneWidget);
+          expect(find.text("Logout"), findsOneWidget);
+          expect(find.byIcon(Icons.logout_sharp), findsOneWidget);
 
-        expect(find.text("Import Google Calendar"), findsOneWidget);
-        expect(find.byIcon(Icons.calendar_today), findsOneWidget);
-      });
-    });
+          expect(find.text("Import Google Calendar"), findsOneWidget);
+          expect(find.byIcon(Icons.calendar_today), findsOneWidget);
+        });
+      },
+    );
 
     testWidgets("tapping Login navigates to LoginScreen", (final tester) async {
       await runZonedGuarded(
@@ -127,20 +134,27 @@ void main() {
 
             when(mockUser.displayName).thenReturn("John Doe");
             when(mockUser.email).thenReturn("john.doe@example.com");
-            when(mockUser.photoURL).thenReturn("https://example.com/avatar.png");
+            when(
+              mockUser.photoURL,
+            ).thenReturn("https://example.com/avatar.png");
 
             await tester.pumpWidget(
               MaterialApp(
                 home: ChangeNotifierProvider<LoginViewModel>.value(
                   value: mockLoginViewModel,
-                  child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
+                  child: const Scaffold(
+                    drawer: HamburgerMenu(),
+                    body: SizedBox(),
+                  ),
                 ),
               ),
             );
 
             await tester.pumpAndSettle();
 
-            final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+            final ScaffoldState scaffoldState = tester.firstState(
+              find.byType(Scaffold),
+            );
             scaffoldState.openDrawer();
             await tester.pumpAndSettle();
             expect(find.text("Login"), findsOneWidget);
@@ -157,7 +171,9 @@ void main() {
       );
     });
 
-    testWidgets("tapping Import Google Calendar calls CalendarInteractor", (final tester) async {
+    testWidgets("tapping Import Google Calendar calls CalendarInteractor", (
+      final tester,
+    ) async {
       await mockNetworkImages(() async {
         final mockLoginViewModel = MockLoginViewModel();
         final mockHomeViewModel = MockHomeViewModel();
@@ -170,8 +186,12 @@ void main() {
           MaterialApp(
             home: MultiProvider(
               providers: [
-                ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
-                ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
+                ChangeNotifierProvider<LoginViewModel>.value(
+                  value: mockLoginViewModel,
+                ),
+                ChangeNotifierProvider<HomeViewModel>.value(
+                  value: mockHomeViewModel,
+                ),
               ],
               child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
             ),
@@ -179,11 +199,16 @@ void main() {
         );
 
         await tester.pumpAndSettle();
-        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+        final ScaffoldState scaffoldState = tester.firstState(
+          find.byType(Scaffold),
+        );
         scaffoldState.openDrawer();
         await tester.pumpAndSettle();
 
-        final calendarTile = find.widgetWithText(ListTile, "Import Google Calendar");
+        final calendarTile = find.widgetWithText(
+          ListTile,
+          "Import Google Calendar",
+        );
         expect(calendarTile, findsOneWidget);
 
         // We can just tap; we don't need to fully fetch real classes for coverage
@@ -207,8 +232,12 @@ void main() {
           MaterialApp(
             home: MultiProvider(
               providers: [
-                ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
-                ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
+                ChangeNotifierProvider<LoginViewModel>.value(
+                  value: mockLoginViewModel,
+                ),
+                ChangeNotifierProvider<HomeViewModel>.value(
+                  value: mockHomeViewModel,
+                ),
               ],
               child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
             ),
@@ -216,7 +245,9 @@ void main() {
         );
 
         await tester.pumpAndSettle();
-        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+        final ScaffoldState scaffoldState = tester.firstState(
+          find.byType(Scaffold),
+        );
         scaffoldState.openDrawer();
         await tester.pumpAndSettle();
 
@@ -235,7 +266,9 @@ void main() {
 class _FakeFirebasePlatform extends FirebasePlatform {
   _FakeFirebasePlatform() : super();
 
-  static final FirebaseAppPlatform _defaultApp = FakeFirebaseAppPlatform("[DEFAULT]");
+  static final FirebaseAppPlatform _defaultApp = FakeFirebaseAppPlatform(
+    "[DEFAULT]",
+  );
 
   @override
   Future<FirebaseAppPlatform> initializeApp({

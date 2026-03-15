@@ -89,7 +89,10 @@ void main() {
 
   group("AcademicClass.toString", () {
     test("includes class fields", () {
-      final room = Room.fromLocation("Sir George Williams Campus - H Building Rm 101", "h");
+      final room = Room.fromLocation(
+        "Sir George Williams Campus - H Building Rm 101",
+        "h",
+      );
       final academicClass = AcademicClass(
         "ENCS 282",
         DateTime.parse("2025-02-01T09:00:00Z"),
@@ -128,7 +131,10 @@ void main() {
         room,
       );
 
-      expect(() => academicClass.getCourseCode(), throwsA(isA<InvalidEventFormatException>()));
+      expect(
+        () => academicClass.getCourseCode(),
+        throwsA(isA<InvalidEventFormatException>()),
+      );
     });
   });
 
@@ -192,7 +198,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Mondays, \nAt 1:05 PM - 2:15 PM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Mondays, \nAt 1:05 PM - 2:15 PM",
+      );
     });
 
     test("formats midnight and noon correctly", () {
@@ -204,7 +213,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Tuesdays, \nAt 12:00 AM - 12:00 PM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Tuesdays, \nAt 12:00 AM - 12:00 PM",
+      );
     });
 
     test("formats Wednesday correctly", () {
@@ -216,7 +228,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Wednesdays, \nAt 9:30 AM - 11:00 AM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Wednesdays, \nAt 9:30 AM - 11:00 AM",
+      );
     });
 
     test("formats Thursday correctly", () {
@@ -228,7 +243,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Thursdays, \nAt 2:00 PM - 3:30 PM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Thursdays, \nAt 2:00 PM - 3:30 PM",
+      );
     });
 
     test("formats Friday correctly", () {
@@ -240,7 +258,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Fridays, \nAt 10:00 AM - 11:30 AM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Fridays, \nAt 10:00 AM - 11:30 AM",
+      );
     });
 
     test("formats Saturday correctly", () {
@@ -252,7 +273,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Saturdays, \nAt 8:00 AM - 9:30 AM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Saturdays, \nAt 8:00 AM - 9:30 AM",
+      );
     });
 
     test("formats Sunday correctly", () {
@@ -264,7 +288,10 @@ void main() {
         room,
       );
 
-      expect(academicClass.getFormattedDayAndTime(), "Sundays, \nAt 4:00 PM - 5:30 PM");
+      expect(
+        academicClass.getFormattedDayAndTime(),
+        "Sundays, \nAt 4:00 PM - 5:30 PM",
+      );
     });
   });
 }

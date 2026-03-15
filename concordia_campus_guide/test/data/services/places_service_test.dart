@@ -34,17 +34,26 @@ class _FakeGoogleMapsPlaces extends gmw.GoogleMapsPlaces {
     _autocompleteError = error;
   }
 
-  void setDetailsResponse(final gmw.PlacesDetailsResponse? resp, {final Exception? error}) {
+  void setDetailsResponse(
+    final gmw.PlacesDetailsResponse? resp, {
+    final Exception? error,
+  }) {
     _detailsResp = resp;
     _detailsError = error;
   }
 
-  void setSearchResponse(final gmw.PlacesSearchResponse? resp, {final Exception? error}) {
+  void setSearchResponse(
+    final gmw.PlacesSearchResponse? resp, {
+    final Exception? error,
+  }) {
     _searchResp = resp;
     _searchError = error;
   }
 
-  void setNearbyResponse(final gmw.PlacesSearchResponse? resp, {final Exception? error}) {
+  void setNearbyResponse(
+    final gmw.PlacesSearchResponse? resp, {
+    final Exception? error,
+  }) {
     _nearbyResp = resp;
     _nearbyError = error;
   }
@@ -154,12 +163,18 @@ void main() {
             {
               "description": "Ignore me",
               "place_id": "",
-              "structured_formatting": {"main_text": "Ignore", "secondary_text": ""},
+              "structured_formatting": {
+                "main_text": "Ignore",
+                "secondary_text": "",
+              },
             },
             {
               "description": "Hall Building",
               "place_id": "place-1",
-              "structured_formatting": {"main_text": "Hall Building", "secondary_text": "Montreal"},
+              "structured_formatting": {
+                "main_text": "Hall Building",
+                "secondary_text": "Montreal",
+              },
             },
           ],
         }),
@@ -181,7 +196,6 @@ void main() {
 
       expect(results, isEmpty);
     });
-
 
     test("fetchNearbyPlaces returns empty when api key missing", () async {
       final service = PlacesService(apiKeyService: _FakeApiKeyService(null));
@@ -289,7 +303,11 @@ void main() {
       client.setDetailsResponse(
         gmw.PlacesDetailsResponse.fromJson({
           "status": "OK",
-          "result": {"place_id": "place-1", "name": "Hall", "formatted_address": "Montreal"},
+          "result": {
+            "place_id": "place-1",
+            "name": "Hall",
+            "formatted_address": "Montreal",
+          },
         }),
       );
 
@@ -312,19 +330,26 @@ void main() {
               "geometry": {
                 "location": {"lat": 45.6, "lng": -73.6},
               },
-              "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
+              "icon":
+                  "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
-              "plus_code": {"compound_code": "Code", "global_code": "GlobalCode"},
+              "plus_code": {
+                "compound_code": "Code",
+                "global_code": "GlobalCode",
+              },
               "types": ["point_of_interest", "establishment"],
             },
           ],
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
+      final result = await service.fetchPlaceCoordinate(
+        "place-1",
+        fallbackQuery: "Hall Building",
+      );
 
       expect(result, isNotNull);
       expect(result!.latitude, 45.6);
@@ -353,19 +378,26 @@ void main() {
               "geometry": {
                 "location": {"lat": 45.7, "lng": -73.7},
               },
-              "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
+              "icon":
+                  "https://maps.gstatic.com/mapfiles/place_api/icons/v1/icon1.png",
               "name": "Hall Building",
               "opening_hours": {"open_now": true},
               "photos": <Map<String, dynamic>>[],
               "place_id": "search-result-1",
-              "plus_code": {"compound_code": "Code", "global_code": "GlobalCode"},
+              "plus_code": {
+                "compound_code": "Code",
+                "global_code": "GlobalCode",
+              },
               "types": ["point_of_interest"],
             },
           ],
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
+      final result = await service.fetchPlaceCoordinate(
+        "place-1",
+        fallbackQuery: "Hall Building",
+      );
 
       expect(result, isNotNull);
       expect(result!.latitude, 45.7);
@@ -422,7 +454,10 @@ void main() {
         }),
       );
 
-      final result = await service.fetchPlaceCoordinate("place-1", fallbackQuery: "Hall Building");
+      final result = await service.fetchPlaceCoordinate(
+        "place-1",
+        fallbackQuery: "Hall Building",
+      );
 
       expect(result, isNull);
     });

@@ -167,7 +167,11 @@ void main() {
           ),
         ).thenAnswer((_) async => null);
 
-        await interactor.getRouteOptions(startCoord, destCoord, departureTime: departureTime);
+        await interactor.getRouteOptions(
+          startCoord,
+          destCoord,
+          departureTime: departureTime,
+        );
 
         verify(
           mockService.fetchRoute(
@@ -213,7 +217,11 @@ void main() {
           ),
         ).thenAnswer((_) async => null);
 
-        await interactor.getRouteOptions(startCoord, destCoord, arrivalTime: arrivalTime);
+        await interactor.getRouteOptions(
+          startCoord,
+          destCoord,
+          arrivalTime: arrivalTime,
+        );
 
         verify(
           mockService.fetchRoute(

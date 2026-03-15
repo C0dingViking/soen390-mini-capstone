@@ -23,7 +23,12 @@ List<Point<double>> parsePointsFromSvgRect(final XmlElement rectElement) {
     final width = double.parse(rectElement.getAttribute("width") ?? "0");
     final height = double.parse(rectElement.getAttribute("height") ?? "0");
 
-    return [Point(x, y), Point(x + width, y), Point(x + width, y + height), Point(x, y + height)];
+    return [
+      Point(x, y),
+      Point(x + width, y),
+      Point(x + width, y + height),
+      Point(x, y + height),
+    ];
   } on FormatException catch (e) {
     logger.e("XML Parser: Invalid SVG rect attribute value", error: e);
   }
@@ -61,7 +66,12 @@ List<Point<double>> parsePointsFromSvgPath(final XmlElement pathElement) {
 }
 
 typedef _PathCommandHandler =
-    int Function(List<String> tokens, int index, bool isRelative, _SvgPathState state);
+    int Function(
+      List<String> tokens,
+      int index,
+      bool isRelative,
+      _SvgPathState state,
+    );
 
 final Map<String, _PathCommandHandler> _pathCommandHandlers = {
   "m": _handleMoveOrLine,
@@ -239,7 +249,11 @@ List<String> _tokenizeSvgPath(final String pathData) {
         buffer.clear();
       }
       tokens.add(char);
-    } else if (char == " " || char == "," || char == "\n" || char == "\r" || char == "\t") {
+    } else if (char == " " ||
+        char == "," ||
+        char == "\n" ||
+        char == "\r" ||
+        char == "\t") {
       if (buffer.isNotEmpty) {
         tokens.add(buffer.toString());
         buffer.clear();

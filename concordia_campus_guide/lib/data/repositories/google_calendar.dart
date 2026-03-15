@@ -17,7 +17,9 @@ class GoogleCalendarRepository {
       return null;
     }
 
-    final googleSignIn = GoogleSignIn(scopes: [calendar.CalendarApi.calendarScope]);
+    final googleSignIn = GoogleSignIn(
+      scopes: [calendar.CalendarApi.calendarScope],
+    );
 
     // use cached user to sign in and get the headers (kind of a hack)
     final googleAccount = await googleSignIn.signInSilently();
@@ -57,7 +59,11 @@ class GoogleCalendarRepository {
     required final DateTime startDate,
     required final DateTime endDate,
   }) async {
-    return getUpcomingEvents(timeMin: startDate, timeMax: endDate, maxResults: 100);
+    return getUpcomingEvents(
+      timeMin: startDate,
+      timeMax: endDate,
+      maxResults: 100,
+    );
   }
 }
 

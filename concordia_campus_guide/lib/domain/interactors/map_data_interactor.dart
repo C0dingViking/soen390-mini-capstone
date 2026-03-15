@@ -17,7 +17,9 @@ class MapDataInteractor {
     final String path,
     final Color color,
   ) async {
-    final Map<String, Building> buildings = await _buildingRepo.loadBuildings(path);
+    final Map<String, Building> buildings = await _buildingRepo.loadBuildings(
+      path,
+    );
     Set<Polygon> buildingOutlines = {};
     Set<Marker> buildingMarkers = {};
     String? error;
@@ -67,7 +69,10 @@ class MapDataInteractor {
   }
 
   /// Finds the building at the given coordinate, or null if outside all buildings.
-  Building? findBuildingAt(final Coordinate coord, final Map<String, Building> buildings) {
+  Building? findBuildingAt(
+    final Coordinate coord,
+    final Map<String, Building> buildings,
+  ) {
     for (final b in buildings.values) {
       // quick reject using precomputed bounding box
       if (b.outlinePoints.isEmpty) continue;
@@ -88,7 +93,8 @@ class MapDataInteractor {
       final current = points[i];
       final next = points[(i + 1) % points.length];
 
-      final partialArea = current.latitude * next.longitude - next.latitude * current.longitude;
+      final partialArea =
+          current.latitude * next.longitude - next.latitude * current.longitude;
       totalArea += partialArea;
 
       centroidWeightedLat += (current.latitude + next.latitude) * partialArea;
@@ -96,6 +102,9 @@ class MapDataInteractor {
     }
 
     totalArea *= 0.5;
-    return LatLng(centroidWeightedLat / (6 * totalArea), centroidWeightedLng / (6 * totalArea));
+    return LatLng(
+      centroidWeightedLat / (6 * totalArea),
+      centroidWeightedLng / (6 * totalArea),
+    );
   }
 }

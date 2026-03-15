@@ -7,7 +7,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group("MapWrapper Polygon Tap Tests", () {
-    testWidgets("MapWrapper accepts onPolygonTap callback", (final tester) async {
+    testWidgets("MapWrapper accepts onPolygonTap callback", (
+      final tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -40,7 +42,9 @@ void main() {
       expect(find.byType(MapWrapper), findsOneWidget);
     });
 
-    testWidgets("MapWrapper works without onPolygonTap callback", (final tester) async {
+    testWidgets("MapWrapper works without onPolygonTap callback", (
+      final tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -71,35 +75,40 @@ void main() {
       expect(find.byType(GoogleMap), findsOneWidget);
     });
 
-    testWidgets("MapWrapper adds consumeTapEvents to polygons when callback provided", (
-      final tester,
-    ) async {
-      final originalPolygon = Polygon(
-        polygonId: const PolygonId("test-poly"),
-        points: const [LatLng(45.497, -73.579), LatLng(45.498, -73.579), LatLng(45.498, -73.578)],
-        consumeTapEvents: false,
-      );
+    testWidgets(
+      "MapWrapper adds consumeTapEvents to polygons when callback provided",
+      (final tester) async {
+        final originalPolygon = Polygon(
+          polygonId: const PolygonId("test-poly"),
+          points: const [
+            LatLng(45.497, -73.579),
+            LatLng(45.498, -73.579),
+            LatLng(45.498, -73.578),
+          ],
+          consumeTapEvents: false,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: MapWrapper(
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(45.4972, -73.5786),
-                zoom: 15,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MapWrapper(
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(45.4972, -73.5786),
+                  zoom: 15,
+                ),
+                onMapCreated: (_) {},
+                myLocationEnabled: false,
+                polygons: {originalPolygon},
+                markers: {},
+                onPolygonTap: (final polygonId) {},
               ),
-              onMapCreated: (_) {},
-              myLocationEnabled: false,
-              polygons: {originalPolygon},
-              markers: {},
-              onPolygonTap: (final polygonId) {},
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(GoogleMap), findsOneWidget);
-    });
+        expect(find.byType(GoogleMap), findsOneWidget);
+      },
+    );
 
     testWidgets("MapWrapper passes through all required GoogleMap properties", (
       final tester,
@@ -137,7 +146,9 @@ void main() {
       expect(find.byType(GoogleMap), findsOneWidget);
     });
 
-    testWidgets("PolygonId extraction from polygon ID works correctly", (final tester) async {
+    testWidgets("PolygonId extraction from polygon ID works correctly", (
+      final tester,
+    ) async {
       const testCases = [
         {"input": "H-poly", "expected": "H"},
         {"input": "MB-poly", "expected": "MB"},

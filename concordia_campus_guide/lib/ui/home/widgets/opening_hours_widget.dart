@@ -44,21 +44,25 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: AppTheme.concordiaForeground),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.concordiaForeground,
+                      ),
                       children: [
                         TextSpan(
                           text: isOpen ? "Open" : "Closed",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: isOpen ? AppTheme.concordiaGreen : AppTheme.concordiaMaroon,
+                            color: isOpen
+                                ? AppTheme.concordiaGreen
+                                : AppTheme.concordiaMaroon,
                           ),
                         ),
                         TextSpan(
                           text: " · $statusText",
                           style: TextStyle(
-                            color: AppTheme.concordiaForeground.withValues(alpha: 0.8),
+                            color: AppTheme.concordiaForeground.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ),
                       ],
@@ -66,7 +70,9 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                   ),
                 ),
                 Icon(
-                  _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  _isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   color: AppTheme.concordiaForeground.withValues(alpha: 0.6),
                   size: 24,
                 ),
@@ -88,15 +94,21 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                       Text(
                         dayName,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isToday
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                           color: AppTheme.concordiaForeground,
                         ),
                       ),
                       Text(
                         "$openTime - $closeTime",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
-                          color: AppTheme.concordiaForeground.withValues(alpha: 0.8),
+                          fontWeight: isToday
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: AppTheme.concordiaForeground.withValues(
+                            alpha: 0.8,
+                          ),
                         ),
                       ),
                     ],
@@ -162,7 +174,10 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
     return openTimeInt > currentTime;
   }
 
-  String _getNextOpeningText(final List<OpeningHoursPeriod> schedule, final int currentDay) {
+  String _getNextOpeningText(
+    final List<OpeningHoursPeriod> schedule,
+    final int currentDay,
+  ) {
     final nextDay = schedule.firstWhere(
       (final period) => (period.open?.day ?? 0) > currentDay,
       orElse: () => schedule.first,

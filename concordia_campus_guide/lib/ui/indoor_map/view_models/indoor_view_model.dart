@@ -53,7 +53,8 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final Map<int, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(buildingId);
+      final Map<int, Floorplan> floorplans = await floorplanInteractor
+          .loadFloorplans(buildingId);
 
       if (floorplans.isEmpty) {
         loadFailed = true;
@@ -79,7 +80,8 @@ class IndoorViewModel extends ChangeNotifier {
   }
 
   bool changeFloor(final int floorNumber) {
-    if (loadedFloorplans == null || !loadedFloorplans!.containsKey(floorNumber)) {
+    if (loadedFloorplans == null ||
+        !loadedFloorplans!.containsKey(floorNumber)) {
       return false;
     }
 

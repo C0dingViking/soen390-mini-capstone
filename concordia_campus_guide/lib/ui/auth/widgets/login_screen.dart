@@ -31,7 +31,9 @@ class LoginScreen extends StatelessWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
             backgroundColor: AppTheme.concordiaGold,
-            body: Center(child: CircularProgressIndicator(color: AppTheme.concordiaMaroon)),
+            body: Center(
+              child: CircularProgressIndicator(color: AppTheme.concordiaMaroon),
+            ),
           );
         }
 
@@ -62,15 +64,20 @@ class LoginScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               }),
             ],
-            headerBuilder: (final context, final constraints, final shrinkOffset) {
-              return const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Icon(Icons.account_circle, size: 100.0, color: AppTheme.concordiaMaroon),
-                ),
-              );
-            },
+            headerBuilder:
+                (final context, final constraints, final shrinkOffset) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Icon(
+                        Icons.account_circle,
+                        size: 100.0,
+                        color: AppTheme.concordiaMaroon,
+                      ),
+                    ),
+                  );
+                },
           ),
         );
       },

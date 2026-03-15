@@ -26,7 +26,10 @@ class AppTheme {
   static const InputDecoration indoorSearchFieldDecoration = InputDecoration(
     filled: true,
     fillColor: Colors.white,
-    border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.zero),
+    border: OutlineInputBorder(
+      borderSide: BorderSide.none,
+      borderRadius: BorderRadius.zero,
+    ),
     contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
   );
 

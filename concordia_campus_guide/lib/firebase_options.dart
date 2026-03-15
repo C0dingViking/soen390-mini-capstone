@@ -2,7 +2,8 @@
 // ignore_for_file: type=lint
 // coverage:ignore-file
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -34,7 +35,9 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
-        throw UnsupportedError('DefaultFirebaseOptions are not supported for this platform.');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions are not supported for this platform.',
+        );
     }
   }
 
@@ -62,8 +65,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '501981294191',
     projectId: 'concordia-campus-guide',
     storageBucket: 'concordia-campus-guide.firebasestorage.app',
-    androidClientId: '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
-    iosClientId: '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 
@@ -73,8 +78,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '501981294191',
     projectId: 'concordia-campus-guide',
     storageBucket: 'concordia-campus-guide.firebasestorage.app',
-    androidClientId: '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
-    iosClientId: '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
+    androidClientId:
+        '501981294191-foqhoe1c7cvhtco1i0oa2gmk8aljqrp7.apps.googleusercontent.com',
+    iosClientId:
+        '501981294191-7kq0enh30ba9st8nhup3t5o59h6lmp81.apps.googleusercontent.com',
     iosBundleId: 'com.example.concordiaCampusGuide',
   );
 

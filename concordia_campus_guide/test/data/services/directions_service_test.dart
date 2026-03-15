@@ -52,8 +52,14 @@ class _FakeHttpClient extends http.BaseClient {
 
 void main() {
   group("DirectionsService", () {
-    const Coordinate defaultOrigin = Coordinate(latitude: 45.5, longitude: -73.5);
-    const Coordinate defaultDestination = Coordinate(latitude: 45.6, longitude: -73.6);
+    const Coordinate defaultOrigin = Coordinate(
+      latitude: 45.5,
+      longitude: -73.5,
+    );
+    const Coordinate defaultDestination = Coordinate(
+      latitude: 45.6,
+      longitude: -73.6,
+    );
 
     late _FakeHttpClient fakeClient;
     late _FakeApiKeyService fakeApiKeyService;
@@ -78,17 +84,26 @@ void main() {
     setUp(() {
       fakeClient = _FakeHttpClient();
       fakeApiKeyService = _FakeApiKeyService("test-api-key");
-      service = DirectionsService(httpClient: fakeClient, apiKeyService: fakeApiKeyService);
+      service = DirectionsService(
+        httpClient: fakeClient,
+        apiKeyService: fakeApiKeyService,
+      );
     });
 
     group("constructor", () {
-      test("initializes with default client and api key service when none provided", () {
-        final service = DirectionsService();
-        expect(service, isNotNull);
-      });
+      test(
+        "initializes with default client and api key service when none provided",
+        () {
+          final service = DirectionsService();
+          expect(service, isNotNull);
+        },
+      );
 
       test("initializes with provided client and api key service", () {
-        final service = DirectionsService(httpClient: fakeClient, apiKeyService: fakeApiKeyService);
+        final service = DirectionsService(
+          httpClient: fakeClient,
+          apiKeyService: fakeApiKeyService,
+        );
         expect(service, isNotNull);
       });
     });
@@ -203,7 +218,10 @@ void main() {
         );
 
         final departureTime = DateTime(2026, 2, 14, 10, 0);
-        final result = await fetchRoute(mode: RouteMode.transit, departureTime: departureTime);
+        final result = await fetchRoute(
+          mode: RouteMode.transit,
+          departureTime: departureTime,
+        );
 
         expect(result, isNotNull);
         expect(result?.mode, RouteMode.transit);
@@ -256,7 +274,10 @@ void main() {
       test("returns null when response status is not OK", () async {
         fakeClient.setResponse(
           http.Response(
-            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            json.encode({
+              "status": "ZERO_RESULTS",
+              "routes": <Map<String, dynamic>>[],
+            }),
             200,
           ),
         );
@@ -268,7 +289,10 @@ void main() {
 
       test("returns null when routes array is empty", () async {
         fakeClient.setResponse(
-          http.Response(json.encode({"status": "OK", "routes": <Map<String, dynamic>>[]}), 200),
+          http.Response(
+            json.encode({"status": "OK", "routes": <Map<String, dynamic>>[]}),
+            200,
+          ),
         );
 
         final result = await fetchRoute();
@@ -328,7 +352,10 @@ void main() {
       test("builds correct URI for walking mode", () async {
         fakeClient.setResponse(
           http.Response(
-            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            json.encode({
+              "status": "ZERO_RESULTS",
+              "routes": <Map<String, dynamic>>[],
+            }),
             200,
           ),
         );
@@ -349,7 +376,10 @@ void main() {
       test("includes transit_mode parameter for transit routes", () async {
         fakeClient.setResponse(
           http.Response(
-            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            json.encode({
+              "status": "ZERO_RESULTS",
+              "routes": <Map<String, dynamic>>[],
+            }),
             200,
           ),
         );
@@ -364,7 +394,10 @@ void main() {
       test("converts mode enum to correct string for all modes", () async {
         fakeClient.setResponse(
           http.Response(
-            json.encode({"status": "ZERO_RESULTS", "routes": <Map<String, dynamic>>[]}),
+            json.encode({
+              "status": "ZERO_RESULTS",
+              "routes": <Map<String, dynamic>>[],
+            }),
             200,
           ),
         );
@@ -703,7 +736,8 @@ void main() {
                       "steps": [
                         {
                           "travel_mode": "WALKING",
-                          "html_instructions": "Walk to <b>Main St</b> and turn <i>left</i>",
+                          "html_instructions":
+                              "Walk to <b>Main St</b> and turn <i>left</i>",
                           "polyline": {"points": ""},
                         },
                       ],
@@ -750,7 +784,10 @@ void main() {
 
         final result = await fetchRoute();
 
-        expect(result?.steps[0].instruction, 'Turn left & continue<test>"quoted"');
+        expect(
+          result?.steps[0].instruction,
+          'Turn left & continue<test>"quoted"',
+        );
       });
 
       test("handles nested HTML tags", () async {
@@ -766,7 +803,8 @@ void main() {
                       "steps": [
                         {
                           "travel_mode": "WALKING",
-                          "html_instructions": "<div><b><i>Nested</i> tags</b></div>",
+                          "html_instructions":
+                              "<div><b><i>Nested</i> tags</b></div>",
                           "polyline": {"points": ""},
                         },
                       ],
@@ -809,8 +847,14 @@ void main() {
 
         final result = await fetchRoute(mode: RouteMode.transit);
 
-        expect(result?.departureTime, DateTime.fromMillisecondsSinceEpoch(1234567890000));
-        expect(result?.arrivalTime, DateTime.fromMillisecondsSinceEpoch(1234568190000));
+        expect(
+          result?.departureTime,
+          DateTime.fromMillisecondsSinceEpoch(1234567890000),
+        );
+        expect(
+          result?.arrivalTime,
+          DateTime.fromMillisecondsSinceEpoch(1234568190000),
+        );
       });
 
       test("handles missing time values", () async {
