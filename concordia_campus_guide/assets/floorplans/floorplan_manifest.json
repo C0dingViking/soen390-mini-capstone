@@ -11,5 +11,8 @@
   "vl": [
     "assets/floorplans/vl/vl-1.svg",
     "assets/floorplans/vl/vl-2.svg"
+  ],
+  "cc": [
+    "assets/floorplans/cc/cc-1.svg"
   ]
 }

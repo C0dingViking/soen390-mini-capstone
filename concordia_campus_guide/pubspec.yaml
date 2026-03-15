@@ -95,6 +95,7 @@ flutter:
     - assets/floorplans/floorplan_manifest.json
     - assets/floorplans/room_manifest.json
     - assets/floorplans/mb/
+    - assets/floorplans/cc/
     - assets/floorplans/vl/
     - assets/floorplans/h/
     - assets/images/buildings/LOY/
