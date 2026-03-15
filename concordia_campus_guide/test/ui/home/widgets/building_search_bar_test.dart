@@ -17,8 +17,8 @@ import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart"
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_test/flutter_test.dart";
 import "package:flutter_google_maps_webservices/places.dart";
+import "package:flutter_test/flutter_test.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
 
@@ -152,12 +152,15 @@ class _TestHomeViewModel extends HomeViewModel {
       selectedDestinationLabel = suggestion.title;
     }
     searchResults = [];
+    isSearchBarExpanded = true;
+    requestUnfocusSearchBar();
     notifyListeners();
   }
 
   @override
   Future<void> setStartToCurrentLocation() async {
     setStartToCurrentLocationCalled = true;
+    startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
     selectedStartLabel = "Current location";
     notifyListeners();
   }
@@ -307,9 +310,14 @@ void main() {
     testWidgets("destination selection does not auto-set when expanded", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
+      vm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      vm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       vm.selectedStartLabel = "Start A";
       vm.selectedDestinationLabel = "Dest A";
       vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.tap(findDestinationFieldExpanded());
       await tester.pumpAndSettle();
 
       vm.setStartToCurrentLocationCalled = false;
@@ -325,6 +333,8 @@ void main() {
       ];
       vm.notifyListeners();
       await tester.pumpAndSettle();
+
+      expect(find.text("Place 2"), findsOneWidget);
 
       await tester.tap(find.text("Place 2"));
       await tester.pumpAndSettle();
@@ -386,13 +396,11 @@ void main() {
 
     testWidgets("shows resolving start spinner", (final tester) async {
       await pumpSearchBar(tester);
-      // First expand the search bar by setting a destination
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pump();
 
-      // Now set the resolving flag
       vm.isResolvingStartLocation = true;
       vm.notifyListeners();
       await tester.pump();
