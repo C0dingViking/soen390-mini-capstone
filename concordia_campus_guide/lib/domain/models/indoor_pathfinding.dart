@@ -1,3 +1,4 @@
+import "dart:developer" as developer;
 import "dart:math";
 
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
@@ -19,17 +20,23 @@ class _IndoorGraphEdge {
 class _IndoorGraph {
   final List<_IndoorGraphNode> nodes;
   final List<List<int>> corridorVertexNodeIds;
+  final List<List<int>> corridorAllNodeIds;
 
-  _IndoorGraph({required this.nodes, required this.corridorVertexNodeIds});
+  _IndoorGraph({
+    required this.nodes,
+    required this.corridorVertexNodeIds,
+    required this.corridorAllNodeIds,
+  });
 
-  /// Builds a graph from corridor polygons.
+  /// Builds a navigation graph from corridor polygons.
   factory _IndoorGraph.fromCorridors(final List<Corridor> corridors) {
     final List<_IndoorGraphNode> nodes = <_IndoorGraphNode>[];
     final Map<String, int> coordinateToNodeId = <String, int>{};
     final List<List<int>> corridorVertexNodeIds = <List<int>>[];
+    final List<List<int>> corridorAllNodeIds = <List<int>>[];
 
     int getOrCreateNodeId(final Point<double> p) {
-      final key = "${p.x.toStringAsFixed(20)}:${p.y.toStringAsFixed(20)}";
+      final key = "${p.x.toStringAsFixed(3)}:${p.y.toStringAsFixed(3)}";
       final existing = coordinateToNodeId[key];
       if (existing != null) {
         return existing;
@@ -47,6 +54,7 @@ class _IndoorGraph {
         vertexIds.add(getOrCreateNodeId(point));
       }
       corridorVertexNodeIds.add(vertexIds);
+      corridorAllNodeIds.add(List<int>.from(vertexIds));
     }
 
     for (final vertexIds in corridorVertexNodeIds) {
@@ -71,9 +79,6 @@ class _IndoorGraph {
       }
     }
 
-    // Snap nearby corridor vertices together to bridge tiny gaps between
-    // separate corridor polygons that are visually connected in the SVG
-    // but whose vertices do not match exactly due to drawing imprecision.
     const double vertexSnapThreshold = 5.0;
     final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
 
@@ -94,7 +99,56 @@ class _IndoorGraph {
       }
     }
 
-    return _IndoorGraph(nodes: nodes, corridorVertexNodeIds: corridorVertexNodeIds);
+    for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
+      final polygon = corridors[corridorIndex].bounds;
+      if (polygon.length < 3) {
+        continue;
+      }
+
+      final allNodeIds = corridorAllNodeIds[corridorIndex];
+
+      for (var i = 0; i < polygon.length; i++) {
+        final a = polygon[i];
+        final b = polygon[(i + 1) % polygon.length];
+        final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
+        final midId = getOrCreateNodeId(midpoint);
+        allNodeIds.add(midId);
+      }
+
+      var sumX = 0.0;
+      var sumY = 0.0;
+      for (final p in polygon) {
+        sumX += p.x;
+        sumY += p.y;
+      }
+      final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
+      final centroidId = getOrCreateNodeId(centroid);
+      allNodeIds.add(centroidId);
+
+      for (var i = 0; i < allNodeIds.length; i++) {
+        final idA = allNodeIds[i];
+        final pa = nodes[idA].position;
+
+        for (var j = i + 1; j < allNodeIds.length; j++) {
+          final idB = allNodeIds[j];
+          final pb = nodes[idB].position;
+
+          if (!_segmentInsidePolygon(pa, pb, polygon)) {
+            continue;
+          }
+
+          final weight = _euclideanDistance(pa, pb);
+          nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
+          nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
+        }
+      }
+    }
+
+    return _IndoorGraph(
+      nodes: nodes,
+      corridorVertexNodeIds: corridorVertexNodeIds,
+      corridorAllNodeIds: corridorAllNodeIds,
+    );
   }
 
   /// Adds a door node and connects it to the nearest corridor vertex.
@@ -138,7 +192,7 @@ class _IndoorGraph {
 
     Iterable<int> candidateVertexIds;
     if (containingCorridorIndex >= 0) {
-      candidateVertexIds = corridorVertexNodeIds[containingCorridorIndex];
+      candidateVertexIds = corridorAllNodeIds[containingCorridorIndex];
     } else {
       candidateVertexIds = Iterable<int>.generate(doorNodeId);
     }
@@ -171,6 +225,12 @@ extension FloorplanPathfinding on Floorplan {
     final IndoorMapRoom endRoom,
   ) {
     if (corridors.isEmpty) {
+      developer.log(
+        "Indoor pathfinding error: no corridors available",
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
+      );
       throw StateError("No indoor corridors available for pathfinding.");
     }
 
@@ -182,6 +242,12 @@ extension FloorplanPathfinding on Floorplan {
     final pathNodeIds = _dijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
+      developer.log(
+        "Indoor pathfinding error: no path found between rooms",
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
+      );
       throw StateError("No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.");
     }
 
@@ -189,10 +255,31 @@ extension FloorplanPathfinding on Floorplan {
   }
 }
 
+/// Euclidean distance between two points.
 double _euclideanDistance(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
+}
+
+/// Checks whether segment AB lies entirely inside the given polygon.
+bool _segmentInsidePolygon(
+  final Point<double> a,
+  final Point<double> b,
+  final List<Point<double>> polygon,
+) {
+  const int samples = 4;
+
+  for (var i = 1; i <= samples; i++) {
+    final t = i / (samples + 1);
+    final samplePoint = Point<double>(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+
+    if (!_pointInPolygon(samplePoint, polygon)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /// Even–odd point-in-polygon test.
