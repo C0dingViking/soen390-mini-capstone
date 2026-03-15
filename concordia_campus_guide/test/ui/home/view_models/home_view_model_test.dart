@@ -796,7 +796,21 @@ void main() {
       expect(hvm.routeBounds, isNotNull);
     });
 
-    test("tapping nearby marker does not start directions", () {
+    test("tapping nearby marker starts directions", () async {
+      fakeGeolocator.lat = 45.0;
+      fakeGeolocator.lng = -73.0;
+      places.resolveResult = const Coordinate(latitude: 45.1, longitude: -73.1);
+      directions.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 900,
+          durationSeconds: 540,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.1, longitude: -73.1),
+          ],
+        ),
+      ];
       hvm.nearbySearchResults = const [
         PlaceSuggestion(
           placeId: "nearby-1",
@@ -813,12 +827,30 @@ void main() {
         (final value) => value.markerId.value == "nearby-nearby-1",
       );
 
-      expect(marker.onTap, isNull);
-      expect(hvm.selectedDestinationLabel, isNull);
-      expect(hvm.routeOptions, isEmpty);
+      expect(marker.onTap, isNotNull);
+      marker.onTap!.call();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(places.lastResolvedSuggestion?.placeId, equals("nearby-1"));
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.startCoordinate!.latitude, 45.0);
+      expect(hvm.startCoordinate!.longitude, -73.0);
+      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.destinationCoordinate, isNotNull);
+      expect(hvm.destinationCoordinate!.latitude, 45.1);
+      expect(hvm.destinationCoordinate!.longitude, -73.1);
+      expect(hvm.selectedDestinationLabel, equals("Restaurant"));
+      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+      expect(
+        directions.lastDestination,
+        equals(const Coordinate(latitude: 45.1, longitude: -73.1)),
+      );
     });
 
-    test("selectSearchSuggestion for nearby place recenters map without routing", () async {
+    test("selectSearchSuggestion for nearby place loads routes", () async {
+      fakeGeolocator.lat = 45.0;
+      fakeGeolocator.lng = -73.0;
       final place = const PlaceSuggestion(
         placeId: "nearby-1",
         description: "Restaurant, Montreal",
@@ -830,15 +862,42 @@ void main() {
       );
       final suggestion = SearchSuggestion.place(place);
       hvm.searchResults = [suggestion];
+      places.resolveResult = const Coordinate(latitude: 45.1, longitude: -73.1);
+      directions.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 900,
+          durationSeconds: 540,
+          polyline: const [
+            Coordinate(latitude: 45.0, longitude: -73.0),
+            Coordinate(latitude: 45.1, longitude: -73.1),
+          ],
+        ),
+      ];
 
       await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
 
-      expect(places.lastResolvedSuggestion, isNull);
-      expect(hvm.destinationCoordinate, isNull);
-      expect(hvm.selectedDestinationLabel, isNull);
+      expect(places.lastResolvedSuggestion, equals(place));
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.startCoordinate!.latitude, 45.0);
+      expect(hvm.startCoordinate!.longitude, -73.0);
+      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.destinationCoordinate, isNotNull);
+      expect(hvm.destinationCoordinate!.latitude, 45.1);
+      expect(hvm.destinationCoordinate!.longitude, -73.1);
+      expect(hvm.selectedDestinationLabel, equals("Restaurant"));
       expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.1, longitude: -73.1)));
-      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+      expect(hvm.routePolylines.length, 1);
       expect(hvm.searchResults, isEmpty);
+      expect(hvm.nearbySearchResults, isEmpty);
+      expect(hvm.cameraTarget, isNotNull);
+      expect(hvm.cameraTarget!.latitude, 45.1);
+      expect(hvm.cameraTarget!.longitude, -73.1);
+      expect(
+        directions.lastDestination,
+        equals(const Coordinate(latitude: 45.1, longitude: -73.1)),
+      );
     });
 
     test("setDepartureTime and setArrivalTime update time state", () {

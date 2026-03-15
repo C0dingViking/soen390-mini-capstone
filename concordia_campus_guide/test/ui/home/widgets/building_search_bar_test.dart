@@ -66,7 +66,7 @@ class _FakeCalendarInteractor extends CalendarInteractor {
 
 class _FakeAssetBundle extends CachingAssetBundle {
   static const String _svg =
-      "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\"></svg>";
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"></svg>';
 
   @override
   Future<String> loadString(final String key, {final bool cache = true}) async {
@@ -101,6 +101,7 @@ class _TestHomeViewModel extends HomeViewModel {
   bool? lastSearchBarExpanded;
   SearchField? lastSelectedField;
   SearchSuggestion? lastSelectedSuggestion;
+  int? lastNearbySearchResultLimit;
 
   @override
   void updateSearchQuery(final String query) {
@@ -152,14 +153,23 @@ class _TestHomeViewModel extends HomeViewModel {
       selectedDestinationLabel = suggestion.title;
     }
     searchResults = [];
+    isSearchBarExpanded = true;
+    requestUnfocusSearchBar();
     notifyListeners();
   }
 
   @override
   Future<void> setStartToCurrentLocation() async {
     setStartToCurrentLocationCalled = true;
+    startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
     selectedStartLabel = "Current location";
     notifyListeners();
+  }
+
+  @override
+  void setNearbySearchResultLimit(final int value) {
+    lastNearbySearchResultLimit = value;
+    super.setNearbySearchResultLimit(value);
   }
 }
 
@@ -201,6 +211,9 @@ void main() {
     Finder findDestinationFieldExpanded() => find.byWidgetPredicate(
       (final widget) => widget is TextField && widget.decoration?.hintText == "Choose destination",
     );
+
+    Finder findSuggestionTile(final String title) =>
+        find.descendant(of: find.byType(ListTile), matching: find.text(title));
 
     TextField getField(final WidgetTester tester, final Finder finder) {
       return tester.widget<TextField>(finder);
@@ -294,7 +307,7 @@ void main() {
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text("Place 1"));
+      await tester.tap(findSuggestionTile("Place 1"));
       await tester.pumpAndSettle();
 
       expect(vm.lastSelectedField, equals(SearchField.destination));
@@ -307,9 +320,14 @@ void main() {
     testWidgets("destination selection does not auto-set when expanded", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
+      vm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
+      vm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       vm.selectedStartLabel = "Start A";
       vm.selectedDestinationLabel = "Dest A";
       vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.tap(findDestinationFieldExpanded());
       await tester.pumpAndSettle();
 
       vm.setStartToCurrentLocationCalled = false;
@@ -326,7 +344,9 @@ void main() {
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text("Place 2"));
+      expect(findSuggestionTile("Place 2"), findsOneWidget);
+
+      await tester.tap(findSuggestionTile("Place 2"));
       await tester.pumpAndSettle();
 
       expect(vm.setStartToCurrentLocationCalled, isFalse);
@@ -357,7 +377,7 @@ void main() {
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text("Place 3"));
+      await tester.tap(findSuggestionTile("Place 3"));
       await tester.pumpAndSettle();
 
       expect(vm.lastSelectedField, equals(SearchField.start));
@@ -384,15 +404,38 @@ void main() {
       expect(startField.controller?.text, equals("Current location"));
     });
 
+    testWidgets("clear start query clears text and results", (final tester) async {
+      await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
+      vm.selectedStartLabel = "Start A";
+      vm.selectedDestinationLabel = "Hall Building";
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.tap(findStartField());
+      await tester.pumpAndSettle();
+      await tester.enterText(findStartField(), "Start me");
+      await tester.pumpAndSettle();
+
+      final closeButton = find.descendant(of: findStartField(), matching: find.byIcon(Icons.close));
+      expect(closeButton, findsOneWidget);
+
+      vm.clearSearchResultsCalled = false;
+      await tester.tap(closeButton);
+      await tester.pumpAndSettle();
+
+      final startField = getField(tester, findStartField());
+      expect(startField.controller?.text, isEmpty);
+      expect(vm.clearSearchResultsCalled, isTrue);
+    });
+
     testWidgets("shows resolving start spinner", (final tester) async {
       await pumpSearchBar(tester);
-      // First expand the search bar by setting a destination
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
       vm.notifyListeners();
       await tester.pump();
 
-      // Now set the resolving flag
       vm.isResolvingStartLocation = true;
       vm.notifyListeners();
       await tester.pump();
@@ -450,6 +493,118 @@ void main() {
 
       final updatedField = getField(tester, findStartField());
       expect(updatedField.focusNode?.hasFocus, isFalse);
+    });
+
+    testWidgets("destination submit hides suggestions and clears results", (final tester) async {
+      await pumpSearchBar(tester);
+      await tester.tap(findDestinationFieldCollapsed());
+      await tester.pumpAndSettle();
+      await tester.enterText(findDestinationFieldCollapsed(), "Bakery");
+      await tester.pumpAndSettle();
+
+      vm.searchResults = [
+        SearchSuggestion.place(
+          const PlaceSuggestion(
+            placeId: "place-4",
+            description: "Bakery",
+            mainText: "Bakery",
+            secondaryText: "",
+          ),
+        ),
+      ];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(findSuggestionTile("Bakery"), findsOneWidget);
+
+      vm.clearSearchResultsCalled = false;
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      expect(findSuggestionTile("Bakery"), findsNothing);
+      expect(vm.clearSearchResultsCalled, isTrue);
+      final destinationField = getField(tester, findDestinationFieldCollapsed());
+      expect(destinationField.controller?.text, equals("Bakery"));
+    });
+
+    testWidgets("focusing destination shows suggestions again after submit", (final tester) async {
+      await pumpSearchBar(tester);
+      await tester.tap(findDestinationFieldCollapsed());
+      await tester.pumpAndSettle();
+      await tester.enterText(findDestinationFieldCollapsed(), "Cafe");
+      await tester.pumpAndSettle();
+
+      vm.searchResults = [
+        SearchSuggestion.place(
+          const PlaceSuggestion(
+            placeId: "place-5",
+            description: "Cafe",
+            mainText: "Cafe",
+            secondaryText: "",
+          ),
+        ),
+      ];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      expect(findSuggestionTile("Cafe"), findsNothing);
+
+      await tester.tap(findDestinationFieldCollapsed());
+      await tester.pumpAndSettle();
+
+      vm.searchResults = [
+        SearchSuggestion.place(
+          const PlaceSuggestion(
+            placeId: "place-6",
+            description: "Cafe 2",
+            mainText: "Cafe 2",
+            secondaryText: "",
+          ),
+        ),
+      ];
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(findSuggestionTile("Cafe 2"), findsOneWidget);
+    });
+
+    testWidgets("nearby limit menu updates the selected value", (final tester) async {
+      await pumpSearchBar(tester);
+      expect(vm.nearbySearchResultLimit, equals(5));
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Show Nearest 10 Locations"));
+      await tester.pumpAndSettle();
+
+      expect(vm.lastNearbySearchResultLimit, equals(10));
+      expect(vm.nearbySearchResultLimit, equals(10));
+    });
+
+    testWidgets("search bar collapse clears start controller text", (final tester) async {
+      await pumpSearchBar(tester);
+      vm.setSearchBarExpanded(true);
+      vm.selectedStartLabel = "Start A";
+      vm.selectedDestinationLabel = "Dest A";
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      vm.selectedStartLabel = null;
+      vm.selectedDestinationLabel = null;
+      vm.setSearchBarExpanded(false);
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      vm.setSearchBarExpanded(true);
+      vm.selectedDestinationLabel = "Dest B";
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      final startField = getField(tester, findStartField());
+      expect(startField.controller?.text, isEmpty);
     });
 
     testWidgets("shows building info button and opens detail screen", (final tester) async {
