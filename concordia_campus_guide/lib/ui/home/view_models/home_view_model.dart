@@ -353,9 +353,10 @@ class HomeViewModel extends ChangeNotifier {
 
     _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
     cameraTarget = coordinate;
+    isSearchBarExpanded = true;
+    clearSearchResults();
+    requestUnfocusSearchBar();
     await _loadRoutesIfReady();
-    searchResults = [];
-    nearbySearchResults = [];
     notifyListeners();
   }
 

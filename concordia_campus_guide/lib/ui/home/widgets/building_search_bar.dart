@@ -65,10 +65,17 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
     if (!_startFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
       if (_keepMarkers) {
-        _keepMarkers = false;
+        setState(() {
+          _keepMarkers = false;
+          _showSuggestions = false;
+        });
+        viewModel.clearSearchResults();
         return;
       }
-      _showSuggestions = true;
+
+      setState(() {
+        _showSuggestions = false;
+      });
       viewModel.clearSearchResults();
     }
   }
@@ -129,6 +136,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       _expanded = true;
       viewModel.setSearchBarExpanded(true);
     }
+    setState(() {
+      _showSuggestions = false;
+    });
     FocusScope.of(context).unfocus();
   }
 
@@ -198,7 +208,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
     setState(() {
       _expanded = isSearchBarExpanded;
-      if (!isSearchBarExpanded) {
+      if (isSearchBarExpanded) {
+        _showSuggestions = false;
+      } else {
         _activeField = SearchField.destination;
       }
     });
