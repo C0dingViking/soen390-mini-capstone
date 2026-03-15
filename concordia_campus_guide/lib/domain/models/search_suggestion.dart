@@ -28,12 +28,37 @@ class SearchSuggestion {
   }
 
   factory SearchSuggestion.place(final PlaceSuggestion place) {
-    final subtitle = place.secondaryText.isNotEmpty ? place.secondaryText : null;
     return SearchSuggestion._(
       type: SearchSuggestionType.place,
       title: place.mainText.isNotEmpty ? place.mainText : place.description,
-      subtitle: subtitle,
+      subtitle: _buildPlaceSubtitle(place),
       place: place,
     );
+  }
+
+  static String? _buildPlaceSubtitle(final PlaceSuggestion place) {
+    final parts = <String>[];
+
+    if (place.distanceMeters != null) {
+      parts.add(_formatDistance(place.distanceMeters!));
+    }
+
+    if (place.secondaryText.isNotEmpty) {
+      parts.add(place.secondaryText);
+    }
+
+    if (parts.isEmpty) {
+      return null;
+    }
+
+    return parts.join(" • ");
+  }
+
+  static String _formatDistance(final double distanceMeters) {
+    if (distanceMeters >= 1000) {
+      return "${(distanceMeters / 1000).toStringAsFixed(1)} km";
+    }
+
+    return "${distanceMeters.round()} m";
   }
 }
