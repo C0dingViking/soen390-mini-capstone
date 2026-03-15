@@ -24,7 +24,7 @@ void main() {
     test("loadFloorplans forwards the floorplans when they are found", () async {
       final mockRepo = MockFloorplanRepository();
       final mockFloorplans = {
-        1: Floorplan(buildingId: "cl", floorNumber: 1, svgPath: "cl-1.svg", rooms: []),
+        "1": Floorplan(buildingId: "cl", floorNumber: "1", svgPath: "cl-1.svg", rooms: []),
       };
 
       when(mockRepo.loadBuildingFloorplans(any)).thenAnswer((_) async => mockFloorplans);

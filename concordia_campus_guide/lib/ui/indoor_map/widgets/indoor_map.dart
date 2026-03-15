@@ -81,7 +81,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return (buildingId: buildingId, roomName: roomName);
   }
 
-  int _findFloorForRoomName(final String roomName, final Map<int, Floorplan> floorplans) {
+  String _findFloorForRoomName(final String roomName, final Map<String, Floorplan> floorplans) {
     final normalizedRoomName = roomName.trim().toLowerCase();
 
     String sanitizeRoomName(final String value) {

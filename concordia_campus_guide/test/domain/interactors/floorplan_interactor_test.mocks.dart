@@ -60,12 +60,12 @@ class MockFloorplanRepository extends _i1.Mock implements _i2.FloorplanRepositor
           as String);
 
   @override
-  _i3.Future<Map<int, _i5.Floorplan>> loadBuildingFloorplans(String? directoryId) =>
+  _i3.Future<Map<String, _i5.Floorplan>> loadBuildingFloorplans(String? directoryId) =>
       (super.noSuchMethod(
             Invocation.method(#loadBuildingFloorplans, [directoryId]),
-            returnValue: _i3.Future<Map<int, _i5.Floorplan>>.value(<int, _i5.Floorplan>{}),
+            returnValue: _i3.Future<Map<String, _i5.Floorplan>>.value(<String, _i5.Floorplan>{}),
           )
-          as _i3.Future<Map<int, _i5.Floorplan>>);
+          as _i3.Future<Map<String, _i5.Floorplan>>);
 
   @override
   _i3.Future<List<String>> loadRoomNames() =>

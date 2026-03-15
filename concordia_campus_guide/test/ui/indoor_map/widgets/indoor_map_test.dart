@@ -21,7 +21,7 @@ class TestIndoorViewModel extends IndoorViewModel {
     // provide a dummy floorplan so the widget's initial build doesn't crash
     selectedFloorplan = Floorplan(
       buildingId: "T",
-      floorNumber: 1,
+      floorNumber: "1",
       svgPath: "",
       canvasWidth: 100,
       canvasHeight: 100,
@@ -38,11 +38,11 @@ class TestIndoorViewModel extends IndoorViewModel {
     final normalizedPath = path.toUpperCase();
 
     if (normalizedPath == "H") {
-      availableFloors = [8];
+      availableFloors = ["8"];
       loadedFloorplans = {
-        8: Floorplan(
+        "8": Floorplan(
           buildingId: normalizedPath,
-          floorNumber: 8,
+          floorNumber: "8",
           svgPath: "testfloor8.svg",
           canvasWidth: 100,
           canvasHeight: 100,
@@ -61,16 +61,16 @@ class TestIndoorViewModel extends IndoorViewModel {
           pois: [],
         ),
       };
-      selectedFloorplan = loadedFloorplans![8];
+      selectedFloorplan = loadedFloorplans!["8"];
       notifyListeners();
       return;
     }
 
-    availableFloors = [1, 2];
+    availableFloors = ["1", "2"];
     loadedFloorplans = {
-      1: Floorplan(
+      "1": Floorplan(
         buildingId: normalizedPath,
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "testfloor1.svg",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -88,9 +88,9 @@ class TestIndoorViewModel extends IndoorViewModel {
         ],
         pois: [],
       ),
-      2: Floorplan(
+      "2": Floorplan(
         buildingId: normalizedPath,
-        floorNumber: 2,
+        floorNumber: "2",
         svgPath: "testfloor2.svg",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -109,7 +109,7 @@ class TestIndoorViewModel extends IndoorViewModel {
         pois: [],
       ),
     };
-    selectedFloorplan = loadedFloorplans![1];
+    selectedFloorplan = loadedFloorplans!["1"];
 
     notifyListeners();
   }
@@ -181,7 +181,7 @@ void main() {
     test("maps tap position to clicked room name", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -211,7 +211,7 @@ void main() {
     test("returns null when tap is outside room area", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -241,7 +241,7 @@ void main() {
     test("returns null for taps in letterboxed area outside SVG content", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -290,7 +290,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text("Floor 2"));
       await tester.pumpAndSettle();
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
       expect(find.text("T2"), findsOneWidget);
     });
 
@@ -298,7 +298,7 @@ void main() {
       await pumpHomeScreen(tester, true);
 
       // remove floor 2 to simulate failure when changing floors
-      ivm.loadedFloorplans!.remove(2);
+      ivm.loadedFloorplans!.remove("2");
 
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
@@ -340,7 +340,7 @@ void main() {
       await tester.tap(find.text("Start Navigation"));
       await tester.pumpAndSettle();
 
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
       expect(find.text("T2"), findsOneWidget);
     });
 
@@ -361,7 +361,7 @@ void main() {
 
       expect(ivm.initPath, "h");
       expect(ivm.selectedFloorplan!.buildingId, "H");
-      expect(ivm.selectedFloorplan!.floorNumber, 8);
+      expect(ivm.selectedFloorplan!.floorNumber, "8");
       expect(find.text("H8"), findsOneWidget);
     });
   });
