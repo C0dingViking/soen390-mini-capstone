@@ -1,5 +1,7 @@
 import "package:concordia_campus_guide/data/services/api_key_service.dart";
 import "package:concordia_campus_guide/data/services/places_service.dart";
+import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:flutter_google_maps_webservices/places.dart" as gmw;
 import "package:flutter_test/flutter_test.dart";
 
@@ -16,9 +18,11 @@ class _FakeGoogleMapsPlaces extends gmw.GoogleMapsPlaces {
   gmw.PlacesAutocompleteResponse? _autocompleteResp;
   gmw.PlacesDetailsResponse? _detailsResp;
   gmw.PlacesSearchResponse? _searchResp;
+  gmw.PlacesSearchResponse? _nearbyResp;
   Exception? _autocompleteError;
   Exception? _detailsError;
   Exception? _searchError;
+  Exception? _nearbyError;
 
   _FakeGoogleMapsPlaces() : super(apiKey: "fake-key");
 
@@ -38,6 +42,11 @@ class _FakeGoogleMapsPlaces extends gmw.GoogleMapsPlaces {
   void setSearchResponse(final gmw.PlacesSearchResponse? resp, {final Exception? error}) {
     _searchResp = resp;
     _searchError = error;
+  }
+
+  void setNearbyResponse(final gmw.PlacesSearchResponse? resp, {final Exception? error}) {
+    _nearbyResp = resp;
+    _nearbyError = error;
   }
 
   @override
@@ -85,6 +94,22 @@ class _FakeGoogleMapsPlaces extends gmw.GoogleMapsPlaces {
   }) async {
     if (_searchError != null) throw _searchError!;
     return _searchResp ?? gmw.PlacesSearchResponse.fromJson({});
+  }
+
+  @override
+  Future<gmw.PlacesSearchResponse> searchNearbyWithRankBy(
+    final gmw.Location location,
+    final String rankby, {
+    final String? type,
+    final String? keyword,
+    final String? language,
+    final gmw.PriceLevel? minprice,
+    final gmw.PriceLevel? maxprice,
+    final String? name,
+    final String? pagetoken,
+  }) async {
+    if (_nearbyError != null) throw _nearbyError!;
+    return _nearbyResp ?? gmw.PlacesSearchResponse.fromJson({});
   }
 }
 
@@ -146,12 +171,80 @@ void main() {
       expect(results.first.placeId, "place-1");
       expect(results.first.mainText, "Hall Building");
       expect(results.first.secondaryText, "Montreal");
+      expect(results.first.source, PlaceSuggestionSource.autocomplete);
     });
 
     test("fetchAutocomplete returns empty on exception", () async {
       client.setAutocompleteResponse(null, error: Exception("boom"));
 
       final results = await service.fetchAutocomplete("hall");
+
+      expect(results, isEmpty);
+    });
+
+
+    test("fetchNearbyPlaces returns empty when api key missing", () async {
+      final service = PlacesService(apiKeyService: _FakeApiKeyService(null));
+
+      final results = await service.fetchNearbyPlaces(
+        "restaurant",
+        const Coordinate(latitude: 45.497, longitude: -73.578),
+      );
+
+      expect(results, isEmpty);
+    });
+
+    test("fetchNearbyPlaces maps results and limits response", () async {
+      client.setNearbyResponse(
+        gmw.PlacesSearchResponse.fromJson({
+          "status": "OK",
+          "results": [
+            {
+              "place_id": "nearby-1",
+              "reference": "nearby-1",
+              "name": "Cafe One",
+              "vicinity": "Montreal",
+              "icon": "https://example.com/icon.png",
+              "types": ["cafe", "food", "point_of_interest", "establishment"],
+              "geometry": {
+                "location": {"lat": 45.498, "lng": -73.579},
+              },
+            },
+            {
+              "place_id": "nearby-2",
+              "reference": "nearby-2",
+              "name": "Cafe Two",
+              "vicinity": "Montreal",
+              "icon": "https://example.com/icon.png",
+              "types": ["cafe", "food", "point_of_interest", "establishment"],
+              "geometry": {
+                "location": {"lat": 45.499, "lng": -73.580},
+              },
+            },
+          ],
+        }),
+      );
+
+      final results = await service.fetchNearbyPlaces(
+        "coffee",
+        const Coordinate(latitude: 45.497, longitude: -73.578),
+        maxResults: 1,
+      );
+
+      expect(results.length, 1);
+      expect(results.first.placeId, "nearby-1");
+      expect(results.first.coordinate, isNotNull);
+      expect(results.first.distanceMeters, isNotNull);
+      expect(results.first.source, PlaceSuggestionSource.nearby);
+    });
+
+    test("fetchNearbyPlaces returns empty on exception", () async {
+      client.setNearbyResponse(null, error: Exception("boom"));
+
+      final results = await service.fetchNearbyPlaces(
+        "restaurant",
+        const Coordinate(latitude: 45.497, longitude: -73.578),
+      );
 
       expect(results, isEmpty);
     });

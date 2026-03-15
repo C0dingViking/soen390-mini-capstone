@@ -5,9 +5,11 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:concordia_campus_guide/data/services/places_service.dart' as _i2;
+import 'package:concordia_campus_guide/data/services/places_service.dart'
+    as _i2;
 import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i5;
-import 'package:concordia_campus_guide/domain/models/place_suggestion.dart' as _i4;
+import 'package:concordia_campus_guide/domain/models/place_suggestion.dart'
+    as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -37,14 +39,41 @@ class MockPlacesService extends _i1.Mock implements _i2.PlacesService {
   _i3.Future<List<_i4.PlaceSuggestion>> fetchAutocomplete(String? input) =>
       (super.noSuchMethod(
             Invocation.method(#fetchAutocomplete, [input]),
-            returnValue: _i3.Future<List<_i4.PlaceSuggestion>>.value(<_i4.PlaceSuggestion>[]),
+            returnValue: _i3.Future<List<_i4.PlaceSuggestion>>.value(
+              <_i4.PlaceSuggestion>[],
+            ),
           )
           as _i3.Future<List<_i4.PlaceSuggestion>>);
 
   @override
-  _i3.Future<_i5.Coordinate?> fetchPlaceCoordinate(String? placeId, {String? fallbackQuery}) =>
+  _i3.Future<List<_i4.PlaceSuggestion>> fetchNearbyPlaces(
+    String? input,
+    _i5.Coordinate? origin, {
+    int? maxResults = 5,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#fetchPlaceCoordinate, [placeId], {#fallbackQuery: fallbackQuery}),
+            Invocation.method(
+              #fetchNearbyPlaces,
+              [input, origin],
+              {#maxResults: maxResults},
+            ),
+            returnValue: _i3.Future<List<_i4.PlaceSuggestion>>.value(
+              <_i4.PlaceSuggestion>[],
+            ),
+          )
+          as _i3.Future<List<_i4.PlaceSuggestion>>);
+
+  @override
+  _i3.Future<_i5.Coordinate?> fetchPlaceCoordinate(
+    String? placeId, {
+    String? fallbackQuery,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #fetchPlaceCoordinate,
+              [placeId],
+              {#fallbackQuery: fallbackQuery},
+            ),
             returnValue: _i3.Future<_i5.Coordinate?>.value(),
           )
           as _i3.Future<_i5.Coordinate?>);

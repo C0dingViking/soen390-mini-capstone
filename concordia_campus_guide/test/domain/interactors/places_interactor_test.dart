@@ -93,6 +93,45 @@ void main() {
       });
     });
 
+
+    group("searchNearbyPlaces", () {
+      test("calls fetchNearbyPlaces with query and origin", () async {
+        const origin = Coordinate(latitude: 45.497, longitude: -73.578);
+        final suggestions = <PlaceSuggestion>[];
+        when(
+          mockService.fetchNearbyPlaces("restaurant", origin, maxResults: 3),
+        ).thenAnswer((_) async => suggestions);
+
+        await interactor.searchNearbyPlaces("restaurant", origin, maxResults: 3);
+
+        verify(mockService.fetchNearbyPlaces("restaurant", origin, maxResults: 3)).called(1);
+      });
+
+      test("returns nearby results from service", () async {
+        const origin = Coordinate(latitude: 45.497, longitude: -73.578);
+        final suggestions = [
+          PlaceSuggestion(
+            placeId: "place-1",
+            description: "Coffee Shop, Montreal",
+            mainText: "Coffee Shop",
+            secondaryText: "Montreal",
+            coordinate: Coordinate(latitude: 45.498, longitude: -73.579),
+            distanceMeters: 120,
+            source: PlaceSuggestionSource.nearby,
+          ),
+        ];
+        when(
+          mockService.fetchNearbyPlaces("coffee", origin, maxResults: 5),
+        ).thenAnswer((_) async => suggestions);
+
+        final result = await interactor.searchNearbyPlaces("coffee", origin);
+
+        expect(result, suggestions);
+        expect(result.first.coordinate, isNotNull);
+        expect(result.first.distanceMeters, 120);
+      });
+    });
+
     group("resolvePlace", () {
       test("calls fetchPlaceCoordinate with placeId", () async {
         when(mockService.fetchPlaceCoordinate("place-1")).thenAnswer((_) async => null);
@@ -140,6 +179,23 @@ void main() {
     });
 
     group("resolvePlaceSuggestion", () {
+      test("returns embedded coordinate when suggestion already has one", () async {
+        final suggestion = PlaceSuggestion(
+          placeId: "place-1",
+          description: "Coffee Shop, Montreal",
+          mainText: "Coffee Shop",
+          secondaryText: "Montreal",
+          coordinate: Coordinate(latitude: 45.499, longitude: -73.57),
+          source: PlaceSuggestionSource.nearby,
+        );
+
+        final result = await interactor.resolvePlaceSuggestion(suggestion);
+
+        expect(result, isNotNull);
+        expect(result!.latitude, 45.499);
+        verifyNever(mockService.fetchPlaceCoordinate(any, fallbackQuery: anyNamed("fallbackQuery")));
+      });
+
       test("calls fetchPlaceCoordinate with placeId and description", () async {
         final suggestion = PlaceSuggestion(
           placeId: "place-1",

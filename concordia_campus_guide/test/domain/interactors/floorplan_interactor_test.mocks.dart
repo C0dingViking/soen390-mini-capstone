@@ -5,7 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:concordia_campus_guide/data/repositories/floorplan_repository.dart' as _i2;
+import 'package:concordia_campus_guide/data/repositories/floorplan_repository.dart'
+    as _i2;
 import 'package:concordia_campus_guide/domain/models/floorplan.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i4;
@@ -28,7 +29,8 @@ import 'package:mockito/src/dummies.dart' as _i4;
 /// A class which mocks [FloorplanRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFloorplanRepository extends _i1.Mock implements _i2.FloorplanRepository {
+class MockFloorplanRepository extends _i1.Mock
+    implements _i2.FloorplanRepository {
   MockFloorplanRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -47,7 +49,10 @@ class MockFloorplanRepository extends _i1.Mock implements _i2.FloorplanRepositor
   String get manifestPath =>
       (super.noSuchMethod(
             Invocation.getter(#manifestPath),
-            returnValue: _i4.dummyValue<String>(this, Invocation.getter(#manifestPath)),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#manifestPath),
+            ),
           )
           as String);
 
@@ -55,15 +60,22 @@ class MockFloorplanRepository extends _i1.Mock implements _i2.FloorplanRepositor
   String get roomManifestPath =>
       (super.noSuchMethod(
             Invocation.getter(#roomManifestPath),
-            returnValue: _i4.dummyValue<String>(this, Invocation.getter(#roomManifestPath)),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#roomManifestPath),
+            ),
           )
           as String);
 
   @override
-  _i3.Future<Map<int, _i5.Floorplan>> loadBuildingFloorplans(String? directoryId) =>
+  _i3.Future<Map<int, _i5.Floorplan>> loadBuildingFloorplans(
+    String? directoryId,
+  ) =>
       (super.noSuchMethod(
             Invocation.method(#loadBuildingFloorplans, [directoryId]),
-            returnValue: _i3.Future<Map<int, _i5.Floorplan>>.value(<int, _i5.Floorplan>{}),
+            returnValue: _i3.Future<Map<int, _i5.Floorplan>>.value(
+              <int, _i5.Floorplan>{},
+            ),
           )
           as _i3.Future<Map<int, _i5.Floorplan>>);
 

@@ -94,7 +94,7 @@ class PlacesService {
             }
 
             final coordinate = Coordinate(latitude: location.lat, longitude: location.lng);
-            final name = result.name ?? "";
+            final name = result.name;
             final secondaryText = result.vicinity ?? result.formattedAddress ?? "";
             final description = secondaryText.isEmpty ? name : "$name, $secondaryText";
 
@@ -133,7 +133,9 @@ class PlacesService {
           return Coordinate(latitude: location.lat, longitude: location.lng);
         }
       }
-    } catch (ignored) {}
+    } catch (e) {
+      logger.w("PlacesService: getDetailsByPlaceId failed", error: e);
+    }
 
     if (fallbackQuery == null || fallbackQuery.trim().isEmpty) {
       return null;
