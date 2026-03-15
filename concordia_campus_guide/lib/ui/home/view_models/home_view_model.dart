@@ -334,15 +334,6 @@ class HomeViewModel extends ChangeNotifier {
     final place = suggestion.place;
     if (place == null) return;
 
-    if (place.source == PlaceSuggestionSource.nearby) {
-      if (place.coordinate != null) {
-        cameraTarget = place.coordinate;
-      }
-      searchResults = [];
-      notifyListeners();
-      return;
-    }
-
     errorMessage = null;
     isResolvingPlace = true;
     notifyListeners();
@@ -869,6 +860,9 @@ class HomeViewModel extends ChangeNotifier {
       return Marker(
         markerId: MarkerId("nearby-${place.placeId}"),
         position: coordinate.toLatLng(),
+        onTap: () async {
+          await selectSearchSuggestion(SearchSuggestion.place(place), SearchField.destination);
+        },
         infoWindow: InfoWindow(
           title: place.mainText,
           snippet: place.secondaryText.isNotEmpty ? place.secondaryText : null,
