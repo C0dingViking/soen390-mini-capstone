@@ -9,8 +9,7 @@ class LocationService {
   LocationService._privateConstructor();
   static final LocationService instance = LocationService._privateConstructor();
 
-  late StreamController<Coordinate> _controller =
-      StreamController<Coordinate>.broadcast();
+  late StreamController<Coordinate> _controller = StreamController<Coordinate>.broadcast();
   StreamSubscription<Position>? _posSub;
 
   Stream<Coordinate> get positionStream => _controller.stream;
@@ -54,15 +53,10 @@ class LocationService {
       _posSub?.cancel();
       _posSub =
           Geolocator.getPositionStream(
-            locationSettings: LocationSettings(
-              accuracy: accuracy,
-              distanceFilter: distanceFilter,
-            ),
+            locationSettings: LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter),
           ).listen(
             (final pos) {
-              _controller.add(
-                Coordinate(latitude: pos.latitude, longitude: pos.longitude),
-              );
+              _controller.add(Coordinate(latitude: pos.latitude, longitude: pos.longitude));
             },
             onError: (final error) {
               // swallow stream errors silently

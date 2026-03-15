@@ -10,11 +10,7 @@ class IndoorMapRoom {
   final Point<double> doorLocation;
   final List<Point<double>> points;
 
-  const IndoorMapRoom({
-    required this.name,
-    required this.doorLocation,
-    required this.points,
-  });
+  const IndoorMapRoom({required this.name, required this.doorLocation, required this.points});
 }
 
 enum PoiType {
@@ -119,9 +115,7 @@ class Floorplan {
 
     final connectorsLayer = xmlData
         .findAllElements("g")
-        .firstWhere(
-          (final e) => e.getAttribute(_inkscapeLabelRoot) == "connectors",
-        );
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "connectors");
 
     final roomsLayer = xmlData
         .findAllElements("g")
@@ -135,16 +129,8 @@ class Floorplan {
 
     final poisLayer = xmlData
         .findAllElements("g")
-        .firstWhere(
-          (final e) =>
-              e.getAttribute(_inkscapeLabelRoot) == "points-of-interest",
-        );
-    floorplan.pois = floorplan._parsePoiData(
-      buildingId,
-      floorNumber,
-      poisLayer,
-      connectorsLayer,
-    );
+        .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "points-of-interest");
+    floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
 
     return floorplan;
   }
@@ -163,9 +149,7 @@ class Floorplan {
       ...roomLayer.findAllElements("rect"),
       ...roomLayer.findAllElements("path"),
     ]) {
-      final match = roomRegex.firstMatch(
-        element.getAttribute(_inkscapeLabelRoot) ?? "",
-      );
+      final match = roomRegex.firstMatch(element.getAttribute(_inkscapeLabelRoot) ?? "");
       if (match == null) {
         continue;
       }
@@ -178,8 +162,7 @@ class Floorplan {
         points = parsePointsFromSvgPath(element);
       }
 
-      final expected =
-          "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
+      final expected = "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
       final doorElement = connectors.firstWhere((final element) {
         final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
         return label == expected;
@@ -187,13 +170,7 @@ class Floorplan {
 
       final doorLocation = parsePointFromSvgCircle(doorElement);
 
-      rooms.add(
-        IndoorMapRoom(
-          name: roomNumber,
-          doorLocation: doorLocation,
-          points: points,
-        ),
-      );
+      rooms.add(IndoorMapRoom(name: roomNumber, doorLocation: doorLocation, points: points));
     }
 
     return rooms;
@@ -213,9 +190,7 @@ class Floorplan {
       ...poiLayer.findAllElements("rect"),
       ...poiLayer.findAllElements("path"),
     ]) {
-      final match = poiRegex.firstMatch(
-        element.getAttribute(_inkscapeLabelRoot) ?? "",
-      );
+      final match = poiRegex.firstMatch(element.getAttribute(_inkscapeLabelRoot) ?? "");
       if (match == null) {
         continue;
       }
@@ -230,8 +205,7 @@ class Floorplan {
         points = parsePointsFromSvgPath(element);
       }
 
-      final expected =
-          "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
+      final expected = "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
       final doorElement = connectors.firstWhere((final element) {
         final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
         return label == expected;

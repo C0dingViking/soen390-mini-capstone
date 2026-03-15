@@ -30,9 +30,7 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -63,8 +61,7 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
-  _FakeCalendarInteractor()
-    : super(calendarRepo: _FakeGoogleCalendarRepository());
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
 }
 
 class _FakeAssetBundle extends CachingAssetBundle {
@@ -193,30 +190,24 @@ void main() {
 
     Finder findStartField() => find.byWidgetPredicate(
       (final widget) =>
-          widget is TextField &&
-          widget.decoration?.hintText == "Choose starting point",
+          widget is TextField && widget.decoration?.hintText == "Choose starting point",
     );
 
     Finder findDestinationFieldCollapsed() => find.byWidgetPredicate(
       (final widget) =>
           widget is TextField &&
-          widget.decoration?.hintText ==
-              "Search for a place, address, or category",
+          widget.decoration?.hintText == "Search for a place, address, or category",
     );
 
     Finder findDestinationFieldExpanded() => find.byWidgetPredicate(
-      (final widget) =>
-          widget is TextField &&
-          widget.decoration?.hintText == "Choose destination",
+      (final widget) => widget is TextField && widget.decoration?.hintText == "Choose destination",
     );
 
     TextField getField(final WidgetTester tester, final Finder finder) {
       return tester.widget<TextField>(finder);
     }
 
-    testWidgets("starts collapsed with destination field only", (
-      final tester,
-    ) async {
+    testWidgets("starts collapsed with destination field only", (final tester) async {
       await pumpSearchBar(tester);
       expect(findDestinationFieldCollapsed(), findsOneWidget);
       expect(findStartField(), findsNothing);
@@ -232,9 +223,7 @@ void main() {
       expect(findDestinationFieldExpanded(), findsOneWidget);
     });
 
-    testWidgets("collapses when view model requests collapse", (
-      final tester,
-    ) async {
+    testWidgets("collapses when view model requests collapse", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -258,9 +247,7 @@ void main() {
       expect(vm.lastQuery, equals("Dest query"));
     });
 
-    testWidgets("clear destination query clears text and results", (
-      final tester,
-    ) async {
+    testWidgets("clear destination query clears text and results", (final tester) async {
       await pumpSearchBar(tester);
       await tester.enterText(findDestinationFieldCollapsed(), "Clear me");
       await tester.pumpAndSettle();
@@ -275,9 +262,7 @@ void main() {
       expect(vm.clearSearchResultsCalled, isTrue);
     });
 
-    testWidgets("cancel search clears selection and collapses", (
-      final tester,
-    ) async {
+    testWidgets("cancel search clears selection and collapses", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -295,9 +280,7 @@ void main() {
       expect(vm.isSearchBarExpanded, isFalse);
     });
 
-    testWidgets("destination selection auto-sets start only when collapsed", (
-      final tester,
-    ) async {
+    testWidgets("destination selection auto-sets start only when collapsed", (final tester) async {
       await pumpSearchBar(tester);
       vm.searchResults = [
         SearchSuggestion.place(
@@ -322,9 +305,7 @@ void main() {
       expect(vm.isSearchBarExpanded, isTrue);
     });
 
-    testWidgets("destination selection does not auto-set when expanded", (
-      final tester,
-    ) async {
+    testWidgets("destination selection does not auto-set when expanded", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedStartLabel = "Start A";
@@ -354,9 +335,7 @@ void main() {
       expect(startField.controller?.text, equals("Start A"));
     });
 
-    testWidgets("start selection does not auto-set current location", (
-      final tester,
-    ) async {
+    testWidgets("start selection does not auto-set current location", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -386,9 +365,7 @@ void main() {
       expect(vm.setStartToCurrentLocationCalled, isFalse);
     });
 
-    testWidgets("current location button updates start field", (
-      final tester,
-    ) async {
+    testWidgets("current location button updates start field", (final tester) async {
       await pumpSearchBar(tester);
       vm.setSearchBarExpanded(true);
       vm.selectedDestinationLabel = "Hall Building";
@@ -476,9 +453,7 @@ void main() {
       expect(updatedField.focusNode?.hasFocus, isFalse);
     });
 
-    testWidgets("shows building info button and opens detail screen", (
-      final tester,
-    ) async {
+    testWidgets("shows building info button and opens detail screen", (final tester) async {
       final building = Building(
         id: "H",
         googlePlacesId: null,

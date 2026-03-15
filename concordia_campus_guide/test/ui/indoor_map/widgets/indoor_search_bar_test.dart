@@ -33,18 +33,14 @@ class _ControllerSwapHostState extends State<_ControllerSwapHost> {
   Widget build(final BuildContext context) {
     return IndoorSearchBar(
       startController: useSecondControllers ? widget.startB : widget.startA,
-      destinationController: useSecondControllers
-          ? widget.destinationB
-          : widget.destinationA,
+      destinationController: useSecondControllers ? widget.destinationB : widget.destinationA,
       queryableRooms: [],
     );
   }
 }
 
 void main() {
-  testWidgets("shows expanded fields with Current location hint", (
-    final tester,
-  ) async {
+  testWidgets("shows expanded fields with Current location hint", (final tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
@@ -52,15 +48,10 @@ void main() {
     );
 
     expect(find.widgetWithText(TextField, "Current location"), findsOneWidget);
-    expect(
-      find.widgetWithText(TextField, "Choose destination"),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(TextField, "Choose destination"), findsOneWidget);
   });
 
-  testWidgets("clear button appears when destination has text", (
-    final tester,
-  ) async {
+  testWidgets("clear button appears when destination has text", (final tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
@@ -124,18 +115,13 @@ void main() {
     expect(find.byIcon(Icons.close), findsNothing);
   });
 
-  testWidgets("programmatic external controller updates are reflected in UI", (
-    final tester,
-  ) async {
+  testWidgets("programmatic external controller updates are reflected in UI", (final tester) async {
     final destinationController = TextEditingController();
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: IndoorSearchBar(
-            destinationController: destinationController,
-            queryableRooms: [],
-          ),
+          body: IndoorSearchBar(destinationController: destinationController, queryableRooms: []),
         ),
       ),
     );
@@ -152,9 +138,7 @@ void main() {
     destinationController.dispose();
   });
 
-  testWidgets("controller swap updates attached text field controllers", (
-    final tester,
-  ) async {
+  testWidgets("controller swap updates attached text field controllers", (final tester) async {
     final startA = TextEditingController(text: "A");
     final startB = TextEditingController(text: "B");
     final destinationA = TextEditingController(text: "C");
@@ -192,9 +176,7 @@ void main() {
     destinationB.dispose();
   });
 
-  testWidgets("externally owned controllers are not disposed by widget", (
-    final tester,
-  ) async {
+  testWidgets("externally owned controllers are not disposed by widget", (final tester) async {
     final startController = TextEditingController();
     final destinationController = TextEditingController();
 
@@ -210,9 +192,7 @@ void main() {
       ),
     );
 
-    await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
-    );
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox.shrink())));
 
     expect(() => startController.text = "Still usable", returnsNormally);
     expect(() => destinationController.text = "Still usable", returnsNormally);
@@ -221,14 +201,10 @@ void main() {
     destinationController.dispose();
   });
 
-  testWidgets("typing filters rooms and shows matching suggestions", (
-    final tester,
-  ) async {
+  testWidgets("typing filters rooms and shows matching suggestions", (final tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: IndoorSearchBar(queryableRooms: ["H 849", "H 101", "MB 1-310"]),
-        ),
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "H 101", "MB 1-310"])),
       ),
     );
 
@@ -265,9 +241,7 @@ void main() {
     expect(find.text("H 849"), findsNothing);
   });
 
-  testWidgets("selecting a suggestion fills the field and hides the list", (
-    final tester,
-  ) async {
+  testWidgets("selecting a suggestion fills the field and hides the list", (final tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849"])),
@@ -292,9 +266,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: IndoorSearchBar(queryableRooms: ["H 849", "H 101"]),
-        ),
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "H 101"])),
       ),
     );
 
@@ -320,14 +292,10 @@ void main() {
     expect(find.text("H 849"), findsNothing);
   });
 
-  testWidgets("typing in one field does not affect the other field", (
-    final tester,
-  ) async {
+  testWidgets("typing in one field does not affect the other field", (final tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"]),
-        ),
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"])),
       ),
     );
 
@@ -348,9 +316,7 @@ void main() {
     expect(find.text("H 849"), findsNothing);
   });
 
-  testWidgets("clearing a field hides suggestions even while focused", (
-    final tester,
-  ) async {
+  testWidgets("clearing a field hides suggestions even while focused", (final tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849"])),
@@ -371,38 +337,35 @@ void main() {
     expect(find.text("H 849"), findsNothing);
   });
 
-  testWidgets(
-    "Start Navigation button appears only when both rooms are valid",
-    (final tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"]),
-          ),
-        ),
-      );
+  testWidgets("Start Navigation button appears only when both rooms are valid", (
+    final tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: ["H 849", "MB 1-310"])),
+      ),
+    );
 
-      final startField = find.byType(TextField).first;
-      final destField = find.byType(TextField).last;
+    final startField = find.byType(TextField).first;
+    final destField = find.byType(TextField).last;
 
-      expect(find.text("Start Navigation"), findsNothing);
+    expect(find.text("Start Navigation"), findsNothing);
 
-      await tester.enterText(startField, "H 849");
-      await tester.pump();
+    await tester.enterText(startField, "H 849");
+    await tester.pump();
 
-      expect(find.text("Start Navigation"), findsNothing);
+    expect(find.text("Start Navigation"), findsNothing);
 
-      await tester.enterText(destField, "MB 1-310");
-      await tester.pump();
+    await tester.enterText(destField, "MB 1-310");
+    await tester.pump();
 
-      expect(find.text("Start Navigation"), findsOneWidget);
+    expect(find.text("Start Navigation"), findsOneWidget);
 
-      await tester.enterText(destField, "NOT A ROOM");
-      await tester.pump();
+    await tester.enterText(destField, "NOT A ROOM");
+    await tester.pump();
 
-      expect(find.text("Start Navigation"), findsNothing);
-    },
-  );
+    expect(find.text("Start Navigation"), findsNothing);
+  });
 
   testWidgets("Start Navigation button triggers callback with selected rooms", (
     final tester,

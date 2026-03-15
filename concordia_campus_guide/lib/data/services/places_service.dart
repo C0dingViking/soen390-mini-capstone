@@ -11,11 +11,9 @@ class PlacesService {
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
 
-  PlacesService({
-    final GoogleMapsPlaces? client,
-    final ApiKeyService? apiKeyService,
-  }) : _places = client,
-       _apiKeyService = apiKeyService ?? ApiKeyService();
+  PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
+    : _places = client,
+      _apiKeyService = apiKeyService ?? ApiKeyService();
 
   Future<String?> _getApiKey() async {
     if (_resolvedKey != null) return _resolvedKey;
@@ -95,16 +93,10 @@ class PlacesService {
               return null;
             }
 
-            final coordinate = Coordinate(
-              latitude: location.lat,
-              longitude: location.lng,
-            );
+            final coordinate = Coordinate(latitude: location.lat, longitude: location.lng);
             final name = result.name;
-            final secondaryText =
-                result.vicinity ?? result.formattedAddress ?? "";
-            final description = secondaryText.isEmpty
-                ? name
-                : "$name, $secondaryText";
+            final secondaryText = result.vicinity ?? result.formattedAddress ?? "";
+            final description = secondaryText.isEmpty ? name : "$name, $secondaryText";
 
             return PlaceSuggestion(
               placeId: result.placeId,
@@ -133,10 +125,7 @@ class PlacesService {
     if (client == null || placeId.isEmpty) return null;
 
     try {
-      final details = await client.getDetailsByPlaceId(
-        placeId,
-        fields: const ["geometry"],
-      );
+      final details = await client.getDetailsByPlaceId(placeId, fields: const ["geometry"]);
 
       if (details.isOkay) {
         final location = details.result.geometry?.location;
@@ -167,32 +156,21 @@ class PlacesService {
 
       return Coordinate(latitude: location.lat, longitude: location.lng);
     } catch (e) {
-      logger.w(
-        "PlacesService: both place details and text search failed",
-        error: e,
-      );
+      logger.w("PlacesService: both place details and text search failed", error: e);
       return null;
     }
   }
 
-  double _distanceBetween(
-    final Coordinate origin,
-    final Coordinate destination,
-  ) {
+  double _distanceBetween(final Coordinate origin, final Coordinate destination) {
     const earthRadiusMeters = 6371000.0;
     final lat1 = _degreesToRadians(origin.latitude);
     final lat2 = _degreesToRadians(destination.latitude);
     final deltaLat = _degreesToRadians(destination.latitude - origin.latitude);
-    final deltaLng = _degreesToRadians(
-      destination.longitude - origin.longitude,
-    );
+    final deltaLng = _degreesToRadians(destination.longitude - origin.longitude);
 
     final a =
         math.sin(deltaLat / 2) * math.sin(deltaLat / 2) +
-        math.cos(lat1) *
-            math.cos(lat2) *
-            math.sin(deltaLng / 2) *
-            math.sin(deltaLng / 2);
+        math.cos(lat1) * math.cos(lat2) * math.sin(deltaLng / 2) * math.sin(deltaLng / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
     return earthRadiusMeters * c;

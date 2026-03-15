@@ -9,10 +9,7 @@ import "package:concordia_campus_guide/domain/models/coordinate.dart";
 
 class ManualMockMapController extends Mock implements GoogleMapController {
   @override
-  Future<void> animateCamera(
-    final CameraUpdate? update, {
-    final Duration? duration,
-  }) =>
+  Future<void> animateCamera(final CameraUpdate? update, {final Duration? duration}) =>
       super.noSuchMethod(
             Invocation.method(#animateCamera, [update], {#duration: duration}),
             returnValue: Future<void>.value(),
@@ -35,9 +32,7 @@ class MockGeolocatorPlatform extends Mock
   Future<LocationPermission> checkPermission() =>
       super.noSuchMethod(
             Invocation.method(#checkPermission, []),
-            returnValue: Future<LocationPermission>.value(
-              LocationPermission.whileInUse,
-            ),
+            returnValue: Future<LocationPermission>.value(LocationPermission.whileInUse),
           )
           as Future<LocationPermission>;
 
@@ -45,20 +40,14 @@ class MockGeolocatorPlatform extends Mock
   Future<LocationPermission> requestPermission() =>
       super.noSuchMethod(
             Invocation.method(#requestPermission, []),
-            returnValue: Future<LocationPermission>.value(
-              LocationPermission.whileInUse,
-            ),
+            returnValue: Future<LocationPermission>.value(LocationPermission.whileInUse),
           )
           as Future<LocationPermission>;
 
   @override
-  Future<Position> getCurrentPosition({
-    final LocationSettings? locationSettings,
-  }) =>
+  Future<Position> getCurrentPosition({final LocationSettings? locationSettings}) =>
       super.noSuchMethod(
-            Invocation.method(#getCurrentPosition, [], {
-              #locationSettings: locationSettings,
-            }),
+            Invocation.method(#getCurrentPosition, [], {#locationSettings: locationSettings}),
             returnValue: Future<Position>.value(
               Position(
                 latitude: 45.0,
@@ -106,22 +95,19 @@ void main() {
     expect(true, true);
   });
 
-  test(
-    "onMapCreated does not complete twice if called multiple times",
-    () async {
-      controller.onMapCreated(mockMapController);
-      final firstController = await controller.mapController;
+  test("onMapCreated does not complete twice if called multiple times", () async {
+    controller.onMapCreated(mockMapController);
+    final firstController = await controller.mapController;
 
-      // Create a second mock controller
-      final secondMockController = ManualMockMapController();
-      controller.onMapCreated(secondMockController);
+    // Create a second mock controller
+    final secondMockController = ManualMockMapController();
+    controller.onMapCreated(secondMockController);
 
-      // Should still return the first controller
-      final stillFirstController = await controller.mapController;
-      expect(stillFirstController, same(firstController));
-      expect(stillFirstController, same(mockMapController));
-    },
-  );
+    // Should still return the first controller
+    final stillFirstController = await controller.mapController;
+    expect(stillFirstController, same(firstController));
+    expect(stillFirstController, same(mockMapController));
+  });
 
   test("mapController returns the created controller", () async {
     final Future<GoogleMapController> future = controller.mapController;
@@ -143,9 +129,7 @@ void main() {
     const testCoord = Coordinate(latitude: 10.0, longitude: 10.0);
     CameraUpdate? capturedUpdate;
 
-    when(mockMapController.animateCamera(any)).thenAnswer((
-      final invocation,
-    ) async {
+    when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
       capturedUpdate = invocation.positionalArguments[0] as CameraUpdate?;
     });
 
@@ -203,9 +187,7 @@ void main() {
         northeast: const LatLng(45.4973, -73.5785), // ~0.0001 degree span
       );
 
-      when(mockMapController.animateCamera(any)).thenAnswer((
-        final invocation,
-      ) async {
+      when(mockMapController.animateCamera(any)).thenAnswer((final invocation) async {
         // We can't easily extract the bounds from CameraUpdate cus google doesn't provide accessors to this object
         // but we can verify it was called
       });
@@ -234,10 +216,7 @@ void main() {
       controller.onMapCreated(mockMapController);
       final bounds = LatLngBounds(
         southwest: const LatLng(45.4972, -73.58),
-        northeast: const LatLng(
-          45.4973,
-          -73.56,
-        ), // lat span tiny, lng span large
+        northeast: const LatLng(45.4973, -73.56), // lat span tiny, lng span large
       );
 
       when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
@@ -251,10 +230,7 @@ void main() {
       controller.onMapCreated(mockMapController);
       final bounds = LatLngBounds(
         southwest: const LatLng(45.49, -73.5786),
-        northeast: const LatLng(
-          45.51,
-          -73.5785,
-        ), // lng span tiny, lat span large
+        northeast: const LatLng(45.51, -73.5785), // lng span tiny, lat span large
       );
 
       when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
@@ -265,21 +241,15 @@ void main() {
     });
   });
 
-  testWidgets("goToCurrentLocation succeeds when permission granted", (
-    final tester,
-  ) async {
+  testWidgets("goToCurrentLocation succeeds when permission granted", (final tester) async {
     controller.onMapCreated(mockMapController);
 
-    when(
-      mockGeolocatorPlatform.isLocationServiceEnabled(),
-    ).thenAnswer((_) async => true);
+    when(mockGeolocatorPlatform.isLocationServiceEnabled()).thenAnswer((_) async => true);
     when(
       mockGeolocatorPlatform.checkPermission(),
     ).thenAnswer((_) async => LocationPermission.whileInUse);
     when(
-      mockGeolocatorPlatform.getCurrentPosition(
-        locationSettings: anyNamed("locationSettings"),
-      ),
+      mockGeolocatorPlatform.getCurrentPosition(locationSettings: anyNamed("locationSettings")),
     ).thenAnswer(
       (_) async => Position(
         latitude: 45.0,
@@ -323,164 +293,147 @@ void main() {
     verify(mockMapController.animateCamera(any)).called(1);
   });
 
-  testWidgets(
-    "goToCurrentLocation shows enable services when service disabled",
-    (final tester) async {
-      controller.onMapCreated(mockMapController);
+  testWidgets("goToCurrentLocation shows enable services when service disabled", (
+    final tester,
+  ) async {
+    controller.onMapCreated(mockMapController);
 
-      when(
-        mockGeolocatorPlatform.isLocationServiceEnabled(),
-      ).thenAnswer((_) async => false);
+    when(mockGeolocatorPlatform.isLocationServiceEnabled()).thenAnswer((_) async => false);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (final context) {
-                return ElevatedButton(
-                  onPressed: () => controller.goToCurrentLocation(context),
-                  child: const Text("Go"),
-                );
-              },
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (final context) {
+              return ElevatedButton(
+                onPressed: () => controller.goToCurrentLocation(context),
+                child: const Text("Go"),
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.runAsync(() async {
-        await tester.tap(find.text("Go"));
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      });
+    await tester.runAsync(() async {
+      await tester.tap(find.text("Go"));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
 
-      await tester.pump();
+    await tester.pump();
 
-      expect(find.text("Enable location services"), findsOneWidget);
-    },
-  );
+    expect(find.text("Enable location services"), findsOneWidget);
+  });
 
-  testWidgets(
-    "goToCurrentLocation shows enable permissions when deniedForever",
-    (final tester) async {
-      controller.onMapCreated(mockMapController);
+  testWidgets("goToCurrentLocation shows enable permissions when deniedForever", (
+    final tester,
+  ) async {
+    controller.onMapCreated(mockMapController);
 
-      when(
-        mockGeolocatorPlatform.isLocationServiceEnabled(),
-      ).thenAnswer((_) async => true);
-      when(
-        mockGeolocatorPlatform.checkPermission(),
-      ).thenAnswer((_) async => LocationPermission.deniedForever);
+    when(mockGeolocatorPlatform.isLocationServiceEnabled()).thenAnswer((_) async => true);
+    when(
+      mockGeolocatorPlatform.checkPermission(),
+    ).thenAnswer((_) async => LocationPermission.deniedForever);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (final context) {
-                return ElevatedButton(
-                  onPressed: () => controller.goToCurrentLocation(context),
-                  child: const Text("Go"),
-                );
-              },
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (final context) {
+              return ElevatedButton(
+                onPressed: () => controller.goToCurrentLocation(context),
+                child: const Text("Go"),
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.runAsync(() async {
-        await tester.tap(find.text("Go"));
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      });
+    await tester.runAsync(() async {
+      await tester.tap(find.text("Go"));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
 
-      await tester.pump();
+    await tester.pump();
 
-      expect(
-        find.text("Enable location permissions in settings"),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text("Enable location permissions in settings"), findsOneWidget);
+  });
 
-  testWidgets(
-    "goToCurrentLocation silently returns when permission denied once",
-    (final tester) async {
-      controller.onMapCreated(mockMapController);
+  testWidgets("goToCurrentLocation silently returns when permission denied once", (
+    final tester,
+  ) async {
+    controller.onMapCreated(mockMapController);
 
-      when(
-        mockGeolocatorPlatform.isLocationServiceEnabled(),
-      ).thenAnswer((_) async => true);
-      when(
-        mockGeolocatorPlatform.checkPermission(),
-      ).thenAnswer((_) async => LocationPermission.denied);
-      when(
-        mockGeolocatorPlatform.requestPermission(),
-      ).thenAnswer((_) async => LocationPermission.denied);
+    when(mockGeolocatorPlatform.isLocationServiceEnabled()).thenAnswer((_) async => true);
+    when(
+      mockGeolocatorPlatform.checkPermission(),
+    ).thenAnswer((_) async => LocationPermission.denied);
+    when(
+      mockGeolocatorPlatform.requestPermission(),
+    ).thenAnswer((_) async => LocationPermission.denied);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (final context) {
-                return ElevatedButton(
-                  onPressed: () => controller.goToCurrentLocation(context),
-                  child: const Text("Go"),
-                );
-              },
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (final context) {
+              return ElevatedButton(
+                onPressed: () => controller.goToCurrentLocation(context),
+                child: const Text("Go"),
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.runAsync(() async {
-        await tester.tap(find.text("Go"));
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      });
+    await tester.runAsync(() async {
+      await tester.tap(find.text("Go"));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
 
-      await tester.pump();
+    await tester.pump();
 
-      expect(find.byType(SnackBar), findsNothing);
-    },
-  );
+    expect(find.byType(SnackBar), findsNothing);
+  });
 
-  testWidgets(
-    "goToCurrentLocation shows generic error for unexpected exceptions",
-    (final tester) async {
-      controller.onMapCreated(mockMapController);
+  testWidgets("goToCurrentLocation shows generic error for unexpected exceptions", (
+    final tester,
+  ) async {
+    controller.onMapCreated(mockMapController);
 
-      when(
-        mockGeolocatorPlatform.isLocationServiceEnabled(),
-      ).thenAnswer((_) async => true);
-      when(
-        mockGeolocatorPlatform.checkPermission(),
-      ).thenAnswer((_) async => LocationPermission.whileInUse);
-      when(
-        mockGeolocatorPlatform.getCurrentPosition(
-          locationSettings: anyNamed("locationSettings"),
-        ),
-      ).thenThrow(Exception("boom"));
-      when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+    when(mockGeolocatorPlatform.isLocationServiceEnabled()).thenAnswer((_) async => true);
+    when(
+      mockGeolocatorPlatform.checkPermission(),
+    ).thenAnswer((_) async => LocationPermission.whileInUse);
+    when(
+      mockGeolocatorPlatform.getCurrentPosition(locationSettings: anyNamed("locationSettings")),
+    ).thenThrow(Exception("boom"));
+    when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (final context) {
-                return ElevatedButton(
-                  onPressed: () => controller.goToCurrentLocation(context),
-                  child: const Text("Go"),
-                );
-              },
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (final context) {
+              return ElevatedButton(
+                onPressed: () => controller.goToCurrentLocation(context),
+                child: const Text("Go"),
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.runAsync(() async {
-        await tester.tap(find.text("Go"));
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      });
+    await tester.runAsync(() async {
+      await tester.tap(find.text("Go"));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
 
-      await tester.pump();
+    await tester.pump();
 
-      expect(find.text("Location error: Exception: boom"), findsOneWidget);
-    },
-  );
+    expect(find.text("Location error: Exception: boom"), findsOneWidget);
+  });
 }

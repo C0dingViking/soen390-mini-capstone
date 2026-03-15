@@ -7,8 +7,7 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
-  final void Function(String startRoom, String destinationRoom)?
-  onStartNavigation;
+  final void Function(String startRoom, String destinationRoom)? onStartNavigation;
 
   const IndoorSearchBar({
     super.key,
@@ -56,8 +55,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   void initState() {
     super.initState();
     _startController = widget.startController ?? TextEditingController();
-    _destinationController =
-        widget.destinationController ?? TextEditingController();
+    _destinationController = widget.destinationController ?? TextEditingController();
     _ownsStartController = widget.startController == null;
     _ownsDestinationController = widget.destinationController == null;
     _startFocus = FocusNode();
@@ -106,8 +104,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         _destinationController.dispose();
       }
 
-      _destinationController =
-          widget.destinationController ?? TextEditingController();
+      _destinationController = widget.destinationController ?? TextEditingController();
       _ownsDestinationController = widget.destinationController == null;
       _destinationController.addListener(_onFieldTextChanged);
     }
@@ -174,8 +171,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   }
 
   bool get _canStartNavigation {
-    return _isValidRoom(_startController.text) &&
-        _isValidRoom(_destinationController.text);
+    return _isValidRoom(_startController.text) && _isValidRoom(_destinationController.text);
   }
 
   void _handleStartNavigationPressed() {
@@ -215,10 +211,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     super.dispose();
   }
 
-  Widget _buildResultsList(
-    final BuildContext context,
-    final List<String> results,
-  ) {
+  Widget _buildResultsList(final BuildContext context, final List<String> results) {
     return SearchResultsDropdown(
       itemCount: results.length,
       itemBuilder: (final context, final index) {
@@ -287,8 +280,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
             ),
           ],
         ),
-        if (_filteredRoomList.isNotEmpty)
-          _buildResultsList(context, _filteredRoomList),
+        if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
         if (showStartNavigationButton) ...[
           const SizedBox(height: _buttonHeight),
           Align(

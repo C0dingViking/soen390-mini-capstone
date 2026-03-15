@@ -29,16 +29,11 @@ class HamburgerMenu extends StatelessWidget {
             leading: Icon(isSignedIn ? Icons.logout_sharp : Icons.login_sharp),
             title: Text(
               isSignedIn ? "Logout" : "Login",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
             onTap: () async {
               if (isSignedIn) {
-                context.read<HomeViewModel?>()?.toggleNextClassFabVisibility(
-                  false,
-                );
+                context.read<HomeViewModel?>()?.toggleNextClassFabVisibility(false);
                 await FirebaseAuth.instance.signOut();
               } else {
                 Navigator.of(context).pop();
@@ -60,23 +55,16 @@ class HamburgerMenu extends StatelessWidget {
               leading: const Icon(Icons.calendar_today),
               title: Text(
                 "Import Google Calendar",
-                style: GoogleFonts.roboto(
-                  color: AppTheme.concordiaForeground,
-                  fontSize: 18.0,
-                ),
+                style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
               ),
               onTap: () async {
                 if (!context.mounted) return;
 
-                context.read<HomeViewModel>().toggleNextClassFabVisibility(
-                  true,
-                );
+                context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
                 // To clear cache and force calendar refresh
                 context.read<HomeViewModel>().clearUpcomingClass();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Google Calendar imported successfully!"),
-                  ),
+                  const SnackBar(content: Text("Google Calendar imported successfully!")),
                 );
 
                 Navigator.of(context).pop();
@@ -87,10 +75,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.stars_rounded),
             title: Text(
               "Give us a Rating",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
           ListTile(
@@ -98,10 +83,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.settings),
             title: Text(
               "Settings",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
           ListTile(
@@ -109,10 +91,7 @@ class HamburgerMenu extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: Text(
               "Version 1.0.0",
-              style: GoogleFonts.roboto(
-                color: AppTheme.concordiaForeground,
-                fontSize: 18.0,
-              ),
+              style: GoogleFonts.roboto(color: AppTheme.concordiaForeground, fontSize: 18.0),
             ),
           ),
         ],

@@ -39,13 +39,10 @@ class _FakeGeolocator extends GeolocatorPlatform {
   Future<LocationPermission> checkPermission() async => checkPermissionResult;
 
   @override
-  Future<LocationPermission> requestPermission() async =>
-      requestPermissionResult;
+  Future<LocationPermission> requestPermission() async => requestPermissionResult;
 
   @override
-  Future<Position> getCurrentPosition({
-    final LocationSettings? locationSettings,
-  }) async {
+  Future<Position> getCurrentPosition({final LocationSettings? locationSettings}) async {
     if (throwOnGet) throw Exception("boom");
     return Position(
       latitude: lat,
@@ -62,9 +59,7 @@ class _FakeGeolocator extends GeolocatorPlatform {
   }
 
   @override
-  Stream<Position> getPositionStream({
-    final LocationSettings? locationSettings,
-  }) {
+  Stream<Position> getPositionStream({final LocationSettings? locationSettings}) {
     return Stream.fromIterable(positionsToStream);
   }
 }
@@ -77,9 +72,7 @@ class _FakePlacesInteractor extends PlacesInteractor {
   Future<Coordinate?> resolvePlace(final String placeId) async => null;
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async => null;
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
 }
 
 class _FakeDirectionsInteractor extends DirectionsInteractor {
@@ -110,8 +103,7 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
-  _FakeCalendarInteractor()
-    : super(calendarRepo: _FakeGoogleCalendarRepository());
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
 }
 
 class _TrackingPlacesInteractor extends PlacesInteractor {
@@ -147,9 +139,7 @@ class _TrackingPlacesInteractor extends PlacesInteractor {
   }
 
   @override
-  Future<Coordinate?> resolvePlaceSuggestion(
-    final PlaceSuggestion suggestion,
-  ) async {
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async {
     lastResolvedSuggestion = suggestion;
     return resolveResult;
   }
@@ -280,16 +270,13 @@ void main() {
       expect(hvm.cameraTarget, isNull);
     });
 
-    test(
-      "goToCurrentLocation when permission denied and request denied",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.denied;
-        fakeGeolocator.requestPermissionResult = LocationPermission.denied;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, equals("Error: Location permission denied"));
-      },
-    );
+    test("goToCurrentLocation when permission denied and request denied", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.denied;
+      fakeGeolocator.requestPermissionResult = LocationPermission.denied;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, equals("Error: Location permission denied"));
+    });
 
     test("goToCurrentLocation when permission denied forever", () async {
       fakeGeolocator.serviceEnabled = true;
@@ -297,38 +284,30 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals(
-          "Error: Location permission deniedForever. Please enable it in settings.",
-        ),
+        equals("Error: Location permission deniedForever. Please enable it in settings."),
       );
     });
 
-    test(
-      "goToCurrentLocation success sets cameraTarget and enables location",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
-        fakeGeolocator.lat = 12.34;
-        fakeGeolocator.lng = 56.78;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, isNull);
-        expect(hvm.cameraTarget, isNotNull);
-        expect(hvm.cameraTarget!.latitude, equals(12.34));
-        expect(hvm.cameraTarget!.longitude, equals(56.78));
-        expect(hvm.myLocationEnabled, isTrue);
-      },
-    );
+    test("goToCurrentLocation success sets cameraTarget and enables location", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
+      fakeGeolocator.lat = 12.34;
+      fakeGeolocator.lng = 56.78;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, isNull);
+      expect(hvm.cameraTarget, isNotNull);
+      expect(hvm.cameraTarget!.latitude, equals(12.34));
+      expect(hvm.cameraTarget!.longitude, equals(56.78));
+      expect(hvm.myLocationEnabled, isTrue);
+    });
 
-    test(
-      "goToCurrentLocation when getCurrentPosition throws sets error message",
-      () async {
-        fakeGeolocator.serviceEnabled = true;
-        fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
-        fakeGeolocator.throwOnGet = true;
-        await hvm.goToCurrentLocation();
-        expect(hvm.errorMessage, contains("boom"));
-      },
-    );
+    test("goToCurrentLocation when getCurrentPosition throws sets error message", () async {
+      fakeGeolocator.serviceEnabled = true;
+      fakeGeolocator.checkPermissionResult = LocationPermission.whileInUse;
+      fakeGeolocator.throwOnGet = true;
+      await hvm.goToCurrentLocation();
+      expect(hvm.errorMessage, contains("boom"));
+    });
 
     group("Building detection with location stream", () {
       test("initializeBuildingsData starts location tracking", () async {
@@ -358,36 +337,31 @@ void main() {
         expect(hvm.cameraTarget!.latitude, 45.5);
       });
 
-      test(
-        "currentBuilding is null when user is outside all buildings",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          // Position far from any building
-          fakeGeolocator.positionsToStream = [
-            Position(
-              latitude: 0.0,
-              longitude: 0.0,
-              timestamp: DateTime.now(),
-              accuracy: 0.0,
-              altitude: 0.0,
-              heading: 0.0,
-              speed: 0.0,
-              speedAccuracy: 0.0,
-              altitudeAccuracy: 0.0,
-              headingAccuracy: 0.0,
-            ),
-          ];
+      test("currentBuilding is null when user is outside all buildings", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        // Position far from any building
+        fakeGeolocator.positionsToStream = [
+          Position(
+            latitude: 0.0,
+            longitude: 0.0,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        ];
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-          expect(hvm.currentBuilding, isNull);
-        },
-      );
+        expect(hvm.currentBuilding, isNull);
+      });
 
       test("stopLocationTracking stops position updates", () async {
         fakeGeolocator.serviceEnabled = true;
@@ -446,115 +420,100 @@ void main() {
         expect(hvm.myLocationEnabled, isTrue);
       });
 
-      test(
-        "loaded buildings have bbox precomputed and isInsideBBox works",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
+      test("loaded buildings have bbox precomputed and isInsideBBox works", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          // get first building and ensure bbox fields are present
-          final b = hvm.buildings.values.first;
-          expect(b.minLatitude, isNotNull);
-          expect(b.maxLatitude, isNotNull);
-          expect(b.minLongitude, isNotNull);
-          expect(b.maxLongitude, isNotNull);
+        // get first building and ensure bbox fields are present
+        final b = hvm.buildings.values.first;
+        expect(b.minLatitude, isNotNull);
+        expect(b.maxLatitude, isNotNull);
+        expect(b.minLongitude, isNotNull);
+        expect(b.maxLongitude, isNotNull);
 
-          // a far away coordinate should be outside the bbox
-          final outside = Coordinate(latitude: 0.0, longitude: 0.0);
-          expect(b.isInsideBBox(outside), isFalse);
-        },
-      );
+        // a far away coordinate should be outside the bbox
+        final outside = Coordinate(latitude: 0.0, longitude: 0.0);
+        expect(b.isInsideBBox(outside), isFalse);
+      });
 
-      test(
-        "cameraTarget only updates when coordinate changes (identical positions)",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          final pos = Position(
-            latitude: 45.5,
-            longitude: -73.5,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
+      test("cameraTarget only updates when coordinate changes (identical positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
 
-          // two identical positions should cause only one cameraTarget update
-          fakeGeolocator.positionsToStream = [pos, pos];
+        // two identical positions should cause only one cameraTarget update
+        fakeGeolocator.positionsToStream = [pos, pos];
 
-          int notifyCount = 0;
-          hvm.addListener(() => notifyCount++);
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-          // initializeBuildingsData triggers two notifications (start + end),
-          // plus one from the first position update -> total 3
-          expect(notifyCount, equals(3));
-          expect(hvm.cameraTarget, isNotNull);
-          expect(hvm.cameraTarget!.latitude, equals(45.5));
-        },
-      );
+        // initializeBuildingsData triggers two notifications (start + end),
+        // plus one from the first position update -> total 3
+        expect(notifyCount, equals(3));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5));
+      });
 
-      test(
-        "cameraTarget updates again when coordinate changes (different positions)",
-        () async {
-          fakeGeolocator.serviceEnabled = true;
-          fakeGeolocator.checkPermissionResult = LocationPermission.always;
-          final pos1 = Position(
-            latitude: 45.5,
-            longitude: -73.5,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          final pos2 = Position(
-            latitude: 45.5009,
-            longitude: -73.5009,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
+      test("cameraTarget updates again when coordinate changes (different positions)", () async {
+        fakeGeolocator.serviceEnabled = true;
+        fakeGeolocator.checkPermissionResult = LocationPermission.always;
+        final pos1 = Position(
+          latitude: 45.5,
+          longitude: -73.5,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+        final pos2 = Position(
+          latitude: 45.5009,
+          longitude: -73.5009,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
 
-          // two different positions should cause two cameraTarget updates
-          fakeGeolocator.positionsToStream = [pos1, pos2];
+        // two different positions should cause two cameraTarget updates
+        fakeGeolocator.positionsToStream = [pos1, pos2];
 
-          int notifyCount = 0;
-          hvm.addListener(() => notifyCount++);
+        int notifyCount = 0;
+        hvm.addListener(() => notifyCount++);
 
-          await hvm.initializeBuildingsData(
-            "test/assets/building_testdata.json",
-          );
+        await hvm.initializeBuildingsData("test/assets/building_testdata.json");
 
-          await Future<void>.delayed(const Duration(milliseconds: 150));
+        await Future<void>.delayed(const Duration(milliseconds: 150));
 
-          // start + end + two position updates = 4
-          expect(notifyCount, equals(4));
-          expect(hvm.cameraTarget, isNotNull);
-          expect(hvm.cameraTarget!.latitude, equals(45.5009));
-        },
-      );
+        // start + end + two position updates = 4
+        expect(notifyCount, equals(4));
+        expect(hvm.cameraTarget, isNotNull);
+        expect(hvm.cameraTarget!.latitude, equals(45.5009));
+      });
     });
   });
 
@@ -660,12 +619,7 @@ void main() {
       expect(places.searchCount, 1);
       expect(places.nearbySearchCount, 0);
       expect(hvm.searchResults.length, 2);
-      expect(
-        hvm.searchResults
-            .where((final s) => s.type == SearchSuggestionType.place)
-            .length,
-        1,
-      );
+      expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
     });
 
     test("destination search shows nearby place results and markers", () async {
@@ -691,9 +645,7 @@ void main() {
       expect(places.lastNearbyMaxResults, 5);
       expect(hvm.nearbySearchResults.length, 1);
       expect(
-        hvm.mapMarkers.any(
-          (final marker) => marker.markerId.value == "nearby-nearby-1",
-        ),
+        hvm.mapMarkers.any((final marker) => marker.markerId.value == "nearby-nearby-1"),
         isTrue,
       );
     });
@@ -719,10 +671,7 @@ void main() {
 
     test("clearRouteSelection resets route state", () {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
-      hvm.destinationCoordinate = const Coordinate(
-        latitude: 45.1,
-        longitude: -73.1,
-      );
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       hvm.selectedStartLabel = "Start";
       hvm.selectedDestinationLabel = "Dest";
       hvm.searchStartMarker = Marker(
@@ -869,34 +818,28 @@ void main() {
       expect(hvm.routeOptions, isEmpty);
     });
 
-    test(
-      "selectSearchSuggestion for nearby place recenters map without routing",
-      () async {
-        final place = const PlaceSuggestion(
-          placeId: "nearby-1",
-          description: "Restaurant, Montreal",
-          mainText: "Restaurant",
-          secondaryText: "Montreal",
-          coordinate: Coordinate(latitude: 45.1, longitude: -73.1),
-          distanceMeters: 90,
-          source: PlaceSuggestionSource.nearby,
-        );
-        final suggestion = SearchSuggestion.place(place);
-        hvm.searchResults = [suggestion];
+    test("selectSearchSuggestion for nearby place recenters map without routing", () async {
+      final place = const PlaceSuggestion(
+        placeId: "nearby-1",
+        description: "Restaurant, Montreal",
+        mainText: "Restaurant",
+        secondaryText: "Montreal",
+        coordinate: Coordinate(latitude: 45.1, longitude: -73.1),
+        distanceMeters: 90,
+        source: PlaceSuggestionSource.nearby,
+      );
+      final suggestion = SearchSuggestion.place(place);
+      hvm.searchResults = [suggestion];
 
-        await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
 
-        expect(places.lastResolvedSuggestion, isNull);
-        expect(hvm.destinationCoordinate, isNull);
-        expect(hvm.selectedDestinationLabel, isNull);
-        expect(
-          hvm.cameraTarget,
-          equals(const Coordinate(latitude: 45.1, longitude: -73.1)),
-        );
-        expect(hvm.routeOptions, isEmpty);
-        expect(hvm.searchResults, isEmpty);
-      },
-    );
+      expect(places.lastResolvedSuggestion, isNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.selectedDestinationLabel, isNull);
+      expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.1, longitude: -73.1)));
+      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.searchResults, isEmpty);
+    });
 
     test("setDepartureTime and setArrivalTime update time state", () {
       hvm.routeOptions = {
@@ -942,10 +885,7 @@ void main() {
 
     test("loadRoutes sets error when options empty", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
-      hvm.destinationCoordinate = const Coordinate(
-        latitude: 45.1,
-        longitude: -73.1,
-      );
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       directions.options = [];
 
       hvm.setDepartureMode(DepartureMode.departAt);
@@ -1078,9 +1018,7 @@ void main() {
 
       final zoomedInRadius = hvm.transitChangeCircles.first.radius;
 
-      hvm.onMapCameraMove(
-        const CameraPosition(target: LatLng(45.0, -73.0), zoom: 10),
-      );
+      hvm.onMapCameraMove(const CameraPosition(target: LatLng(45.0, -73.0), zoom: 10));
       final zoomedOutRadius = hvm.transitChangeCircles.first.radius;
 
       expect(zoomedOutRadius, greaterThan(zoomedInRadius));
@@ -1101,57 +1039,50 @@ void main() {
       };
       hvm.selectedRouteMode = RouteMode.walking;
 
-      hvm.onMapCameraMove(
-        const CameraPosition(target: LatLng(45.0, -73.0), zoom: 9),
-      );
+      hvm.onMapCameraMove(const CameraPosition(target: LatLng(45.0, -73.0), zoom: 9));
 
       expect(hvm.transitChangeCircles, isEmpty);
     });
 
-    test(
-      "refreshRoutes re-fetches routes with same origin/destination",
-      () async {
-        final interactor = _ConfigurableDirectionsInteractor();
-        final start = Coordinate(latitude: 45.0, longitude: -73.0);
-        final dest = Coordinate(latitude: 45.1, longitude: -73.1);
-        final walkingOption = RouteOption(
-          mode: RouteMode.walking,
-          distanceMeters: 1000,
-          durationSeconds: 600,
-          polyline: const [],
-        );
-        interactor.options = [walkingOption];
+    test("refreshRoutes re-fetches routes with same origin/destination", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      final walkingOption = RouteOption(
+        mode: RouteMode.walking,
+        distanceMeters: 1000,
+        durationSeconds: 600,
+        polyline: const [],
+      );
+      interactor.options = [walkingOption];
 
-        final hvmWithInteractor = HomeViewModel(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(
-              buildingLoader: (final path) async => "{}",
-            ),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: interactor,
-          calendarInteractor: _FakeCalendarInteractor(),
-        );
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+        calendarInteractor: _FakeCalendarInteractor(),
+      );
 
-        // Set initial coordinates and load routes
-        hvmWithInteractor.startCoordinate = start;
-        hvmWithInteractor.destinationCoordinate = dest;
+      // Set initial coordinates and load routes
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
 
-        // Initial routes load
-        await hvmWithInteractor.refreshRoutes();
-        expect(interactor.callCount, 1);
-        expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+      // Initial routes load
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 1);
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
 
-        // Refresh routes again
-        await hvmWithInteractor.refreshRoutes();
-        expect(interactor.callCount, 2);
-        expect(interactor.lastStart, equals(start));
-        expect(interactor.lastDestination, equals(dest));
-        expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
+      // Refresh routes again
+      await hvmWithInteractor.refreshRoutes();
+      expect(interactor.callCount, 2);
+      expect(interactor.lastStart, equals(start));
+      expect(interactor.lastDestination, equals(dest));
+      expect(hvmWithInteractor.routeOptions.isNotEmpty, true);
 
-        hvmWithInteractor.dispose();
-      },
-    );
+      hvmWithInteractor.dispose();
+    });
 
     test("refreshRoutes sets loading state during fetch", () async {
       final interactor = _ConfigurableDirectionsInteractor();
@@ -1168,9 +1099,7 @@ void main() {
 
       final hvmWithInteractor = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: _FakePlacesInteractor(),
         directionsInteractor: interactor,
@@ -1194,51 +1123,45 @@ void main() {
       hvmWithInteractor.dispose();
     });
 
-    test(
-      "setStartToCurrentLocation success sets start coordinate and enables location",
-      () async {
-        final geolocator = _FakeGeolocator();
-        geolocator.serviceEnabled = true;
-        geolocator.checkPermissionResult = LocationPermission.always;
-        geolocator.lat = 45.4972;
-        geolocator.lng = -73.5786;
-        final previousPlatform = GeolocatorPlatform.instance;
-        GeolocatorPlatform.instance = geolocator;
+    test("setStartToCurrentLocation success sets start coordinate and enables location", () async {
+      final geolocator = _FakeGeolocator();
+      geolocator.serviceEnabled = true;
+      geolocator.checkPermissionResult = LocationPermission.always;
+      geolocator.lat = 45.4972;
+      geolocator.lng = -73.5786;
+      final previousPlatform = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = geolocator;
 
-        try {
-          directions.options = [
-            RouteOption(
-              mode: RouteMode.walking,
-              distanceMeters: 500,
-              durationSeconds: 300,
-              polyline: const [
-                Coordinate(latitude: 45.4972, longitude: -73.5786),
-                Coordinate(latitude: 45.5, longitude: -73.57),
-              ],
-            ),
-          ];
-          hvm.destinationCoordinate = const Coordinate(
-            latitude: 45.5,
-            longitude: -73.57,
-          );
-          hvm.selectedDestinationLabel = "Destination";
+      try {
+        directions.options = [
+          RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 500,
+            durationSeconds: 300,
+            polyline: const [
+              Coordinate(latitude: 45.4972, longitude: -73.5786),
+              Coordinate(latitude: 45.5, longitude: -73.57),
+            ],
+          ),
+        ];
+        hvm.destinationCoordinate = const Coordinate(latitude: 45.5, longitude: -73.57);
+        hvm.selectedDestinationLabel = "Destination";
 
-          await hvm.setStartToCurrentLocation();
+        await hvm.setStartToCurrentLocation();
 
-          expect(hvm.startCoordinate, isNotNull);
-          expect(hvm.startCoordinate!.latitude, equals(45.4972));
-          expect(hvm.startCoordinate!.longitude, equals(-73.5786));
-          expect(hvm.selectedStartLabel, equals("Current location"));
-          expect(hvm.isResolvingStartLocation, isFalse);
-          expect(hvm.errorMessage, isNull);
-          expect(hvm.myLocationEnabled, isTrue);
-          expect(hvm.routeOptions.isNotEmpty, isTrue);
-        } finally {
-          GeolocatorPlatform.instance = previousPlatform;
-          LocationService.resetForTesting();
-        }
-      },
-    );
+        expect(hvm.startCoordinate, isNotNull);
+        expect(hvm.startCoordinate!.latitude, equals(45.4972));
+        expect(hvm.startCoordinate!.longitude, equals(-73.5786));
+        expect(hvm.selectedStartLabel, equals("Current location"));
+        expect(hvm.isResolvingStartLocation, isFalse);
+        expect(hvm.errorMessage, isNull);
+        expect(hvm.myLocationEnabled, isTrue);
+        expect(hvm.routeOptions.isNotEmpty, isTrue);
+      } finally {
+        GeolocatorPlatform.instance = previousPlatform;
+        LocationService.resetForTesting();
+      }
+    });
 
     test("setStartToCurrentLocation error sets error message", () async {
       final geolocator = _FakeGeolocator();
@@ -1260,32 +1183,26 @@ void main() {
       }
     });
 
-    test(
-      "selectSearchSuggestion with unresolvable place shows error",
-      () async {
-        final place = const PlaceSuggestion(
-          placeId: "place-1",
-          description: "Hall Place",
-          mainText: "Hall Place",
-          secondaryText: "Montreal",
-        );
-        final suggestion = SearchSuggestion.place(place);
-        places.resolveResult = null;
+    test("selectSearchSuggestion with unresolvable place shows error", () async {
+      final place = const PlaceSuggestion(
+        placeId: "place-1",
+        description: "Hall Place",
+        mainText: "Hall Place",
+        secondaryText: "Montreal",
+      );
+      final suggestion = SearchSuggestion.place(place);
+      places.resolveResult = null;
 
-        await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
 
-        expect(hvm.errorMessage, equals("Unable to resolve that address."));
-        expect(hvm.destinationCoordinate, isNull);
-        expect(hvm.isResolvingPlace, isFalse);
-      },
-    );
+      expect(hvm.errorMessage, equals("Unable to resolve that address."));
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.isResolvingPlace, isFalse);
+    });
 
     test("exitNavigation clears routes and search bar", () {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
-      hvm.destinationCoordinate = const Coordinate(
-        latitude: 45.1,
-        longitude: -73.1,
-      );
+      hvm.destinationCoordinate = const Coordinate(latitude: 45.1, longitude: -73.1);
       hvm.selectedStartLabel = "Start";
       hvm.isSearchBarExpanded = true;
       final signal = hvm.unfocusSearchBarSignal;
@@ -1299,128 +1216,117 @@ void main() {
       expect(hvm.unfocusSearchBarSignal, signal + 1);
     });
 
-    test(
-      "selectRouteMode for shuttle updates polylines with shuttle styling",
-      () {
-        final shuttleOption = RouteOption(
-          mode: RouteMode.shuttle,
-          distanceMeters: 2000,
+    test("selectRouteMode for shuttle updates polylines with shuttle styling", () {
+      final shuttleOption = RouteOption(
+        mode: RouteMode.shuttle,
+        distanceMeters: 2000,
+        durationSeconds: 1800,
+        polyline: const [
+          Coordinate(latitude: 45.0, longitude: -73.0),
+          Coordinate(latitude: 45.1, longitude: -73.1),
+        ],
+        steps: [
+          RouteStep(
+            instruction: "Walk to shuttle stop",
+            distanceMeters: 100,
+            durationSeconds: 120,
+            travelMode: "WALKING",
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.01, longitude: -73.01),
+            ],
+          ),
+          RouteStep(
+            instruction: "Take shuttle",
+            distanceMeters: 1500,
+            durationSeconds: 1800,
+            travelMode: "SHUTTLE",
+            transitDetails: const TransitDetails(
+              lineName: "Campus Shuttle",
+              shortName: "SH",
+              mode: TransitMode.bus,
+              departureStop: "SGW",
+              arrivalStop: "LOY",
+            ),
+            polyline: const [
+              Coordinate(latitude: 45.01, longitude: -73.01),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ],
+      );
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 3000,
           durationSeconds: 1800,
           polyline: const [
             Coordinate(latitude: 45.0, longitude: -73.0),
             Coordinate(latitude: 45.1, longitude: -73.1),
           ],
-          steps: [
-            RouteStep(
-              instruction: "Walk to shuttle stop",
-              distanceMeters: 100,
-              durationSeconds: 120,
-              travelMode: "WALKING",
-              polyline: const [
-                Coordinate(latitude: 45.0, longitude: -73.0),
-                Coordinate(latitude: 45.01, longitude: -73.01),
-              ],
-            ),
-            RouteStep(
-              instruction: "Take shuttle",
-              distanceMeters: 1500,
-              durationSeconds: 1800,
-              travelMode: "SHUTTLE",
-              transitDetails: const TransitDetails(
-                lineName: "Campus Shuttle",
-                shortName: "SH",
-                mode: TransitMode.bus,
-                departureStop: "SGW",
-                arrivalStop: "LOY",
-              ),
-              polyline: const [
-                Coordinate(latitude: 45.01, longitude: -73.01),
-                Coordinate(latitude: 45.1, longitude: -73.1),
-              ],
-            ),
-          ],
-        );
-        hvm.routeOptions = {
-          RouteMode.walking: RouteOption(
-            mode: RouteMode.walking,
-            distanceMeters: 3000,
-            durationSeconds: 1800,
-            polyline: const [
-              Coordinate(latitude: 45.0, longitude: -73.0),
-              Coordinate(latitude: 45.1, longitude: -73.1),
-            ],
-            steps: [],
-          ),
-          RouteMode.shuttle: shuttleOption,
-        };
-        hvm.selectedRouteMode = RouteMode.walking;
+          steps: [],
+        ),
+        RouteMode.shuttle: shuttleOption,
+      };
+      hvm.selectedRouteMode = RouteMode.walking;
 
-        hvm.selectRouteMode(RouteMode.shuttle);
+      hvm.selectRouteMode(RouteMode.shuttle);
 
-        expect(hvm.selectedRouteMode, equals(RouteMode.shuttle));
-        expect(hvm.routePolylines.length, 2);
-        expect(hvm.routeBounds, isNotNull);
-      },
-    );
+      expect(hvm.selectedRouteMode, equals(RouteMode.shuttle));
+      expect(hvm.routePolylines.length, 2);
+      expect(hvm.routeBounds, isNotNull);
+    });
 
-    test(
-      "refreshRoutes passes time parameters to directions interactor",
-      () async {
-        final interactor = _ConfigurableDirectionsInteractor();
-        interactor.options = [
-          RouteOption(
-            mode: RouteMode.walking,
-            distanceMeters: 1000,
-            durationSeconds: 600,
-            polyline: const [],
-          ),
-        ];
+    test("refreshRoutes passes time parameters to directions interactor", () async {
+      final interactor = _ConfigurableDirectionsInteractor();
+      interactor.options = [
+        RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: 600,
+          polyline: const [],
+        ),
+      ];
 
-        final hvmWithInteractor = HomeViewModel(
-          mapInteractor: MapDataInteractor(
-            buildingRepo: BuildingRepository(
-              buildingLoader: (final path) async => "{}",
-            ),
-          ),
-          placesInteractor: _FakePlacesInteractor(),
-          directionsInteractor: interactor,
-          calendarInteractor: _FakeCalendarInteractor(),
-        );
+      final hvmWithInteractor = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: interactor,
+        calendarInteractor: _FakeCalendarInteractor(),
+      );
 
-        final start = Coordinate(latitude: 45.0, longitude: -73.0);
-        final dest = Coordinate(latitude: 45.1, longitude: -73.1);
-        final departTime = DateTime(2025, 1, 15, 9, 0);
+      final start = Coordinate(latitude: 45.0, longitude: -73.0);
+      final dest = Coordinate(latitude: 45.1, longitude: -73.1);
+      final departTime = DateTime(2025, 1, 15, 9, 0);
 
-        hvmWithInteractor.startCoordinate = start;
-        hvmWithInteractor.destinationCoordinate = dest;
-        hvmWithInteractor.departureMode = DepartureMode.departAt;
-        hvmWithInteractor.selectedDepartureTime = departTime;
+      hvmWithInteractor.startCoordinate = start;
+      hvmWithInteractor.destinationCoordinate = dest;
+      hvmWithInteractor.departureMode = DepartureMode.departAt;
+      hvmWithInteractor.selectedDepartureTime = departTime;
 
-        await hvmWithInteractor.refreshRoutes();
+      await hvmWithInteractor.refreshRoutes();
 
-        expect(interactor.lastStart, equals(start));
-        expect(interactor.lastDestination, equals(dest));
-        expect(interactor.lastDepartureTime, equals(departTime));
-        expect(interactor.lastArrivalTime, isNull);
+      expect(interactor.lastStart, equals(start));
+      expect(interactor.lastDestination, equals(dest));
+      expect(interactor.lastDepartureTime, equals(departTime));
+      expect(interactor.lastArrivalTime, isNull);
 
-        hvmWithInteractor.dispose();
-      },
-    );
+      hvmWithInteractor.dispose();
+    });
 
-    test(
-      "setSearchBarExpanded does not notify if already set to same value",
-      () {
-        hvm.isSearchBarExpanded = false;
-        int notifyCount = 0;
-        hvm.addListener(() => notifyCount++);
+    test("setSearchBarExpanded does not notify if already set to same value", () {
+      hvm.isSearchBarExpanded = false;
+      int notifyCount = 0;
+      hvm.addListener(() => notifyCount++);
 
-        hvm.setSearchBarExpanded(false);
-        expect(notifyCount, 0);
+      hvm.setSearchBarExpanded(false);
+      expect(notifyCount, 0);
 
-        hvm.setSearchBarExpanded(true);
-        expect(notifyCount, 1);
-      },
-    );
+      hvm.setSearchBarExpanded(true);
+      expect(notifyCount, 1);
+    });
 
     test("selectRouteMode does not update if already selected", () {
       hvm.routeOptions = {
@@ -1440,30 +1346,27 @@ void main() {
       expect(notifyCount, 0);
     });
 
-    test(
-      "stopLocationTracking disables location and disposes service",
-      () async {
-        final geolocator = _FakeGeolocator();
-        geolocator.serviceEnabled = true;
-        geolocator.checkPermissionResult = LocationPermission.always;
-        geolocator.lat = 45.5;
-        geolocator.lng = -73.5;
-        final previousPlatform = GeolocatorPlatform.instance;
-        GeolocatorPlatform.instance = geolocator;
+    test("stopLocationTracking disables location and disposes service", () async {
+      final geolocator = _FakeGeolocator();
+      geolocator.serviceEnabled = true;
+      geolocator.checkPermissionResult = LocationPermission.always;
+      geolocator.lat = 45.5;
+      geolocator.lng = -73.5;
+      final previousPlatform = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = geolocator;
 
-        try {
-          hvm.myLocationEnabled = true;
-          expect(hvm.myLocationEnabled, isTrue);
+      try {
+        hvm.myLocationEnabled = true;
+        expect(hvm.myLocationEnabled, isTrue);
 
-          hvm.stopLocationTracking();
+        hvm.stopLocationTracking();
 
-          expect(hvm.myLocationEnabled, isFalse);
-        } finally {
-          GeolocatorPlatform.instance = previousPlatform;
-          LocationService.resetForTesting();
-        }
-      },
-    );
+        expect(hvm.myLocationEnabled, isFalse);
+      } finally {
+        GeolocatorPlatform.instance = previousPlatform;
+        LocationService.resetForTesting();
+      }
+    });
 
     test("setDepartureMode now clears all time-related state", () {
       hvm.departureMode = DepartureMode.departAt;
@@ -1479,37 +1382,34 @@ void main() {
       expect(hvm.suggestedDepartureTime, isNull);
     });
 
-    test(
-      "selectRouteMode updates suggested departure when arrival time set",
-      () {
-        final arrivalTime = DateTime(2025, 1, 1, 10, 0);
-        const walkDurationSeconds = 1800; // 30 minutes
-        const bikeDurationSeconds = 1200; // 20 minutes
+    test("selectRouteMode updates suggested departure when arrival time set", () {
+      final arrivalTime = DateTime(2025, 1, 1, 10, 0);
+      const walkDurationSeconds = 1800; // 30 minutes
+      const bikeDurationSeconds = 1200; // 20 minutes
 
-        hvm.selectedArrivalTime = arrivalTime;
-        hvm.routeOptions = {
-          RouteMode.walking: RouteOption(
-            mode: RouteMode.walking,
-            distanceMeters: 1000,
-            durationSeconds: walkDurationSeconds,
-            polyline: const [],
-          ),
-          RouteMode.bicycling: RouteOption(
-            mode: RouteMode.bicycling,
-            distanceMeters: 1000,
-            durationSeconds: bikeDurationSeconds,
-            polyline: const [],
-          ),
-        };
-        hvm.selectedRouteMode = RouteMode.bicycling;
+      hvm.selectedArrivalTime = arrivalTime;
+      hvm.routeOptions = {
+        RouteMode.walking: RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1000,
+          durationSeconds: walkDurationSeconds,
+          polyline: const [],
+        ),
+        RouteMode.bicycling: RouteOption(
+          mode: RouteMode.bicycling,
+          distanceMeters: 1000,
+          durationSeconds: bikeDurationSeconds,
+          polyline: const [],
+        ),
+      };
+      hvm.selectedRouteMode = RouteMode.bicycling;
 
-        // Switch to walking - this should trigger _calculateSuggestedDeparture
-        hvm.selectRouteMode(RouteMode.walking);
+      // Switch to walking - this should trigger _calculateSuggestedDeparture
+      hvm.selectRouteMode(RouteMode.walking);
 
-        expect(hvm.selectedRouteMode, equals(RouteMode.walking));
-        expect(hvm.suggestedDepartureTime, equals(DateTime(2025, 1, 1, 9, 30)));
-      },
-    );
+      expect(hvm.selectedRouteMode, equals(RouteMode.walking));
+      expect(hvm.suggestedDepartureTime, equals(DateTime(2025, 1, 1, 9, 30)));
+    });
 
     test("clearCameraTarget sets cameraTarget to null", () {
       hvm.cameraTarget = const Coordinate(latitude: 45.0, longitude: -73.0);
@@ -1531,9 +1431,7 @@ void main() {
       trackingPlacesInteractor = _TrackingPlacesInteractor();
       hvm = HomeViewModel(
         mapInteractor: MapDataInteractor(
-          buildingRepo: BuildingRepository(
-            buildingLoader: (final path) async => "{}",
-          ),
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
         ),
         placesInteractor: trackingPlacesInteractor,
         directionsInteractor: _FakeDirectionsInteractor(),
@@ -1571,103 +1469,85 @@ void main() {
       expect(hvm.showNextClassDialog, isFalse);
     });
 
-    test(
-      "setDestinationToUpcomingClassBuilding sets destination and camera target",
-      () async {
-        final building = Building(
-          id: "MB",
-          googlePlacesId: null,
-          name: "J.W. McConnell Building",
-          description: "Engineering building",
-          street: "1400 De Maisonneuve Blvd. W",
-          postalCode: "H3G 1M8",
-          location: const Coordinate(latitude: 45.4972, longitude: -73.5786),
-          hours: gmw.OpeningHoursDetail(),
-          campus: Campus.sgw,
-          outlinePoints: const [],
-          images: const [],
-        );
-        hvm.buildings = {"MB": building};
-        hvm.upcomingClass = AcademicClass(
-          "SOEN 390 LEC A",
-          DateTime(2026, 1, 5, 13, 0),
-          DateTime(2026, 1, 5, 14, 0),
-          Room("235", "2", Campus.sgw, "mb"),
-        );
+    test("setDestinationToUpcomingClassBuilding sets destination and camera target", () async {
+      final building = Building(
+        id: "MB",
+        googlePlacesId: null,
+        name: "J.W. McConnell Building",
+        description: "Engineering building",
+        street: "1400 De Maisonneuve Blvd. W",
+        postalCode: "H3G 1M8",
+        location: const Coordinate(latitude: 45.4972, longitude: -73.5786),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: const [],
+        images: const [],
+      );
+      hvm.buildings = {"MB": building};
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
 
-        await hvm.setDestinationToUpcomingClassBuilding();
+      await hvm.setDestinationToUpcomingClassBuilding();
 
-        expect(hvm.isSearchBarExpanded, isTrue);
-        expect(hvm.startCoordinate, isNotNull);
-        expect(hvm.selectedStartLabel, equals("Current location"));
-        expect(hvm.destinationCoordinate, equals(building.location));
-        expect(hvm.selectedDestinationLabel, equals(building.name));
-        expect(hvm.cameraTarget, equals(building.location));
-        expect(hvm.selectedCampusIndex, equals(0));
-      },
-    );
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.destinationCoordinate, equals(building.location));
+      expect(hvm.selectedDestinationLabel, equals(building.name));
+      expect(hvm.cameraTarget, equals(building.location));
+      expect(hvm.selectedCampusIndex, equals(0));
+    });
 
-    test(
-      "setDestinationToUpcomingClassBuilding shows info when building is missing",
-      () async {
-        hvm.upcomingClass = AcademicClass(
-          "SOEN 390 LEC A",
-          DateTime(2026, 1, 5, 13, 0),
-          DateTime(2026, 1, 5, 14, 0),
-          Room("235", "2", Campus.sgw, "x"),
-        );
+    test("setDestinationToUpcomingClassBuilding shows info when building is missing", () async {
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "x"),
+      );
 
-        await hvm.setDestinationToUpcomingClassBuilding();
+      await hvm.setDestinationToUpcomingClassBuilding();
 
-        expect(hvm.isSearchBarExpanded, isTrue);
-        expect(hvm.startCoordinate, isNotNull);
-        expect(hvm.destinationCoordinate, isNull);
-        expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
-      },
-    );
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
+    });
 
-    test(
-      "setDestinationToUpcomingClassBuilding falls back to first places suggestion",
-      () async {
-        trackingPlacesInteractor.searchResults = const [
-          PlaceSuggestion(
-            placeId: "place-1",
-            description: "Concordia University EV Building, Montreal",
-            mainText: "Concordia University EV Building",
-            secondaryText: "Montreal, QC",
-          ),
-        ];
-        trackingPlacesInteractor.resolveResult = const Coordinate(
-          latitude: 45.4958,
-          longitude: -73.5779,
-        );
-        hvm.upcomingClass = AcademicClass(
-          "SOEN 390 LEC A",
-          DateTime(2026, 1, 5, 13, 0),
-          DateTime(2026, 1, 5, 14, 0),
-          Room("235", "2", Campus.sgw, "ev"),
-        );
+    test("setDestinationToUpcomingClassBuilding falls back to first places suggestion", () async {
+      trackingPlacesInteractor.searchResults = const [
+        PlaceSuggestion(
+          placeId: "place-1",
+          description: "Concordia University EV Building, Montreal",
+          mainText: "Concordia University EV Building",
+          secondaryText: "Montreal, QC",
+        ),
+      ];
+      trackingPlacesInteractor.resolveResult = const Coordinate(
+        latitude: 45.4958,
+        longitude: -73.5779,
+      );
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "ev"),
+      );
 
-        await hvm.setDestinationToUpcomingClassBuilding();
+      await hvm.setDestinationToUpcomingClassBuilding();
 
-        expect(hvm.isSearchBarExpanded, isTrue);
-        expect(hvm.startCoordinate, isNotNull);
-        expect(trackingPlacesInteractor.lastQuery, equals("ev"));
-        expect(
-          hvm.destinationCoordinate,
-          equals(trackingPlacesInteractor.resolveResult),
-        );
-        expect(
-          hvm.selectedDestinationLabel,
-          equals("Concordia University EV Building"),
-        );
-        expect(
-          hvm.cameraTarget,
-          equals(trackingPlacesInteractor.resolveResult),
-        );
-        expect(hvm.generateInfoMessage, isNull);
-      },
-    );
+      expect(hvm.isSearchBarExpanded, isTrue);
+      expect(hvm.startCoordinate, isNotNull);
+      expect(trackingPlacesInteractor.lastQuery, equals("ev"));
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.selectedDestinationLabel, equals("Concordia University EV Building"));
+      expect(hvm.cameraTarget, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.generateInfoMessage, isNull);
+    });
 
     test("falls back for Richard Renaud Science Complex location", () async {
       const buildingName = "Richard Renaud Science Complex";
@@ -1693,14 +1573,8 @@ void main() {
       await hvm.setDestinationToUpcomingClassBuilding();
 
       expect(trackingPlacesInteractor.lastQuery, equals(buildingName));
-      expect(
-        hvm.destinationCoordinate,
-        equals(trackingPlacesInteractor.resolveResult),
-      );
-      expect(
-        hvm.selectedDestinationLabel,
-        equals("Richard Renaud Science Complex"),
-      );
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
+      expect(hvm.selectedDestinationLabel, equals("Richard Renaud Science Complex"));
       expect(hvm.generateInfoMessage, isNull);
     });
 
@@ -1728,10 +1602,7 @@ void main() {
       await hvm.setDestinationToUpcomingClassBuilding();
 
       expect(trackingPlacesInteractor.lastQuery, equals(buildingName));
-      expect(
-        hvm.destinationCoordinate,
-        equals(trackingPlacesInteractor.resolveResult),
-      );
+      expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
       expect(hvm.selectedDestinationLabel, equals("Hingston Hall B"));
       expect(hvm.generateInfoMessage, isNull);
     });

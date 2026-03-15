@@ -30,8 +30,7 @@ extension PointInPolygon on Coordinate {
       final double xj = polygon[j].longitude;
       final double yj = polygon[j].latitude;
 
-      final bool intersect =
-          ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      final bool intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) inside = !inside;
     }
 
@@ -42,7 +41,6 @@ extension PointInPolygon on Coordinate {
 // Provides approximate-equality comparison for coordinates.
 extension CoordinateApproxEqual on Coordinate {
   bool isApproximatelyEqual(final Coordinate other, {final double eps = 1e-6}) {
-    return (latitude - other.latitude).abs() < eps &&
-        (longitude - other.longitude).abs() < eps;
+    return (latitude - other.latitude).abs() < eps && (longitude - other.longitude).abs() < eps;
   }
 }

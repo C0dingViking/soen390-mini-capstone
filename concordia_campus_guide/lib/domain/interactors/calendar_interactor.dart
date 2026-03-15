@@ -66,8 +66,7 @@ class CalendarInteractor {
 
     final eventLocationBuildingName = match?.group(1);
 
-    if (eventLocationBuildingName == null ||
-        eventLocationBuildingName.isEmpty) {
+    if (eventLocationBuildingName == null || eventLocationBuildingName.isEmpty) {
       return null;
     }
 

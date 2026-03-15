@@ -26,12 +26,7 @@ void main() {
         </svg>
       """;
 
-      final floorplan = Floorplan.fromXml(
-        "cl",
-        1,
-        "test.svg",
-        XmlDocument.parse(xmlString),
-      );
+      final floorplan = Floorplan.fromXml("cl", 1, "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.canvasWidth, 0);
       expect(floorplan.canvasHeight, 0);
@@ -80,12 +75,7 @@ void main() {
       """;
 
       expect(
-        () => Floorplan.fromXml(
-          "cl",
-          2,
-          "test.svg",
-          XmlDocument.parse(xmlString),
-        ),
+        () => Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString)),
         throwsA(isA<StateError>()),
       );
     });
@@ -102,12 +92,7 @@ void main() {
         </svg>
       """;
 
-      final floorplan = Floorplan.fromXml(
-        "cl",
-        2,
-        "test.svg",
-        XmlDocument.parse(xmlString),
-      );
+      final floorplan = Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString));
       expect(floorplan.rooms, isEmpty);
     });
 
@@ -123,12 +108,7 @@ void main() {
         </svg>
       """;
 
-      final floorplan = Floorplan.fromXml(
-        "vl",
-        1,
-        "vl-1.svg",
-        XmlDocument.parse(xmlString),
-      );
+      final floorplan = Floorplan.fromXml("vl", 1, "vl-1.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.rooms.length, 2);
       expect(floorplan.rooms[0].name, "101-6");
@@ -146,12 +126,7 @@ void main() {
         </svg>
       """;
 
-      final floorplan = Floorplan.fromXml(
-        "cl",
-        2,
-        "test.svg",
-        XmlDocument.parse(xmlString),
-      );
+      final floorplan = Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.canvasWidth, closeTo(374.32665, 0.00001));
       expect(floorplan.canvasHeight, closeTo(398.919, 0.00001));

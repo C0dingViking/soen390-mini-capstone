@@ -5,8 +5,7 @@ import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 class PlacesInteractor {
   final PlacesService _service;
 
-  PlacesInteractor({final PlacesService? service})
-    : _service = service ?? PlacesService();
+  PlacesInteractor({final PlacesService? service}) : _service = service ?? PlacesService();
 
   Future<List<PlaceSuggestion>> searchPlaces(final String query) {
     return _service.fetchAutocomplete(query);
@@ -29,9 +28,6 @@ class PlacesInteractor {
       return Future.value(suggestion.coordinate);
     }
 
-    return _service.fetchPlaceCoordinate(
-      suggestion.placeId,
-      fallbackQuery: suggestion.description,
-    );
+    return _service.fetchPlaceCoordinate(suggestion.placeId, fallbackQuery: suggestion.description);
   }
 }

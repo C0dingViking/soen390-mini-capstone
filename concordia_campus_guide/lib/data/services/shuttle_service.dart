@@ -51,9 +51,7 @@ class ShuttleService {
       if (walkToBoard.durationSeconds == null) continue;
       if (walkFromAlight.durationSeconds == null) continue;
 
-      final arriveBoard = leaveTimeSeconds.add(
-        Duration(seconds: walkToBoard.durationSeconds!),
-      );
+      final arriveBoard = leaveTimeSeconds.add(Duration(seconds: walkToBoard.durationSeconds!));
       final waitTimeSeconds = waitSeconds(arriveBoard);
 
       final totalTimeSeconds =
@@ -70,8 +68,7 @@ class ShuttleService {
           alight.location,
           RouteMode.driving,
         );
-        final shuttlePolyline =
-            shuttleRoute?.polyline ?? [board.location, alight.location];
+        final shuttlePolyline = shuttleRoute?.polyline ?? [board.location, alight.location];
 
         // added waiting step if needed
         final stepList = <RouteStep>[];
@@ -115,15 +112,9 @@ class ShuttleService {
 
         bestRouteOption = RouteOption(
           mode: RouteMode.shuttle,
-          distanceMeters:
-              (walkToBoard.distanceMeters ?? 0) +
-              (walkFromAlight.distanceMeters ?? 0),
+          distanceMeters: (walkToBoard.distanceMeters ?? 0) + (walkFromAlight.distanceMeters ?? 0),
           durationSeconds: totalTimeSeconds,
-          polyline: [
-            ...walkToBoard.polyline,
-            ...shuttlePolyline,
-            ...walkFromAlight.polyline,
-          ],
+          polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
           steps: stepList,
           summary: summaryString,
         );

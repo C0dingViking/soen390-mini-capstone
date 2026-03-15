@@ -14,11 +14,7 @@ String? resolveRoomNameFromTapPosition(
   final Size viewportSize,
   final Floorplan floorplan,
 ) {
-  return _IndoorMapViewState.roomNameFromTapPosition(
-    scenePoint,
-    viewportSize,
-    floorplan,
-  );
+  return _IndoorMapViewState.roomNameFromTapPosition(scenePoint, viewportSize, floorplan);
 }
 
 class IndoorMapView extends StatefulWidget {
@@ -50,9 +46,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<IndoorViewModel>().initializeRoomNames();
-      context.read<IndoorViewModel>().initializeBuildingFloorplans(
-        widget.building.id,
-      );
+      context.read<IndoorViewModel>().initializeBuildingFloorplans(widget.building.id);
     });
   }
 
@@ -76,9 +70,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (!mounted) return;
   }
 
-  ({String buildingId, String roomName}) _parseRoomLabel(
-    final String roomLabel,
-  ) {
+  ({String buildingId, String roomName}) _parseRoomLabel(final String roomLabel) {
     final trimmedLabel = roomLabel.trim();
 
     final parts = trimmedLabel.split(RegExp(r"\s+"));
@@ -89,10 +81,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return (buildingId: buildingId, roomName: roomName);
   }
 
-  int _findFloorForRoomName(
-    final String roomName,
-    final Map<int, Floorplan> floorplans,
-  ) {
+  int _findFloorForRoomName(final String roomName, final Map<int, Floorplan> floorplans) {
     final normalizedRoomName = roomName.trim().toLowerCase();
 
     String sanitizeRoomName(final String value) {
@@ -121,20 +110,13 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     throw Exception("Floor not found for room: $roomName");
   }
 
-  Future<void> _handleStartNavigation(
-    final String startRoom,
-    final String destinationRoom,
-  ) async {
+  Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
 
-    final currentBuildingId =
-        (_viewModel.loadedBuildingId ?? widget.building.id).toUpperCase();
-    final isStartRoomInDifferentBuilding =
-        parsedStartRoom.buildingId != currentBuildingId;
+    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toUpperCase();
+    final isStartRoomInDifferentBuilding = parsedStartRoom.buildingId != currentBuildingId;
     if (isStartRoomInDifferentBuilding) {
-      await _viewModel.initializeBuildingFloorplans(
-        parsedStartRoom.buildingId.toLowerCase(),
-      );
+      await _viewModel.initializeBuildingFloorplans(parsedStartRoom.buildingId.toLowerCase());
       if (!mounted) {
         return;
       }
@@ -143,25 +125,18 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final floorplans = _viewModel.loadedFloorplans;
     if (floorplans == null || floorplans.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("No floor plans available for current location."),
-        ),
+        const SnackBar(content: Text("No floor plans available for current location.")),
       );
       return;
     }
 
-    final startFloor = _findFloorForRoomName(
-      parsedStartRoom.roomName,
-      floorplans,
-    );
+    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
 
     final changedFloor = _viewModel.changeFloor(startFloor);
     if (!changedFloor) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Failed to change floor. Please try again."),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
       return;
     }
   }
@@ -170,11 +145,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final ivm = context.read<IndoorViewModel>();
     if (ivm.availableFloors == null || ivm.availableFloors!.isEmpty) {
       // should be impossible to reach as this page doesn't open with at least one floorplan
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("No floor plans available for this building."),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No floor plans available for this building.")));
       return;
     }
 
@@ -197,11 +170,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
                   if (!success) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Failed to change floor. Please try again.",
-                        ),
-                      ),
+                      const SnackBar(content: Text("Failed to change floor. Please try again.")),
                     );
                   }
                 },
@@ -277,11 +246,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final Floorplan floorplan,
   ) {
     final scenePoint = _controller.toScene(details.localPosition);
-    final roomName = roomNameFromTapPosition(
-      scenePoint,
-      viewportSize,
-      floorplan,
-    );
+    final roomName = roomNameFromTapPosition(scenePoint, viewportSize, floorplan);
 
     if (roomName == null) {
       return;
@@ -289,9 +254,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
     final destinationLabel = "${floorplan.buildingId.toUpperCase()} $roomName";
     _destinationController.text = destinationLabel;
-    _destinationController.selection = TextSelection.collapsed(
-      offset: destinationLabel.length,
-    );
+    _destinationController.selection = TextSelection.collapsed(offset: destinationLabel.length);
     _destinationFocusNode.requestFocus();
   }
 
@@ -319,15 +282,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return null;
     }
 
-    final normalizedX =
-        (scenePoint.dx - destinationRect.left) / destinationRect.width;
-    final normalizedY =
-        (scenePoint.dy - destinationRect.top) / destinationRect.height;
+    final normalizedX = (scenePoint.dx - destinationRect.left) / destinationRect.width;
+    final normalizedY = (scenePoint.dy - destinationRect.top) / destinationRect.height;
 
-    return Offset(
-      normalizedX * floorplan.canvasWidth,
-      normalizedY * floorplan.canvasHeight,
-    );
+    return Offset(normalizedX * floorplan.canvasWidth, normalizedY * floorplan.canvasHeight);
   }
 
   @override
@@ -368,17 +326,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 Positioned.fill(
                   child: LayoutBuilder(
                     builder: (final context, final constraints) {
-                      final viewportSize = Size(
-                        constraints.maxWidth,
-                        constraints.maxHeight,
-                      );
+                      final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
                       return GestureDetector(
                         behavior: HitTestBehavior.translucent,
-                        onTapUp: (final details) => _handleTapOnMap(
-                          details,
-                          viewportSize,
-                          selectedFloorplan,
-                        ),
+                        onTapUp: (final details) =>
+                            _handleTapOnMap(details, viewportSize, selectedFloorplan),
                         child: InteractiveViewer(
                           transformationController: _controller,
                           minScale: minMapZoom,

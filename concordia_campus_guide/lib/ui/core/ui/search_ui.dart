@@ -5,12 +5,7 @@ class SearchInputCard extends StatelessWidget {
   final double elevation;
   final double radius;
 
-  const SearchInputCard({
-    super.key,
-    required this.children,
-    this.elevation = 4,
-    this.radius = 12,
-  });
+  const SearchInputCard({super.key, required this.children, this.elevation = 4, this.radius = 12});
 
   @override
   Widget build(final BuildContext context) {
@@ -26,11 +21,7 @@ class SearchResultsDropdown extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
 
-  const SearchResultsDropdown({
-    super.key,
-    required this.itemCount,
-    required this.itemBuilder,
-  });
+  const SearchResultsDropdown({super.key, required this.itemCount, required this.itemBuilder});
 
   @override
   Widget build(final BuildContext context) {
@@ -40,16 +31,13 @@ class SearchResultsDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 4),
         shrinkWrap: true,
         itemCount: itemCount,
-        separatorBuilder: (final context, final index) =>
-            const Divider(height: 1),
+        separatorBuilder: (final context, final index) => const Divider(height: 1),
         itemBuilder: itemBuilder,
       ),
     );

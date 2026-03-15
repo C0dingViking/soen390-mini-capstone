@@ -12,11 +12,9 @@ class DirectionsInteractor {
     RouteMode.transit,
   ];
 
-  DirectionsInteractor({
-    final DirectionsService? service,
-    final ShuttleService? shuttleService,
-  }) : _service = service ?? DirectionsService(),
-       _shuttleService = shuttleService ?? ShuttleService();
+  DirectionsInteractor({final DirectionsService? service, final ShuttleService? shuttleService})
+    : _service = service ?? DirectionsService(),
+      _shuttleService = shuttleService ?? ShuttleService();
 
   Future<List<RouteOption>> getRouteOptions(
     final Coordinate start,

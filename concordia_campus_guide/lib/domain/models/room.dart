@@ -19,10 +19,7 @@ class Room {
       throw InvalidLocationFormatException("Location string is empty");
     }
 
-    final roomNumber = Room._determineRoomNumberFromBuildingId(
-      buildingId,
-      location,
-    );
+    final roomNumber = Room._determineRoomNumberFromBuildingId(buildingId, location);
 
     final String floor = Room._determineFloorFromRoomNumber(roomNumber);
     final Campus campus = Room._determineCampus(location);
@@ -37,35 +34,24 @@ class Room {
     } else if (location.toLowerCase().contains("george williams")) {
       campus = Campus.sgw;
     } else {
-      throw InvalidLocationFormatException(
-        "Campus not found in location: $location",
-      );
+      throw InvalidLocationFormatException("Campus not found in location: $location");
     }
     return campus;
   }
 
-  static String _determineRoomNumberFromBuildingId(
-    final String buildingId,
-    final String location,
-  ) {
+  static String _determineRoomNumberFromBuildingId(final String buildingId, final String location) {
     final String lowerBuildingId = buildingId.toLowerCase();
     final Pattern mbBuildingRoomPattern = RegExp(r"Rm\s(?:S[12]|\d)\.\d{3}");
     final Pattern ccHClBuildingRoomPattern = RegExp(r"\bRm\.?\s*(\d{3,4})");
-    final Pattern fgFbBuildingRoomPattern = RegExp(
-      r"\bRm\s*((?:[BCS])?\d{3})\b",
-    );
-    final Pattern otherBuildingRoomPattern = RegExp(
-      r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)",
-    );
+    final Pattern fgFbBuildingRoomPattern = RegExp(r"\bRm\s*((?:[BCS])?\d{3})\b");
+    final Pattern otherBuildingRoomPattern = RegExp(r"\bRm\.?\s*([A-Za-z0-9][A-Za-z0-9\.\-]*)");
 
     if (lowerBuildingId == "mb") {
       if (mbBuildingRoomPattern.firstMatchOf(location) != null) {
         final match = mbBuildingRoomPattern.firstMatchOf(location);
         return match!.group(0)!.split("Rm").last.trim();
       }
-    } else if (lowerBuildingId == "cc" ||
-        lowerBuildingId == "h" ||
-        lowerBuildingId == "cl") {
+    } else if (lowerBuildingId == "cc" || lowerBuildingId == "h" || lowerBuildingId == "cl") {
       if (ccHClBuildingRoomPattern.firstMatchOf(location) != null) {
         final match = ccHClBuildingRoomPattern.firstMatchOf(location);
         return match!.group(1)!.trim();
@@ -81,9 +67,7 @@ class Room {
         return match!.group(1)!.trim();
       }
     }
-    throw InvalidLocationFormatException(
-      "Room number format is invalid in location: $location",
-    );
+    throw InvalidLocationFormatException("Room number format is invalid in location: $location");
   }
 
   static String _determineFloorFromRoomNumber(final String roomNumber) {

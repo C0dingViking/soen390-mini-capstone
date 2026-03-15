@@ -21,9 +21,7 @@ void main() {
     });
 
     test("loads a building with correct data", () async {
-      final buildings = await repo.loadBuildings(
-        "test/assets/building_testdata.json",
-      );
+      final buildings = await repo.loadBuildings("test/assets/building_testdata.json");
       final building = buildings["t"];
 
       expect(buildings.length, 1);
@@ -94,9 +92,7 @@ void main() {
     });
 
     test("fails gracefully if file is malformed", () async {
-      final buildings = await repo.loadBuildings(
-        "test/assets/building_testdata2.json",
-      );
+      final buildings = await repo.loadBuildings("test/assets/building_testdata2.json");
       expect(buildings.length, 0);
     });
 
@@ -118,9 +114,7 @@ void main() {
       expect(building.buildingFeatures![4].name, "shuttleBus");
 
       // Verify invalid features are not present
-      final featureNames = building.buildingFeatures!
-          .map((final f) => f.name)
-          .toList();
+      final featureNames = building.buildingFeatures!.map((final f) => f.name).toList();
       expect(featureNames.contains("invalidFeature"), false);
       expect(featureNames.contains("nonExistentFeature"), false);
     });

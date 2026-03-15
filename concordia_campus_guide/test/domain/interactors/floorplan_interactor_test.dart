@@ -10,57 +10,41 @@ import "floorplan_interactor_test.mocks.dart";
 @GenerateMocks([FloorplanRepository])
 void main() {
   group("Floorplan Interactor", () {
-    test(
-      "loadFloorplans returns an empty list when no floorplans are found",
-      () async {
-        final mockRepo = MockFloorplanRepository();
+    test("loadFloorplans returns an empty list when no floorplans are found", () async {
+      final mockRepo = MockFloorplanRepository();
 
-        when(mockRepo.loadBuildingFloorplans(any)).thenAnswer((_) async => {});
+      when(mockRepo.loadBuildingFloorplans(any)).thenAnswer((_) async => {});
 
-        final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
-        final response = await interactor.loadFloorplans("nonexistent/id");
+      final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
+      final response = await interactor.loadFloorplans("nonexistent/id");
 
-        expect(response, isEmpty);
-      },
-    );
+      expect(response, isEmpty);
+    });
 
-    test(
-      "loadFloorplans forwards the floorplans when they are found",
-      () async {
-        final mockRepo = MockFloorplanRepository();
-        final mockFloorplans = {
-          1: Floorplan(
-            buildingId: "cl",
-            floorNumber: 1,
-            svgPath: "cl-1.svg",
-            rooms: [],
-          ),
-        };
+    test("loadFloorplans forwards the floorplans when they are found", () async {
+      final mockRepo = MockFloorplanRepository();
+      final mockFloorplans = {
+        1: Floorplan(buildingId: "cl", floorNumber: 1, svgPath: "cl-1.svg", rooms: []),
+      };
 
-        when(
-          mockRepo.loadBuildingFloorplans(any),
-        ).thenAnswer((_) async => mockFloorplans);
+      when(mockRepo.loadBuildingFloorplans(any)).thenAnswer((_) async => mockFloorplans);
 
-        final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
-        final response = await interactor.loadFloorplans("valid/id");
+      final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
+      final response = await interactor.loadFloorplans("valid/id");
 
-        expect(response, equals(mockFloorplans));
-      },
-    );
+      expect(response, equals(mockFloorplans));
+    });
 
-    test(
-      "loadRoomNames returns an empty list when no floorplans are found",
-      () async {
-        final mockRepo = MockFloorplanRepository();
+    test("loadRoomNames returns an empty list when no floorplans are found", () async {
+      final mockRepo = MockFloorplanRepository();
 
-        when(mockRepo.loadRoomNames()).thenAnswer((_) async => []);
+      when(mockRepo.loadRoomNames()).thenAnswer((_) async => []);
 
-        final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
-        final response = await interactor.loadRoomNames();
+      final interactor = FloorplanInteractor(floorplanRepo: mockRepo);
+      final response = await interactor.loadRoomNames();
 
-        expect(response, isEmpty);
-      },
-    );
+      expect(response, isEmpty);
+    });
 
     test("loadRoomNames forwards the room names when they are found", () async {
       final mockRepo = MockFloorplanRepository();

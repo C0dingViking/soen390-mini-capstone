@@ -99,18 +99,14 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         ? _startController
         : _destinationController;
     controller.text = suggestion.title;
-    controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: controller.text.length),
-    );
+    controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
 
     final viewModel = context.read<HomeViewModel>();
     await viewModel.selectSearchSuggestion(suggestion, _activeField);
     if (!mounted) return;
 
     final shouldAutoSetStart =
-        _activeField == SearchField.destination &&
-        !_expanded &&
-        viewModel.startCoordinate == null;
+        _activeField == SearchField.destination && !_expanded && viewModel.startCoordinate == null;
     if (shouldAutoSetStart) {
       await viewModel.setStartToCurrentLocation();
       if (!mounted) return;
@@ -128,35 +124,23 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
   @override
   Widget build(final BuildContext context) {
-    final results = context.select(
-      (final HomeViewModel vm) => vm.searchResults,
-    );
+    final results = context.select((final HomeViewModel vm) => vm.searchResults);
     final showClearStart = _startController.text.isNotEmpty;
     final showClearDestination = _destinationController.text.isNotEmpty;
-    final isSearchingPlaces = context.select(
-      (final HomeViewModel vm) => vm.isSearchingPlaces,
-    );
+    final isSearchingPlaces = context.select((final HomeViewModel vm) => vm.isSearchingPlaces);
     final isSearchingNearbyPlaces = context.select(
       (final HomeViewModel vm) => vm.isSearchingNearbyPlaces,
     );
-    final isResolvingPlace = context.select(
-      (final HomeViewModel vm) => vm.isResolvingPlace,
-    );
+    final isResolvingPlace = context.select((final HomeViewModel vm) => vm.isResolvingPlace);
     final isResolvingStart = context.select(
       (final HomeViewModel vm) => vm.isResolvingStartLocation,
     );
-    final selectedStartLabel = context.select(
-      (final HomeViewModel vm) => vm.selectedStartLabel,
-    );
+    final selectedStartLabel = context.select((final HomeViewModel vm) => vm.selectedStartLabel);
     final selectedDestinationLabel = context.select(
       (final HomeViewModel vm) => vm.selectedDestinationLabel,
     );
-    final unfocusSignal = context.select(
-      (final HomeViewModel vm) => vm.unfocusSearchBarSignal,
-    );
-    final isSearchBarExpanded = context.select(
-      (final HomeViewModel vm) => vm.isSearchBarExpanded,
-    );
+    final unfocusSignal = context.select((final HomeViewModel vm) => vm.unfocusSearchBarSignal);
+    final isSearchBarExpanded = context.select((final HomeViewModel vm) => vm.isSearchBarExpanded);
 
     _schedulePostFrameSync(
       context: context,
@@ -199,10 +183,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     });
   }
 
-  void _syncExpandedState(
-    final BuildContext context,
-    final bool isSearchBarExpanded,
-  ) {
+  void _syncExpandedState(final BuildContext context, final bool isSearchBarExpanded) {
     if (_expanded == isSearchBarExpanded) return;
 
     setState(() {
@@ -227,8 +208,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _syncStartLabel(final String? selectedStartLabel) {
-    if (_startFocusNode.hasFocus ||
-        selectedStartLabel == _lastSyncedStartLabel) {
+    if (_startFocusNode.hasFocus || selectedStartLabel == _lastSyncedStartLabel) {
       return;
     }
     _lastSyncedStartLabel = selectedStartLabel;
@@ -240,8 +220,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _syncDestinationLabel(final String? selectedDestinationLabel) {
-    if (_destinationFocusNode.hasFocus ||
-        selectedDestinationLabel == _lastSyncedDestinationLabel) {
+    if (_destinationFocusNode.hasFocus || selectedDestinationLabel == _lastSyncedDestinationLabel) {
       return;
     }
     _lastSyncedDestinationLabel = selectedDestinationLabel;
@@ -315,10 +294,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         filled: true,
         fillColor: Colors.white,
         border: const OutlineInputBorder(borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 12,
-          horizontal: 12,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
     );
   }
@@ -331,11 +307,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     if (isResolvingStart) {
       return const Padding(
         padding: EdgeInsets.all(12),
-        child: SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
 
@@ -370,13 +342,10 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     return TextField(
       controller: _destinationController,
       focusNode: _destinationFocusNode,
-      onChanged: (final value) =>
-          _handleQueryChanged(value, SearchField.destination),
+      onChanged: (final value) => _handleQueryChanged(value, SearchField.destination),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: _expanded
-            ? "Choose destination"
-            : "Search for a place, address, or category",
+        hintText: _expanded ? "Choose destination" : "Search for a place, address, or category",
         prefixIcon: const Icon(Icons.place_outlined),
         suffixIcon: _buildDestinationSuffix(
           context,
@@ -387,10 +356,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         filled: true,
         fillColor: Colors.white,
         border: const OutlineInputBorder(borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 12,
-          horizontal: 12,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
     );
   }
@@ -401,9 +367,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     required final bool isResolvingPlace,
     required final bool isSearchingPlaces,
   }) {
-    final nearbyLimit = context.select(
-      (final HomeViewModel vm) => vm.nearbySearchResultLimit,
-    );
+    final nearbyLimit = context.select((final HomeViewModel vm) => vm.nearbySearchResultLimit);
 
     return SizedBox(
       width: _expanded ? 48 : 96,
@@ -446,10 +410,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     );
   }
 
-  Widget _buildResultsList(
-    final BuildContext context,
-    final List<SearchSuggestion> results,
-  ) {
+  Widget _buildResultsList(final BuildContext context, final List<SearchSuggestion> results) {
     return SearchResultsDropdown(
       itemCount: results.length,
       itemBuilder: (final context, final index) {
@@ -457,16 +418,10 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         final isBuilding = suggestion.type == SearchSuggestionType.building;
         return ListTile(
           leading: isBuilding
-              ? SvgPicture.asset(
-                  "assets/images/app_logo.svg",
-                  height: 24,
-                  width: 24,
-                )
+              ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
               : const Icon(Icons.location_on_outlined),
           title: Text(suggestion.title),
-          subtitle: suggestion.subtitle != null
-              ? Text(suggestion.subtitle!)
-              : null,
+          subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
           trailing: isBuilding && suggestion.building != null
               ? IconButton(
                   icon: const Icon(Icons.info_outline),
@@ -474,9 +429,8 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                     Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (final context) => BuildingDetailScreen(
-                          building: suggestion.building!,
-                        ),
+                        builder: (final context) =>
+                            BuildingDetailScreen(building: suggestion.building!),
                       ),
                     );
                   },

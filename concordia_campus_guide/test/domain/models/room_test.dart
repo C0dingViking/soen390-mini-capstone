@@ -28,8 +28,7 @@ void main() {
     });
 
     test("parses dot room format and special MB building id", () {
-      const location =
-          "Sir George Williams Campus - John Molson School of Business Rm S2.330";
+      const location = "Sir George Williams Campus - John Molson School of Business Rm S2.330";
 
       final room = Room.fromLocation(location, "mb");
 
@@ -118,8 +117,7 @@ void main() {
     });
 
     test("parses FG building room with B prefix", () {
-      const location =
-          "Sir George Williams Campus - Faubourg Building (FG) Rm B123";
+      const location = "Sir George Williams Campus - Faubourg Building (FG) Rm B123";
 
       final room = Room.fromLocation(location, "fg");
 
@@ -130,8 +128,7 @@ void main() {
     });
 
     test("parses FB building room with S prefix", () {
-      const location =
-          "Sir George Williams Campus - Faubourg Tower (FB) Rm S123";
+      const location = "Sir George Williams Campus - Faubourg Tower (FB) Rm S123";
 
       final room = Room.fromLocation(location, "fb");
 
@@ -142,8 +139,7 @@ void main() {
     });
 
     test("throws for FG when room prefix is invalid", () {
-      const location =
-          "Sir George Williams Campus - Faubourg Building (FG) Rm A123";
+      const location = "Sir George Williams Campus - Faubourg Building (FG) Rm A123";
 
       expect(
         () => Room.fromLocation(location, "fg"),
@@ -161,8 +157,7 @@ void main() {
     });
 
     test("throws for MB when room format is invalid", () {
-      const location =
-          "Sir George Williams Campus - John Molson School of Business Rm 820";
+      const location = "Sir George Williams Campus - John Molson School of Business Rm 820";
 
       expect(
         () => Room.fromLocation(location, "mb"),
