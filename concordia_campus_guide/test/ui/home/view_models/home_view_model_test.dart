@@ -108,8 +108,13 @@ class _FakeCalendarInteractor extends CalendarInteractor {
 
 class _TrackingPlacesInteractor extends PlacesInteractor {
   int searchCount = 0;
+  int nearbySearchCount = 0;
   String? lastQuery;
+  String? lastNearbyQuery;
+  Coordinate? lastNearbyOrigin;
+  int? lastNearbyMaxResults;
   List<PlaceSuggestion> searchResults = [];
+  List<PlaceSuggestion> nearbyResults = [];
   PlaceSuggestion? lastResolvedSuggestion;
   Coordinate? resolveResult;
 
@@ -118,6 +123,19 @@ class _TrackingPlacesInteractor extends PlacesInteractor {
     searchCount++;
     lastQuery = query;
     return searchResults;
+  }
+
+  @override
+  Future<List<PlaceSuggestion>> searchNearbyPlaces(
+    final String query,
+    final Coordinate origin, {
+    final int maxResults = 5,
+  }) async {
+    nearbySearchCount++;
+    lastNearbyQuery = query;
+    lastNearbyOrigin = origin;
+    lastNearbyMaxResults = maxResults;
+    return nearbyResults;
   }
 
   @override
@@ -503,6 +521,8 @@ void main() {
     late HomeViewModel hvm;
     late _TrackingPlacesInteractor places;
     late _ConfigurableDirectionsInteractor directions;
+    late GeolocatorPlatform previousPlatform;
+    late _FakeGeolocator fakeGeolocator;
 
     setUp(() {
       places = _TrackingPlacesInteractor();
@@ -515,9 +535,13 @@ void main() {
         directionsInteractor: directions,
         calendarInteractor: _FakeCalendarInteractor(),
       );
+      previousPlatform = GeolocatorPlatform.instance;
+      fakeGeolocator = _FakeGeolocator();
+      GeolocatorPlatform.instance = fakeGeolocator;
     });
 
     tearDown(() {
+      GeolocatorPlatform.instance = previousPlatform;
       hvm.dispose();
       LocationService.resetForTesting();
     });
@@ -588,12 +612,42 @@ void main() {
         ),
       ];
 
+      hvm.setActiveSearchField(SearchField.start);
       hvm.updateSearchQuery("hal");
       await Future<void>.delayed(const Duration(milliseconds: 450));
 
       expect(places.searchCount, 1);
+      expect(places.nearbySearchCount, 0);
       expect(hvm.searchResults.length, 2);
       expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
+    });
+
+    test("destination search shows nearby place results and markers", () async {
+      places.nearbyResults = [
+        const PlaceSuggestion(
+          placeId: "nearby-1",
+          description: "Coffee Shop, Montreal",
+          mainText: "Coffee Shop",
+          secondaryText: "Montreal",
+          coordinate: Coordinate(latitude: 45.001, longitude: -73.001),
+          distanceMeters: 140,
+        ),
+      ];
+      fakeGeolocator.lat = 45.0;
+      fakeGeolocator.lng = -73.0;
+      hvm.setActiveSearchField(SearchField.destination);
+
+      hvm.updateSearchQuery("coffee");
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+
+      expect(places.nearbySearchCount, 1);
+      expect(places.lastNearbyQuery, "coffee");
+      expect(places.lastNearbyMaxResults, 5);
+      expect(hvm.nearbySearchResults.length, 1);
+      expect(
+        hvm.mapMarkers.any((final marker) => marker.markerId.value == "nearby-nearby-1"),
+        isTrue,
+      );
     });
 
     test("clearSearchResults resets search state", () {
@@ -740,6 +794,51 @@ void main() {
       expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
       expect(hvm.routePolylines.length, 1);
       expect(hvm.routeBounds, isNotNull);
+    });
+
+    test("tapping nearby marker does not start directions", () {
+      hvm.nearbySearchResults = const [
+        PlaceSuggestion(
+          placeId: "nearby-1",
+          description: "Restaurant, Montreal",
+          mainText: "Restaurant",
+          secondaryText: "Montreal",
+          coordinate: Coordinate(latitude: 45.1, longitude: -73.1),
+          distanceMeters: 90,
+          source: PlaceSuggestionSource.nearby,
+        ),
+      ];
+
+      final marker = hvm.mapMarkers.firstWhere(
+        (final value) => value.markerId.value == "nearby-nearby-1",
+      );
+
+      expect(marker.onTap, isNull);
+      expect(hvm.selectedDestinationLabel, isNull);
+      expect(hvm.routeOptions, isEmpty);
+    });
+
+    test("selectSearchSuggestion for nearby place recenters map without routing", () async {
+      final place = const PlaceSuggestion(
+        placeId: "nearby-1",
+        description: "Restaurant, Montreal",
+        mainText: "Restaurant",
+        secondaryText: "Montreal",
+        coordinate: Coordinate(latitude: 45.1, longitude: -73.1),
+        distanceMeters: 90,
+        source: PlaceSuggestionSource.nearby,
+      );
+      final suggestion = SearchSuggestion.place(place);
+      hvm.searchResults = [suggestion];
+
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+
+      expect(places.lastResolvedSuggestion, isNull);
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.selectedDestinationLabel, isNull);
+      expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.1, longitude: -73.1)));
+      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.searchResults, isEmpty);
     });
 
     test("setDepartureTime and setArrivalTime update time state", () {

@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:concordia_campus_guide/data/services/api_key_service.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
@@ -8,6 +10,7 @@ class PlacesService {
   GoogleMapsPlaces? _places;
   final ApiKeyService _apiKeyService;
   String? _resolvedKey;
+
   PlacesService({final GoogleMapsPlaces? client, final ApiKeyService? apiKeyService})
     : _places = client,
       _apiKeyService = apiKeyService ?? ApiKeyService();
@@ -51,12 +54,65 @@ class PlacesService {
               description: prediction.description ?? "",
               mainText: structured?.mainText ?? prediction.description ?? "",
               secondaryText: structured?.secondaryText ?? "",
+              source: PlaceSuggestionSource.autocomplete,
             );
           })
           .where((final suggestion) => suggestion.placeId.isNotEmpty)
           .toList();
     } catch (e) {
       logger.w("PlacesService: autocomplete failed", error: e);
+      return [];
+    }
+  }
+
+  Future<List<PlaceSuggestion>> fetchNearbyPlaces(
+    final String input,
+    final Coordinate origin, {
+    final int maxResults = 5,
+  }) async {
+    final client = await _getClient();
+    if (client == null) return [];
+
+    final trimmed = input.trim();
+    if (trimmed.isEmpty || maxResults <= 0) return [];
+
+    try {
+      final response = await client.searchNearbyWithRankBy(
+        Location(lat: origin.latitude, lng: origin.longitude),
+        "distance",
+        keyword: trimmed,
+        language: "en",
+      );
+
+      if (!response.isOkay) return [];
+
+      return response.results
+          .map((final result) {
+            final location = result.geometry?.location;
+            if (location == null) {
+              return null;
+            }
+
+            final coordinate = Coordinate(latitude: location.lat, longitude: location.lng);
+            final name = result.name;
+            final secondaryText = result.vicinity ?? result.formattedAddress ?? "";
+            final description = secondaryText.isEmpty ? name : "$name, $secondaryText";
+
+            return PlaceSuggestion(
+              placeId: result.placeId,
+              description: description,
+              mainText: name,
+              secondaryText: secondaryText,
+              coordinate: coordinate,
+              distanceMeters: _distanceBetween(origin, coordinate),
+              source: PlaceSuggestionSource.nearby,
+            );
+          })
+          .whereType<PlaceSuggestion>()
+          .take(maxResults)
+          .toList();
+    } catch (e) {
+      logger.w("PlacesService: nearby search failed", error: e);
       return [];
     }
   }
@@ -77,12 +133,10 @@ class PlacesService {
           return Coordinate(latitude: location.lat, longitude: location.lng);
         }
       }
-    } catch (ignored) {
-      // Silently fall through to text search fallback
-      // The package may throw type cast errors on certain API responses that does not affect app behaviour. Probably unncessary logging.
+    } catch (e) {
+      logger.w("PlacesService: getDetailsByPlaceId failed", error: e);
     }
 
-    // Fallback to text search if details lookup failed
     if (fallbackQuery == null || fallbackQuery.trim().isEmpty) {
       return null;
     }
@@ -105,5 +159,24 @@ class PlacesService {
       logger.w("PlacesService: both place details and text search failed", error: e);
       return null;
     }
+  }
+
+  double _distanceBetween(final Coordinate origin, final Coordinate destination) {
+    const earthRadiusMeters = 6371000.0;
+    final lat1 = _degreesToRadians(origin.latitude);
+    final lat2 = _degreesToRadians(destination.latitude);
+    final deltaLat = _degreesToRadians(destination.latitude - origin.latitude);
+    final deltaLng = _degreesToRadians(destination.longitude - origin.longitude);
+
+    final a =
+        math.sin(deltaLat / 2) * math.sin(deltaLat / 2) +
+        math.cos(lat1) * math.cos(lat2) * math.sin(deltaLng / 2) * math.sin(deltaLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+    return earthRadiusMeters * c;
+  }
+
+  double _degreesToRadians(final double degrees) {
+    return degrees * math.pi / 180;
   }
 }
