@@ -124,23 +124,40 @@ class _IndoorGraph {
       final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
       final centroidId = getOrCreateNodeId(centroid);
       allNodeIds.add(centroidId);
+    }
 
-      for (var i = 0; i < allNodeIds.length; i++) {
-        final idA = allNodeIds[i];
-        final pa = nodes[idA].position;
+    final Set<int> unionNodeIds = <int>{};
+    for (final corridorNodes in corridorAllNodeIds) {
+      unionNodeIds.addAll(corridorNodes);
+    }
 
-        for (var j = i + 1; j < allNodeIds.length; j++) {
-          final idB = allNodeIds[j];
-          final pb = nodes[idB].position;
+    final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
 
-          if (!_segmentInsidePolygon(pa, pb, polygon)) {
-            continue;
-          }
+    const double maxVisibilityEdgeLength = 200.0;
+    final double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
 
-          final weight = _euclideanDistance(pa, pb);
-          nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
-          nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
+    for (var i = 0; i < allVisibilityNodeIds.length; i++) {
+      final idA = allVisibilityNodeIds[i];
+      final pa = nodes[idA].position;
+
+      for (var j = i + 1; j < allVisibilityNodeIds.length; j++) {
+        final idB = allVisibilityNodeIds[j];
+        final pb = nodes[idB].position;
+
+        final dx = pa.x - pb.x;
+        final dy = pa.y - pb.y;
+        final distanceSquared = dx * dx + dy * dy;
+        if (distanceSquared > maxVisibilityEdgeLengthSquared) {
+          continue;
         }
+
+        if (!_segmentInsideAnyCorridor(pa, pb, corridors)) {
+          continue;
+        }
+
+        final weight = sqrt(distanceSquared);
+        nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
+        nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
       }
     }
 
@@ -151,7 +168,7 @@ class _IndoorGraph {
     );
   }
 
-  /// Adds a door node and connects it to the nearest corridor vertex.
+  /// Adds a door node and connects it to the corridor graph.
   int addDoorNode(final Point<double> door, final List<Corridor> corridors) {
     final doorNodeId = nodes.length;
     nodes.add(_IndoorGraphNode(door));
@@ -164,10 +181,6 @@ class _IndoorGraph {
       }
     }
 
-    // If the door is not strictly inside any corridor polygon, but is very
-    // close to one (for example due to SVG rounding or being drawn just on
-    // the boundary), snap it to the nearest corridor instead of treating it
-    // as completely disconnected.
     if (containingCorridorIndex < 0 && corridors.isNotEmpty) {
       const double snapThreshold = 20.0;
 
@@ -262,11 +275,11 @@ double _euclideanDistance(final Point<double> a, final Point<double> b) {
   return sqrt(dx * dx + dy * dy);
 }
 
-/// Checks whether segment AB lies entirely inside the given polygon.
-bool _segmentInsidePolygon(
+/// Checks whether segment AB lies entirely inside the union of all corridors.
+bool _segmentInsideAnyCorridor(
   final Point<double> a,
   final Point<double> b,
-  final List<Point<double>> polygon,
+  final List<Corridor> corridors,
 ) {
   const int samples = 4;
 
@@ -274,7 +287,15 @@ bool _segmentInsidePolygon(
     final t = i / (samples + 1);
     final samplePoint = Point<double>(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
 
-    if (!_pointInPolygon(samplePoint, polygon)) {
+    var insideAny = false;
+    for (final corridor in corridors) {
+      if (_pointInPolygon(samplePoint, corridor.bounds)) {
+        insideAny = true;
+        break;
+      }
+    }
+
+    if (!insideAny) {
       return false;
     }
   }
