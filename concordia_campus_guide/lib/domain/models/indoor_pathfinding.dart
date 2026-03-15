@@ -32,7 +32,6 @@ class _IndoorGraph {
   factory _IndoorGraph.fromCorridors(final List<Corridor> corridors) {
     final List<_IndoorGraphNode> nodes = <_IndoorGraphNode>[];
     final Map<String, int> coordinateToNodeId = <String, int>{};
-    final List<List<int>> corridorVertexNodeIds = <List<int>>[];
     final List<List<int>> corridorAllNodeIds = <List<int>>[];
 
     int getOrCreateNodeId(final Point<double> p) {
@@ -47,119 +46,16 @@ class _IndoorGraph {
       coordinateToNodeId[key] = id;
       return id;
     }
+    final corridorVertexNodeIds = _createCorridorVertexNodes(
+      corridors,
+      getOrCreateNodeId,
+      corridorAllNodeIds,
+    );
 
-    for (final corridor in corridors) {
-      final vertexIds = <int>[];
-      for (final point in corridor.bounds) {
-        vertexIds.add(getOrCreateNodeId(point));
-      }
-      corridorVertexNodeIds.add(vertexIds);
-      corridorAllNodeIds.add(List<int>.from(vertexIds));
-    }
-
-    for (final vertexIds in corridorVertexNodeIds) {
-      if (vertexIds.length < 2) {
-        continue;
-      }
-
-      for (var i = 0; i < vertexIds.length; i++) {
-        final int a = vertexIds[i];
-        final int b = vertexIds[(i + 1) % vertexIds.length];
-
-        if (a == b) {
-          continue;
-        }
-
-        final pa = nodes[a].position;
-        final pb = nodes[b].position;
-        final weight = _euclideanDistance(pa, pb);
-
-        nodes[a].edges.add(_IndoorGraphEdge(b, weight));
-        nodes[b].edges.add(_IndoorGraphEdge(a, weight));
-      }
-    }
-
-    const double vertexSnapThreshold = 5.0;
-    final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
-
-    for (var i = 0; i < nodes.length; i++) {
-      final pi = nodes[i].position;
-      for (var j = i + 1; j < nodes.length; j++) {
-        final pj = nodes[j].position;
-        final dx = pi.x - pj.x;
-        final dy = pi.y - pj.y;
-        final distanceSquared = dx * dx + dy * dy;
-        if (distanceSquared > vertexSnapThresholdSquared) {
-          continue;
-        }
-
-        final weight = sqrt(distanceSquared);
-        nodes[i].edges.add(_IndoorGraphEdge(j, weight));
-        nodes[j].edges.add(_IndoorGraphEdge(i, weight));
-      }
-    }
-
-    for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
-      final polygon = corridors[corridorIndex].bounds;
-      if (polygon.length < 3) {
-        continue;
-      }
-
-      final allNodeIds = corridorAllNodeIds[corridorIndex];
-
-      for (var i = 0; i < polygon.length; i++) {
-        final a = polygon[i];
-        final b = polygon[(i + 1) % polygon.length];
-        final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
-        final midId = getOrCreateNodeId(midpoint);
-        allNodeIds.add(midId);
-      }
-
-      var sumX = 0.0;
-      var sumY = 0.0;
-      for (final p in polygon) {
-        sumX += p.x;
-        sumY += p.y;
-      }
-      final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
-      final centroidId = getOrCreateNodeId(centroid);
-      allNodeIds.add(centroidId);
-    }
-
-    final Set<int> unionNodeIds = <int>{};
-    for (final corridorNodes in corridorAllNodeIds) {
-      unionNodeIds.addAll(corridorNodes);
-    }
-
-    final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
-
-    const double maxVisibilityEdgeLength = 200.0;
-    final double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
-
-    for (var i = 0; i < allVisibilityNodeIds.length; i++) {
-      final idA = allVisibilityNodeIds[i];
-      final pa = nodes[idA].position;
-
-      for (var j = i + 1; j < allVisibilityNodeIds.length; j++) {
-        final idB = allVisibilityNodeIds[j];
-        final pb = nodes[idB].position;
-
-        final dx = pa.x - pb.x;
-        final dy = pa.y - pb.y;
-        final distanceSquared = dx * dx + dy * dy;
-        if (distanceSquared > maxVisibilityEdgeLengthSquared) {
-          continue;
-        }
-
-        if (!_segmentInsideAnyCorridor(pa, pb, corridors)) {
-          continue;
-        }
-
-        final weight = sqrt(distanceSquared);
-        nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
-        nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
-      }
-    }
+    _connectCorridorEdges(nodes, corridorVertexNodeIds);
+    _snapNearbyVertices(nodes);
+    _addCorridorInteriorPoints(corridors, corridorAllNodeIds, getOrCreateNodeId);
+    _addGlobalVisibilityEdges(nodes, corridorAllNodeIds, corridors);
 
     return _IndoorGraph(
       nodes: nodes,
@@ -273,6 +169,153 @@ double _euclideanDistance(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
+}
+
+/// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
+List<List<int>> _createCorridorVertexNodes(
+  final List<Corridor> corridors,
+  final int Function(Point<double>) getOrCreateNodeId,
+  final List<List<int>> corridorAllNodeIds,
+) {
+  final List<List<int>> corridorVertexNodeIds = <List<int>>[];
+
+  for (final corridor in corridors) {
+    final vertexIds = <int>[];
+    for (final point in corridor.bounds) {
+      vertexIds.add(getOrCreateNodeId(point));
+    }
+    corridorVertexNodeIds.add(vertexIds);
+    corridorAllNodeIds.add(List<int>.from(vertexIds));
+  }
+
+  return corridorVertexNodeIds;
+}
+
+/// Connects consecutive corridor vertices along each corridor boundary.
+void _connectCorridorEdges(
+  final List<_IndoorGraphNode> nodes,
+  final List<List<int>> corridorVertexNodeIds,
+) {
+  for (final vertexIds in corridorVertexNodeIds) {
+    if (vertexIds.length < 2) {
+      continue;
+    }
+
+    for (var i = 0; i < vertexIds.length; i++) {
+      final int a = vertexIds[i];
+      final int b = vertexIds[(i + 1) % vertexIds.length];
+
+      if (a == b) {
+        continue;
+      }
+
+      final pa = nodes[a].position;
+      final pb = nodes[b].position;
+      final weight = _euclideanDistance(pa, pb);
+
+      nodes[a].edges.add(_IndoorGraphEdge(b, weight));
+      nodes[b].edges.add(_IndoorGraphEdge(a, weight));
+    }
+  }
+}
+
+/// Connects nearby corridor vertices to bridge small gaps.
+void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
+  const double vertexSnapThreshold = 5.0;
+  final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
+
+  for (var i = 0; i < nodes.length; i++) {
+    final pi = nodes[i].position;
+    for (var j = i + 1; j < nodes.length; j++) {
+      final pj = nodes[j].position;
+      final dx = pi.x - pj.x;
+      final dy = pi.y - pj.y;
+      final distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared > vertexSnapThresholdSquared) {
+        continue;
+      }
+
+      final weight = sqrt(distanceSquared);
+      nodes[i].edges.add(_IndoorGraphEdge(j, weight));
+      nodes[j].edges.add(_IndoorGraphEdge(i, weight));
+    }
+  }
+}
+
+/// Adds midpoints and centroids as interior nodes for each corridor.
+void _addCorridorInteriorPoints(
+  final List<Corridor> corridors,
+  final List<List<int>> corridorAllNodeIds,
+  final int Function(Point<double>) getOrCreateNodeId,
+) {
+  for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
+    final polygon = corridors[corridorIndex].bounds;
+    if (polygon.length < 3) {
+      continue;
+    }
+
+    final allNodeIds = corridorAllNodeIds[corridorIndex];
+
+    for (var i = 0; i < polygon.length; i++) {
+      final a = polygon[i];
+      final b = polygon[(i + 1) % polygon.length];
+      final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
+      final midId = getOrCreateNodeId(midpoint);
+      allNodeIds.add(midId);
+    }
+
+    var sumX = 0.0;
+    var sumY = 0.0;
+    for (final p in polygon) {
+      sumX += p.x;
+      sumY += p.y;
+    }
+    final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
+    final centroidId = getOrCreateNodeId(centroid);
+    allNodeIds.add(centroidId);
+  }
+}
+
+/// Adds global visibility edges over the union of all corridors.
+void _addGlobalVisibilityEdges(
+  final List<_IndoorGraphNode> nodes,
+  final List<List<int>> corridorAllNodeIds,
+  final List<Corridor> corridors,
+) {
+  final Set<int> unionNodeIds = <int>{};
+  for (final corridorNodes in corridorAllNodeIds) {
+    unionNodeIds.addAll(corridorNodes);
+  }
+
+  final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
+
+  const double maxVisibilityEdgeLength = 200.0;
+  final double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
+
+  for (var i = 0; i < allVisibilityNodeIds.length; i++) {
+    final idA = allVisibilityNodeIds[i];
+    final pa = nodes[idA].position;
+
+    for (var j = i + 1; j < allVisibilityNodeIds.length; j++) {
+      final idB = allVisibilityNodeIds[j];
+      final pb = nodes[idB].position;
+
+      final dx = pa.x - pb.x;
+      final dy = pa.y - pb.y;
+      final distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared > maxVisibilityEdgeLengthSquared) {
+        continue;
+      }
+
+      if (!_segmentInsideAnyCorridor(pa, pb, corridors)) {
+        continue;
+      }
+
+      final weight = sqrt(distanceSquared);
+      nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
+      nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
+    }
+  }
 }
 
 /// Checks whether segment AB lies entirely inside the union of all corridors.
