@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:flutter/material.dart";
@@ -13,6 +15,7 @@ class IndoorViewModel extends ChangeNotifier {
   Map<int, Floorplan>? loadedFloorplans;
   List<int>? availableFloors;
   Floorplan? selectedFloorplan;
+  List<Point<double>>? indoorPath;
   bool isLoading = false;
   bool loadFailed = false;
 
@@ -75,6 +78,7 @@ class IndoorViewModel extends ChangeNotifier {
   void resetFloorplanLoadState() {
     loadFailed = false;
     isLoading = false;
+    indoorPath = null;
     notifyListeners();
   }
 
@@ -85,8 +89,22 @@ class IndoorViewModel extends ChangeNotifier {
 
     if (selectedFloorplan!.floorNumber != floorNumber) {
       selectedFloorplan = loadedFloorplans![floorNumber];
+      indoorPath = null;
       notifyListeners();
     }
     return true;
+  }
+
+  void setIndoorPath(final List<Point<double>> path) {
+    indoorPath = path;
+    notifyListeners();
+  }
+
+  void clearIndoorPath() {
+    if (indoorPath == null) {
+      return;
+    }
+    indoorPath = null;
+    notifyListeners();
   }
 }

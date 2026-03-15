@@ -1,5 +1,8 @@
+import "dart:math";
+
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
+import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
@@ -81,6 +84,32 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return (buildingId: buildingId, roomName: roomName);
   }
 
+  IndoorMapRoom? _findRoomOnFloor(final String roomName, final Floorplan floorplan) {
+    final normalizedRoomName = roomName.trim().toLowerCase();
+
+    String sanitizeRoomName(final String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r"\s+"), "")
+          .replaceAll(RegExp(r"[-.]"), "");
+    }
+
+    final sanitizedTarget = sanitizeRoomName(normalizedRoomName);
+
+    for (final room in floorplan.rooms) {
+      final candidate = room.name.trim().toLowerCase();
+      if (candidate == normalizedRoomName) {
+        return room;
+      }
+      if (sanitizeRoomName(candidate) == sanitizedTarget) {
+        return room;
+      }
+    }
+
+    return null;
+  }
+
   int _findFloorForRoomName(final String roomName, final Map<int, Floorplan> floorplans) {
     final normalizedRoomName = roomName.trim().toLowerCase();
 
@@ -112,11 +141,21 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
+    final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
-    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toUpperCase();
-    final isStartRoomInDifferentBuilding = parsedStartRoom.buildingId != currentBuildingId;
-    if (isStartRoomInDifferentBuilding) {
-      await _viewModel.initializeBuildingFloorplans(parsedStartRoom.buildingId.toLowerCase());
+    if (parsedStartRoom.buildingId != parsedDestinationRoom.buildingId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Indoor navigation currently supports routes within a single building."),
+        ),
+      );
+      return;
+    }
+
+    final targetBuildingId = parsedStartRoom.buildingId.toLowerCase();
+    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toLowerCase();
+    if (targetBuildingId != currentBuildingId) {
+      await _viewModel.initializeBuildingFloorplans(targetBuildingId);
       if (!mounted) {
         return;
       }
@@ -131,6 +170,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+    final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
+
+    if (startFloor != destinationFloor) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Indoor navigation currently supports routes on a single floor only."),
+        ),
+      );
+      return;
+    }
 
     final changedFloor = _viewModel.changeFloor(startFloor);
     if (!changedFloor) {
@@ -138,6 +187,35 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
       return;
+    }
+
+    final floorplan = _viewModel.selectedFloorplan;
+    if (floorplan == null) {
+      return;
+    }
+
+    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, floorplan);
+    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, floorplan);
+
+    if (startRoomModel == null || destinationRoomModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to locate one or both rooms on this floor.")),
+      );
+      return;
+    }
+    try {
+      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
+      _viewModel.setIndoorPath(path);
+    } on StateError catch (_) {
+      _viewModel.clearIndoorPath();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No indoor route found between the selected rooms.")),
+      );
+    } catch (_) {
+      _viewModel.clearIndoorPath();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
+      );
     }
   }
 
@@ -337,7 +415,15 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                           maxScale: maxMapZoom,
                           boundaryMargin: EdgeInsets.zero,
                           clipBehavior: Clip.hardEdge,
-                          child: SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                          child: CustomPaint(
+                            foregroundPainter: ivm.indoorPath == null
+                                ? null
+                                : _IndoorPathPainter(
+                                    floorplan: selectedFloorplan,
+                                    path: ivm.indoorPath!,
+                                  ),
+                            child: SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                          ),
                         ),
                       );
                     },
@@ -399,5 +485,52 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         },
       ),
     );
+  }
+}
+
+class _IndoorPathPainter extends CustomPainter {
+  final Floorplan floorplan;
+  final List<Point<double>> path;
+
+  _IndoorPathPainter({required this.floorplan, required this.path});
+
+  @override
+  void paint(final Canvas canvas, final Size size) {
+    if (path.length < 2 || floorplan.canvasWidth <= 0 || floorplan.canvasHeight <= 0) {
+      return;
+    }
+
+    final inputSize = Size(floorplan.canvasWidth, floorplan.canvasHeight);
+    final fittedSizes = applyBoxFit(BoxFit.contain, inputSize, size);
+    final destinationRect = Alignment.center.inscribe(fittedSizes.destination, Offset.zero & size);
+
+    Offset svgToCanvas(final Point<double> p) {
+      final dx = destinationRect.left + (p.x / floorplan.canvasWidth) * destinationRect.width;
+      final dy = destinationRect.top + (p.y / floorplan.canvasHeight) * destinationRect.height;
+      return Offset(dx, dy);
+    }
+
+    final paint = Paint()
+      ..color = Colors.blueAccent
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final pathShape = Path();
+    final startOffset = svgToCanvas(path.first);
+    pathShape.moveTo(startOffset.dx, startOffset.dy);
+
+    for (final point in path.skip(1)) {
+      final o = svgToCanvas(point);
+      pathShape.lineTo(o.dx, o.dy);
+    }
+
+    canvas.drawPath(pathShape, paint);
+  }
+
+  @override
+  bool shouldRepaint(final _IndoorPathPainter oldDelegate) {
+    return oldDelegate.floorplan != floorplan || oldDelegate.path != path;
   }
 }
