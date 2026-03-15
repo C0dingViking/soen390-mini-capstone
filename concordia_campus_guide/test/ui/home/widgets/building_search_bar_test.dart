@@ -195,8 +195,7 @@ void main() {
 
     Finder findDestinationFieldCollapsed() => find.byWidgetPredicate(
       (final widget) =>
-          widget is TextField &&
-          widget.decoration?.hintText == "Search for a place, address, or category",
+          widget is TextField && widget.decoration?.hintText == "Search for a Destination",
     );
 
     Finder findDestinationFieldExpanded() => find.byWidgetPredicate(

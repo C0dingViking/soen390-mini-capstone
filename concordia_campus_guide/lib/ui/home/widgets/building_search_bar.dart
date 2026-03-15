@@ -14,6 +14,9 @@ class BuildingSearchBar extends StatefulWidget {
 }
 
 class _BuildingSearchBarState extends State<BuildingSearchBar> {
+  bool _keepMarkers = false;
+  bool _showSuggestions = true;
+
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _startFocusNode = FocusNode();
@@ -47,18 +50,25 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
     if (_startFocusNode.hasFocus) {
       _activeField = SearchField.start;
+      _showSuggestions = true; // Show suggestions when focusing
       viewModel.setActiveSearchField(SearchField.start);
       viewModel.updateSearchQuery(_startController.text);
       return;
     }
     if (_destinationFocusNode.hasFocus) {
       _activeField = SearchField.destination;
+      _showSuggestions = true; // Show suggestions when focusing
       viewModel.setActiveSearchField(SearchField.destination);
       viewModel.updateSearchQuery(_destinationController.text);
       return;
     }
 
     if (!_startFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
+      if (_keepMarkers) {
+        _keepMarkers = false;
+        return;
+      }
+      _showSuggestions = true;
       viewModel.clearSearchResults();
     }
   }
@@ -161,7 +171,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           isResolvingPlace: isResolvingPlace,
           isSearchingPlaces: isSearchingPlaces || isSearchingNearbyPlaces,
         ),
-        if (results.isNotEmpty) _buildResultsList(context, results),
+        if (_showSuggestions && results.isNotEmpty) _buildResultsList(context, results),
       ],
     );
   }
@@ -343,9 +353,16 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       controller: _destinationController,
       focusNode: _destinationFocusNode,
       onChanged: (final value) => _handleQueryChanged(value, SearchField.destination),
+      onSubmitted: (final value) {
+        setState(() {
+          _showSuggestions = false;
+          _keepMarkers = true;
+        });
+        FocusScope.of(context).unfocus();
+      },
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: _expanded ? "Choose destination" : "Search for a place, address, or category",
+        hintText: _expanded ? "Choose destination" : "Search for a Destination",
         prefixIcon: const Icon(Icons.place_outlined),
         suffixIcon: _buildDestinationSuffix(
           context,
@@ -384,9 +401,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
                 context.read<HomeViewModel>().setNearbySearchResultLimit(value);
               },
               itemBuilder: (final context) => const [
-                PopupMenuItem<int>(value: 3, child: Text("Show 3 nearby")),
-                PopupMenuItem<int>(value: 5, child: Text("Show 5 nearby")),
-                PopupMenuItem<int>(value: 10, child: Text("Show 10 nearby")),
+                PopupMenuItem<int>(value: 3, child: Text("Show Nearest 3 Locations")),
+                PopupMenuItem<int>(value: 5, child: Text("Show Nearest 5 Locations")),
+                PopupMenuItem<int>(value: 10, child: Text("Show Nearest 10 Locations")),
               ],
             ),
           if (isResolvingPlace || isSearchingPlaces)
