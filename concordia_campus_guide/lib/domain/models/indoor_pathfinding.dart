@@ -127,6 +127,32 @@ class _IndoorGraph {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Single-floor path segment used in multi-floor routes
+// ---------------------------------------------------------------------------
+
+/// Represents the path on a single floor as part of a multi-floor route.
+class IndoorFloorPathSegment {
+  /// The floor number this segment belongs to.
+  final int floorNumber;
+
+  /// Ordered list of points forming the path on this floor.
+  final List<Point<double>> path;
+
+  /// The transition used to leave this floor (null for the final segment).
+  final FloorTransition? exitTransition;
+
+  /// The transition used to enter this floor (null for the first segment).
+  final FloorTransition? entryTransition;
+
+  const IndoorFloorPathSegment({
+    required this.floorNumber,
+    required this.path,
+    this.exitTransition,
+    this.entryTransition,
+  });
+}
+
 /// Computes the shortest indoor path between two rooms.
 extension FloorplanPathfinding on Floorplan {
   List<Point<double>> shortestPathBetweenRooms(
@@ -162,7 +188,258 @@ extension FloorplanPathfinding on Floorplan {
 
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
   }
+
+  /// Computes the path from a room's door to a specific transition point on this floor.
+  List<Point<double>> shortestPathToTransition(
+    final Point<double> startPoint,
+    final FloorTransition transition,
+  ) {
+    if (corridors.isEmpty) {
+      throw StateError("No indoor corridors available for pathfinding.");
+    }
+
+    final graph = _IndoorGraph.fromCorridors(corridors);
+
+    final startId = graph.addDoorNode(startPoint, corridors);
+    final endId = graph.addDoorNode(transition.location, corridors);
+
+    final pathNodeIds = _dijkstra(graph, startId, endId);
+
+    if (pathNodeIds.isEmpty) {
+      throw StateError(
+        "No indoor path found to transition ${transition.id} on floor $floorNumber.",
+      );
+    }
+
+    return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Inter-floor pathfinding
+// ---------------------------------------------------------------------------
+
+/// Computes a multi-floor route between rooms on different floors.
+///
+/// The algorithm:
+/// 1. Finds transitions shared between the start and destination floors
+///    (matched by [FloorTransition.groupTag]).
+/// 2. For each candidate transition pair, computes the path on the start floor
+///    (start room → transition) and the path on the destination floor
+///    (transition → destination room).
+/// 3. Picks the pair with the smallest combined path cost.
+///
+/// For routes spanning more than two floors (e.g. floor 1 → floor 3), the
+/// method chains through intermediate floors by finding a transition that
+/// connects each consecutive floor pair.
+///
+/// Returns a list of [IndoorFloorPathSegment]s, one per floor traversed,
+/// in order from start to destination.
+///
+/// Throws [StateError] if no connecting transitions exist between the
+/// required floors.
+List<IndoorFloorPathSegment> computeInterFloorPath({
+  required final Map<int, Floorplan> floorplans,
+  required final int startFloor,
+  required final int destinationFloor,
+  required final IndoorMapRoom startRoom,
+  required final IndoorMapRoom destinationRoom,
+  final TransitionType? preferredTransitionType,
+}) {
+  if (startFloor == destinationFloor) {
+    // Same-floor case: delegate to the existing single-floor pathfinding.
+    final floorplan = floorplans[startFloor]!;
+    final path = floorplan.shortestPathBetweenRooms(startRoom, destinationRoom);
+    return [
+      IndoorFloorPathSegment(floorNumber: startFloor, path: path),
+    ];
+  }
+
+  // Determine the ordered list of floors to traverse.
+  final int direction = destinationFloor > startFloor ? 1 : -1;
+  final List<int> floorsToTraverse = [];
+  for (int f = startFloor; f != destinationFloor + direction; f += direction) {
+    if (!floorplans.containsKey(f)) {
+      continue; // skip floors that don't have a floorplan
+    }
+    floorsToTraverse.add(f);
+  }
+
+  if (floorsToTraverse.length < 2) {
+    throw StateError(
+      "Cannot navigate between floor $startFloor and floor $destinationFloor: "
+      "insufficient floorplan data.",
+    );
+  }
+
+  // Build segments floor-by-floor.
+  final List<IndoorFloorPathSegment> segments = [];
+  Point<double> currentStartPoint = startRoom.doorLocation;
+
+  for (int i = 0; i < floorsToTraverse.length - 1; i++) {
+    final currentFloorNum = floorsToTraverse[i];
+    final nextFloorNum = floorsToTraverse[i + 1];
+    final currentFloorplan = floorplans[currentFloorNum]!;
+    final nextFloorplan = floorplans[nextFloorNum]!;
+
+    // Find matching transition pairs between these two floors.
+    final candidates = _findMatchingTransitions(
+      currentFloorplan.transitions,
+      nextFloorplan.transitions,
+      preferredTransitionType,
+    );
+
+    if (candidates.isEmpty) {
+      throw StateError(
+        "No connecting transition found between floor $currentFloorNum "
+        "and floor $nextFloorNum.",
+      );
+    }
+
+    // Evaluate each candidate pair and pick the shortest combined path.
+    _TransitionCandidate? bestCandidate;
+    List<Point<double>>? bestPath;
+    double bestCost = double.infinity;
+
+    for (final candidate in candidates) {
+      try {
+        final path = currentFloorplan.shortestPathToTransition(
+          currentStartPoint,
+          candidate.fromTransition,
+        );
+        final cost = _pathLength(path);
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestPath = path;
+          bestCandidate = candidate;
+        }
+      } on StateError {
+        // This transition isn't reachable; try the next candidate.
+        continue;
+      }
+    }
+
+    if (bestCandidate == null || bestPath == null) {
+      throw StateError(
+        "No reachable transition found on floor $currentFloorNum "
+        "to reach floor $nextFloorNum.",
+      );
+    }
+
+    segments.add(IndoorFloorPathSegment(
+      floorNumber: currentFloorNum,
+      path: bestPath,
+      exitTransition: bestCandidate.fromTransition,
+      entryTransition: i > 0 ? segments.last.exitTransition : null,
+    ));
+
+    // The start point on the next floor is the matching transition's location.
+    currentStartPoint = bestCandidate.toTransition.location;
+  }
+
+  // Final segment: from the transition on the destination floor to the destination room.
+  final destFloorplan = floorplans[destinationFloor]!;
+  final lastExitTransition = segments.last.exitTransition!;
+
+  // Find the corresponding entry transition on the destination floor.
+  final entryTransition = destFloorplan.transitions.firstWhere(
+    (final t) => t.groupTag == lastExitTransition.groupTag,
+    orElse: () => throw StateError(
+      "No matching entry transition on floor $destinationFloor.",
+    ),
+  );
+
+  try {
+    final destPath = destFloorplan.shortestPathToTransition(
+      entryTransition.location,
+      // We need to path from the transition to the destination room.
+      // Reuse shortestPathToTransition by creating a temporary FloorTransition
+      // at the destination room's door location.
+      FloorTransition(
+        id: "dest-room",
+        location: destinationRoom.doorLocation,
+        type: TransitionType.stairs, // type doesn't matter for pathfinding
+        groupTag: "",
+      ),
+    );
+    segments.add(IndoorFloorPathSegment(
+      floorNumber: destinationFloor,
+      path: destPath,
+      entryTransition: entryTransition,
+    ));
+  } on StateError {
+    throw StateError(
+      "No path found from transition to room ${destinationRoom.name} "
+      "on floor $destinationFloor.",
+    );
+  }
+
+  return segments;
+}
+
+// ---------------------------------------------------------------------------
+// Inter-floor helpers
+// ---------------------------------------------------------------------------
+
+class _TransitionCandidate {
+  final FloorTransition fromTransition;
+  final FloorTransition toTransition;
+
+  const _TransitionCandidate({
+    required this.fromTransition,
+    required this.toTransition,
+  });
+}
+
+/// Finds transition pairs that connect two floors by matching [groupTag].
+///
+/// If [preferredType] is specified, transitions of that type are returned
+/// first. Other types are still included as fallbacks.
+List<_TransitionCandidate> _findMatchingTransitions(
+  final List<FloorTransition> fromFloorTransitions,
+  final List<FloorTransition> toFloorTransitions,
+  final TransitionType? preferredType,
+) {
+  final Map<String, FloorTransition> toTransitionsByGroup = {
+    for (final t in toFloorTransitions) t.groupTag: t,
+  };
+
+  final List<_TransitionCandidate> preferred = [];
+  final List<_TransitionCandidate> others = [];
+
+  for (final fromT in fromFloorTransitions) {
+    final toT = toTransitionsByGroup[fromT.groupTag];
+    if (toT == null) {
+      continue;
+    }
+
+    final candidate = _TransitionCandidate(
+      fromTransition: fromT,
+      toTransition: toT,
+    );
+
+    if (preferredType != null && fromT.type == preferredType) {
+      preferred.add(candidate);
+    } else {
+      others.add(candidate);
+    }
+  }
+
+  return [...preferred, ...others];
+}
+
+/// Computes the total Euclidean length of a polyline path.
+double _pathLength(final List<Point<double>> path) {
+  double total = 0;
+  for (int i = 0; i < path.length - 1; i++) {
+    total += _euclideanDistance(path[i], path[i + 1]);
+  }
+  return total;
+}
+
+// ---------------------------------------------------------------------------
+// Graph construction helpers (unchanged)
+// ---------------------------------------------------------------------------
 
 /// Euclidean distance between two points.
 double _euclideanDistance(final Point<double> a, final Point<double> b) {

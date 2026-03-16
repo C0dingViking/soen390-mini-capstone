@@ -12,14 +12,16 @@ class FloorTransition {
   final String id;
   final Point<double> location;
   final TransitionType type;
-  
- 
+
+  /// The group tag shared by transitions that connect across floors.
+  /// For example, "elevator-A" on floor 1 and floor 2 are the same shaft.
+  final String groupTag;
 
   const FloorTransition({
     required this.id,
     required this.location,
     required this.type,
-    
+    required this.groupTag,
   });
 }
 
@@ -101,7 +103,7 @@ class Floorplan {
   late List<IndoorMapRoom> rooms;
   late List<PointOfInterest> pois;
   late List<Corridor> corridors;
-  final List<FloorTransition> transitions;
+  late List<FloorTransition> transitions;
 
   Floorplan({
     required this.buildingId,
@@ -165,6 +167,14 @@ class Floorplan {
         .findAllElements("g")
         .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "points-of-interest");
     floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
+
+    // Parse floor transitions from the SVG.
+    floorplan.transitions = floorplan._parseTransitionData(
+      buildingId,
+      floorNumber,
+      poisLayer,
+      connectorsLayer,
+    );
 
     return floorplan;
   }
@@ -278,5 +288,77 @@ class Floorplan {
     }
 
     return pois;
+  }
+
+  /// Parses floor transition points from the POI layer.
+  ///
+  /// Transitions are identified by POI types that represent vertical movement
+  /// (stairs, elevator, escalator). The groupTag is derived from the POI label
+  /// so that matching transitions across floors share the same tag.
+  ///
+  /// Expected SVG label format: `elevator-1`, `stairs-2`, `escalatorUp-1`, etc.
+  /// The groupTag becomes the type + instance number, e.g. "elevator-1".
+  List<FloorTransition> _parseTransitionData(
+    final String buildingId,
+    final int floorNumber,
+    final XmlElement poiLayer,
+    final XmlElement connectorsLayer,
+  ) {
+    final transitionRegex = RegExp(r"^(stairs|stairsUp|stairsDown|elevator|escalatorUp|escalatorDown)-([0-9]+)$");
+    final List<FloorTransition> transitions = [];
+    final connectors = connectorsLayer.findAllElements("ellipse");
+
+    for (final element in [
+      ...poiLayer.findAllElements("rect"),
+      ...poiLayer.findAllElements("path"),
+    ]) {
+      final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
+      final match = transitionRegex.firstMatch(label);
+      if (match == null) {
+        continue;
+      }
+
+      final typeName = match.group(1)!;
+      final instanceNum = match.group(2)!;
+
+      // Determine the canonical transition type.
+      TransitionType transitionType;
+      String canonicalGroup;
+      switch (typeName) {
+        case "elevator":
+          transitionType = TransitionType.elevator;
+          canonicalGroup = "elevator-$instanceNum";
+          break;
+        case "escalatorUp":
+        case "escalatorDown":
+          transitionType = TransitionType.escalator;
+          canonicalGroup = "escalator-$instanceNum";
+          break;
+        default: // stairs, stairsUp, stairsDown
+          transitionType = TransitionType.stairs;
+          canonicalGroup = "stairs-$instanceNum";
+          break;
+      }
+
+      // Resolve the door/connector location for this transition.
+      final expected = "door-${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum";
+      final doorElement = connectors.firstWhere((final element) {
+        final connLabel = element.getAttribute(_inkscapeLabelRoot) ?? "";
+        return connLabel == expected;
+      }, orElse: () => XmlElement(XmlName("ellipse")));
+
+      final location = parsePointFromSvgCircle(doorElement);
+
+      transitions.add(
+        FloorTransition(
+          id: "${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum",
+          location: location,
+          type: transitionType,
+          groupTag: canonicalGroup,
+        ),
+      );
+    }
+
+    return transitions;
   }
 }
