@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
@@ -83,6 +84,7 @@ class HomeViewModel extends ChangeNotifier {
 
   List<SearchSuggestion> searchResults = [];
   List<PlaceSuggestion> nearbySearchResults = [];
+  final Map<String, BitmapDescriptor> _nearbyMarkerIcons = {};
   String _searchQuery = "";
   Timer? _searchDebounce;
   SearchField _activeSearchField = SearchField.destination;
@@ -245,6 +247,7 @@ class HomeViewModel extends ChangeNotifier {
         return;
       }
 
+      await _primeNearbyMarkerIcons(nearbyResults);
       nearbySearchResults = nearbyResults;
       final nearbyPlaceIds = nearbyResults.map((final place) => place.placeId).toSet();
       final autocompleteSuggestions = autocompleteResults
@@ -334,15 +337,6 @@ class HomeViewModel extends ChangeNotifier {
     final place = suggestion.place;
     if (place == null) return;
 
-    if (place.source == PlaceSuggestionSource.nearby) {
-      if (place.coordinate != null) {
-        cameraTarget = place.coordinate;
-      }
-      searchResults = [];
-      notifyListeners();
-      return;
-    }
-
     errorMessage = null;
     isResolvingPlace = true;
     notifyListeners();
@@ -356,15 +350,16 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    if (field == SearchField.destination && startCoordinate == null && place.coordinate != null) {
+    if (field == SearchField.destination && startCoordinate == null) {
       await _applyCurrentLocationAsStart();
     }
 
     _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
     cameraTarget = coordinate;
+    isSearchBarExpanded = true;
+    clearSearchResults();
+    requestUnfocusSearchBar();
     await _loadRoutesIfReady();
-    searchResults = [];
-    nearbySearchResults = [];
     notifyListeners();
   }
 
@@ -863,17 +858,190 @@ class HomeViewModel extends ChangeNotifier {
     myLocationEnabled = true;
   }
 
+  Future<void> _primeNearbyMarkerIcons(final List<PlaceSuggestion> places) async {
+    for (final place in places) {
+      if (_nearbyMarkerIcons.containsKey(place.placeId)) continue;
+      _nearbyMarkerIcons[place.placeId] = await _buildNearbyMarkerIcon(place.mainText);
+    }
+  }
+
+  Future<BitmapDescriptor> _buildNearbyMarkerIcon(final String label) async {
+    const double imageWidth = 140;
+    const double imageHeight = 150;
+    const double pinCircleRadius = 20;
+    const double pinTipHeight = 24;
+    const double pinStrokeWidth = 3;
+    const double labelHorizontalPadding = 10;
+    const double labelVerticalPadding = 6;
+    const double labelTop = 4;
+    const double labelBottomSpacing = 0;
+    const double maxLabelWidth = 110;
+    const double fontSize = 14;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final centerX = imageWidth / 2;
+    final pinTipY = imageHeight - 4;
+    final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
+
+    final displayLabel = _truncateMarkerLabel(label);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: displayLabel,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      maxLines: 1,
+      ellipsis: "…",
+      textDirection: ui.TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: maxLabelWidth);
+
+    final labelWidth = textPainter.width + (labelHorizontalPadding * 2);
+    final labelHeight = textPainter.height + (labelVerticalPadding * 2);
+    final labelLeft = (imageWidth - labelWidth) / 2;
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(labelLeft, labelTop, labelWidth, labelHeight),
+      const Radius.circular(14),
+    );
+
+    final labelShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.16)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRRect(labelRect.shift(const Offset(0, 2)), labelShadowPaint);
+
+    final labelPaint = Paint()..color = Colors.white;
+    canvas.drawRRect(labelRect, labelPaint);
+
+    final labelBorderPaint = Paint()
+      ..color = Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawRRect(labelRect, labelBorderPaint);
+
+    final textOffset = Offset(
+      (imageWidth - textPainter.width) / 2,
+      labelTop + ((labelHeight - textPainter.height) / 2),
+    );
+    textPainter.paint(canvas, textOffset);
+
+    final connectorTop = labelTop + labelHeight + labelBottomSpacing;
+    final connectorBottom = pinCircleCenter.dy - pinCircleRadius - 2;
+
+    final connectorShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawLine(
+      Offset(centerX, connectorTop + 2),
+      Offset(centerX, connectorBottom + 2),
+      connectorShadowPaint,
+    );
+
+    final connectorPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(centerX, connectorTop),
+      Offset(centerX, connectorBottom),
+      connectorPaint,
+    );
+
+    final pinShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final pinPathShadow = Path()
+      ..moveTo(centerX, pinTipY + 3)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
+      ..arcToPoint(
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX,
+        pinTipY + 3,
+      )
+      ..close();
+    canvas.drawPath(pinPathShadow, pinShadowPaint);
+
+    final pinPath = Path()
+      ..moveTo(centerX, pinTipY)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
+      ..arcToPoint(
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX,
+        pinTipY,
+      )
+      ..close();
+
+    final pinPaint = Paint()..color = Colors.orange;
+    canvas.drawPath(pinPath, pinPaint);
+
+    final pinStrokePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = pinStrokeWidth;
+    canvas.drawPath(pinPath, pinStrokePaint);
+
+    final innerCirclePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(pinCircleCenter, 8, innerCirclePaint);
+
+    final image = await recorder.endRecording().toImage(imageWidth.toInt(), imageHeight.toInt());
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    }
+    return BitmapDescriptor.bytes(data.buffer.asUint8List());
+  }
+
+  String _truncateMarkerLabel(final String label) {
+    final trimmed = label.trim();
+    if (trimmed.length <= 20) return trimmed;
+    return "${trimmed.substring(0, 19).trimRight()}…";
+  }
+
   Set<Marker> _nearbyResultMarkers() {
     return nearbySearchResults.where((final place) => place.coordinate != null).map((final place) {
       final coordinate = place.coordinate!;
       return Marker(
         markerId: MarkerId("nearby-${place.placeId}"),
         position: coordinate.toLatLng(),
+        anchor: const Offset(0.5, 1.0),
+        onTap: () async {
+          await selectSearchSuggestion(SearchSuggestion.place(place), SearchField.destination);
+        },
         infoWindow: InfoWindow(
           title: place.mainText,
           snippet: place.secondaryText.isNotEmpty ? place.secondaryText : null,
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        icon:
+            _nearbyMarkerIcons[place.placeId] ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
       );
     }).toSet();
   }
