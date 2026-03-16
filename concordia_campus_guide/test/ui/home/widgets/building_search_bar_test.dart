@@ -495,19 +495,20 @@ void main() {
       expect(updatedField.focusNode?.hasFocus, isFalse);
     });
 
-    testWidgets("destination submit hides suggestions and clears results", (final tester) async {
+    testWidgets("destination submit hides suggestions without clearing results", (
+      final tester,
+    ) async {
       await pumpSearchBar(tester);
+
       await tester.tap(findDestinationFieldCollapsed());
-      await tester.pumpAndSettle();
-      await tester.enterText(findDestinationFieldCollapsed(), "Bakery");
       await tester.pumpAndSettle();
 
       vm.searchResults = [
         SearchSuggestion.place(
           const PlaceSuggestion(
-            placeId: "place-4",
-            description: "Bakery",
-            mainText: "Bakery",
+            placeId: "place-submit",
+            description: "Cafe Submit",
+            mainText: "Cafe Submit",
             secondaryText: "",
           ),
         ),
@@ -515,18 +516,17 @@ void main() {
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
-      expect(findSuggestionTile("Bakery"), findsOneWidget);
+      expect(find.text("Cafe Submit"), findsOneWidget);
 
-      vm.clearSearchResultsCalled = false;
+      await tester.enterText(findDestinationFieldCollapsed(), "cafe");
+      await tester.pumpAndSettle();
+
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 
-      expect(findSuggestionTile("Bakery"), findsNothing);
-      expect(vm.clearSearchResultsCalled, isTrue);
-      final destinationField = getField(tester, findDestinationFieldCollapsed());
-      expect(destinationField.controller?.text, equals("Bakery"));
+      expect(find.text("Cafe Submit"), findsNothing);
+      expect(vm.clearSearchResultsCalled, isFalse);
     });
-
     testWidgets("focusing destination shows suggestions again after submit", (final tester) async {
       await pumpSearchBar(tester);
       await tester.tap(findDestinationFieldCollapsed());

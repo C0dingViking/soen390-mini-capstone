@@ -1,4 +1,6 @@
 import "dart:async";
+import "dart:typed_data";
+import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
@@ -83,6 +85,7 @@ class HomeViewModel extends ChangeNotifier {
 
   List<SearchSuggestion> searchResults = [];
   List<PlaceSuggestion> nearbySearchResults = [];
+  final Map<String, BitmapDescriptor> _nearbyMarkerIcons = {};
   String _searchQuery = "";
   Timer? _searchDebounce;
   SearchField _activeSearchField = SearchField.destination;
@@ -245,6 +248,7 @@ class HomeViewModel extends ChangeNotifier {
         return;
       }
 
+      await _primeNearbyMarkerIcons(nearbyResults);
       nearbySearchResults = nearbyResults;
       final nearbyPlaceIds = nearbyResults.map((final place) => place.placeId).toSet();
       final autocompleteSuggestions = autocompleteResults
@@ -347,7 +351,7 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    if (field == SearchField.destination && startCoordinate == null && place.coordinate != null) {
+    if (field == SearchField.destination && startCoordinate == null) {
       await _applyCurrentLocationAsStart();
     }
 
@@ -855,12 +859,138 @@ class HomeViewModel extends ChangeNotifier {
     myLocationEnabled = true;
   }
 
+  Future<void> _primeNearbyMarkerIcons(final List<PlaceSuggestion> places) async {
+    for (final place in places) {
+      if (_nearbyMarkerIcons.containsKey(place.placeId)) continue;
+      _nearbyMarkerIcons[place.placeId] = await _buildNearbyMarkerIcon(place.mainText);
+    }
+  }
+
+  Future<BitmapDescriptor> _buildNearbyMarkerIcon(final String label) async {
+    const double imageWidth = 260;
+    const double imageHeight = 180;
+    const double pinCircleRadius = 40;
+    const double pinTipHeight = 34;
+    const double pinStrokeWidth = 6;
+    const double labelHorizontalPadding = 20;
+    const double labelVerticalPadding = 14;
+    const double labelTop = 8;
+    const double labelBottomSpacing = 16;
+    const double maxLabelWidth = 220;
+    const double fontSize = 32;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final centerX = imageWidth / 2;
+    final pinTipY = imageHeight - 4;
+    final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
+
+    final displayLabel = _truncateMarkerLabel(label);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: displayLabel,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      maxLines: 1,
+      ellipsis: "…",
+      textDirection: ui.TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: maxLabelWidth);
+
+    final labelWidth = textPainter.width + (labelHorizontalPadding * 2);
+    final labelHeight = textPainter.height + (labelVerticalPadding * 2);
+    final labelLeft = (imageWidth - labelWidth) / 2;
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(labelLeft, labelTop, labelWidth, labelHeight),
+      const Radius.circular(18),
+    );
+
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.18)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawRRect(labelRect.shift(const Offset(0, 4)), shadowPaint);
+
+    final labelPaint = Paint()..color = Colors.white;
+    canvas.drawRRect(labelRect, labelPaint);
+
+    final labelBorderPaint = Paint()
+      ..color = Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawRRect(labelRect, labelBorderPaint);
+
+    final textOffset = Offset(
+      (imageWidth - textPainter.width) / 2,
+      labelTop + ((labelHeight - textPainter.height) / 2),
+    );
+    textPainter.paint(canvas, textOffset);
+
+    final connectorTop = labelTop + labelHeight + labelBottomSpacing;
+    final connectorPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(centerX, connectorTop),
+      Offset(centerX, pinCircleCenter.dy - pinCircleRadius),
+      connectorPaint,
+    );
+
+    final pinShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.22)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(pinCircleCenter + const Offset(0, 4), pinCircleRadius, pinShadowPaint);
+
+    final pinPath = Path()
+      ..moveTo(centerX, pinTipY)
+      ..lineTo(centerX - 20, pinCircleCenter.dy + pinCircleRadius - 4)
+      ..arcToPoint(
+        Offset(centerX + 20, pinCircleCenter.dy + pinCircleRadius - 4),
+        radius: const Radius.circular(18),
+        clockwise: false,
+      )
+      ..close();
+    canvas.drawPath(pinPath.shift(const Offset(0, 4)), pinShadowPaint);
+
+    final pinPaint = Paint()..color = Colors.orange;
+    canvas.drawCircle(pinCircleCenter, pinCircleRadius, pinPaint);
+    canvas.drawPath(pinPath, pinPaint);
+
+    final pinStrokePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = pinStrokeWidth;
+    canvas.drawCircle(pinCircleCenter, pinCircleRadius, pinStrokePaint);
+    canvas.drawPath(pinPath, pinStrokePaint);
+
+    final pinInnerPaint = Paint()..color = Colors.white;
+    canvas.drawCircle(pinCircleCenter, 12, pinInnerPaint);
+
+    final image = await recorder.endRecording().toImage(imageWidth.toInt(), imageHeight.toInt());
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    }
+    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+  }
+
+  String _truncateMarkerLabel(final String label) {
+    final trimmed = label.trim();
+    if (trimmed.length <= 20) return trimmed;
+    return "${trimmed.substring(0, 19).trimRight()}…";
+  }
+
   Set<Marker> _nearbyResultMarkers() {
     return nearbySearchResults.where((final place) => place.coordinate != null).map((final place) {
       final coordinate = place.coordinate!;
       return Marker(
         markerId: MarkerId("nearby-${place.placeId}"),
         position: coordinate.toLatLng(),
+        anchor: const Offset(0.5, 1.0),
         onTap: () async {
           await selectSearchSuggestion(SearchSuggestion.place(place), SearchField.destination);
         },
@@ -868,7 +998,9 @@ class HomeViewModel extends ChangeNotifier {
           title: place.mainText,
           snippet: place.secondaryText.isNotEmpty ? place.secondaryText : null,
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        icon:
+            _nearbyMarkerIcons[place.placeId] ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
       );
     }).toSet();
   }
