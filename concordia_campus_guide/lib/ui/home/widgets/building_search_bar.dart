@@ -69,7 +69,6 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           _keepMarkers = false;
           _showSuggestions = false;
         });
-        viewModel.clearSearchResults();
         return;
       }
 
