@@ -7,6 +7,7 @@ import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
@@ -415,14 +416,17 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                           maxScale: maxMapZoom,
                           boundaryMargin: EdgeInsets.zero,
                           clipBehavior: Clip.hardEdge,
-                          child: CustomPaint(
-                            foregroundPainter: ivm.indoorPath == null
-                                ? null
-                                : _IndoorPathPainter(
+                          child: Stack(
+                            children: [
+                              SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                              if (ivm.indoorPath != null)
+                                Positioned.fill(
+                                  child: _AnimatedIndoorPath(
                                     floorplan: selectedFloorplan,
                                     path: ivm.indoorPath!,
                                   ),
-                            child: SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                                ),
+                            ],
                           ),
                         ),
                       );
@@ -488,49 +492,52 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   }
 }
 
-class _IndoorPathPainter extends CustomPainter {
+// ---------------------------------------------------------------------------
+// Path painter – delegates to IndoorPathPainter (indoor_path_painter.dart)
+// ---------------------------------------------------------------------------
+
+/// Thin StatefulWidget wrapper so we can own an [AnimationController] for
+/// the pulsing start-indicator and hand the resulting [Animation] down to
+/// [IndoorPathPainter].
+class _AnimatedIndoorPath extends StatefulWidget {
   final Floorplan floorplan;
   final List<Point<double>> path;
 
-  _IndoorPathPainter({required this.floorplan, required this.path});
+  const _AnimatedIndoorPath({required this.floorplan, required this.path});
 
   @override
-  void paint(final Canvas canvas, final Size size) {
-    if (path.length < 2 || floorplan.canvasWidth <= 0 || floorplan.canvasHeight <= 0) {
-      return;
-    }
+  State<_AnimatedIndoorPath> createState() => _AnimatedIndoorPathState();
+}
 
-    final inputSize = Size(floorplan.canvasWidth, floorplan.canvasHeight);
-    final fittedSizes = applyBoxFit(BoxFit.contain, inputSize, size);
-    final destinationRect = Alignment.center.inscribe(fittedSizes.destination, Offset.zero & size);
+class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
 
-    Offset svgToCanvas(final Point<double> p) {
-      final dx = destinationRect.left + (p.x / floorplan.canvasWidth) * destinationRect.width;
-      final dy = destinationRect.top + (p.y / floorplan.canvasHeight) * destinationRect.height;
-      return Offset(dx, dy);
-    }
-
-    final paint = Paint()
-      ..color = Colors.blueAccent
-      ..strokeWidth = 3.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final pathShape = Path();
-    final startOffset = svgToCanvas(path.first);
-    pathShape.moveTo(startOffset.dx, startOffset.dy);
-
-    for (final point in path.skip(1)) {
-      final o = svgToCanvas(point);
-      pathShape.lineTo(o.dx, o.dy);
-    }
-
-    canvas.drawPath(pathShape, paint);
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
   }
 
   @override
-  bool shouldRepaint(final _IndoorPathPainter oldDelegate) {
-    return oldDelegate.floorplan != floorplan || oldDelegate.path != path;
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(final BuildContext context) {
+    // CustomPaint with a transparent child so the painter sits on top of the
+    // SVG which is already rendered by the parent CustomPaint.
+    return CustomPaint(
+      painter: IndoorPathPainter(
+        floorplan: widget.floorplan,
+        path: widget.path,
+        pulseAnimation: _pulse,
+      ),
+    );
   }
 }
