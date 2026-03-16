@@ -3,30 +3,23 @@ import "dart:math";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:flutter/material.dart";
 
-/// A [CustomPainter] that renders the indoor navigation path with:
-///   • A dashed/dotted line along the computed route
-///   • A pulsing origin indicator at the start point
-///   • A destination pin marker at the end point
-///
-/// Drop-in replacement for the old `_IndoorPathPainter` inside `indoor_map.dart`.
-/// Pass an [Animation<double>] (0.0 → 1.0, repeating) to drive the pulse on the
-/// start indicator. If [pulseAnimation] is null the indicator is drawn statically.
+
 class IndoorPathPainter extends CustomPainter {
   final Floorplan floorplan;
   final List<Point<double>> path;
 
-  // ── Dash line ──────────────────────────────────────────────────────────────
+
   final Color pathColor;
   final double strokeWidth;
   final double dashLength;
   final double gapLength;
 
-  // ── Start indicator ────────────────────────────────────────────────────────
+  
   final Color startColor;
   final double startRadius;
   final Animation<double>? pulseAnimation;
 
-  // ── End indicator ──────────────────────────────────────────────────────────
+  
   final Color endColor;
   final double pinRadius;
   final double pinStemHeight;
@@ -34,19 +27,19 @@ class IndoorPathPainter extends CustomPainter {
   const IndoorPathPainter({
     required this.floorplan,
     required this.path,
-    this.pathColor = const Color.fromARGB(200, 8, 187, 241), // bright blue
-    this.strokeWidth = 3.5,
+    this.pathColor = const Color.fromARGB(200, 8, 187, 241), 
+    this.strokeWidth = 2.0,
     this.dashLength = 12.0,
-    this.gapLength = 7.0,
-    this.startColor = const Color.fromARGB(200, 8, 187, 241), // vivid green
+    this.gapLength = 10.0,
+    this.startColor = const Color.fromARGB(200, 8, 187, 241), 
     this.startRadius = 7.0,
     this.pulseAnimation,
-    this.endColor = const Color.fromARGB(200, 8, 187, 241), // vivid red
-    this.pinRadius = 9.0,
-    this.pinStemHeight = 14.0,
+    this.endColor = const Color.fromARGB(200, 8, 187, 241), 
+    this.pinRadius = 5.0,
+    this.pinStemHeight = 10.0,
   }) : super(repaint: pulseAnimation);
 
-  // ── Coordinate mapping ─────────────────────────────────────────────────────
+  // Coordinate mapping
 
   Rect _destinationRect(final Size size) {
     final inputSize = Size(floorplan.canvasWidth, floorplan.canvasHeight);
@@ -61,7 +54,7 @@ class IndoorPathPainter extends CustomPainter {
     );
   }
 
-  // ── Paint ──────────────────────────────────────────────────────────────────
+  //Paint
 
   @override
   void paint(final Canvas canvas, final Size size) {
@@ -75,7 +68,7 @@ class IndoorPathPainter extends CustomPainter {
     _drawDestinationPin(canvas, offsets.last);
   }
 
-  // ── Dashed path ────────────────────────────────────────────────────────────
+  // Dashed path 
 
   void _drawDashedPath(final Canvas canvas, final List<Offset> offsets) {
     final paint = Paint()
@@ -85,7 +78,7 @@ class IndoorPathPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Draw a subtle drop-shadow first
+    
     final shadowPaint = Paint()
       ..color = pathColor.withOpacity(0.18)
       ..strokeWidth = strokeWidth + 4
@@ -112,7 +105,7 @@ class IndoorPathPainter extends CustomPainter {
     final segmentLength = sqrt(dx * dx + dy * dy);
     if (segmentLength == 0) return;
 
-    final ux = dx / segmentLength; // unit vector
+    final ux = dx / segmentLength; 
     final uy = dy / segmentLength;
 
     var drawn = 0.0;
@@ -135,74 +128,85 @@ class IndoorPathPainter extends CustomPainter {
     }
   }
 
-  // ── Start indicator ────────────────────────────────────────────────────────
-  //
-  //   • Outer pulsing ring (animated when [pulseAnimation] is provided)
-  //   • Mid ring
-  //   • Inner filled dot
+  // Start indicator 
+  
 
   void _drawStartIndicator(final Canvas canvas, final Offset center) {
-    final pulse = pulseAnimation?.value ?? 0.5;
+  const Color iconColor = Color.fromARGB(200, 8, 187, 241); 
+  
 
-    // Outer pulse ring
-    final pulseRadius = startRadius * (1.4 + pulse * 1.1);
-    final pulseOpacity = (1.0 - pulse) * 0.45;
-    canvas.drawCircle(
-      center,
-      pulseRadius,
-      Paint()
-        ..color = startColor.withOpacity(pulseOpacity)
-        ..style = PaintingStyle.fill,
-    );
+  
 
-    // Mid ring
-    canvas.drawCircle(
-      center,
-      startRadius * 1.55,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill,
-    );
+  const double outerRingRadius = 6.0;
+  const double innerDotRadius = 3.5;
+  const double strokeW = 1.6;
+  const double tickLength = 2.5;
+  const double tickGap = 1.0;
 
-    // Inner dot
-    canvas.drawCircle(
-      center,
-      startRadius,
-      Paint()
-        ..color = startColor
-        ..style = PaintingStyle.fill,
-    );
+  // Outer ring
+  canvas.drawCircle(
+    center,
+    outerRingRadius,
+    Paint()
+      ..color = iconColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeW,
+  );
 
-    // White centre dot
-    canvas.drawCircle(
-      center,
-      startRadius * 0.38,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill,
-    );
-  }
+  // Inner filled dot
+  canvas.drawCircle(
+    center,
+    innerDotRadius,
+    Paint()
+      ..color = iconColor
+      ..style = PaintingStyle.fill,
+  );
 
-  // ── Destination pin ────────────────────────────────────────────────────────
-  //
-  //   Classic teardrop map-pin: filled circle on top, pointed stem below,
-  //   white inner circle for contrast, drawn so the tip sits at [tip].
+  // Four crosshair ticks (top, bottom, left, right)
+  final tickPaint = Paint()
+    ..color = iconColor
+    ..strokeWidth = strokeW
+    ..strokeCap = StrokeCap.square;
+
+  final tickStart = outerRingRadius + tickGap;
+  final tickEnd = tickStart + tickLength;
+
+  // Top
+  canvas.drawLine(
+    Offset(center.dx, center.dy - tickStart),
+    Offset(center.dx, center.dy - tickEnd),
+    tickPaint,
+  );
+  // Bottom
+  canvas.drawLine(
+    Offset(center.dx, center.dy + tickStart),
+    Offset(center.dx, center.dy + tickEnd),
+    tickPaint,
+  );
+  // Left
+  canvas.drawLine(
+    Offset(center.dx - tickStart, center.dy),
+    Offset(center.dx - tickEnd, center.dy),
+    tickPaint,
+  );
+  // Right
+  canvas.drawLine(
+    Offset(center.dx + tickStart, center.dy),
+    Offset(center.dx + tickEnd, center.dy),
+    tickPaint,
+  );
+}
+
+  //  Destination pin
+  
 
   void _drawDestinationPin(final Canvas canvas, final Offset tip) {
-    // The circle centre sits `pinStemHeight` above the tip.
+    
     final circleCenter = tip.translate(0, -(pinRadius + pinStemHeight));
 
-    // Drop shadow
-    canvas.drawCircle(
-      circleCenter.translate(0, 2),
-      pinRadius + 1,
-      Paint()
-        ..color = Colors.black.withOpacity(0.22)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
-        ..style = PaintingStyle.fill,
-    );
+    
 
-    // Stem (triangle from circle bottom to tip)
+    // Triangle Part
     final stemPath = Path()
       ..moveTo(circleCenter.dx - pinRadius * 0.45, circleCenter.dy + pinRadius * 0.75)
       ..lineTo(tip.dx, tip.dy)
@@ -211,17 +215,10 @@ class IndoorPathPainter extends CustomPainter {
 
     canvas.drawPath(stemPath, Paint()..color = endColor);
 
-    // Circle body
+    // Circle
     canvas.drawCircle(circleCenter, pinRadius, Paint()..color = endColor);
 
-    // White inner ring
-    canvas.drawCircle(
-      circleCenter,
-      pinRadius * 0.48,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill,
-    );
+    
   }
 
   @override

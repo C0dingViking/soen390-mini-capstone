@@ -5,6 +5,25 @@ import "package:xml/xml.dart";
 
 const String _inkscapeLabelRoot = "inkscape:label";
 
+enum TransitionType { stairs, elevator, escalator }
+
+
+class FloorTransition {
+  final String id;
+  final Point<double> location;
+  final TransitionType type;
+  
+ 
+
+  const FloorTransition({
+    required this.id,
+    required this.location,
+    required this.type,
+    
+  });
+}
+
+
 class Corridor {
   final List<Point<double>> bounds;
 
@@ -82,6 +101,7 @@ class Floorplan {
   late List<IndoorMapRoom> rooms;
   late List<PointOfInterest> pois;
   late List<Corridor> corridors;
+  final List<FloorTransition> transitions;
 
   Floorplan({
     required this.buildingId,
@@ -92,6 +112,7 @@ class Floorplan {
     this.rooms = const [],
     this.pois = const [],
     this.corridors = const [],
+    this.transitions = const [],
   });
 
   factory Floorplan.fromXml(
