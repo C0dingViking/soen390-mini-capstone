@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:typed_data";
 import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
@@ -867,17 +866,17 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<BitmapDescriptor> _buildNearbyMarkerIcon(final String label) async {
-    const double imageWidth = 260;
-    const double imageHeight = 180;
-    const double pinCircleRadius = 40;
-    const double pinTipHeight = 34;
-    const double pinStrokeWidth = 6;
-    const double labelHorizontalPadding = 20;
-    const double labelVerticalPadding = 14;
-    const double labelTop = 8;
-    const double labelBottomSpacing = 16;
-    const double maxLabelWidth = 220;
-    const double fontSize = 32;
+    const double imageWidth = 140;
+    const double imageHeight = 150;
+    const double pinCircleRadius = 20;
+    const double pinTipHeight = 24;
+    const double pinStrokeWidth = 3;
+    const double labelHorizontalPadding = 10;
+    const double labelVerticalPadding = 6;
+    const double labelTop = 4;
+    const double labelBottomSpacing = 0;
+    const double maxLabelWidth = 110;
+    const double fontSize = 14;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -906,13 +905,13 @@ class HomeViewModel extends ChangeNotifier {
     final labelLeft = (imageWidth - labelWidth) / 2;
     final labelRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(labelLeft, labelTop, labelWidth, labelHeight),
-      const Radius.circular(18),
+      const Radius.circular(14),
     );
 
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.18)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawRRect(labelRect.shift(const Offset(0, 4)), shadowPaint);
+    final labelShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.16)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRRect(labelRect.shift(const Offset(0, 2)), labelShadowPaint);
 
     final labelPaint = Paint()..color = Colors.white;
     canvas.drawRRect(labelRect, labelPaint);
@@ -920,7 +919,7 @@ class HomeViewModel extends ChangeNotifier {
     final labelBorderPaint = Paint()
       ..color = Colors.black12
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 1;
     canvas.drawRRect(labelRect, labelBorderPaint);
 
     final textOffset = Offset(
@@ -930,52 +929,94 @@ class HomeViewModel extends ChangeNotifier {
     textPainter.paint(canvas, textOffset);
 
     final connectorTop = labelTop + labelHeight + labelBottomSpacing;
+    final connectorBottom = pinCircleCenter.dy - pinCircleRadius - 2;
+
+    final connectorShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawLine(
+      Offset(centerX, connectorTop + 2),
+      Offset(centerX, connectorBottom + 2),
+      connectorShadowPaint,
+    );
+
     final connectorPaint = Paint()
       ..color = Colors.white
-      ..strokeWidth = 6
+      ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
       Offset(centerX, connectorTop),
-      Offset(centerX, pinCircleCenter.dy - pinCircleRadius),
+      Offset(centerX, connectorBottom),
       connectorPaint,
     );
 
     final pinShadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.22)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-    canvas.drawCircle(pinCircleCenter + const Offset(0, 4), pinCircleRadius, pinShadowPaint);
+      ..color = Colors.black.withValues(alpha: 0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final pinPathShadow = Path()
+      ..moveTo(centerX, pinTipY + 3)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
+      ..arcToPoint(
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX,
+        pinTipY + 3,
+      )
+      ..close();
+    canvas.drawPath(pinPathShadow, pinShadowPaint);
 
     final pinPath = Path()
       ..moveTo(centerX, pinTipY)
-      ..lineTo(centerX - 20, pinCircleCenter.dy + pinCircleRadius - 4)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
       ..arcToPoint(
-        Offset(centerX + 20, pinCircleCenter.dy + pinCircleRadius - 4),
-        radius: const Radius.circular(18),
-        clockwise: false,
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX,
+        pinTipY,
       )
       ..close();
-    canvas.drawPath(pinPath.shift(const Offset(0, 4)), pinShadowPaint);
 
     final pinPaint = Paint()..color = Colors.orange;
-    canvas.drawCircle(pinCircleCenter, pinCircleRadius, pinPaint);
     canvas.drawPath(pinPath, pinPaint);
 
     final pinStrokePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = pinStrokeWidth;
-    canvas.drawCircle(pinCircleCenter, pinCircleRadius, pinStrokePaint);
     canvas.drawPath(pinPath, pinStrokePaint);
 
-    final pinInnerPaint = Paint()..color = Colors.white;
-    canvas.drawCircle(pinCircleCenter, 12, pinInnerPaint);
+    final innerCirclePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(pinCircleCenter, 8, innerCirclePaint);
 
     final image = await recorder.endRecording().toImage(imageWidth.toInt(), imageHeight.toInt());
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     if (data == null) {
       return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
-    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+    return BitmapDescriptor.bytes(data.buffer.asUint8List());
   }
 
   String _truncateMarkerLabel(final String label) {
