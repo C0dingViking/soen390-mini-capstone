@@ -127,22 +127,19 @@ class _IndoorGraph {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Single-floor path segment used in multi-floor routes
-// ---------------------------------------------------------------------------
 
-/// Represents the path on a single floor as part of a multi-floor route.
 class IndoorFloorPathSegment {
-  /// The floor number this segment belongs to.
+  
   final int floorNumber;
 
-  /// Ordered list of points forming the path on this floor.
+  
   final List<Point<double>> path;
 
-  /// The transition used to leave this floor (null for the final segment).
+  
   final FloorTransition? exitTransition;
 
-  /// The transition used to enter this floor (null for the first segment).
+  
   final FloorTransition? entryTransition;
 
   const IndoorFloorPathSegment({
@@ -215,29 +212,9 @@ extension FloorplanPathfinding on Floorplan {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Inter-floor pathfinding
-// ---------------------------------------------------------------------------
 
-/// Computes a multi-floor route between rooms on different floors.
-///
-/// The algorithm:
-/// 1. Finds transitions shared between the start and destination floors
-///    (matched by [FloorTransition.groupTag]).
-/// 2. For each candidate transition pair, computes the path on the start floor
-///    (start room → transition) and the path on the destination floor
-///    (transition → destination room).
-/// 3. Picks the pair with the smallest combined path cost.
-///
-/// For routes spanning more than two floors (e.g. floor 1 → floor 3), the
-/// method chains through intermediate floors by finding a transition that
-/// connects each consecutive floor pair.
-///
-/// Returns a list of [IndoorFloorPathSegment]s, one per floor traversed,
-/// in order from start to destination.
-///
-/// Throws [StateError] if no connecting transitions exist between the
-/// required floors.
+// Inter-floor pathfinding
+
 List<IndoorFloorPathSegment> computeInterFloorPath({
   required final Map<int, Floorplan> floorplans,
   required final int startFloor,
@@ -247,7 +224,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   final TransitionType? preferredTransitionType,
 }) {
   if (startFloor == destinationFloor) {
-    // Same-floor case: delegate to the existing single-floor pathfinding.
+    
     final floorplan = floorplans[startFloor]!;
     final path = floorplan.shortestPathBetweenRooms(startRoom, destinationRoom);
     return [
@@ -272,7 +249,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     );
   }
 
-  // Build segments floor-by-floor.
+  // Build segments floor by floor.
   final List<IndoorFloorPathSegment> segments = [];
   Point<double> currentStartPoint = startRoom.doorLocation;
 
@@ -282,7 +259,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     final currentFloorplan = floorplans[currentFloorNum]!;
     final nextFloorplan = floorplans[nextFloorNum]!;
 
-    // Find matching transition pairs between these two floors.
+    // Find matching transition pairs between these floors 
     final candidates = _findMatchingTransitions(
       currentFloorplan.transitions,
       nextFloorplan.transitions,
@@ -296,7 +273,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       );
     }
 
-    // Evaluate each candidate pair and pick the shortest combined path.
+    
     _TransitionCandidate? bestCandidate;
     List<Point<double>>? bestPath;
     double bestCost = double.infinity;
@@ -314,7 +291,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
           bestCandidate = candidate;
         }
       } on StateError {
-        // This transition isn't reachable; try the next candidate.
+        
         continue;
       }
     }
@@ -333,15 +310,15 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       entryTransition: i > 0 ? segments.last.exitTransition : null,
     ));
 
-    // The start point on the next floor is the matching transition's location.
+    
     currentStartPoint = bestCandidate.toTransition.location;
   }
 
-  // Final segment: from the transition on the destination floor to the destination room.
+  // Final segment
   final destFloorplan = floorplans[destinationFloor]!;
   final lastExitTransition = segments.last.exitTransition!;
 
-  // Find the corresponding entry transition on the destination floor.
+ 
   final entryTransition = destFloorplan.transitions.firstWhere(
     (final t) => t.groupTag == lastExitTransition.groupTag,
     orElse: () => throw StateError(
@@ -358,7 +335,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       FloorTransition(
         id: "dest-room",
         location: destinationRoom.doorLocation,
-        type: TransitionType.stairs, // type doesn't matter for pathfinding
+        type: TransitionType.stairs,
         groupTag: "",
       ),
     );
@@ -377,9 +354,9 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   return segments;
 }
 
-// ---------------------------------------------------------------------------
+
 // Inter-floor helpers
-// ---------------------------------------------------------------------------
+
 
 class _TransitionCandidate {
   final FloorTransition fromTransition;
@@ -391,10 +368,7 @@ class _TransitionCandidate {
   });
 }
 
-/// Finds transition pairs that connect two floors by matching [groupTag].
-///
-/// If [preferredType] is specified, transitions of that type are returned
-/// first. Other types are still included as fallbacks.
+/// Finds transition pairs that connect two floors by matching
 List<_TransitionCandidate> _findMatchingTransitions(
   final List<FloorTransition> fromFloorTransitions,
   final List<FloorTransition> toFloorTransitions,
@@ -437,9 +411,9 @@ double _pathLength(final List<Point<double>> path) {
   return total;
 }
 
-// ---------------------------------------------------------------------------
-// Graph construction helpers (unchanged)
-// ---------------------------------------------------------------------------
+
+// Graph construction helpers 
+
 
 /// Euclidean distance between two points.
 double _euclideanDistance(final Point<double> a, final Point<double> b) {
