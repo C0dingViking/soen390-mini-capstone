@@ -290,14 +290,6 @@ class Floorplan {
     return pois;
   }
 
-  /// Parses floor transition points from the POI layer.
-  ///
-  /// Transitions are identified by POI types that represent vertical movement
-  /// (stairs, elevator, escalator). The groupTag is derived from the POI label
-  /// so that matching transitions across floors share the same tag.
-  ///
-  /// Expected SVG label format: `elevator-1`, `stairs-2`, `escalatorUp-1`, etc.
-  /// The groupTag becomes the type + instance number, e.g. "elevator-1".
   List<FloorTransition> _parseTransitionData(
     final String buildingId,
     final int floorNumber,
