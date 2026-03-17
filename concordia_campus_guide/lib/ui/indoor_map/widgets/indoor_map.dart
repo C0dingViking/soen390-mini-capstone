@@ -6,8 +6,8 @@ import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
-import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
@@ -263,7 +263,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   void _showFloorPicker(final BuildContext context) {
     final ivm = context.read<IndoorViewModel>();
     if (ivm.availableFloors == null || ivm.availableFloors!.isEmpty) {
-      // should be impossible to reach as this page doesn't open with at least one floorplan
+      // should be impossible to reach (needs floorplan)
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("No floor plans available for this building.")));
@@ -407,9 +407,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Offset(normalizedX * floorplan.canvasWidth, normalizedY * floorplan.canvasHeight);
   }
 
-  // -------------------------------------------------------------------------
-  // Helper: human-readable label for a transition type
-  // -------------------------------------------------------------------------
+  // label for a transition type
+  
   String _transitionLabel(final FloorTransition transition) {
     switch (transition.type) {
       case TransitionType.elevator:
@@ -421,16 +420,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Widget: inter-floor segment navigation bar
-  // -------------------------------------------------------------------------
+  
+  // inter-floor segment navigation bar
+  
   Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
     final segment = ivm.currentSegment;
     if (segment == null) {
       return const SizedBox.shrink();
     }
 
-    // Build the description text.
+    // description text.
     String description;
     if (segment.entryTransition != null && segment.exitTransition != null) {
       description =
@@ -452,11 +451,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color.fromARGB(200, 8, 187, 241),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-        ],
+        
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -468,6 +465,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             tooltip: "Previous floor",
+            color: Colors.white,
           ),
           const SizedBox(width: 8),
 
@@ -481,14 +479,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12, color: Colors.white,),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
+                  
                 ),
               ],
             ),
@@ -502,6 +502,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             tooltip: "Next floor",
+            color: Colors.white,
           ),
         ],
       ),
@@ -576,7 +577,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  top: 0.0, // align in the top-left most corner
+                  top: 0.0, 
                   child: SafeArea(
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
@@ -628,7 +629,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 // Inter-floor segment navigation bar
                 if (ivm.isInterFloorRoute)
                   Positioned(
-                    bottom: floorPickerSpacing + 64, // above the floor picker
+                    bottom: floorPickerSpacing + 64, 
                     left: floorPickerSpacing,
                     right: floorPickerSpacing,
                     child: SafeArea(
@@ -646,13 +647,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Path painter – delegates to IndoorPathPainter (indoor_path_painter.dart)
-// ---------------------------------------------------------------------------
 
-/// Thin StatefulWidget wrapper so we can own an [AnimationController] for
-/// the pulsing start-indicator and hand the resulting [Animation] down to
-/// [IndoorPathPainter].
+// Path painter – delegates to Indoor_Path_Painter.dart
+
+
+
 class _AnimatedIndoorPath extends StatefulWidget {
   final Floorplan floorplan;
   final List<Point<double>> path;
@@ -684,8 +683,7 @@ class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
 
   @override
   Widget build(final BuildContext context) {
-    // CustomPaint with a transparent child so the painter sits on top of the
-    // SVG which is already rendered by the parent CustomPaint.
+    
     return CustomPaint(
       painter: IndoorPathPainter(
         floorplan: widget.floorplan,

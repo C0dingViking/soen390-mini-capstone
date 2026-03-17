@@ -192,4 +192,310 @@ void main() {
       expect(() => PoiType.fromString("unknown-type"), throwsArgumentError);
     });
   });
+
+  // =========================================================================
+  // FloorTransition model
+  // =========================================================================
+
+  group("FloorTransition", () {
+    test("stores all fields including groupTag", () {
+      const t = FloorTransition(
+        id: "h1-elevator-1",
+        location: Point(100.0, 200.0),
+        type: TransitionType.elevator,
+        groupTag: "elevator-1",
+      );
+
+      expect(t.id, "h1-elevator-1");
+      expect(t.location, const Point(100.0, 200.0));
+      expect(t.type, TransitionType.elevator);
+      expect(t.groupTag, "elevator-1");
+    });
+  });
+
+  group("TransitionType", () {
+    test("has three values", () {
+      expect(TransitionType.values.length, 3);
+      expect(TransitionType.values, contains(TransitionType.stairs));
+      expect(TransitionType.values, contains(TransitionType.elevator));
+      expect(TransitionType.values, contains(TransitionType.escalator));
+    });
+  });
+
+  // =========================================================================
+  // Floorplan.transitions field
+  // =========================================================================
+
+  group("Floorplan transitions field", () {
+    test("defaults to empty list", () {
+      final fp = Floorplan(
+        buildingId: "h",
+        floorNumber: 1,
+        svgPath: "test.svg",
+      );
+      expect(fp.transitions, isEmpty);
+    });
+
+    test("can be set via constructor", () {
+      final fp = Floorplan(
+        buildingId: "h",
+        floorNumber: 1,
+        svgPath: "test.svg",
+        transitions: [
+          const FloorTransition(
+            id: "h1-stairs-1",
+            location: Point(50.0, 50.0),
+            type: TransitionType.stairs,
+            groupTag: "stairs-1",
+          ),
+          const FloorTransition(
+            id: "h1-elevator-1",
+            location: Point(150.0, 50.0),
+            type: TransitionType.elevator,
+            groupTag: "elevator-1",
+          ),
+        ],
+      );
+
+      expect(fp.transitions.length, 2);
+      expect(fp.transitions[0].groupTag, "stairs-1");
+      expect(fp.transitions[1].groupTag, "elevator-1");
+    });
+
+    test("transitions can be reassigned (late field)", () {
+      final fp = Floorplan(
+        buildingId: "h",
+        floorNumber: 1,
+        svgPath: "test.svg",
+      );
+
+      fp.transitions = [
+        const FloorTransition(
+          id: "h1-escalator-1",
+          location: Point(75.0, 75.0),
+          type: TransitionType.escalator,
+          groupTag: "escalator-1",
+        ),
+      ];
+
+      expect(fp.transitions.length, 1);
+      expect(fp.transitions.first.type, TransitionType.escalator);
+    });
+  });
+
+  // =========================================================================
+  // Transition parsing from SVG via fromXml
+  // =========================================================================
+
+  group("Floorplan.fromXml transition parsing", () {
+    test("parses stairs transitions from POI layer", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h1-stairs-1" cx="100" cy="50" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="stairs-1" x="90" y="40" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 1);
+      expect(floorplan.transitions[0].type, TransitionType.stairs);
+      expect(floorplan.transitions[0].groupTag, "stairs-1");
+      expect(floorplan.transitions[0].location, const Point(100.0, 50.0));
+    });
+
+    test("parses elevator transitions from POI layer", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h2-elevator-1" cx="200" cy="100" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="elevator-1" x="190" y="90" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 2, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 1);
+      expect(floorplan.transitions[0].type, TransitionType.elevator);
+      expect(floorplan.transitions[0].groupTag, "elevator-1");
+    });
+
+    test("parses escalatorUp and escalatorDown with same canonical group", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h1-escalatorUp-1" cx="50" cy="50" rx="5" ry="5" />
+    <ellipse inkscape:label="door-h1-escalatorDown-1" cx="70" cy="50" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="escalatorUp-1" x="40" y="40" width="20" height="20" />
+    <rect inkscape:label="escalatorDown-1" x="60" y="40" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 2);
+      expect(floorplan.transitions[0].type, TransitionType.escalator);
+      expect(floorplan.transitions[1].type, TransitionType.escalator);
+      expect(floorplan.transitions[0].groupTag, "escalator-1");
+      expect(floorplan.transitions[1].groupTag, "escalator-1");
+    });
+
+    test("parses stairsUp and stairsDown with same canonical group", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h3-stairsUp-2" cx="120" cy="60" rx="5" ry="5" />
+    <ellipse inkscape:label="door-h3-stairsDown-2" cx="140" cy="60" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="stairsUp-2" x="110" y="50" width="20" height="20" />
+    <rect inkscape:label="stairsDown-2" x="130" y="50" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 3, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 2);
+      expect(floorplan.transitions[0].type, TransitionType.stairs);
+      expect(floorplan.transitions[1].type, TransitionType.stairs);
+      expect(floorplan.transitions[0].groupTag, "stairs-2");
+      expect(floorplan.transitions[1].groupTag, "stairs-2");
+    });
+
+    test("ignores non-transition POIs when parsing transitions", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h1-washroomMale-1" cx="50" cy="50" rx="5" ry="5" />
+    <ellipse inkscape:label="door-h1-stairs-1" cx="200" cy="50" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="washroomMale-1" x="40" y="40" width="20" height="20" />
+    <rect inkscape:label="stairs-1" x="190" y="40" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 1);
+      expect(floorplan.transitions[0].groupTag, "stairs-1");
+
+      // washroomMale should still appear in pois.
+      expect(floorplan.pois.length, 2);
+    });
+
+    test("parses multiple different transition types on same floor", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors">
+    <ellipse inkscape:label="door-h1-stairs-1" cx="50" cy="50" rx="5" ry="5" />
+    <ellipse inkscape:label="door-h1-elevator-1" cx="150" cy="50" rx="5" ry="5" />
+    <ellipse inkscape:label="door-h1-escalatorUp-1" cx="250" cy="50" rx="5" ry="5" />
+  </g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="stairs-1" x="40" y="40" width="20" height="20" />
+    <rect inkscape:label="elevator-1" x="140" y="40" width="20" height="20" />
+    <rect inkscape:label="escalatorUp-1" x="240" y="40" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+
+      expect(floorplan.transitions.length, 3);
+
+      final types = floorplan.transitions.map((final t) => t.type).toSet();
+      expect(types, containsAll([
+        TransitionType.stairs,
+        TransitionType.elevator,
+        TransitionType.escalator,
+      ]));
+
+      final groups = floorplan.transitions.map((final t) => t.groupTag).toSet();
+      expect(groups, containsAll(["stairs-1", "elevator-1", "escalator-1"]));
+    });
+
+    test("returns empty transitions when no transition POIs exist", () {
+      const xmlString = '''
+<svg>
+  <g inkscape:label="rooms"></g>
+  <g inkscape:label="connectors"></g>
+  <g inkscape:label="points-of-interest">
+    <rect inkscape:label="washroomMale-1" x="40" y="40" width="20" height="20" />
+  </g>
+  <g inkscape:label="walkable"></g>
+</svg>
+''';
+
+      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      expect(floorplan.transitions, isEmpty);
+    });
+  });
+
+  // =========================================================================
+  // groupTag conventions
+  // =========================================================================
+
+  group("groupTag conventions", () {
+    test("different types produce different groups", () {
+      const stairsGroup = "stairs-1";
+      const elevatorGroup = "elevator-1";
+      const escalatorGroup = "escalator-1";
+
+      expect({stairsGroup, elevatorGroup, escalatorGroup}.length, 3);
+    });
+
+    test("different instance numbers produce different groups", () {
+      const stairs1 = "stairs-1";
+      const stairs2 = "stairs-2";
+
+      expect(stairs1, isNot(equals(stairs2)));
+    });
+  });
+
+  // =========================================================================
+  // PoiType.fromString for transition-related types
+  // =========================================================================
+
+  group("PoiType.fromString transition types", () {
+    test("parses stairsUp", () {
+      expect(PoiType.fromString("stairsUp"), PoiType.stairsUp);
+    });
+
+    test("parses stairsDown", () {
+      expect(PoiType.fromString("stairsDown"), PoiType.stairsDown);
+    });
+
+    test("parses escalatorUp", () {
+      expect(PoiType.fromString("escalatorUp"), PoiType.escalatorUp);
+    });
+
+    test("parses escalatorDown", () {
+      expect(PoiType.fromString("escalatorDown"), PoiType.escalatorDown);
+    });
+  });
 }
