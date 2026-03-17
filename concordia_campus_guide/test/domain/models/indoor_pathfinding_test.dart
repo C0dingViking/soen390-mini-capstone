@@ -180,36 +180,38 @@ void main() {
   // Helpers for inter-floor tests
   // =========================================================================
 
-  Corridor rectCorridor(double x1, double y1, double x2, double y2) {
-    return Corridor(bounds: [
-      Point<double>(x1, y1),
-      Point<double>(x2, y1),
-      Point<double>(x2, y2),
-      Point<double>(x1, y2),
-    ]);
+  Corridor rectCorridor(final double x1, final double y1, final double x2, final double y2) {
+    return Corridor(
+      bounds: [
+        Point<double>(x1, y1),
+        Point<double>(x2, y1),
+        Point<double>(x2, y2),
+        Point<double>(x1, y2),
+      ],
+    );
   }
 
   Floorplan makeFloorplan({
-    required int floorNumber,
-    required List<Corridor> corridors,
-    List<IndoorMapRoom> rooms = const [],
-    List<FloorTransition> transitions = const [],
-    String buildingId = "h",
+    required final int floorNumber,
+    required final List<Corridor> corridors,
+    final List<IndoorMapRoom> rooms = const [],
+    final List<FloorTransition> transitions = const [],
+    final String buildingId = "h",
   }) {
     return Floorplan(
-      buildingId: buildingId,
-      floorNumber: floorNumber,
-      svgPath: "assets/maps/$buildingId$floorNumber.svg",
-      canvasWidth: 1000,
-      canvasHeight: 800,
-    )
+        buildingId: buildingId,
+        floorNumber: floorNumber,
+        svgPath: "assets/maps/$buildingId$floorNumber.svg",
+        canvasWidth: 1000,
+        canvasHeight: 800,
+      )
       ..rooms = rooms
       ..corridors = corridors
       ..transitions = transitions
       ..pois = [];
   }
 
-  IndoorMapRoom makeRoom(String name, Point<double> door) {
+  IndoorMapRoom makeRoom(final String name, final Point<double> door) {
     return IndoorMapRoom(
       name: name,
       doorLocation: door,
@@ -242,10 +244,7 @@ void main() {
         transitions: [transition],
       );
 
-      final path = floorplan.shortestPathToTransition(
-        const Point<double>(20, 25),
-        transition,
-      );
+      final path = floorplan.shortestPathToTransition(const Point<double>(20, 25), transition);
 
       expect(path, isNotEmpty);
       expect(path.first.x, closeTo(20, 1));
@@ -262,11 +261,7 @@ void main() {
         groupTag: "stairs-1",
       );
 
-      final floorplan = makeFloorplan(
-        floorNumber: 1,
-        corridors: [],
-        transitions: [transition],
-      );
+      final floorplan = makeFloorplan(floorNumber: 1, corridors: [], transitions: [transition]);
 
       expect(
         () => floorplan.shortestPathToTransition(const Point<double>(10, 25), transition),
@@ -556,10 +551,7 @@ void main() {
     });
 
     test("exit and entry transitions default to null", () {
-      final segment = IndoorFloorPathSegment(
-        floorNumber: 1,
-        path: [const Point<double>(0, 0)],
-      );
+      final segment = IndoorFloorPathSegment(floorNumber: 1, path: [const Point<double>(0, 0)]);
 
       expect(segment.exitTransition, isNull);
       expect(segment.entryTransition, isNull);

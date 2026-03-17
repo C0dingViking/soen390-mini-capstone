@@ -3,23 +3,19 @@ import "dart:math";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:flutter/material.dart";
 
-
 class IndoorPathPainter extends CustomPainter {
   final Floorplan floorplan;
   final List<Point<double>> path;
-
 
   final Color pathColor;
   final double strokeWidth;
   final double dashLength;
   final double gapLength;
 
-  
   final Color startColor;
   final double startRadius;
   final Animation<double>? pulseAnimation;
 
-  
   final Color endColor;
   final double pinRadius;
   final double pinStemHeight;
@@ -27,14 +23,14 @@ class IndoorPathPainter extends CustomPainter {
   const IndoorPathPainter({
     required this.floorplan,
     required this.path,
-    this.pathColor = const Color.fromARGB(200, 8, 187, 241), 
+    this.pathColor = const Color.fromARGB(200, 8, 187, 241),
     this.strokeWidth = 2.0,
     this.dashLength = 12.0,
     this.gapLength = 10.0,
-    this.startColor = const Color.fromARGB(200, 8, 187, 241), 
+    this.startColor = const Color.fromARGB(200, 8, 187, 241),
     this.startRadius = 7.0,
     this.pulseAnimation,
-    this.endColor = const Color.fromARGB(200, 8, 187, 241), 
+    this.endColor = const Color.fromARGB(200, 8, 187, 241),
     this.pinRadius = 5.0,
     this.pinStemHeight = 10.0,
   }) : super(repaint: pulseAnimation);
@@ -61,14 +57,14 @@ class IndoorPathPainter extends CustomPainter {
     if (path.length < 2 || floorplan.canvasWidth <= 0 || floorplan.canvasHeight <= 0) return;
 
     final rect = _destinationRect(size);
-    final offsets = path.map((p) => _svgToCanvas(p, rect)).toList(growable: false);
+    final offsets = path.map((final p) => _svgToCanvas(p, rect)).toList(growable: false);
 
     _drawDashedPath(canvas, offsets);
     _drawStartIndicator(canvas, offsets.first);
     _drawDestinationPin(canvas, offsets.last);
   }
 
-  // Dashed path 
+  // Dashed path
 
   void _drawDashedPath(final Canvas canvas, final List<Offset> offsets) {
     final paint = Paint()
@@ -78,9 +74,8 @@ class IndoorPathPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    
     final shadowPaint = Paint()
-      ..color = pathColor.withOpacity(0.18)
+      ..color = pathColor.withValues(alpha: .18)
       ..strokeWidth = strokeWidth + 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -94,18 +89,13 @@ class IndoorPathPainter extends CustomPainter {
     }
   }
 
-  void _drawDashedSegment(
-    final Canvas canvas,
-    final Offset a,
-    final Offset b,
-    final Paint paint,
-  ) {
+  void _drawDashedSegment(final Canvas canvas, final Offset a, final Offset b, final Paint paint) {
     final dx = b.dx - a.dx;
     final dy = b.dy - a.dy;
     final segmentLength = sqrt(dx * dx + dy * dy);
     if (segmentLength == 0) return;
 
-    final ux = dx / segmentLength; 
+    final ux = dx / segmentLength;
     final uy = dy / segmentLength;
 
     var drawn = 0.0;
@@ -128,83 +118,75 @@ class IndoorPathPainter extends CustomPainter {
     }
   }
 
-  // Start indicator 
-  
+  // Start indicator
 
   void _drawStartIndicator(final Canvas canvas, final Offset center) {
-  const Color iconColor = Color.fromARGB(200, 8, 187, 241); 
-  
+    const Color iconColor = Color.fromARGB(200, 8, 187, 241);
 
-  
+    const double outerRingRadius = 6.0;
+    const double innerDotRadius = 3.5;
+    const double strokeW = 1.6;
+    const double tickLength = 2.5;
+    const double tickGap = 1.0;
 
-  const double outerRingRadius = 6.0;
-  const double innerDotRadius = 3.5;
-  const double strokeW = 1.6;
-  const double tickLength = 2.5;
-  const double tickGap = 1.0;
+    // Outer ring
+    canvas.drawCircle(
+      center,
+      outerRingRadius,
+      Paint()
+        ..color = iconColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW,
+    );
 
-  // Outer ring
-  canvas.drawCircle(
-    center,
-    outerRingRadius,
-    Paint()
+    // Inner filled dot
+    canvas.drawCircle(
+      center,
+      innerDotRadius,
+      Paint()
+        ..color = iconColor
+        ..style = PaintingStyle.fill,
+    );
+
+    // Four crosshair ticks (top, bottom, left, right)
+    final tickPaint = Paint()
       ..color = iconColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeW,
-  );
+      ..strokeWidth = strokeW
+      ..strokeCap = StrokeCap.square;
 
-  // Inner filled dot
-  canvas.drawCircle(
-    center,
-    innerDotRadius,
-    Paint()
-      ..color = iconColor
-      ..style = PaintingStyle.fill,
-  );
+    final tickStart = outerRingRadius + tickGap;
+    final tickEnd = tickStart + tickLength;
 
-  // Four crosshair ticks (top, bottom, left, right)
-  final tickPaint = Paint()
-    ..color = iconColor
-    ..strokeWidth = strokeW
-    ..strokeCap = StrokeCap.square;
-
-  final tickStart = outerRingRadius + tickGap;
-  final tickEnd = tickStart + tickLength;
-
-  // Top
-  canvas.drawLine(
-    Offset(center.dx, center.dy - tickStart),
-    Offset(center.dx, center.dy - tickEnd),
-    tickPaint,
-  );
-  // Bottom
-  canvas.drawLine(
-    Offset(center.dx, center.dy + tickStart),
-    Offset(center.dx, center.dy + tickEnd),
-    tickPaint,
-  );
-  // Left
-  canvas.drawLine(
-    Offset(center.dx - tickStart, center.dy),
-    Offset(center.dx - tickEnd, center.dy),
-    tickPaint,
-  );
-  // Right
-  canvas.drawLine(
-    Offset(center.dx + tickStart, center.dy),
-    Offset(center.dx + tickEnd, center.dy),
-    tickPaint,
-  );
-}
+    // Top
+    canvas.drawLine(
+      Offset(center.dx, center.dy - tickStart),
+      Offset(center.dx, center.dy - tickEnd),
+      tickPaint,
+    );
+    // Bottom
+    canvas.drawLine(
+      Offset(center.dx, center.dy + tickStart),
+      Offset(center.dx, center.dy + tickEnd),
+      tickPaint,
+    );
+    // Left
+    canvas.drawLine(
+      Offset(center.dx - tickStart, center.dy),
+      Offset(center.dx - tickEnd, center.dy),
+      tickPaint,
+    );
+    // Right
+    canvas.drawLine(
+      Offset(center.dx + tickStart, center.dy),
+      Offset(center.dx + tickEnd, center.dy),
+      tickPaint,
+    );
+  }
 
   //  Destination pin
-  
 
   void _drawDestinationPin(final Canvas canvas, final Offset tip) {
-    
     final circleCenter = tip.translate(0, -(pinRadius + pinStemHeight));
-
-    
 
     // Triangle Part
     final stemPath = Path()
@@ -217,8 +199,6 @@ class IndoorPathPainter extends CustomPainter {
 
     // Circle
     canvas.drawCircle(circleCenter, pinRadius, Paint()..color = endColor);
-
-    
   }
 
   @override

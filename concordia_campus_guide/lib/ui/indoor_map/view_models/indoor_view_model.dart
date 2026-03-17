@@ -18,42 +18,32 @@ class IndoorViewModel extends ChangeNotifier {
   Floorplan? selectedFloorplan;
 
   /// The path displayed on the currently selected floor.
-  
+
   List<Point<double>>? indoorPath;
 
-  
   List<IndoorFloorPathSegment>? _interFloorSegments;
 
-  
   int _currentSegmentIndex = 0;
 
   bool isLoading = false;
   bool loadFailed = false;
 
   /// checks Whether the active route spans multiple floors.
-  bool get isInterFloorRoute =>
-      _interFloorSegments != null && _interFloorSegments!.length > 1;
+  bool get isInterFloorRoute => _interFloorSegments != null && _interFloorSegments!.length > 1;
 
-  
   int get totalSegments => _interFloorSegments?.length ?? 0;
 
-  
   int get currentSegmentIndex => _currentSegmentIndex;
 
-  
   IndoorFloorPathSegment? get currentSegment =>
       _interFloorSegments != null && _currentSegmentIndex < _interFloorSegments!.length
-          ? _interFloorSegments![_currentSegmentIndex]
-          : null;
+      ? _interFloorSegments![_currentSegmentIndex]
+      : null;
 
-  
   bool get hasNextSegment =>
-      _interFloorSegments != null &&
-      _currentSegmentIndex < _interFloorSegments!.length - 1;
+      _interFloorSegments != null && _currentSegmentIndex < _interFloorSegments!.length - 1;
 
-  
-  bool get hasPreviousSegment =>
-      _interFloorSegments != null && _currentSegmentIndex > 0;
+  bool get hasPreviousSegment => _interFloorSegments != null && _currentSegmentIndex > 0;
 
   IndoorViewModel({required this.floorplanInteractor});
 
@@ -83,7 +73,6 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans != null &&
         loadedFloorplans!.isNotEmpty &&
         selectedFloorplan != null) {
-      
       return;
     }
 
@@ -130,13 +119,13 @@ class IndoorViewModel extends ChangeNotifier {
 
       // show segment for this floor.
       if (_interFloorSegments != null) {
-        final segmentIndex = _interFloorSegments!
-            .indexWhere((final s) => s.floorNumber == floorNumber);
+        final segmentIndex = _interFloorSegments!.indexWhere(
+          (final s) => s.floorNumber == floorNumber,
+        );
         if (segmentIndex >= 0) {
           _currentSegmentIndex = segmentIndex;
           indoorPath = _interFloorSegments![segmentIndex].path;
         } else {
-         
           indoorPath = null;
         }
       } else {
@@ -148,9 +137,8 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
- 
-  // Single-floor path 
-  
+  // Single-floor path
+
   void setIndoorPath(final List<Point<double>> path) {
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
@@ -158,11 +146,8 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  
   // Multi-floor path
-  
 
-  
   void setInterFloorPath(final List<IndoorFloorPathSegment> segments) {
     if (segments.isEmpty) {
       clearIndoorPath();
@@ -173,8 +158,7 @@ class IndoorViewModel extends ChangeNotifier {
     _currentSegmentIndex = 0;
 
     final firstSegment = segments.first;
-    if (loadedFloorplans != null &&
-        loadedFloorplans!.containsKey(firstSegment.floorNumber)) {
+    if (loadedFloorplans != null && loadedFloorplans!.containsKey(firstSegment.floorNumber)) {
       selectedFloorplan = loadedFloorplans![firstSegment.floorNumber];
     }
     indoorPath = firstSegment.path;
@@ -191,8 +175,7 @@ class IndoorViewModel extends ChangeNotifier {
     _currentSegmentIndex++;
     final segment = _interFloorSegments![_currentSegmentIndex];
 
-    if (loadedFloorplans != null &&
-        loadedFloorplans!.containsKey(segment.floorNumber)) {
+    if (loadedFloorplans != null && loadedFloorplans!.containsKey(segment.floorNumber)) {
       selectedFloorplan = loadedFloorplans![segment.floorNumber];
     }
     indoorPath = segment.path;
@@ -210,8 +193,7 @@ class IndoorViewModel extends ChangeNotifier {
     _currentSegmentIndex--;
     final segment = _interFloorSegments![_currentSegmentIndex];
 
-    if (loadedFloorplans != null &&
-        loadedFloorplans!.containsKey(segment.floorNumber)) {
+    if (loadedFloorplans != null && loadedFloorplans!.containsKey(segment.floorNumber)) {
       selectedFloorplan = loadedFloorplans![segment.floorNumber];
     }
     indoorPath = segment.path;

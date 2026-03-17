@@ -7,7 +7,6 @@ const String _inkscapeLabelRoot = "inkscape:label";
 
 enum TransitionType { stairs, elevator, escalator }
 
-
 class FloorTransition {
   final String id;
   final Point<double> location;
@@ -24,7 +23,6 @@ class FloorTransition {
     required this.groupTag,
   });
 }
-
 
 class Corridor {
   final List<Point<double>> bounds;
@@ -296,7 +294,9 @@ class Floorplan {
     final XmlElement poiLayer,
     final XmlElement connectorsLayer,
   ) {
-    final transitionRegex = RegExp(r"^(stairs|stairsUp|stairsDown|elevator|escalatorUp|escalatorDown)-([0-9]+)$");
+    final transitionRegex = RegExp(
+      r"^(stairs|stairsUp|stairsDown|elevator|escalatorUp|escalatorDown)-([0-9]+)$",
+    );
     final List<FloorTransition> transitions = [];
     final connectors = connectorsLayer.findAllElements("ellipse");
 

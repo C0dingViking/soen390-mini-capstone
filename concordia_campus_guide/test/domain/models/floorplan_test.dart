@@ -136,7 +136,7 @@ void main() {
       expect(floorplan.canvasHeight, closeTo(398.919, 0.00001));
     });
 
-    test('parses walkable areas from SVG layer', () {
+    test("parses walkable areas from SVG layer", () {
       const xmlString = '''
 <svg>
   <g inkscape:label="rooms">
@@ -228,11 +228,7 @@ void main() {
 
   group("Floorplan transitions field", () {
     test("defaults to empty list", () {
-      final fp = Floorplan(
-        buildingId: "h",
-        floorNumber: 1,
-        svgPath: "test.svg",
-      );
+      final fp = Floorplan(buildingId: "h", floorNumber: 1, svgPath: "test.svg");
       expect(fp.transitions, isEmpty);
     });
 
@@ -263,11 +259,7 @@ void main() {
     });
 
     test("transitions can be reassigned (late field)", () {
-      final fp = Floorplan(
-        buildingId: "h",
-        floorNumber: 1,
-        svgPath: "test.svg",
-      );
+      final fp = Floorplan(buildingId: "h", floorNumber: 1, svgPath: "test.svg");
 
       fp.transitions = [
         const FloorTransition(
@@ -429,11 +421,10 @@ void main() {
       expect(floorplan.transitions.length, 3);
 
       final types = floorplan.transitions.map((final t) => t.type).toSet();
-      expect(types, containsAll([
-        TransitionType.stairs,
-        TransitionType.elevator,
-        TransitionType.escalator,
-      ]));
+      expect(
+        types,
+        containsAll([TransitionType.stairs, TransitionType.elevator, TransitionType.escalator]),
+      );
 
       final groups = floorplan.transitions.map((final t) => t.groupTag).toSet();
       expect(groups, containsAll(["stairs-1", "elevator-1", "escalator-1"]));

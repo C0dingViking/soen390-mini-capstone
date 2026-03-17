@@ -240,10 +240,7 @@ void main() {
 
     test("returns false after setInterFloorPath with a single segment", () {
       ivm.setInterFloorPath([
-        IndoorFloorPathSegment(
-          floorNumber: 1,
-          path: [const Point(0, 0), const Point(50, 50)],
-        ),
+        IndoorFloorPathSegment(floorNumber: 1, path: [const Point(0, 0), const Point(50, 50)]),
       ]);
       expect(ivm.isInterFloorRoute, isFalse);
     });

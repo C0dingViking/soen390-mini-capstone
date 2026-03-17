@@ -179,9 +179,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (startFloor == destinationFloor) {
       final changedFloor = _viewModel.changeFloor(startFloor);
       if (!changedFloor) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to change floor. Please try again.")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
         return;
       }
 
@@ -232,9 +232,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, destFloorplan);
 
     if (startRoomModel == null || destinationRoomModel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to locate one or both rooms.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both rooms.")));
       return;
     }
 
@@ -249,9 +249,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       _viewModel.setInterFloorPath(segments);
     } on StateError catch (e) {
       _viewModel.clearIndoorPath();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       _viewModel.clearIndoorPath();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -408,7 +406,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   }
 
   // label for a transition type
-  
+
   String _transitionLabel(final FloorTransition transition) {
     switch (transition.type) {
       case TransitionType.elevator:
@@ -420,9 +418,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-  
   // inter-floor segment navigation bar
-  
+
   Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
     final segment = ivm.currentSegment;
     if (segment == null) {
@@ -453,7 +450,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       decoration: BoxDecoration(
         color: Color.fromARGB(200, 8, 187, 241),
         borderRadius: BorderRadius.circular(12),
-        
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -485,10 +481,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(fontSize: 12, color: Colors.white,),
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
-                  
                 ),
               ],
             ),
@@ -577,7 +572,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  top: 0.0, 
+                  top: 0.0,
                   child: SafeArea(
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
@@ -629,14 +624,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 // Inter-floor segment navigation bar
                 if (ivm.isInterFloorRoute)
                   Positioned(
-                    bottom: floorPickerSpacing + 64, 
+                    bottom: floorPickerSpacing + 64,
                     left: floorPickerSpacing,
                     right: floorPickerSpacing,
-                    child: SafeArea(
-                      child: Center(
-                        child: _buildSegmentNavigationBar(ivm),
-                      ),
-                    ),
+                    child: SafeArea(child: Center(child: _buildSegmentNavigationBar(ivm))),
                   ),
               ],
             ),
@@ -647,10 +638,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   }
 }
 
-
 // Path painter – delegates to Indoor_Path_Painter.dart
-
-
 
 class _AnimatedIndoorPath extends StatefulWidget {
   final Floorplan floorplan;
@@ -669,10 +657,8 @@ class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
+    _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+      ..repeat();
   }
 
   @override
@@ -683,7 +669,6 @@ class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
 
   @override
   Widget build(final BuildContext context) {
-    
     return CustomPaint(
       painter: IndoorPathPainter(
         floorplan: widget.floorplan,

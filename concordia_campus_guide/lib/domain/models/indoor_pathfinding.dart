@@ -46,6 +46,7 @@ class _IndoorGraph {
       coordinateToNodeId[key] = id;
       return id;
     }
+
     final corridorVertexNodeIds = _createCorridorVertexNodes(
       corridors,
       getOrCreateNodeId,
@@ -130,16 +131,12 @@ class _IndoorGraph {
 // Single-floor path segment used in multi-floor routes
 
 class IndoorFloorPathSegment {
-  
   final int floorNumber;
 
-  
   final List<Point<double>> path;
 
-  
   final FloorTransition? exitTransition;
 
-  
   final FloorTransition? entryTransition;
 
   const IndoorFloorPathSegment({
@@ -212,7 +209,6 @@ extension FloorplanPathfinding on Floorplan {
   }
 }
 
-
 // Inter-floor pathfinding
 
 List<IndoorFloorPathSegment> computeInterFloorPath({
@@ -224,12 +220,9 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   final TransitionType? preferredTransitionType,
 }) {
   if (startFloor == destinationFloor) {
-    
     final floorplan = floorplans[startFloor]!;
     final path = floorplan.shortestPathBetweenRooms(startRoom, destinationRoom);
-    return [
-      IndoorFloorPathSegment(floorNumber: startFloor, path: path),
-    ];
+    return [IndoorFloorPathSegment(floorNumber: startFloor, path: path)];
   }
 
   // Determine the ordered list of floors to traverse.
@@ -259,7 +252,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     final currentFloorplan = floorplans[currentFloorNum]!;
     final nextFloorplan = floorplans[nextFloorNum]!;
 
-    // Find matching transition pairs between these floors 
+    // Find matching transition pairs between these floors
     final candidates = _findMatchingTransitions(
       currentFloorplan.transitions,
       nextFloorplan.transitions,
@@ -273,7 +266,6 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       );
     }
 
-    
     _TransitionCandidate? bestCandidate;
     List<Point<double>>? bestPath;
     double bestCost = double.infinity;
@@ -291,7 +283,6 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
           bestCandidate = candidate;
         }
       } on StateError {
-        
         continue;
       }
     }
@@ -303,14 +294,15 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       );
     }
 
-    segments.add(IndoorFloorPathSegment(
-      floorNumber: currentFloorNum,
-      path: bestPath,
-      exitTransition: bestCandidate.fromTransition,
-      entryTransition: i > 0 ? segments.last.exitTransition : null,
-    ));
+    segments.add(
+      IndoorFloorPathSegment(
+        floorNumber: currentFloorNum,
+        path: bestPath,
+        exitTransition: bestCandidate.fromTransition,
+        entryTransition: i > 0 ? segments.last.exitTransition : null,
+      ),
+    );
 
-    
     currentStartPoint = bestCandidate.toTransition.location;
   }
 
@@ -318,12 +310,9 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   final destFloorplan = floorplans[destinationFloor]!;
   final lastExitTransition = segments.last.exitTransition!;
 
- 
   final entryTransition = destFloorplan.transitions.firstWhere(
     (final t) => t.groupTag == lastExitTransition.groupTag,
-    orElse: () => throw StateError(
-      "No matching entry transition on floor $destinationFloor.",
-    ),
+    orElse: () => throw StateError("No matching entry transition on floor $destinationFloor."),
   );
 
   try {
@@ -339,11 +328,13 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
         groupTag: "",
       ),
     );
-    segments.add(IndoorFloorPathSegment(
-      floorNumber: destinationFloor,
-      path: destPath,
-      entryTransition: entryTransition,
-    ));
+    segments.add(
+      IndoorFloorPathSegment(
+        floorNumber: destinationFloor,
+        path: destPath,
+        entryTransition: entryTransition,
+      ),
+    );
   } on StateError {
     throw StateError(
       "No path found from transition to room ${destinationRoom.name} "
@@ -354,18 +345,13 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   return segments;
 }
 
-
 // Inter-floor helpers
-
 
 class _TransitionCandidate {
   final FloorTransition fromTransition;
   final FloorTransition toTransition;
 
-  const _TransitionCandidate({
-    required this.fromTransition,
-    required this.toTransition,
-  });
+  const _TransitionCandidate({required this.fromTransition, required this.toTransition});
 }
 
 /// Finds transition pairs that connect two floors by matching
@@ -387,10 +373,7 @@ List<_TransitionCandidate> _findMatchingTransitions(
       continue;
     }
 
-    final candidate = _TransitionCandidate(
-      fromTransition: fromT,
-      toTransition: toT,
-    );
+    final candidate = _TransitionCandidate(fromTransition: fromT, toTransition: toT);
 
     if (preferredType != null && fromT.type == preferredType) {
       preferred.add(candidate);
@@ -411,9 +394,7 @@ double _pathLength(final List<Point<double>> path) {
   return total;
 }
 
-
-// Graph construction helpers 
-
+// Graph construction helpers
 
 /// Euclidean distance between two points.
 double _euclideanDistance(final Point<double> a, final Point<double> b) {
