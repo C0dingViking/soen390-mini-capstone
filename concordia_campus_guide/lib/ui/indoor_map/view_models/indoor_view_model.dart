@@ -63,7 +63,9 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans = floorplans;
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
-        availableFloors = loadedFloorplans!.keys.map((final k) => k.toUpperCase()).toList()..sort();
+        availableFloors = _sortFloorplanKeys(
+          loadedFloorplans!.keys.map((final k) => k.toUpperCase()).toList(),
+        );
         loadFailed = false;
       }
     } catch (e) {
@@ -72,6 +74,28 @@ class IndoorViewModel extends ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
+  }
+
+  // necessary to ensure "S2" comes before "1".. etc
+  List<String> _sortFloorplanKeys(final List<String> keys) {
+    keys.sort((final a, final b) {
+      final aIsSub = a.startsWith("S");
+      final bIsSub = b.startsWith("S");
+
+      if (aIsSub && !bIsSub) return -1;
+      if (!aIsSub && bIsSub) return 1;
+
+      final aNum = int.tryParse(a.replaceAll(RegExp(r"[^0-9]"), ""));
+      final bNum = int.tryParse(b.replaceAll(RegExp(r"[^0-9]"), ""));
+
+      if (aNum != null && bNum != null) {
+        return aNum.compareTo(bNum);
+      }
+
+      return a.compareTo(b);
+    });
+
+    return keys;
   }
 
   void resetFloorplanLoadState() {
