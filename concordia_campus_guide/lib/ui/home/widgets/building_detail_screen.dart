@@ -24,7 +24,7 @@ class BuildingDetailScreen extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height + 300),
             child: Column(
-              spacing: 10,
+              spacing: 15,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -40,6 +40,58 @@ class BuildingDetailScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                Center(
+                  child: Row(
+                    spacing: 15,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FloatingActionButton.extended(
+                        heroTag: "go_to_here",
+                        onPressed: () async {
+                          final viewModel = context.read<HomeViewModel>();
+                          final suggestion = SearchSuggestion.building(
+                            building,
+                            subtitle: building.campus.name,
+                          );
+                          if (!viewModel.isSearchBarExpanded) {
+                            await viewModel.setStartToCurrentLocation();
+                          }
+                          await viewModel.selectSearchSuggestion(
+                            suggestion,
+                            SearchField.destination,
+                          );
+                          viewModel.requestUnfocusSearchBar();
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                        },
+                        backgroundColor: AppTheme.concordiaButtonCyan,
+                        icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
+                        label: const Text(
+                          "Directions",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      if (building.supportedIndoorFloors.isNotEmpty) ...[
+                        const SizedBox(width: 16),
+                        FloatingActionButton.extended(
+                          heroTag: "indoor_floor_plans",
+                          onPressed: () => _showIndoorFloorPlans(context),
+                          tooltip: "Indoor Floor Plans",
+                          label: const Text(
+                            "Floor Plans",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          backgroundColor: AppTheme.concordiaBusCyan,
+                          icon: const Icon(Icons.schema, color: Colors.white),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(height: 0), // the height of 0 gives it enough padding (for some reason)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
@@ -91,41 +143,7 @@ class BuildingDetailScreen extends StatelessWidget {
                 backgroundColor: AppTheme.concordiaMaroon,
                 child: const Icon(Icons.info, color: Colors.white),
               ),
-
-              if (building.supportedIndoorFloors.isNotEmpty) ...[
-                const SizedBox(width: 16),
-                FloatingActionButton(
-                  heroTag: "indoor_floor_plans",
-                  onPressed: () => _showIndoorFloorPlans(context),
-                  tooltip: "Indoor Floor Plans",
-                  backgroundColor: AppTheme.concordiaMaroon,
-                  child: const Icon(Icons.schema, color: Colors.white),
-                ),
-              ],
             ],
-          ),
-
-          const SizedBox(height: 12),
-
-          FloatingActionButton.extended(
-            heroTag: "go_to_here",
-            onPressed: () async {
-              final viewModel = context.read<HomeViewModel>();
-              final suggestion = SearchSuggestion.building(
-                building,
-                subtitle: building.campus.name,
-              );
-              if (!viewModel.isSearchBarExpanded) {
-                await viewModel.setStartToCurrentLocation();
-              }
-              await viewModel.selectSearchSuggestion(suggestion, SearchField.destination);
-              viewModel.requestUnfocusSearchBar();
-              if (!context.mounted) return;
-              Navigator.pop(context);
-            },
-            backgroundColor: AppTheme.concordiaDarkBlue,
-            icon: const Icon(Icons.place, color: Colors.white),
-            label: const Text("Go to this building", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
