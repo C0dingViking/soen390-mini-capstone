@@ -21,8 +21,8 @@ class FloorplanRepository {
        roomManifestPath = roomManifestPath ?? "assets/floorplans/room_manifest.json";
 
   // requires a directoryPath as it parses the XML from the .svg files for all available floors to a building
-  Future<Map<int, Floorplan>> loadBuildingFloorplans(final String directoryId) async {
-    final Map<int, Floorplan> floorplans = {};
+  Future<Map<String, Floorplan>> loadBuildingFloorplans(final String directoryId) async {
+    final Map<String, Floorplan> floorplans = {};
 
     try {
       // cannot loop over the directory directly due to flutter limitations
@@ -47,7 +47,7 @@ class FloorplanRepository {
         final svgString = await floorplanLoader(svg);
         final xmlData = XmlDocument.parse(svgString);
 
-        final regex = RegExp(r"([a-zA-Z]+)-(\d+)\.svg$");
+        final regex = RegExp(r"([a-zA-Z]+)-([a-zA-Z]*\d+)\.svg$");
         final fileName = svg.split("/").last;
         final match = regex.firstMatch(fileName);
 
@@ -56,8 +56,13 @@ class FloorplanRepository {
         }
 
         final buildingCode = match.group(1)!;
-        final floorNumber = int.parse(match.group(2)!);
-        floorplans[floorNumber] = Floorplan.fromXml(buildingCode, floorNumber, svg, xmlData);
+        final floorNumber = match.group(2)!;
+        floorplans[floorNumber.toUpperCase()] = Floorplan.fromXml(
+          buildingCode,
+          floorNumber,
+          svg,
+          xmlData,
+        );
       }
     } on PathNotFoundException catch (e) {
       logger.e("Failed to resolve a file path", error: e);

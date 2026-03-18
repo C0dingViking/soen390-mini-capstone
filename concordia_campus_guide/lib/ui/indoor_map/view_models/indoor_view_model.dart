@@ -10,8 +10,8 @@ class IndoorViewModel extends ChangeNotifier {
   bool listLoadFailed = false;
   bool listIsLoading = false;
 
-  Map<int, Floorplan>? loadedFloorplans;
-  List<int>? availableFloors;
+  Map<String, Floorplan>? loadedFloorplans;
+  List<String>? availableFloors;
   Floorplan? selectedFloorplan;
   bool isLoading = false;
   bool loadFailed = false;
@@ -53,7 +53,9 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final Map<int, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(buildingId);
+      final Map<String, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(
+        buildingId,
+      );
 
       if (floorplans.isEmpty) {
         loadFailed = true;
@@ -61,7 +63,7 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans = floorplans;
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
-        availableFloors = loadedFloorplans!.keys.toList()..sort();
+        availableFloors = loadedFloorplans!.keys.map((final k) => k.toUpperCase()).toList()..sort();
         loadFailed = false;
       }
     } catch (e) {
@@ -78,7 +80,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool changeFloor(final int floorNumber) {
+  bool changeFloor(final String floorNumber) {
     if (loadedFloorplans == null || !loadedFloorplans!.containsKey(floorNumber)) {
       return false;
     }
