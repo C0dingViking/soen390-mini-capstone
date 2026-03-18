@@ -6,10 +6,12 @@ import "package:logger/logger.dart";
 
 class _FakeFloorplanInteractor extends FloorplanInteractor {
   bool returnEmpty = false;
+  bool shouldThrow = false;
   int executionCount = 0;
 
   @override
   Future<Map<String, Floorplan>> loadFloorplans(final String buildingId) async {
+    if (shouldThrow) throw Exception();
     executionCount += 1;
 
     return (returnEmpty)
@@ -27,6 +29,7 @@ class _FakeFloorplanInteractor extends FloorplanInteractor {
 
   @override
   Future<List<String>> loadRoomNames() async {
+    if (shouldThrow) throw Exception();
     return (returnEmpty) ? [] : ["T 1", "T 2", "T 3"];
   }
 }
@@ -96,6 +99,18 @@ void main() {
       await ivm.initializeBuildingFloorplans("T");
       expect(ivm.loadFailed, true);
     });
+
+    test("initializeBuildingFloorplans handles throws", () async {
+      floorplanInteractor.shouldThrow = true;
+
+      await ivm.initializeBuildingFloorplans("T");
+      expect(ivm.loadFailed, true);
+    });
+
+    test("floorplan keys are sorted with S floors first", () async {
+      final keys = ["1", "2", "S2"];
+      expect(ivm.sortFloorplanKeys(keys), ["S2", "1", "2"]);
+    });
   });
 
   group("changeFloor", () {
@@ -154,6 +169,13 @@ void main() {
 
     test("initializeRoomNames handles empty returns", () async {
       floorplanInteractor.returnEmpty = true;
+
+      await ivm.initializeRoomNames();
+      expect(ivm.listLoadFailed, true);
+    });
+
+    test("initializeRoomNames handles throws", () async {
+      floorplanInteractor.shouldThrow = true;
 
       await ivm.initializeRoomNames();
       expect(ivm.listLoadFailed, true);

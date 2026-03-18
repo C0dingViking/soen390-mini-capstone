@@ -63,7 +63,7 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans = floorplans;
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
-        availableFloors = _sortFloorplanKeys(
+        availableFloors = sortFloorplanKeys(
           loadedFloorplans!.keys.map((final k) => k.toUpperCase()).toList(),
         );
         loadFailed = false;
@@ -77,7 +77,7 @@ class IndoorViewModel extends ChangeNotifier {
   }
 
   // necessary to ensure "S2" comes before "1".. etc
-  List<String> _sortFloorplanKeys(final List<String> keys) {
+  List<String> sortFloorplanKeys(final List<String> keys) {
     keys.sort((final a, final b) {
       final aIsSub = a.startsWith("S");
       final bIsSub = b.startsWith("S");
