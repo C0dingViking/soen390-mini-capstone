@@ -3,12 +3,24 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
-import 'dart:ui' as _i6;
+import 'dart:async' as _i9;
+import 'dart:ui' as _i10;
 
+import 'package:concordia_campus_guide/domain/interactors/calendar_interactor.dart' as _i6;
+import 'package:concordia_campus_guide/domain/interactors/directions_interactor.dart' as _i5;
 import 'package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart' as _i2;
-import 'package:concordia_campus_guide/domain/models/floorplan.dart' as _i4;
-import 'package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart' as _i3;
+import 'package:concordia_campus_guide/domain/interactors/map_data_interactor.dart' as _i3;
+import 'package:concordia_campus_guide/domain/interactors/places_interactor.dart' as _i4;
+import 'package:concordia_campus_guide/domain/models/academic_class.dart' as _i18;
+import 'package:concordia_campus_guide/domain/models/building.dart' as _i12;
+import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i17;
+import 'package:concordia_campus_guide/domain/models/floorplan.dart' as _i8;
+import 'package:concordia_campus_guide/domain/models/place_suggestion.dart' as _i16;
+import 'package:concordia_campus_guide/domain/models/route_option.dart' as _i14;
+import 'package:concordia_campus_guide/domain/models/search_suggestion.dart' as _i15;
+import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart' as _i11;
+import 'package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart' as _i7;
+import 'package:google_maps_flutter/google_maps_flutter.dart' as _i13;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -31,10 +43,30 @@ class _FakeFloorplanInteractor_0 extends _i1.SmartFake implements _i2.FloorplanI
     : super(parent, parentInvocation);
 }
 
+class _FakeMapDataInteractor_1 extends _i1.SmartFake implements _i3.MapDataInteractor {
+  _FakeMapDataInteractor_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakePlacesInteractor_2 extends _i1.SmartFake implements _i4.PlacesInteractor {
+  _FakePlacesInteractor_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeDirectionsInteractor_3 extends _i1.SmartFake implements _i5.DirectionsInteractor {
+  _FakeDirectionsInteractor_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeCalendarInteractor_4 extends _i1.SmartFake implements _i6.CalendarInteractor {
+  _FakeCalendarInteractor_4(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [IndoorViewModel].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
+class MockIndoorViewModel extends _i1.Mock implements _i7.IndoorViewModel {
   @override
   _i2.FloorplanInteractor get floorplanInteractor =>
       (super.noSuchMethod(
@@ -106,7 +138,7 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
       super.noSuchMethod(Invocation.setter(#listIsLoading, value), returnValueForMissingStub: null);
 
   @override
-  set loadedFloorplans(Map<String, _i4.Floorplan>? value) => super.noSuchMethod(
+  set loadedFloorplans(Map<String, _i8.Floorplan>? value) => super.noSuchMethod(
     Invocation.setter(#loadedFloorplans, value),
     returnValueForMissingStub: null,
   );
@@ -118,7 +150,7 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   );
 
   @override
-  set selectedFloorplan(_i4.Floorplan? value) => super.noSuchMethod(
+  set selectedFloorplan(_i8.Floorplan? value) => super.noSuchMethod(
     Invocation.setter(#selectedFloorplan, value),
     returnValueForMissingStub: null,
   );
@@ -141,22 +173,22 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
           as bool);
 
   @override
-  _i5.Future<void> initializeRoomNames() =>
+  _i9.Future<void> initializeRoomNames() =>
       (super.noSuchMethod(
             Invocation.method(#initializeRoomNames, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i5.Future<void> initializeBuildingFloorplans(String? buildingId) =>
+  _i9.Future<void> initializeBuildingFloorplans(String? buildingId) =>
       (super.noSuchMethod(
             Invocation.method(#initializeBuildingFloorplans, [buildingId]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i9.Future<void>);
 
   @override
   List<String> sortFloorplanKeys(List<String>? keys) =>
@@ -183,13 +215,13 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
           as bool);
 
   @override
-  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i10.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i10.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -197,6 +229,602 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   @override
   void dispose() =>
       super.noSuchMethod(Invocation.method(#dispose, []), returnValueForMissingStub: null);
+
+  @override
+  void notifyListeners() =>
+      super.noSuchMethod(Invocation.method(#notifyListeners, []), returnValueForMissingStub: null);
+}
+
+/// A class which mocks [HomeViewModel].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockHomeViewModel extends _i1.Mock implements _i11.HomeViewModel {
+  MockHomeViewModel() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.MapDataInteractor get mapInteractor =>
+      (super.noSuchMethod(
+            Invocation.getter(#mapInteractor),
+            returnValue: _FakeMapDataInteractor_1(this, Invocation.getter(#mapInteractor)),
+          )
+          as _i3.MapDataInteractor);
+
+  @override
+  _i4.PlacesInteractor get placesInteractor =>
+      (super.noSuchMethod(
+            Invocation.getter(#placesInteractor),
+            returnValue: _FakePlacesInteractor_2(this, Invocation.getter(#placesInteractor)),
+          )
+          as _i4.PlacesInteractor);
+
+  @override
+  _i5.DirectionsInteractor get directionsInteractor =>
+      (super.noSuchMethod(
+            Invocation.getter(#directionsInteractor),
+            returnValue: _FakeDirectionsInteractor_3(
+              this,
+              Invocation.getter(#directionsInteractor),
+            ),
+          )
+          as _i5.DirectionsInteractor);
+
+  @override
+  _i6.CalendarInteractor get calendarInteractor =>
+      (super.noSuchMethod(
+            Invocation.getter(#calendarInteractor),
+            returnValue: _FakeCalendarInteractor_4(this, Invocation.getter(#calendarInteractor)),
+          )
+          as _i6.CalendarInteractor);
+
+  @override
+  bool get showLoginSuccessMessage =>
+      (super.noSuchMethod(Invocation.getter(#showLoginSuccessMessage), returnValue: false) as bool);
+
+  @override
+  Map<String, _i12.Building> get buildings =>
+      (super.noSuchMethod(Invocation.getter(#buildings), returnValue: <String, _i12.Building>{})
+          as Map<String, _i12.Building>);
+
+  @override
+  Set<_i13.Polygon> get buildingOutlines =>
+      (super.noSuchMethod(Invocation.getter(#buildingOutlines), returnValue: <_i13.Polygon>{})
+          as Set<_i13.Polygon>);
+
+  @override
+  Set<_i13.Marker> get buildingMarkers =>
+      (super.noSuchMethod(Invocation.getter(#buildingMarkers), returnValue: <_i13.Marker>{})
+          as Set<_i13.Marker>);
+
+  @override
+  bool get isLoading =>
+      (super.noSuchMethod(Invocation.getter(#isLoading), returnValue: false) as bool);
+
+  @override
+  bool get isSearchingPlaces =>
+      (super.noSuchMethod(Invocation.getter(#isSearchingPlaces), returnValue: false) as bool);
+
+  @override
+  bool get isSearchingNearbyPlaces =>
+      (super.noSuchMethod(Invocation.getter(#isSearchingNearbyPlaces), returnValue: false) as bool);
+
+  @override
+  bool get isResolvingPlace =>
+      (super.noSuchMethod(Invocation.getter(#isResolvingPlace), returnValue: false) as bool);
+
+  @override
+  bool get isResolvingStartLocation =>
+      (super.noSuchMethod(Invocation.getter(#isResolvingStartLocation), returnValue: false)
+          as bool);
+
+  @override
+  bool get isLoadingRoutes =>
+      (super.noSuchMethod(Invocation.getter(#isLoadingRoutes), returnValue: false) as bool);
+
+  @override
+  Map<_i14.RouteMode, _i14.RouteOption> get routeOptions =>
+      (super.noSuchMethod(
+            Invocation.getter(#routeOptions),
+            returnValue: <_i14.RouteMode, _i14.RouteOption>{},
+          )
+          as Map<_i14.RouteMode, _i14.RouteOption>);
+
+  @override
+  _i14.RouteMode get selectedRouteMode =>
+      (super.noSuchMethod(
+            Invocation.getter(#selectedRouteMode),
+            returnValue: _i14.RouteMode.walking,
+          )
+          as _i14.RouteMode);
+
+  @override
+  Set<_i13.Polyline> get routePolylines =>
+      (super.noSuchMethod(Invocation.getter(#routePolylines), returnValue: <_i13.Polyline>{})
+          as Set<_i13.Polyline>);
+
+  @override
+  Set<_i13.Circle> get transitChangeCircles =>
+      (super.noSuchMethod(Invocation.getter(#transitChangeCircles), returnValue: <_i13.Circle>{})
+          as Set<_i13.Circle>);
+
+  @override
+  bool get showNextClassFab =>
+      (super.noSuchMethod(Invocation.getter(#showNextClassFab), returnValue: false) as bool);
+
+  @override
+  bool get showNextClassDialog =>
+      (super.noSuchMethod(Invocation.getter(#showNextClassDialog), returnValue: false) as bool);
+
+  @override
+  _i11.DepartureMode get departureMode =>
+      (super.noSuchMethod(Invocation.getter(#departureMode), returnValue: _i11.DepartureMode.now)
+          as _i11.DepartureMode);
+
+  @override
+  List<_i15.SearchSuggestion> get searchResults =>
+      (super.noSuchMethod(Invocation.getter(#searchResults), returnValue: <_i15.SearchSuggestion>[])
+          as List<_i15.SearchSuggestion>);
+
+  @override
+  List<_i16.PlaceSuggestion> get nearbySearchResults =>
+      (super.noSuchMethod(
+            Invocation.getter(#nearbySearchResults),
+            returnValue: <_i16.PlaceSuggestion>[],
+          )
+          as List<_i16.PlaceSuggestion>);
+
+  @override
+  int get nearbySearchResultLimit =>
+      (super.noSuchMethod(Invocation.getter(#nearbySearchResultLimit), returnValue: 0) as int);
+
+  @override
+  bool get myLocationEnabled =>
+      (super.noSuchMethod(Invocation.getter(#myLocationEnabled), returnValue: false) as bool);
+
+  @override
+  bool get isSearchBarExpanded =>
+      (super.noSuchMethod(Invocation.getter(#isSearchBarExpanded), returnValue: false) as bool);
+
+  @override
+  int get unfocusSearchBarSignal =>
+      (super.noSuchMethod(Invocation.getter(#unfocusSearchBarSignal), returnValue: 0) as int);
+
+  @override
+  List<_i17.Coordinate> get campuses =>
+      (super.noSuchMethod(Invocation.getter(#campuses), returnValue: <_i17.Coordinate>[])
+          as List<_i17.Coordinate>);
+
+  @override
+  int get selectedCampusIndex =>
+      (super.noSuchMethod(Invocation.getter(#selectedCampusIndex), returnValue: 0) as int);
+
+  @override
+  Set<_i13.Marker> get mapMarkers =>
+      (super.noSuchMethod(Invocation.getter(#mapMarkers), returnValue: <_i13.Marker>{})
+          as Set<_i13.Marker>);
+
+  @override
+  set buildings(Map<String, _i12.Building>? value) =>
+      super.noSuchMethod(Invocation.setter(#buildings, value), returnValueForMissingStub: null);
+
+  @override
+  set buildingOutlines(Set<_i13.Polygon>? value) => super.noSuchMethod(
+    Invocation.setter(#buildingOutlines, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set buildingMarkers(Set<_i13.Marker>? value) => super.noSuchMethod(
+    Invocation.setter(#buildingMarkers, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set currentBuilding(_i12.Building? value) => super.noSuchMethod(
+    Invocation.setter(#currentBuilding, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isLoading(bool? value) =>
+      super.noSuchMethod(Invocation.setter(#isLoading, value), returnValueForMissingStub: null);
+
+  @override
+  set errorMessage(String? value) =>
+      super.noSuchMethod(Invocation.setter(#errorMessage, value), returnValueForMissingStub: null);
+
+  @override
+  set generateInfoMessage(String? value) => super.noSuchMethod(
+    Invocation.setter(#generateInfoMessage, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isSearchingPlaces(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isSearchingPlaces, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isSearchingNearbyPlaces(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isSearchingNearbyPlaces, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isResolvingPlace(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isResolvingPlace, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isResolvingStartLocation(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isResolvingStartLocation, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set searchStartMarker(_i13.Marker? value) => super.noSuchMethod(
+    Invocation.setter(#searchStartMarker, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set searchDestinationMarker(_i13.Marker? value) => super.noSuchMethod(
+    Invocation.setter(#searchDestinationMarker, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set startCoordinate(_i17.Coordinate? value) => super.noSuchMethod(
+    Invocation.setter(#startCoordinate, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set destinationCoordinate(_i17.Coordinate? value) => super.noSuchMethod(
+    Invocation.setter(#destinationCoordinate, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set selectedStartLabel(String? value) => super.noSuchMethod(
+    Invocation.setter(#selectedStartLabel, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set selectedDestinationLabel(String? value) => super.noSuchMethod(
+    Invocation.setter(#selectedDestinationLabel, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isLoadingRoutes(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isLoadingRoutes, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set routeErrorMessage(String? value) => super.noSuchMethod(
+    Invocation.setter(#routeErrorMessage, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set routeOptions(Map<_i14.RouteMode, _i14.RouteOption>? value) =>
+      super.noSuchMethod(Invocation.setter(#routeOptions, value), returnValueForMissingStub: null);
+
+  @override
+  set selectedRouteMode(_i14.RouteMode? value) => super.noSuchMethod(
+    Invocation.setter(#selectedRouteMode, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set routePolylines(Set<_i13.Polyline>? value) => super.noSuchMethod(
+    Invocation.setter(#routePolylines, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set transitChangeCircles(Set<_i13.Circle>? value) => super.noSuchMethod(
+    Invocation.setter(#transitChangeCircles, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set showNextClassFab(bool? value) => super.noSuchMethod(
+    Invocation.setter(#showNextClassFab, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set upcomingClass(_i18.AcademicClass? value) =>
+      super.noSuchMethod(Invocation.setter(#upcomingClass, value), returnValueForMissingStub: null);
+
+  @override
+  set departureMode(_i11.DepartureMode? value) =>
+      super.noSuchMethod(Invocation.setter(#departureMode, value), returnValueForMissingStub: null);
+
+  @override
+  set selectedDepartureTime(DateTime? value) => super.noSuchMethod(
+    Invocation.setter(#selectedDepartureTime, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set selectedArrivalTime(DateTime? value) => super.noSuchMethod(
+    Invocation.setter(#selectedArrivalTime, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set suggestedDepartureTime(DateTime? value) => super.noSuchMethod(
+    Invocation.setter(#suggestedDepartureTime, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set searchResults(List<_i15.SearchSuggestion>? value) =>
+      super.noSuchMethod(Invocation.setter(#searchResults, value), returnValueForMissingStub: null);
+
+  @override
+  set nearbySearchResults(List<_i16.PlaceSuggestion>? value) => super.noSuchMethod(
+    Invocation.setter(#nearbySearchResults, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set nearbySearchResultLimit(int? value) => super.noSuchMethod(
+    Invocation.setter(#nearbySearchResultLimit, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set myLocationEnabled(bool? value) => super.noSuchMethod(
+    Invocation.setter(#myLocationEnabled, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isSearchBarExpanded(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isSearchBarExpanded, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set selectedCampusIndex(int? value) => super.noSuchMethod(
+    Invocation.setter(#selectedCampusIndex, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set cameraTarget(_i17.Coordinate? value) =>
+      super.noSuchMethod(Invocation.setter(#cameraTarget, value), returnValueForMissingStub: null);
+
+  @override
+  set routeBounds(_i13.LatLngBounds? value) =>
+      super.noSuchMethod(Invocation.setter(#routeBounds, value), returnValueForMissingStub: null);
+
+  @override
+  set buildingOutlineColor(_i10.Color? color) => super.noSuchMethod(
+    Invocation.setter(#buildingOutlineColor, color),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+
+  @override
+  _i9.Future<void> initializeBuildingsData(String? path) =>
+      (super.noSuchMethod(
+            Invocation.method(#initializeBuildingsData, [path]),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  _i9.Future<void> goToCurrentLocation() =>
+      (super.noSuchMethod(
+            Invocation.method(#goToCurrentLocation, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  void toggleCampus() =>
+      super.noSuchMethod(Invocation.method(#toggleCampus, []), returnValueForMissingStub: null);
+
+  @override
+  void clearCameraTarget() => super.noSuchMethod(
+    Invocation.method(#clearCameraTarget, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearRouteBounds() =>
+      super.noSuchMethod(Invocation.method(#clearRouteBounds, []), returnValueForMissingStub: null);
+
+  @override
+  void setActiveSearchField(_i11.SearchField? field) => super.noSuchMethod(
+    Invocation.method(#setActiveSearchField, [field]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setNearbySearchResultLimit(int? value) => super.noSuchMethod(
+    Invocation.method(#setNearbySearchResultLimit, [value]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void updateSearchQuery(String? query) => super.noSuchMethod(
+    Invocation.method(#updateSearchQuery, [query]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearSearchResults() => super.noSuchMethod(
+    Invocation.method(#clearSearchResults, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearRouteSelection() => super.noSuchMethod(
+    Invocation.method(#clearRouteSelection, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void exitNavigation() =>
+      super.noSuchMethod(Invocation.method(#exitNavigation, []), returnValueForMissingStub: null);
+
+  @override
+  void setSearchBarExpanded(bool? value) => super.noSuchMethod(
+    Invocation.method(#setSearchBarExpanded, [value]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void requestUnfocusSearchBar() => super.noSuchMethod(
+    Invocation.method(#requestUnfocusSearchBar, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i9.Future<void> selectSearchSuggestion(
+    _i15.SearchSuggestion? suggestion,
+    _i11.SearchField? field,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#selectSearchSuggestion, [suggestion, field]),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  _i9.Future<void> setStartToCurrentLocation() =>
+      (super.noSuchMethod(
+            Invocation.method(#setStartToCurrentLocation, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  void stopLocationTracking() => super.noSuchMethod(
+    Invocation.method(#stopLocationTracking, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setDepartureMode(_i11.DepartureMode? mode) => super.noSuchMethod(
+    Invocation.method(#setDepartureMode, [mode]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setDepartureTime(DateTime? time) => super.noSuchMethod(
+    Invocation.method(#setDepartureTime, [time]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setArrivalTime(DateTime? time) => super.noSuchMethod(
+    Invocation.method(#setArrivalTime, [time]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void selectRouteMode(_i14.RouteMode? mode) => super.noSuchMethod(
+    Invocation.method(#selectRouteMode, [mode]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i9.Future<void> refreshRoutes() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshRoutes, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  void onMapCameraMove(_i13.CameraPosition? position) => super.noSuchMethod(
+    Invocation.method(#onMapCameraMove, [position]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void dispose() =>
+      super.noSuchMethod(Invocation.method(#dispose, []), returnValueForMissingStub: null);
+
+  @override
+  void notifyLoginSuccess() => super.noSuchMethod(
+    Invocation.method(#notifyLoginSuccess, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearLoginSuccessMessage() => super.noSuchMethod(
+    Invocation.method(#clearLoginSuccessMessage, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void toggleNextClassFabVisibility(bool? isVisible) => super.noSuchMethod(
+    Invocation.method(#toggleNextClassFabVisibility, [isVisible]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void clearNextClassDialog() => super.noSuchMethod(
+    Invocation.method(#clearNextClassDialog, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i9.Future<void> setDestinationToUpcomingClassBuilding() =>
+      (super.noSuchMethod(
+            Invocation.method(#setDestinationToUpcomingClassBuilding, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  _i9.Future<void> showNextClass() =>
+      (super.noSuchMethod(
+            Invocation.method(#showNextClass, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  void clearUpcomingClass() => super.noSuchMethod(
+    Invocation.method(#clearUpcomingClass, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void addListener(_i10.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void removeListener(_i10.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void notifyListeners() =>

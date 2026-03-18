@@ -10,12 +10,14 @@ import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:mockito/annotations.dart";
+import "package:mockito/mockito.dart";
 import "package:provider/provider.dart";
 
 import "building_detail_screen_test.mocks.dart";
 import "home_screen_test.dart";
 
 @GenerateNiceMocks([MockSpec<IndoorViewModel>()])
+@GenerateMocks([HomeViewModel])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -282,6 +284,35 @@ void main() {
       await tester.pump();
 
       expect(find.byType(IndoorMapView), findsOneWidget);
+    });
+
+    testWidgets("Directions button pops the screen", (final tester) async {
+      final mockHomeVM = MockHomeViewModel();
+
+      // Required stubs
+      when(mockHomeVM.isSearchBarExpanded).thenReturn(false);
+      when(mockHomeVM.setStartToCurrentLocation()).thenAnswer((_) async {});
+      when(mockHomeVM.selectSearchSuggestion(any, any)).thenAnswer((_) async {});
+      when(mockHomeVM.requestUnfocusSearchBar()).thenReturn(null);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<HomeViewModel>.value(
+            value: mockHomeVM,
+            child: Navigator(
+              onGenerateRoute: (_) =>
+                  MaterialPageRoute(builder: (_) => BuildingDetailScreen(building: testBuilding)),
+            ),
+          ),
+        ),
+      );
+
+      // Tap the Directions button
+      await tester.tap(find.text("Directions"));
+      await tester.pumpAndSettle();
+
+      // Screen should pop
+      expect(find.byType(BuildingDetailScreen), findsNothing);
     });
   });
 }
