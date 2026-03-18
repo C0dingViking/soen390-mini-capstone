@@ -14,6 +14,7 @@ class AppTheme {
   static const Color concordiaGreen = Color(0xFF508212);
   static const Color concordiaForeground = Colors.black;
   static const Color concordiaButtonCyan = Color(0xCC00ADEF);
+  static const Color concordiaButtonCyanSolid = Color(0xFF00ABEF);
 
   static ThemeData mainTheme = ThemeData(
     appBarTheme: const AppBarTheme(backgroundColor: concordiaMaroon),

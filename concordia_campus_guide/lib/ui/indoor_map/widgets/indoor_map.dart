@@ -141,47 +141,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-  void _showFloorPicker(final BuildContext context) {
-    final ivm = context.read<IndoorViewModel>();
-    if (ivm.availableFloors == null || ivm.availableFloors!.isEmpty) {
-      // should be impossible to reach as this page doesn't open with at least one floorplan
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("No floor plans available for this building.")));
-      return;
-    }
-
-    final currentFloor = ivm.selectedFloorplan?.floorNumber;
-
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (final BuildContext sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ivm.availableFloors!.map((final floor) {
-              final isSelected = currentFloor == floor;
-              return ListTile(
-                title: Text("Floor $floor"),
-                selected: isSelected,
-                onTap: () {
-                  final success = ivm.changeFloor(floor);
-                  Navigator.of(sheetContext).pop();
-
-                  if (!success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Failed to change floor. Please try again.")),
-                    );
-                  }
-                },
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
-
   static Rect _roomBounds(final IndoorMapRoom room) {
     if (room.points.isEmpty) {
       return Rect.zero;
@@ -359,24 +318,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  bottom: floorPickerSpacing,
-                  left: floorPickerSpacing,
-                  child: SafeArea(
-                    child: FloatingActionButton.extended(
-                      heroTag: "floor_picker",
-                      onPressed: () => _showFloorPicker(context),
-                      label: Text(
-                        "${ivm.selectedFloorplan!.buildingId.toUpperCase()}${ivm.selectedFloorplan!.floorNumber}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      icon: const Icon(Icons.layers, color: Colors.white),
-                      backgroundColor: AppTheme.concordiaButtonCyan,
-                    ),
-                  ),
+                  bottom: 0,
+                  top: 0,
+                  right: floorPickerSpacing,
+                  child: SafeArea(child: Center(child: _buildFloorPicker(context))),
                 ),
 
                 Positioned(
@@ -397,6 +342,57 @@ class _IndoorMapViewState extends State<IndoorMapView> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFloorPicker(final BuildContext context) {
+    final currentFloor = _viewModel.selectedFloorplan!.floorNumber;
+    final floors = _viewModel.availableFloors!;
+    final floorIdx = floors.indexOf(currentFloor);
+
+    final String nextFloorUp = (floorIdx < floors.length - 1) ? floors[floorIdx + 1] : "";
+    final String nextFloorDown = (floorIdx > 0) ? floors[floorIdx - 1] : "";
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyanSolid,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (nextFloorUp.isNotEmpty)
+            InkWell(
+              onTap: () => _viewModel.changeFloor(nextFloorUp),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(6, 12, 6, 0),
+                child: Icon(Icons.arrow_upward_rounded, color: Colors.white),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            child: Text(
+              currentFloor,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          if (nextFloorDown.isNotEmpty)
+            InkWell(
+              onTap: () => _viewModel.changeFloor(nextFloorDown),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(6, 0, 6, 12),
+                child: Icon(Icons.arrow_downward_rounded, color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
   }
