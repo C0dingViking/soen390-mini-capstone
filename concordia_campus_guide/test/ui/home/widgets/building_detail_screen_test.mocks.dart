@@ -6,11 +6,9 @@
 import 'dart:async' as _i5;
 import 'dart:ui' as _i6;
 
-import 'package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart'
-    as _i2;
+import 'package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart' as _i2;
 import 'package:concordia_campus_guide/domain/models/floorplan.dart' as _i4;
-import 'package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart'
-    as _i3;
+import 'package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -28,8 +26,7 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeFloorplanInteractor_0 extends _i1.SmartFake
-    implements _i2.FloorplanInteractor {
+class _FakeFloorplanInteractor_0 extends _i1.SmartFake implements _i2.FloorplanInteractor {
   _FakeFloorplanInteractor_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
@@ -42,10 +39,7 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   _i2.FloorplanInteractor get floorplanInteractor =>
       (super.noSuchMethod(
             Invocation.getter(#floorplanInteractor),
-            returnValue: _FakeFloorplanInteractor_0(
-              this,
-              Invocation.getter(#floorplanInteractor),
-            ),
+            returnValue: _FakeFloorplanInteractor_0(this, Invocation.getter(#floorplanInteractor)),
             returnValueForMissingStub: _FakeFloorplanInteractor_0(
               this,
               Invocation.getter(#floorplanInteractor),
@@ -108,10 +102,8 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   );
 
   @override
-  set listIsLoading(bool? value) => super.noSuchMethod(
-    Invocation.setter(#listIsLoading, value),
-    returnValueForMissingStub: null,
-  );
+  set listIsLoading(bool? value) =>
+      super.noSuchMethod(Invocation.setter(#listIsLoading, value), returnValueForMissingStub: null);
 
   @override
   set loadedFloorplans(Map<String, _i4.Floorplan>? value) => super.noSuchMethod(
@@ -132,16 +124,12 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   );
 
   @override
-  set isLoading(bool? value) => super.noSuchMethod(
-    Invocation.setter(#isLoading, value),
-    returnValueForMissingStub: null,
-  );
+  set isLoading(bool? value) =>
+      super.noSuchMethod(Invocation.setter(#isLoading, value), returnValueForMissingStub: null);
 
   @override
-  set loadFailed(bool? value) => super.noSuchMethod(
-    Invocation.setter(#loadFailed, value),
-    returnValueForMissingStub: null,
-  );
+  set loadFailed(bool? value) =>
+      super.noSuchMethod(Invocation.setter(#loadFailed, value), returnValueForMissingStub: null);
 
   @override
   bool get hasListeners =>
@@ -207,14 +195,10 @@ class MockIndoorViewModel extends _i1.Mock implements _i3.IndoorViewModel {
   );
 
   @override
-  void dispose() => super.noSuchMethod(
-    Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
+  void dispose() =>
+      super.noSuchMethod(Invocation.method(#dispose, []), returnValueForMissingStub: null);
 
   @override
-  void notifyListeners() => super.noSuchMethod(
-    Invocation.method(#notifyListeners, []),
-    returnValueForMissingStub: null,
-  );
+  void notifyListeners() =>
+      super.noSuchMethod(Invocation.method(#notifyListeners, []), returnValueForMissingStub: null);
 }
