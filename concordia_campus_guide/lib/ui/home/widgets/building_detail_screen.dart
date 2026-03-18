@@ -91,7 +91,9 @@ class BuildingDetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 0), // the height of 0 gives it enough padding (for some reason)
+                const SizedBox(
+                  height: 0,
+                ), // the height of 0 gives it enough padding (for some reason)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
