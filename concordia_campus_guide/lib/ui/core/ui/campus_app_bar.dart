@@ -11,6 +11,7 @@ class CampusAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       leading: IconButton(
+        key: const Key("hamburger_button"),
         onPressed: Scaffold.of(context).openDrawer,
         icon: const Icon(Icons.menu),
         color: Colors.white,
