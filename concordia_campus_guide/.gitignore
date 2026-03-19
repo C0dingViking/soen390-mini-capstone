@@ -52,3 +52,4 @@ app.*.map.json
 
 # Patrol test bundle (auto-generated)
 /patrol_test/test_bundle.dart
+/integration_test/patrol_test_bundle.dart

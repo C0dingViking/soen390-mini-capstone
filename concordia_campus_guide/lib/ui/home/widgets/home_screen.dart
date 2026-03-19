@@ -420,6 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     left: actionInset,
                     bottom: secondActionBottom,
                     child: FloatingActionButton.extended(
+                      key: const Key("next_class"),
                       heroTag: "next_class",
                       onPressed: () => context.read<HomeViewModel>().showNextClass(),
                       backgroundColor: _buttonColor,
