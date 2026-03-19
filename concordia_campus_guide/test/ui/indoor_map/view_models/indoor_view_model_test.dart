@@ -6,19 +6,30 @@ import "package:logger/logger.dart";
 
 class _FakeFloorplanInteractor extends FloorplanInteractor {
   bool returnEmpty = false;
+  bool shouldThrow = false;
   int executionCount = 0;
 
   @override
-  Future<Map<int, Floorplan>> loadFloorplans(final String buildingId) async {
+  Future<Map<String, Floorplan>> loadFloorplans(final String buildingId) async {
+    if (shouldThrow) throw Exception();
     executionCount += 1;
 
     return (returnEmpty)
         ? {}
-        : {1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "test.svg", rooms: [], pois: [])};
+        : {
+            "1": Floorplan(
+              buildingId: "T",
+              floorNumber: "1",
+              svgPath: "test.svg",
+              rooms: [],
+              pois: [],
+            ),
+          };
   }
 
   @override
   Future<List<String>> loadRoomNames() async {
+    if (shouldThrow) throw Exception();
     return (returnEmpty) ? [] : ["T 1", "T 2", "T 3"];
   }
 }
@@ -65,7 +76,7 @@ void main() {
       expect(ivm.selectedFloorplan!.buildingId, "T");
       expect(ivm.availableFloors, isNotNull);
       expect(ivm.availableFloors!.length, 1);
-      expect(ivm.availableFloors!.first, 1);
+      expect(ivm.availableFloors!.first, "1");
       expect(ivm.isLoading, false);
       expect(ivm.loadFailed, false);
     });
@@ -88,34 +99,58 @@ void main() {
       await ivm.initializeBuildingFloorplans("T");
       expect(ivm.loadFailed, true);
     });
+
+    test("initializeBuildingFloorplans handles throws", () async {
+      floorplanInteractor.shouldThrow = true;
+
+      await ivm.initializeBuildingFloorplans("T");
+      expect(ivm.loadFailed, true);
+    });
+
+    test("floorplan keys are sorted with S floors first", () async {
+      final keys = ["1", "2", "S2"];
+      expect(ivm.sortFloorplanKeys(keys), ["S2", "1", "2"]);
+    });
   });
 
   group("changeFloor", () {
     test("changeFloor changes selected floorplan successfully", () async {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "floor1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "floor2.svg", rooms: [], pois: []),
+        "1": Floorplan(
+          buildingId: "T",
+          floorNumber: "1",
+          svgPath: "floor1.svg",
+          rooms: [],
+          pois: [],
+        ),
+        "2": Floorplan(
+          buildingId: "T",
+          floorNumber: "2",
+          svgPath: "floor2.svg",
+          rooms: [],
+          pois: [],
+        ),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
 
-      final success = ivm.changeFloor(1);
+      final success = ivm.changeFloor("1");
       expect(success, true);
       expect(ivm.selectedFloorplan, isNotNull);
-      expect(ivm.selectedFloorplan!.floorNumber, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
 
-      final success2 = ivm.changeFloor(2);
+      final success2 = ivm.changeFloor("2");
       expect(success2, true);
       expect(ivm.selectedFloorplan, isNotNull);
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
     });
 
     test("changeFloor returns false for invalid floor number", () async {
       await ivm.initializeBuildingFloorplans("T");
-      final success = ivm.changeFloor(2);
+      final success = ivm.changeFloor("2");
 
       expect(success, false);
       expect(ivm.selectedFloorplan, isNotNull);
-      expect(ivm.selectedFloorplan!.floorNumber, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
     });
   });
 
@@ -134,6 +169,13 @@ void main() {
 
     test("initializeRoomNames handles empty returns", () async {
       floorplanInteractor.returnEmpty = true;
+
+      await ivm.initializeRoomNames();
+      expect(ivm.listLoadFailed, true);
+    });
+
+    test("initializeRoomNames handles throws", () async {
+      floorplanInteractor.shouldThrow = true;
 
       await ivm.initializeRoomNames();
       expect(ivm.listLoadFailed, true);

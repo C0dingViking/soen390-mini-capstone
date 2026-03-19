@@ -28,10 +28,10 @@ void main() {
 
       expect(floorplans.length, 2);
 
-      final Floorplan? floorplan1 = floorplans[1];
+      final Floorplan? floorplan1 = floorplans["1"];
       expect(floorplan1, isNotNull);
       expect(floorplan1!.buildingId, "vl");
-      expect(floorplan1.floorNumber, 1);
+      expect(floorplan1.floorNumber, "1");
       expect(floorplan1.rooms.length, 2);
       expect(floorplan1.rooms[0].name, "202-1");
       expect(floorplan1.rooms[0].points.length, 4);
@@ -41,10 +41,10 @@ void main() {
       expect(floorplan1.pois[0].location, Point(753.37836, 768.33722));
       expect(floorplan1.pois[1].name, "stairs-1");
 
-      final Floorplan? floorplan2 = floorplans[2];
+      final Floorplan? floorplan2 = floorplans["2"];
       expect(floorplan2, isNotNull);
       expect(floorplan2!.buildingId, "vl");
-      expect(floorplan2.floorNumber, 2);
+      expect(floorplan2.floorNumber, "2");
       expect(floorplan2.rooms.length, 1);
       expect(floorplan2.rooms[0].name, "205");
       expect(floorplan2.pois.length, 2);
