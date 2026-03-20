@@ -114,6 +114,28 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     throw Exception("Floor not found for room: $roomName");
   }
 
+  IndoorMapRoom? _findRoomOnFloor(final String roomName, final Floorplan floorplan) {
+    final normalizedName = roomName.trim().toLowerCase();
+
+    String sanitize(final String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r"\s+"), "")
+          .replaceAll(RegExp(r"[-.]"), "");
+    }
+
+    final sanitizedName = sanitize(normalizedName);
+
+    for (final room in floorplan.rooms) {
+      final candidate = room.name.trim().toLowerCase();
+      if (candidate == normalizedName || sanitize(candidate) == sanitizedName) {
+        return room;
+      }
+    }
+    return null;
+  }
+
   Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);

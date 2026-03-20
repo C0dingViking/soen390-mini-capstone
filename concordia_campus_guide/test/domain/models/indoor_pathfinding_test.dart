@@ -28,7 +28,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("cl", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("cl", "1", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.rooms.length, 2);
       expect(floorplan.corridors.length, 1);
@@ -59,7 +59,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("cl", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("cl", "1", "test.svg", XmlDocument.parse(xmlString));
 
       final roomA = floorplan.rooms[0];
       final roomB = floorplan.rooms[1];
@@ -87,7 +87,7 @@ void main() {
             if (match == null) continue;
 
             final buildingCode = match.group(1)!;
-            final floorNumber = int.parse(match.group(2)!);
+            final floorNumber = match.group(2)!;
 
             final svgString = File(svgPath).readAsStringSync();
             final xml = XmlDocument.parse(svgString);
@@ -141,7 +141,7 @@ void main() {
       final svgString = File(svgPath).readAsStringSync();
       final xml = XmlDocument.parse(svgString);
 
-      final floorplan = Floorplan.fromXml("h", 8, svgPath, xml);
+      final floorplan = Floorplan.fromXml("h", "8", svgPath, xml);
 
       // We expect H8 to have multiple rooms and corridors defined.
       expect(floorplan.rooms.length, greaterThan(1));
@@ -192,7 +192,7 @@ void main() {
   }
 
   Floorplan makeFloorplan({
-    required final int floorNumber,
+    required final String floorNumber,
     required final List<Corridor> corridors,
     final List<IndoorMapRoom> rooms = const [],
     final List<FloorTransition> transitions = const [],
@@ -239,7 +239,7 @@ void main() {
       );
 
       final floorplan = makeFloorplan(
-        floorNumber: 1,
+        floorNumber: "1",
         corridors: [corridor],
         transitions: [transition],
       );
@@ -261,7 +261,7 @@ void main() {
         groupTag: "stairs-1",
       );
 
-      final floorplan = makeFloorplan(floorNumber: 1, corridors: [], transitions: [transition]);
+      final floorplan = makeFloorplan(floorNumber: "1", corridors: [], transitions: [transition]);
 
       expect(
         () => floorplan.shortestPathToTransition(const Point<double>(10, 25), transition),
@@ -275,7 +275,7 @@ void main() {
   // =========================================================================
 
   group("computeInterFloorPath", () {
-    late Map<int, Floorplan> twoFloorBuilding;
+    late Map<String, Floorplan> twoFloorBuilding;
     late IndoorMapRoom roomOnFloor1;
     late IndoorMapRoom roomOnFloor2;
 
@@ -299,14 +299,14 @@ void main() {
       );
 
       twoFloorBuilding = {
-        1: makeFloorplan(
-          floorNumber: 1,
+        "1": makeFloorplan(
+          floorNumber: "1",
           corridors: [corridor1],
           rooms: [roomOnFloor1],
           transitions: [transition1],
         ),
-        2: makeFloorplan(
-          floorNumber: 2,
+        "2": makeFloorplan(
+          floorNumber: "2",
           corridors: [corridor2],
           rooms: [roomOnFloor2],
           transitions: [transition2],
@@ -317,14 +317,14 @@ void main() {
     test("returns a single segment for same-floor routes", () {
       final segments = computeInterFloorPath(
         floorplans: twoFloorBuilding,
-        startFloor: 1,
-        destinationFloor: 1,
+        startFloor: "1",
+        destinationFloor: "1",
         startRoom: roomOnFloor1,
         destinationRoom: roomOnFloor1,
       );
 
       expect(segments.length, 1);
-      expect(segments.first.floorNumber, 1);
+      expect(segments.first.floorNumber, "1");
       expect(segments.first.entryTransition, isNull);
       expect(segments.first.exitTransition, isNull);
     });
@@ -332,20 +332,20 @@ void main() {
     test("returns two segments for a two-floor route", () {
       final segments = computeInterFloorPath(
         floorplans: twoFloorBuilding,
-        startFloor: 1,
-        destinationFloor: 2,
+        startFloor: "1",
+        destinationFloor: "2",
         startRoom: roomOnFloor1,
         destinationRoom: roomOnFloor2,
       );
 
       expect(segments.length, 2);
 
-      expect(segments[0].floorNumber, 1);
+      expect(segments[0].floorNumber, "1");
       expect(segments[0].path, isNotEmpty);
       expect(segments[0].exitTransition, isNotNull);
       expect(segments[0].exitTransition!.groupTag, "stairs-1");
 
-      expect(segments[1].floorNumber, 2);
+      expect(segments[1].floorNumber, "2");
       expect(segments[1].path, isNotEmpty);
       expect(segments[1].entryTransition, isNotNull);
       expect(segments[1].entryTransition!.groupTag, "stairs-1");
@@ -354,21 +354,21 @@ void main() {
     test("works in the reverse direction (floor 2 → floor 1)", () {
       final segments = computeInterFloorPath(
         floorplans: twoFloorBuilding,
-        startFloor: 2,
-        destinationFloor: 1,
+        startFloor: "2",
+        destinationFloor: "1",
         startRoom: roomOnFloor2,
         destinationRoom: roomOnFloor1,
       );
 
       expect(segments.length, 2);
-      expect(segments[0].floorNumber, 2);
-      expect(segments[1].floorNumber, 1);
+      expect(segments[0].floorNumber, "2");
+      expect(segments[1].floorNumber, "1");
     });
 
     test("throws when no matching transition exists between floors", () {
-      twoFloorBuilding[2] = makeFloorplan(
-        floorNumber: 2,
-        corridors: twoFloorBuilding[2]!.corridors,
+      twoFloorBuilding["2"] = makeFloorplan(
+        floorNumber: "2",
+        corridors: twoFloorBuilding["2"]!.corridors,
         rooms: [roomOnFloor2],
         transitions: [],
       );
@@ -376,8 +376,8 @@ void main() {
       expect(
         () => computeInterFloorPath(
           floorplans: twoFloorBuilding,
-          startFloor: 1,
-          destinationFloor: 2,
+          startFloor: "1",
+          destinationFloor: "2",
           startRoom: roomOnFloor1,
           destinationRoom: roomOnFloor2,
         ),
@@ -390,9 +390,9 @@ void main() {
       final roomOnFloor3 = makeRoom("301", const Point<double>(20, 25));
 
       final threeFloorBuilding = {
-        1: twoFloorBuilding[1]!,
-        3: makeFloorplan(
-          floorNumber: 3,
+        "1": twoFloorBuilding["1"]!,
+        "3": makeFloorplan(
+          floorNumber: "3",
           corridors: [corridor3],
           rooms: [roomOnFloor3],
           transitions: [
@@ -408,15 +408,15 @@ void main() {
 
       final segments = computeInterFloorPath(
         floorplans: threeFloorBuilding,
-        startFloor: 1,
-        destinationFloor: 3,
+        startFloor: "1",
+        destinationFloor: "3",
         startRoom: roomOnFloor1,
         destinationRoom: roomOnFloor3,
       );
 
       expect(segments.length, 2);
-      expect(segments[0].floorNumber, 1);
-      expect(segments[1].floorNumber, 3);
+      expect(segments[0].floorNumber, "1");
+      expect(segments[1].floorNumber, "3");
     });
 
     test("uses elevator when it is the only available transition", () {
@@ -436,23 +436,23 @@ void main() {
         groupTag: "elevator-1",
       );
 
-      twoFloorBuilding[1] = makeFloorplan(
-        floorNumber: 1,
-        corridors: twoFloorBuilding[1]!.corridors,
+      twoFloorBuilding["1"] = makeFloorplan(
+        floorNumber: "1",
+        corridors: twoFloorBuilding["1"]!.corridors,
         rooms: [roomOnFloor1],
         transitions: [elevatorTransition1],
       );
-      twoFloorBuilding[2] = makeFloorplan(
-        floorNumber: 2,
-        corridors: twoFloorBuilding[2]!.corridors,
+      twoFloorBuilding["2"] = makeFloorplan(
+        floorNumber: "2",
+        corridors: twoFloorBuilding["2"]!.corridors,
         rooms: [roomOnFloor2],
         transitions: [elevatorTransition2],
       );
 
       final segments = computeInterFloorPath(
         floorplans: twoFloorBuilding,
-        startFloor: 1,
-        destinationFloor: 2,
+        startFloor: "1",
+        destinationFloor: "2",
         startRoom: roomOnFloor1,
         destinationRoom: roomOnFloor2,
         preferredTransitionType: TransitionType.elevator,
@@ -468,10 +468,10 @@ void main() {
       final roomOnFloor3 = makeRoom("301", const Point<double>(20, 25));
 
       final threeFloorBuilding = {
-        1: twoFloorBuilding[1]!,
-        2: makeFloorplan(
-          floorNumber: 2,
-          corridors: twoFloorBuilding[2]!.corridors,
+        "1": twoFloorBuilding["1"]!,
+        "2": makeFloorplan(
+          floorNumber: "2",
+          corridors: twoFloorBuilding["2"]!.corridors,
           rooms: [roomOnFloor2],
           transitions: [
             FloorTransition(
@@ -488,8 +488,8 @@ void main() {
             ),
           ],
         ),
-        3: makeFloorplan(
-          floorNumber: 3,
+        "3": makeFloorplan(
+          floorNumber: "3",
           corridors: [corridor3],
           rooms: [roomOnFloor3],
           transitions: [
@@ -505,16 +505,16 @@ void main() {
 
       final segments = computeInterFloorPath(
         floorplans: threeFloorBuilding,
-        startFloor: 1,
-        destinationFloor: 3,
+        startFloor: "1",
+        destinationFloor: "3",
         startRoom: roomOnFloor1,
         destinationRoom: roomOnFloor3,
       );
 
       expect(segments.length, 3);
-      expect(segments[0].floorNumber, 1);
-      expect(segments[1].floorNumber, 2);
-      expect(segments[2].floorNumber, 3);
+      expect(segments[0].floorNumber, "1");
+      expect(segments[1].floorNumber, "2");
+      expect(segments[2].floorNumber, "3");
     });
   });
 
@@ -538,20 +538,20 @@ void main() {
       );
 
       final segment = IndoorFloorPathSegment(
-        floorNumber: 3,
+        floorNumber: "3",
         path: [const Point<double>(10, 10), const Point<double>(100, 50)],
         exitTransition: exit,
         entryTransition: entry,
       );
 
-      expect(segment.floorNumber, 3);
+      expect(segment.floorNumber, "3");
       expect(segment.path.length, 2);
       expect(segment.exitTransition!.id, "t1");
       expect(segment.entryTransition!.id, "t2");
     });
 
     test("exit and entry transitions default to null", () {
-      final segment = IndoorFloorPathSegment(floorNumber: 1, path: [const Point<double>(0, 0)]);
+      final segment = IndoorFloorPathSegment(floorNumber: "1", path: [const Point<double>(0, 0)]);
 
       expect(segment.exitTransition, isNull);
       expect(segment.entryTransition, isNull);

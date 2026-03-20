@@ -159,7 +159,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("cl", 2, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("cl", "2", "test.svg", XmlDocument.parse(xmlString));
       final result = floorplan.corridors;
 
       expect(result.length, 5);
@@ -228,14 +228,14 @@ void main() {
 
   group("Floorplan transitions field", () {
     test("defaults to empty list", () {
-      final fp = Floorplan(buildingId: "h", floorNumber: 1, svgPath: "test.svg");
+      final fp = Floorplan(buildingId: "h", floorNumber: "1", svgPath: "test.svg");
       expect(fp.transitions, isEmpty);
     });
 
     test("can be set via constructor", () {
       final fp = Floorplan(
         buildingId: "h",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "test.svg",
         transitions: [
           const FloorTransition(
@@ -259,7 +259,7 @@ void main() {
     });
 
     test("transitions can be reassigned (late field)", () {
-      final fp = Floorplan(buildingId: "h", floorNumber: 1, svgPath: "test.svg");
+      final fp = Floorplan(buildingId: "h", floorNumber: "1", svgPath: "test.svg");
 
       fp.transitions = [
         const FloorTransition(
@@ -294,7 +294,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "1", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 1);
       expect(floorplan.transitions[0].type, TransitionType.stairs);
@@ -316,7 +316,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 2, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "2", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 1);
       expect(floorplan.transitions[0].type, TransitionType.elevator);
@@ -339,7 +339,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "1", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 2);
       expect(floorplan.transitions[0].type, TransitionType.escalator);
@@ -364,7 +364,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 3, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "3", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 2);
       expect(floorplan.transitions[0].type, TransitionType.stairs);
@@ -389,7 +389,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "1", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 1);
       expect(floorplan.transitions[0].groupTag, "stairs-1");
@@ -416,7 +416,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "1", "test.svg", XmlDocument.parse(xmlString));
 
       expect(floorplan.transitions.length, 3);
 
@@ -442,7 +442,7 @@ void main() {
 </svg>
 ''';
 
-      final floorplan = Floorplan.fromXml("h", 1, "test.svg", XmlDocument.parse(xmlString));
+      final floorplan = Floorplan.fromXml("h", "1", "test.svg", XmlDocument.parse(xmlString));
       expect(floorplan.transitions, isEmpty);
     });
   });

@@ -104,7 +104,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // necessary to ensure "S2" comes before "1".. etc
+  //  to ensure S2 comes before 1 and other specifications
   List<String> sortFloorplanKeys(final List<String> keys) {
     keys.sort((final a, final b) {
       final aIsSub = a.startsWith("S");
@@ -192,7 +192,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Advance to the next floor
+  // Advance to the next floor
   bool advanceToNextSegment() {
     if (!hasNextSegment) {
       return false;
@@ -210,7 +210,7 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
-  /// Goes back to the previous floor segment and switches displayed floor
+  // Goes back to the previous floor segment and switches displayed floor
   bool goToPreviousSegment() {
     if (!hasPreviousSegment) {
       return false;

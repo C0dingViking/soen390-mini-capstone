@@ -192,7 +192,7 @@ void main() {
   List<IndoorFloorPathSegment> twoFloorSegments() {
     return [
       IndoorFloorPathSegment(
-        floorNumber: 1,
+        floorNumber: "1",
         path: [const Point(10, 10), const Point(100, 50)],
         exitTransition: const FloorTransition(
           id: "h1-stairs-1",
@@ -202,7 +202,7 @@ void main() {
         ),
       ),
       IndoorFloorPathSegment(
-        floorNumber: 2,
+        floorNumber: "2",
         path: [const Point(100, 50), const Point(20, 30)],
         entryTransition: const FloorTransition(
           id: "h2-stairs-1",
@@ -217,7 +217,7 @@ void main() {
   List<IndoorFloorPathSegment> threeFloorSegments() {
     return [
       IndoorFloorPathSegment(
-        floorNumber: 1,
+        floorNumber: "1",
         path: [const Point(10, 10), const Point(100, 50)],
         exitTransition: const FloorTransition(
           id: "h1-stairs-1",
@@ -227,7 +227,7 @@ void main() {
         ),
       ),
       IndoorFloorPathSegment(
-        floorNumber: 2,
+        floorNumber: "2",
         path: [const Point(100, 50), const Point(200, 50)],
         entryTransition: const FloorTransition(
           id: "h2-stairs-1",
@@ -243,7 +243,7 @@ void main() {
         ),
       ),
       IndoorFloorPathSegment(
-        floorNumber: 3,
+        floorNumber: "3",
         path: [const Point(200, 50), const Point(20, 30)],
         entryTransition: const FloorTransition(
           id: "h3-stairs-2",
@@ -271,10 +271,10 @@ void main() {
 
     test("returns true after setInterFloorPath with multiple segments", () {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
 
       ivm.setInterFloorPath(twoFloorSegments());
       expect(ivm.isInterFloorRoute, isTrue);
@@ -282,7 +282,7 @@ void main() {
 
     test("returns false after setInterFloorPath with a single segment", () {
       ivm.setInterFloorPath([
-        IndoorFloorPathSegment(floorNumber: 1, path: [const Point(0, 0), const Point(50, 50)]),
+        IndoorFloorPathSegment(floorNumber: "1", path: [const Point(0, 0), const Point(50, 50)]),
       ]);
       expect(ivm.isInterFloorRoute, isFalse);
     });
@@ -295,11 +295,11 @@ void main() {
   group("setInterFloorPath", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
-        3: Floorplan(buildingId: "T", floorNumber: 3, svgPath: "f3.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("sets indoorPath to the first segment's path", () {
@@ -310,10 +310,10 @@ void main() {
     });
 
     test("switches selectedFloorplan to the first segment's floor", () {
-      ivm.selectedFloorplan = ivm.loadedFloorplans![2];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["2"];
       ivm.setInterFloorPath(twoFloorSegments());
 
-      expect(ivm.selectedFloorplan!.floorNumber, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
     });
 
     test("resets segment index to 0 on new route", () {
@@ -349,11 +349,11 @@ void main() {
   group("segment navigation", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
-        3: Floorplan(buildingId: "T", floorNumber: 3, svgPath: "f3.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("advanceToNextSegment moves to segment index 1", () {
@@ -362,7 +362,7 @@ void main() {
 
       expect(result, isTrue);
       expect(ivm.currentSegmentIndex, 1);
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
       expect(ivm.indoorPath, equals(twoFloorSegments()[1].path));
     });
 
@@ -382,7 +382,7 @@ void main() {
       final result = ivm.goToPreviousSegment();
       expect(result, isTrue);
       expect(ivm.currentSegmentIndex, 0);
-      expect(ivm.selectedFloorplan!.floorNumber, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
     });
 
     test("goToPreviousSegment returns false at first segment", () {
@@ -403,19 +403,19 @@ void main() {
 
       ivm.advanceToNextSegment();
       expect(ivm.currentSegmentIndex, 1);
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
       expect(ivm.hasNextSegment, isTrue);
       expect(ivm.hasPreviousSegment, isTrue);
 
       ivm.advanceToNextSegment();
       expect(ivm.currentSegmentIndex, 2);
-      expect(ivm.selectedFloorplan!.floorNumber, 3);
+      expect(ivm.selectedFloorplan!.floorNumber, "3");
       expect(ivm.hasNextSegment, isFalse);
       expect(ivm.hasPreviousSegment, isTrue);
 
       ivm.goToPreviousSegment();
       expect(ivm.currentSegmentIndex, 1);
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
     });
 
     test("each navigation step notifies listeners", () {
@@ -442,11 +442,11 @@ void main() {
   group("currentSegment", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
-        3: Floorplan(buildingId: "T", floorNumber: 3, svgPath: "f3.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("returns null when no route is active", () {
@@ -471,18 +471,18 @@ void main() {
   group("changeFloor with active inter-floor route", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
-        3: Floorplan(buildingId: "T", floorNumber: 3, svgPath: "f3.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("syncs indoorPath to the segment for the selected floor", () {
       final segments = threeFloorSegments();
       ivm.setInterFloorPath(segments);
 
-      ivm.changeFloor(3);
+      ivm.changeFloor("3");
 
       expect(ivm.indoorPath, equals(segments[2].path));
       expect(ivm.currentSegmentIndex, 2);
@@ -491,14 +491,14 @@ void main() {
     test("clears indoorPath if the selected floor has no segment", () {
       ivm.setInterFloorPath(twoFloorSegments());
 
-      ivm.changeFloor(3);
+      ivm.changeFloor("3");
 
       expect(ivm.indoorPath, isNull);
     });
 
     test("does not affect path when no inter-floor route is active", () {
       ivm.setIndoorPath([const Point(0, 0), const Point(50, 50)]);
-      ivm.changeFloor(2);
+      ivm.changeFloor("2");
 
       expect(ivm.indoorPath, isNull);
     });
@@ -511,10 +511,10 @@ void main() {
   group("clearIndoorPath with inter-floor state", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("clears inter-floor segments and resets index", () {
@@ -545,10 +545,10 @@ void main() {
   group("resetFloorplanLoadState with inter-floor state", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("clears inter-floor route state", () {
@@ -572,10 +572,10 @@ void main() {
   group("setIndoorPath clears inter-floor state", () {
     setUp(() {
       ivm.loadedFloorplans = {
-        1: Floorplan(buildingId: "T", floorNumber: 1, svgPath: "f1.svg", rooms: [], pois: []),
-        2: Floorplan(buildingId: "T", floorNumber: 2, svgPath: "f2.svg", rooms: [], pois: []),
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
       };
-      ivm.selectedFloorplan = ivm.loadedFloorplans![1];
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
     });
 
     test("clears any active inter-floor route", () {

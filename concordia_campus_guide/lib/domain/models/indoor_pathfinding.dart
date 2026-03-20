@@ -28,7 +28,7 @@ class _IndoorGraph {
     required this.corridorAllNodeIds,
   });
 
-  /// Builds a navigation graph from corridor polygons.
+  // Builds a navigation graph from corridor polygons.
   factory _IndoorGraph.fromCorridors(final List<Corridor> corridors) {
     final List<_IndoorGraphNode> nodes = <_IndoorGraphNode>[];
     final Map<String, int> coordinateToNodeId = <String, int>{};
@@ -65,7 +65,7 @@ class _IndoorGraph {
     );
   }
 
-  /// Adds a door node and connects it to the corridor graph.
+  // Adds a door node and connects it to the corridor graph.
   int addDoorNode(final Point<double> door, final List<Corridor> corridors) {
     final doorNodeId = nodes.length;
     nodes.add(_IndoorGraphNode(door));
@@ -131,7 +131,7 @@ class _IndoorGraph {
 // Single-floor path segment used in multi-floor routes
 
 class IndoorFloorPathSegment {
-  final int floorNumber;
+  final String floorNumber;
 
   final List<Point<double>> path;
 
@@ -147,7 +147,7 @@ class IndoorFloorPathSegment {
   });
 }
 
-/// Computes the shortest indoor path between two rooms.
+// Computes the shortest indoor path between two rooms.
 extension FloorplanPathfinding on Floorplan {
   List<Point<double>> shortestPathBetweenRooms(
     final IndoorMapRoom startRoom,
@@ -183,7 +183,7 @@ extension FloorplanPathfinding on Floorplan {
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
   }
 
-  /// Computes the path from a room's door to a specific transition point on this floor.
+  // Computes the path from a room's door to a specific transition point on this floor.
   List<Point<double>> shortestPathToTransition(
     final Point<double> startPoint,
     final FloorTransition transition,
@@ -212,9 +212,9 @@ extension FloorplanPathfinding on Floorplan {
 // Inter-floor pathfinding
 
 List<IndoorFloorPathSegment> computeInterFloorPath({
-  required final Map<int, Floorplan> floorplans,
-  required final int startFloor,
-  required final int destinationFloor,
+  required final Map<String, Floorplan> floorplans,
+  required final String startFloor,
+  required final String destinationFloor,
   required final IndoorMapRoom startRoom,
   required final IndoorMapRoom destinationRoom,
   final TransitionType? preferredTransitionType,
@@ -226,13 +226,23 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   }
 
   // Determine the ordered list of floors to traverse.
-  final int direction = destinationFloor > startFloor ? 1 : -1;
-  final List<int> floorsToTraverse = [];
-  for (int f = startFloor; f != destinationFloor + direction; f += direction) {
-    if (!floorplans.containsKey(f)) {
-      continue; // skip floors that don't have a floorplan
-    }
-    floorsToTraverse.add(f);
+  // Parse numeric portion for sorting; non-numeric floors sort alphabetically
+  int floorSortKey(final String key) {
+    final digits = key.replaceAll(RegExp(r"[^0-9]"), "");
+    return digits.isNotEmpty ? int.parse(digits) : 0;
+  }
+
+  final allKeys = floorplans.keys.toList()
+    ..sort((final a, final b) => floorSortKey(a).compareTo(floorSortKey(b)));
+
+  final startIdx = allKeys.indexOf(startFloor);
+  final destIdx = allKeys.indexOf(destinationFloor);
+
+  final List<String> floorsToTraverse;
+  if (startIdx <= destIdx) {
+    floorsToTraverse = allKeys.sublist(startIdx, destIdx + 1);
+  } else {
+    floorsToTraverse = allKeys.sublist(destIdx, startIdx + 1).reversed.toList();
   }
 
   if (floorsToTraverse.length < 2) {
@@ -354,7 +364,7 @@ class _TransitionCandidate {
   const _TransitionCandidate({required this.fromTransition, required this.toTransition});
 }
 
-/// Finds transition pairs that connect two floors by matching
+// Finds transition pairs that connect two floors by matching
 List<_TransitionCandidate> _findMatchingTransitions(
   final List<FloorTransition> fromFloorTransitions,
   final List<FloorTransition> toFloorTransitions,
@@ -385,7 +395,7 @@ List<_TransitionCandidate> _findMatchingTransitions(
   return [...preferred, ...others];
 }
 
-/// Computes the total Euclidean length of a polyline path.
+// Computes the total  length of a polyline path.
 double _pathLength(final List<Point<double>> path) {
   double total = 0;
   for (int i = 0; i < path.length - 1; i++) {
@@ -396,14 +406,14 @@ double _pathLength(final List<Point<double>> path) {
 
 // Graph construction helpers
 
-/// Euclidean distance between two points.
+// Euclidean distance between two points.
 double _euclideanDistance(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
 }
 
-/// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
+// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
 List<List<int>> _createCorridorVertexNodes(
   final List<Corridor> corridors,
   final int Function(Point<double>) getOrCreateNodeId,
@@ -423,7 +433,7 @@ List<List<int>> _createCorridorVertexNodes(
   return corridorVertexNodeIds;
 }
 
-/// Connects consecutive corridor vertices along each corridor boundary.
+// Connects consecutive corridor vertices along each corridor boundary.
 void _connectCorridorEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorVertexNodeIds,
@@ -451,7 +461,7 @@ void _connectCorridorEdges(
   }
 }
 
-/// Connects nearby corridor vertices to bridge small gaps.
+// Connects nearby corridor vertices to bridge small gaps.
 void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   const double vertexSnapThreshold = 5.0;
   final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
@@ -474,7 +484,7 @@ void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   }
 }
 
-/// Adds midpoints and centroids as interior nodes for each corridor.
+// Adds midpoints and centroids as interior nodes for each corridor.
 void _addCorridorInteriorPoints(
   final List<Corridor> corridors,
   final List<List<int>> corridorAllNodeIds,
@@ -508,7 +518,7 @@ void _addCorridorInteriorPoints(
   }
 }
 
-/// Adds global visibility edges over the union of all corridors.
+// Adds global visibility edges over the union of all corridors.
 void _addGlobalVisibilityEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorAllNodeIds,
@@ -550,7 +560,7 @@ void _addGlobalVisibilityEdges(
   }
 }
 
-/// Checks whether segment AB lies entirely inside the union of all corridors.
+// Checks whether segment AB lies entirely inside the union of all corridors.
 bool _segmentInsideAnyCorridor(
   final Point<double> a,
   final Point<double> b,
@@ -578,7 +588,7 @@ bool _segmentInsideAnyCorridor(
   return true;
 }
 
-/// Even–odd point-in-polygon test.
+// Even–odd point-in-polygon test.
 bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygon) {
   if (polygon.length < 3) {
     return false;
@@ -602,7 +612,7 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   return inside;
 }
 
-/// Dijkstra shortest path on the indoor graph.
+// Dijkstra shortest path on the indoor graph.
 List<int> _dijkstra(final _IndoorGraph graph, final int startId, final int endId) {
   final nodeCount = graph.nodes.length;
   if (startId < 0 || startId >= nodeCount || endId < 0 || endId >= nodeCount) {
