@@ -372,21 +372,27 @@ void main() {
   ) async {
     String? selectedStartRoom;
     String? selectedDestinationRoom;
+    bool? selectedAccMode;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: IndoorSearchBar(
             queryableRooms: ["H 849", "MB 1-310"],
-            onStartNavigation: (final startRoom, final destinationRoom) {
+            onStartNavigation: (final startRoom, final destinationRoom, final accMode) {
               selectedStartRoom = startRoom;
               selectedDestinationRoom = destinationRoom;
+              selectedAccMode = accMode;
             },
           ),
         ),
       ),
     );
 
+    // Tap the accessible mode button
+    await tester.tap(find.byIcon(Icons.accessible));
+    await tester.pump();
+    
     final startField = find.byType(TextField).first;
     final destField = find.byType(TextField).last;
 
@@ -399,5 +405,6 @@ void main() {
 
     expect(selectedStartRoom, "H 849");
     expect(selectedDestinationRoom, "MB 1-310");
+    expect(selectedAccMode, isTrue);
   });
 }
