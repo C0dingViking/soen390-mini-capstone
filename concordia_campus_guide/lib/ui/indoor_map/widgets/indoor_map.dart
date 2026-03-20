@@ -144,15 +144,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
-    if (parsedStartRoom.buildingId != parsedDestinationRoom.buildingId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Indoor navigation currently supports routes within a single building."),
-        ),
-      );
-      return;
-    }
-
     final targetBuildingId = parsedStartRoom.buildingId.toLowerCase();
     final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toLowerCase();
     if (targetBuildingId != currentBuildingId) {
@@ -171,11 +162,24 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+
+    // Switch to the current location's floor immediately
+    _viewModel.changeFloor(startFloor);
+
+    if (parsedStartRoom.buildingId != parsedDestinationRoom.buildingId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Indoor navigation currently supports routes within a single building."),
+        ),
+      );
+      return;
+    }
+
     final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
 
-    // -----------------------------------------------------------------------
-    // Same-floor route (original behaviour)
-    // -----------------------------------------------------------------------
+    
+    // Same-floor route 
+    
     if (startFloor == destinationFloor) {
       final changedFloor = _viewModel.changeFloor(startFloor);
       if (!changedFloor) {
@@ -216,9 +220,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
-    // -----------------------------------------------------------------------
+    
     // Inter-floor route
-    // -----------------------------------------------------------------------
+  
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {
