@@ -218,6 +218,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   required final IndoorMapRoom startRoom,
   required final IndoorMapRoom destinationRoom,
   final TransitionType? preferredTransitionType,
+  final bool accessibleMode = false,
 }) {
   if (startFloor == destinationFloor) {
     final floorplan = floorplans[startFloor]!;
@@ -263,17 +264,32 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     final nextFloorplan = floorplans[nextFloorNum]!;
 
     // Find matching transition pairs between these floors
-    final candidates = _findMatchingTransitions(
+    final allCandidates = _findMatchingTransitions(
       currentFloorplan.transitions,
       nextFloorplan.transitions,
       preferredTransitionType,
     );
 
-    if (candidates.isEmpty) {
+    if (allCandidates.isEmpty) {
       throw StateError(
         "No connecting transition found between floor $currentFloorNum "
         "and floor $nextFloorNum.",
       );
+    }
+
+    // Accessibility mode: if accessibleMode is true then populate candidates list with only non stairs transitions (if any)
+    List<_TransitionCandidate> candidates = allCandidates;
+
+    if (accessibleMode) {
+      final nonStairs = allCandidates
+          .where((c) =>
+      c.fromTransition.type != TransitionType.stairs &&
+          c.toTransition.type != TransitionType.stairs)
+          .toList();
+
+      if (nonStairs.isNotEmpty) {
+        candidates = nonStairs;
+      }
     }
 
     _TransitionCandidate? bestCandidate;

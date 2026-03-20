@@ -7,7 +7,7 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
-  final void Function(String startRoom, String destinationRoom)? onStartNavigation;
+  final void Function(String startRoom, String destinationRoom, bool accessibleMode)? onStartNavigation;
 
   const IndoorSearchBar({
     super.key,
@@ -37,6 +37,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
+  bool _accessibleMode = false;
 
   List<String> _filteredRoomList = [];
 
@@ -179,6 +180,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     widget.onStartNavigation?.call(
       _startController.text.trim(),
       _destinationController.text.trim(),
+      _accessibleMode,
     );
   }
 
@@ -260,6 +262,30 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(
+                Icons.directions_walk,
+                color: !_accessibleMode ? Colors.blue : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() => _accessibleMode = false);
+              },
+              tooltip: "Normal walking route",
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.accessible,
+                color: _accessibleMode ? Colors.blue : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() => _accessibleMode = true);
+              },
+              tooltip: "Accessible route (avoid stairs)",
+            ),
+          ],
+        ),
         SearchInputCard(
           elevation: _cardElevation,
           radius: _cardRadius,
