@@ -42,6 +42,18 @@ class MockPlacesService extends _i1.Mock implements _i2.PlacesService {
           as _i3.Future<List<_i4.PlaceSuggestion>>);
 
   @override
+  _i3.Future<List<_i4.PlaceSuggestion>> fetchNearbyPlaces(
+    String? input,
+    _i5.Coordinate? origin, {
+    int? maxResults = 5,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#fetchNearbyPlaces, [input, origin], {#maxResults: maxResults}),
+            returnValue: _i3.Future<List<_i4.PlaceSuggestion>>.value(<_i4.PlaceSuggestion>[]),
+          )
+          as _i3.Future<List<_i4.PlaceSuggestion>>);
+
+  @override
   _i3.Future<_i5.Coordinate?> fetchPlaceCoordinate(String? placeId, {String? fallbackQuery}) =>
       (super.noSuchMethod(
             Invocation.method(#fetchPlaceCoordinate, [placeId], {#fallbackQuery: fallbackQuery}),

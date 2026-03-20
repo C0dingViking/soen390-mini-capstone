@@ -3,25 +3,27 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i15;
-import 'dart:ui' as _i14;
+import 'dart:async' as _i17;
+import 'dart:ui' as _i16;
 
+import 'package:concordia_campus_guide/domain/interactors/calendar_interactor.dart' as _i5;
 import 'package:concordia_campus_guide/domain/interactors/directions_interactor.dart' as _i4;
 import 'package:concordia_campus_guide/domain/interactors/map_data_interactor.dart' as _i2;
 import 'package:concordia_campus_guide/domain/interactors/places_interactor.dart' as _i3;
-import 'package:concordia_campus_guide/domain/models/academic_class.dart' as _i13;
-import 'package:concordia_campus_guide/domain/models/building.dart' as _i8;
-import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i12;
-import 'package:concordia_campus_guide/domain/models/route_option.dart' as _i10;
-import 'package:concordia_campus_guide/domain/models/search_suggestion.dart' as _i11;
-import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart' as _i7;
-import 'package:firebase_auth/firebase_auth.dart' as _i6;
-import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart' as _i5;
-import 'package:google_maps_flutter/google_maps_flutter.dart' as _i9;
-import 'package:google_sign_in/google_sign_in.dart' as _i16;
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart' as _i17;
+import 'package:concordia_campus_guide/domain/models/academic_class.dart' as _i15;
+import 'package:concordia_campus_guide/domain/models/building.dart' as _i9;
+import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i14;
+import 'package:concordia_campus_guide/domain/models/place_suggestion.dart' as _i13;
+import 'package:concordia_campus_guide/domain/models/route_option.dart' as _i11;
+import 'package:concordia_campus_guide/domain/models/search_suggestion.dart' as _i12;
+import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart' as _i8;
+import 'package:firebase_auth/firebase_auth.dart' as _i7;
+import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart' as _i6;
+import 'package:google_maps_flutter/google_maps_flutter.dart' as _i10;
+import 'package:google_sign_in/google_sign_in.dart' as _i18;
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart' as _i19;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i18;
+import 'package:mockito/src/dummies.dart' as _i20;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -53,37 +55,42 @@ class _FakeDirectionsInteractor_2 extends _i1.SmartFake implements _i4.Direction
     : super(parent, parentInvocation);
 }
 
-class _FakeUserMetadata_3 extends _i1.SmartFake implements _i5.UserMetadata {
-  _FakeUserMetadata_3(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
-}
-
-class _FakeMultiFactor_4 extends _i1.SmartFake implements _i6.MultiFactor {
-  _FakeMultiFactor_4(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
-}
-
-class _FakeIdTokenResult_5 extends _i1.SmartFake implements _i5.IdTokenResult {
-  _FakeIdTokenResult_5(Object parent, Invocation parentInvocation)
+class _FakeCalendarInteractor_3 extends _i1.SmartFake implements _i5.CalendarInteractor {
+  _FakeCalendarInteractor_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeUserCredential_6 extends _i1.SmartFake implements _i6.UserCredential {
-  _FakeUserCredential_6(Object parent, Invocation parentInvocation)
+class _FakeUserMetadata_4 extends _i1.SmartFake implements _i6.UserMetadata {
+  _FakeUserMetadata_4(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+}
+
+class _FakeMultiFactor_5 extends _i1.SmartFake implements _i7.MultiFactor {
+  _FakeMultiFactor_5(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+}
+
+class _FakeIdTokenResult_6 extends _i1.SmartFake implements _i6.IdTokenResult {
+  _FakeIdTokenResult_6(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeConfirmationResult_7 extends _i1.SmartFake implements _i6.ConfirmationResult {
-  _FakeConfirmationResult_7(Object parent, Invocation parentInvocation)
+class _FakeUserCredential_7 extends _i1.SmartFake implements _i7.UserCredential {
+  _FakeUserCredential_7(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeUser_8 extends _i1.SmartFake implements _i6.User {
-  _FakeUser_8(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+class _FakeConfirmationResult_8 extends _i1.SmartFake implements _i7.ConfirmationResult {
+  _FakeConfirmationResult_8(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeUser_9 extends _i1.SmartFake implements _i7.User {
+  _FakeUser_9(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
 }
 
 /// A class which mocks [HomeViewModel].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
+class MockHomeViewModel extends _i1.Mock implements _i8.HomeViewModel {
   MockHomeViewModel() {
     _i1.throwOnMissingStub(this);
   }
@@ -116,23 +123,31 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
           as _i4.DirectionsInteractor);
 
   @override
+  _i5.CalendarInteractor get calendarInteractor =>
+      (super.noSuchMethod(
+            Invocation.getter(#calendarInteractor),
+            returnValue: _FakeCalendarInteractor_3(this, Invocation.getter(#calendarInteractor)),
+          )
+          as _i5.CalendarInteractor);
+
+  @override
   bool get showLoginSuccessMessage =>
       (super.noSuchMethod(Invocation.getter(#showLoginSuccessMessage), returnValue: false) as bool);
 
   @override
-  Map<String, _i8.Building> get buildings =>
-      (super.noSuchMethod(Invocation.getter(#buildings), returnValue: <String, _i8.Building>{})
-          as Map<String, _i8.Building>);
+  Map<String, _i9.Building> get buildings =>
+      (super.noSuchMethod(Invocation.getter(#buildings), returnValue: <String, _i9.Building>{})
+          as Map<String, _i9.Building>);
 
   @override
-  Set<_i9.Polygon> get buildingOutlines =>
-      (super.noSuchMethod(Invocation.getter(#buildingOutlines), returnValue: <_i9.Polygon>{})
-          as Set<_i9.Polygon>);
+  Set<_i10.Polygon> get buildingOutlines =>
+      (super.noSuchMethod(Invocation.getter(#buildingOutlines), returnValue: <_i10.Polygon>{})
+          as Set<_i10.Polygon>);
 
   @override
-  Set<_i9.Marker> get buildingMarkers =>
-      (super.noSuchMethod(Invocation.getter(#buildingMarkers), returnValue: <_i9.Marker>{})
-          as Set<_i9.Marker>);
+  Set<_i10.Marker> get buildingMarkers =>
+      (super.noSuchMethod(Invocation.getter(#buildingMarkers), returnValue: <_i10.Marker>{})
+          as Set<_i10.Marker>);
 
   @override
   bool get isLoading =>
@@ -141,6 +156,10 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   @override
   bool get isSearchingPlaces =>
       (super.noSuchMethod(Invocation.getter(#isSearchingPlaces), returnValue: false) as bool);
+
+  @override
+  bool get isSearchingNearbyPlaces =>
+      (super.noSuchMethod(Invocation.getter(#isSearchingNearbyPlaces), returnValue: false) as bool);
 
   @override
   bool get isResolvingPlace =>
@@ -156,30 +175,30 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#isLoadingRoutes), returnValue: false) as bool);
 
   @override
-  Map<_i10.RouteMode, _i10.RouteOption> get routeOptions =>
+  Map<_i11.RouteMode, _i11.RouteOption> get routeOptions =>
       (super.noSuchMethod(
             Invocation.getter(#routeOptions),
-            returnValue: <_i10.RouteMode, _i10.RouteOption>{},
+            returnValue: <_i11.RouteMode, _i11.RouteOption>{},
           )
-          as Map<_i10.RouteMode, _i10.RouteOption>);
+          as Map<_i11.RouteMode, _i11.RouteOption>);
 
   @override
-  _i10.RouteMode get selectedRouteMode =>
+  _i11.RouteMode get selectedRouteMode =>
       (super.noSuchMethod(
             Invocation.getter(#selectedRouteMode),
-            returnValue: _i10.RouteMode.walking,
+            returnValue: _i11.RouteMode.walking,
           )
-          as _i10.RouteMode);
+          as _i11.RouteMode);
 
   @override
-  Set<_i9.Polyline> get routePolylines =>
-      (super.noSuchMethod(Invocation.getter(#routePolylines), returnValue: <_i9.Polyline>{})
-          as Set<_i9.Polyline>);
+  Set<_i10.Polyline> get routePolylines =>
+      (super.noSuchMethod(Invocation.getter(#routePolylines), returnValue: <_i10.Polyline>{})
+          as Set<_i10.Polyline>);
 
   @override
-  Set<_i9.Circle> get transitChangeCircles =>
-      (super.noSuchMethod(Invocation.getter(#transitChangeCircles), returnValue: <_i9.Circle>{})
-          as Set<_i9.Circle>);
+  Set<_i10.Circle> get transitChangeCircles =>
+      (super.noSuchMethod(Invocation.getter(#transitChangeCircles), returnValue: <_i10.Circle>{})
+          as Set<_i10.Circle>);
 
   @override
   bool get showNextClassFab =>
@@ -190,14 +209,26 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#showNextClassDialog), returnValue: false) as bool);
 
   @override
-  _i7.DepartureMode get departureMode =>
-      (super.noSuchMethod(Invocation.getter(#departureMode), returnValue: _i7.DepartureMode.now)
-          as _i7.DepartureMode);
+  _i8.DepartureMode get departureMode =>
+      (super.noSuchMethod(Invocation.getter(#departureMode), returnValue: _i8.DepartureMode.now)
+          as _i8.DepartureMode);
 
   @override
-  List<_i11.SearchSuggestion> get searchResults =>
-      (super.noSuchMethod(Invocation.getter(#searchResults), returnValue: <_i11.SearchSuggestion>[])
-          as List<_i11.SearchSuggestion>);
+  List<_i12.SearchSuggestion> get searchResults =>
+      (super.noSuchMethod(Invocation.getter(#searchResults), returnValue: <_i12.SearchSuggestion>[])
+          as List<_i12.SearchSuggestion>);
+
+  @override
+  List<_i13.PlaceSuggestion> get nearbySearchResults =>
+      (super.noSuchMethod(
+            Invocation.getter(#nearbySearchResults),
+            returnValue: <_i13.PlaceSuggestion>[],
+          )
+          as List<_i13.PlaceSuggestion>);
+
+  @override
+  int get nearbySearchResultLimit =>
+      (super.noSuchMethod(Invocation.getter(#nearbySearchResultLimit), returnValue: 0) as int);
 
   @override
   bool get myLocationEnabled =>
@@ -212,37 +243,37 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#unfocusSearchBarSignal), returnValue: 0) as int);
 
   @override
-  List<_i12.Coordinate> get campuses =>
-      (super.noSuchMethod(Invocation.getter(#campuses), returnValue: <_i12.Coordinate>[])
-          as List<_i12.Coordinate>);
+  List<_i14.Coordinate> get campuses =>
+      (super.noSuchMethod(Invocation.getter(#campuses), returnValue: <_i14.Coordinate>[])
+          as List<_i14.Coordinate>);
 
   @override
   int get selectedCampusIndex =>
       (super.noSuchMethod(Invocation.getter(#selectedCampusIndex), returnValue: 0) as int);
 
   @override
-  Set<_i9.Marker> get mapMarkers =>
-      (super.noSuchMethod(Invocation.getter(#mapMarkers), returnValue: <_i9.Marker>{})
-          as Set<_i9.Marker>);
+  Set<_i10.Marker> get mapMarkers =>
+      (super.noSuchMethod(Invocation.getter(#mapMarkers), returnValue: <_i10.Marker>{})
+          as Set<_i10.Marker>);
 
   @override
-  set buildings(Map<String, _i8.Building>? value) =>
+  set buildings(Map<String, _i9.Building>? value) =>
       super.noSuchMethod(Invocation.setter(#buildings, value), returnValueForMissingStub: null);
 
   @override
-  set buildingOutlines(Set<_i9.Polygon>? value) => super.noSuchMethod(
+  set buildingOutlines(Set<_i10.Polygon>? value) => super.noSuchMethod(
     Invocation.setter(#buildingOutlines, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set buildingMarkers(Set<_i9.Marker>? value) => super.noSuchMethod(
+  set buildingMarkers(Set<_i10.Marker>? value) => super.noSuchMethod(
     Invocation.setter(#buildingMarkers, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set currentBuilding(_i8.Building? value) => super.noSuchMethod(
+  set currentBuilding(_i9.Building? value) => super.noSuchMethod(
     Invocation.setter(#currentBuilding, value),
     returnValueForMissingStub: null,
   );
@@ -256,12 +287,20 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
       super.noSuchMethod(Invocation.setter(#errorMessage, value), returnValueForMissingStub: null);
 
   @override
-  set generateInfoMessage(String? value) =>
-      super.noSuchMethod(Invocation.setter(#infoMessage, value), returnValueForMissingStub: null);
+  set generateInfoMessage(String? value) => super.noSuchMethod(
+    Invocation.setter(#generateInfoMessage, value),
+    returnValueForMissingStub: null,
+  );
 
   @override
   set isSearchingPlaces(bool? value) => super.noSuchMethod(
     Invocation.setter(#isSearchingPlaces, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set isSearchingNearbyPlaces(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isSearchingNearbyPlaces, value),
     returnValueForMissingStub: null,
   );
 
@@ -278,25 +317,25 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  set searchStartMarker(_i9.Marker? value) => super.noSuchMethod(
+  set searchStartMarker(_i10.Marker? value) => super.noSuchMethod(
     Invocation.setter(#searchStartMarker, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set searchDestinationMarker(_i9.Marker? value) => super.noSuchMethod(
+  set searchDestinationMarker(_i10.Marker? value) => super.noSuchMethod(
     Invocation.setter(#searchDestinationMarker, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set startCoordinate(_i12.Coordinate? value) => super.noSuchMethod(
+  set startCoordinate(_i14.Coordinate? value) => super.noSuchMethod(
     Invocation.setter(#startCoordinate, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set destinationCoordinate(_i12.Coordinate? value) => super.noSuchMethod(
+  set destinationCoordinate(_i14.Coordinate? value) => super.noSuchMethod(
     Invocation.setter(#destinationCoordinate, value),
     returnValueForMissingStub: null,
   );
@@ -326,23 +365,23 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  set routeOptions(Map<_i10.RouteMode, _i10.RouteOption>? value) =>
+  set routeOptions(Map<_i11.RouteMode, _i11.RouteOption>? value) =>
       super.noSuchMethod(Invocation.setter(#routeOptions, value), returnValueForMissingStub: null);
 
   @override
-  set selectedRouteMode(_i10.RouteMode? value) => super.noSuchMethod(
+  set selectedRouteMode(_i11.RouteMode? value) => super.noSuchMethod(
     Invocation.setter(#selectedRouteMode, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set routePolylines(Set<_i9.Polyline>? value) => super.noSuchMethod(
+  set routePolylines(Set<_i10.Polyline>? value) => super.noSuchMethod(
     Invocation.setter(#routePolylines, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set transitChangeCircles(Set<_i9.Circle>? value) => super.noSuchMethod(
+  set transitChangeCircles(Set<_i10.Circle>? value) => super.noSuchMethod(
     Invocation.setter(#transitChangeCircles, value),
     returnValueForMissingStub: null,
   );
@@ -354,11 +393,11 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  set upcomingClass(_i13.AcademicClass? value) =>
+  set upcomingClass(_i15.AcademicClass? value) =>
       super.noSuchMethod(Invocation.setter(#upcomingClass, value), returnValueForMissingStub: null);
 
   @override
-  set departureMode(_i7.DepartureMode? value) =>
+  set departureMode(_i8.DepartureMode? value) =>
       super.noSuchMethod(Invocation.setter(#departureMode, value), returnValueForMissingStub: null);
 
   @override
@@ -380,8 +419,20 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  set searchResults(List<_i11.SearchSuggestion>? value) =>
+  set searchResults(List<_i12.SearchSuggestion>? value) =>
       super.noSuchMethod(Invocation.setter(#searchResults, value), returnValueForMissingStub: null);
+
+  @override
+  set nearbySearchResults(List<_i13.PlaceSuggestion>? value) => super.noSuchMethod(
+    Invocation.setter(#nearbySearchResults, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set nearbySearchResultLimit(int? value) => super.noSuchMethod(
+    Invocation.setter(#nearbySearchResultLimit, value),
+    returnValueForMissingStub: null,
+  );
 
   @override
   set myLocationEnabled(bool? value) => super.noSuchMethod(
@@ -402,15 +453,15 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  set cameraTarget(_i12.Coordinate? value) =>
+  set cameraTarget(_i14.Coordinate? value) =>
       super.noSuchMethod(Invocation.setter(#cameraTarget, value), returnValueForMissingStub: null);
 
   @override
-  set routeBounds(_i9.LatLngBounds? value) =>
+  set routeBounds(_i10.LatLngBounds? value) =>
       super.noSuchMethod(Invocation.setter(#routeBounds, value), returnValueForMissingStub: null);
 
   @override
-  set buildingOutlineColor(_i14.Color? color) => super.noSuchMethod(
+  set buildingOutlineColor(_i16.Color? color) => super.noSuchMethod(
     Invocation.setter(#buildingOutlineColor, color),
     returnValueForMissingStub: null,
   );
@@ -420,22 +471,22 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
 
   @override
-  _i15.Future<void> initializeBuildingsData(String? path) =>
+  _i17.Future<void> initializeBuildingsData(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#initializeBuildingsData, [path]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> goToCurrentLocation() =>
+  _i17.Future<void> goToCurrentLocation() =>
       (super.noSuchMethod(
             Invocation.method(#goToCurrentLocation, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
   void toggleCampus() =>
@@ -450,6 +501,18 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   @override
   void clearRouteBounds() =>
       super.noSuchMethod(Invocation.method(#clearRouteBounds, []), returnValueForMissingStub: null);
+
+  @override
+  void setActiveSearchField(_i8.SearchField? field) => super.noSuchMethod(
+    Invocation.method(#setActiveSearchField, [field]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void setNearbySearchResultLimit(int? value) => super.noSuchMethod(
+    Invocation.method(#setNearbySearchResultLimit, [value]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void updateSearchQuery(String? query) => super.noSuchMethod(
@@ -486,25 +549,25 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  _i15.Future<void> selectSearchSuggestion(
-    _i11.SearchSuggestion? suggestion,
-    _i7.SearchField? field,
+  _i17.Future<void> selectSearchSuggestion(
+    _i12.SearchSuggestion? suggestion,
+    _i8.SearchField? field,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#selectSearchSuggestion, [suggestion, field]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> setStartToCurrentLocation() =>
+  _i17.Future<void> setStartToCurrentLocation() =>
       (super.noSuchMethod(
             Invocation.method(#setStartToCurrentLocation, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
   void stopLocationTracking() => super.noSuchMethod(
@@ -513,7 +576,7 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  void setDepartureMode(_i7.DepartureMode? mode) => super.noSuchMethod(
+  void setDepartureMode(_i8.DepartureMode? mode) => super.noSuchMethod(
     Invocation.method(#setDepartureMode, [mode]),
     returnValueForMissingStub: null,
   );
@@ -531,19 +594,25 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  void selectRouteMode(_i10.RouteMode? mode) => super.noSuchMethod(
+  void selectRouteMode(_i11.RouteMode? mode) => super.noSuchMethod(
     Invocation.method(#selectRouteMode, [mode]),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i15.Future<void> refreshRoutes() =>
+  _i17.Future<void> refreshRoutes() =>
       (super.noSuchMethod(
             Invocation.method(#refreshRoutes, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
+
+  @override
+  void onMapCameraMove(_i10.CameraPosition? position) => super.noSuchMethod(
+    Invocation.method(#onMapCameraMove, [position]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void dispose() =>
@@ -574,22 +643,37 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
   );
 
   @override
-  _i15.Future<void> showNextClass() =>
+  _i17.Future<void> setDestinationToUpcomingClassBuilding() =>
       (super.noSuchMethod(
-            Invocation.method(#showNextClass, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            Invocation.method(#setDestinationToUpcomingClassBuilding, []),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  void addListener(_i14.VoidCallback? listener) => super.noSuchMethod(
+  _i17.Future<void> showNextClass() =>
+      (super.noSuchMethod(
+            Invocation.method(#showNextClass, []),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
+          )
+          as _i17.Future<void>);
+
+  @override
+  void clearUpcomingClass() => super.noSuchMethod(
+    Invocation.method(#clearUpcomingClass, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void addListener(_i16.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i14.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i16.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -602,15 +686,15 @@ class MockHomeViewModel extends _i1.Mock implements _i7.HomeViewModel {
 /// A class which mocks [GoogleSignIn].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGoogleSignIn extends _i1.Mock implements _i16.GoogleSignIn {
+class MockGoogleSignIn extends _i1.Mock implements _i18.GoogleSignIn {
   MockGoogleSignIn() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i17.SignInOption get signInOption =>
-      (super.noSuchMethod(Invocation.getter(#signInOption), returnValue: _i17.SignInOption.standard)
-          as _i17.SignInOption);
+  _i19.SignInOption get signInOption =>
+      (super.noSuchMethod(Invocation.getter(#signInOption), returnValue: _i19.SignInOption.standard)
+          as _i19.SignInOption);
 
   @override
   List<String> get scopes =>
@@ -622,15 +706,15 @@ class MockGoogleSignIn extends _i1.Mock implements _i16.GoogleSignIn {
           as bool);
 
   @override
-  _i15.Stream<_i16.GoogleSignInAccount?> get onCurrentUserChanged =>
+  _i17.Stream<_i18.GoogleSignInAccount?> get onCurrentUserChanged =>
       (super.noSuchMethod(
             Invocation.getter(#onCurrentUserChanged),
-            returnValue: _i15.Stream<_i16.GoogleSignInAccount?>.empty(),
+            returnValue: _i17.Stream<_i18.GoogleSignInAccount?>.empty(),
           )
-          as _i15.Stream<_i16.GoogleSignInAccount?>);
+          as _i17.Stream<_i18.GoogleSignInAccount?>);
 
   @override
-  _i15.Future<_i16.GoogleSignInAccount?> signInSilently({
+  _i17.Future<_i18.GoogleSignInAccount?> signInSilently({
     bool? suppressErrors = true,
     bool? reAuthenticate = false,
   }) =>
@@ -639,63 +723,63 @@ class MockGoogleSignIn extends _i1.Mock implements _i16.GoogleSignIn {
               #suppressErrors: suppressErrors,
               #reAuthenticate: reAuthenticate,
             }),
-            returnValue: _i15.Future<_i16.GoogleSignInAccount?>.value(),
+            returnValue: _i17.Future<_i18.GoogleSignInAccount?>.value(),
           )
-          as _i15.Future<_i16.GoogleSignInAccount?>);
+          as _i17.Future<_i18.GoogleSignInAccount?>);
 
   @override
-  _i15.Future<bool> isSignedIn() =>
+  _i17.Future<bool> isSignedIn() =>
       (super.noSuchMethod(
             Invocation.method(#isSignedIn, []),
-            returnValue: _i15.Future<bool>.value(false),
+            returnValue: _i17.Future<bool>.value(false),
           )
-          as _i15.Future<bool>);
+          as _i17.Future<bool>);
 
   @override
-  _i15.Future<_i16.GoogleSignInAccount?> signIn() =>
+  _i17.Future<_i18.GoogleSignInAccount?> signIn() =>
       (super.noSuchMethod(
             Invocation.method(#signIn, []),
-            returnValue: _i15.Future<_i16.GoogleSignInAccount?>.value(),
+            returnValue: _i17.Future<_i18.GoogleSignInAccount?>.value(),
           )
-          as _i15.Future<_i16.GoogleSignInAccount?>);
+          as _i17.Future<_i18.GoogleSignInAccount?>);
 
   @override
-  _i15.Future<_i16.GoogleSignInAccount?> signOut() =>
+  _i17.Future<_i18.GoogleSignInAccount?> signOut() =>
       (super.noSuchMethod(
             Invocation.method(#signOut, []),
-            returnValue: _i15.Future<_i16.GoogleSignInAccount?>.value(),
+            returnValue: _i17.Future<_i18.GoogleSignInAccount?>.value(),
           )
-          as _i15.Future<_i16.GoogleSignInAccount?>);
+          as _i17.Future<_i18.GoogleSignInAccount?>);
 
   @override
-  _i15.Future<_i16.GoogleSignInAccount?> disconnect() =>
+  _i17.Future<_i18.GoogleSignInAccount?> disconnect() =>
       (super.noSuchMethod(
             Invocation.method(#disconnect, []),
-            returnValue: _i15.Future<_i16.GoogleSignInAccount?>.value(),
+            returnValue: _i17.Future<_i18.GoogleSignInAccount?>.value(),
           )
-          as _i15.Future<_i16.GoogleSignInAccount?>);
+          as _i17.Future<_i18.GoogleSignInAccount?>);
 
   @override
-  _i15.Future<bool> requestScopes(List<String>? scopes) =>
+  _i17.Future<bool> requestScopes(List<String>? scopes) =>
       (super.noSuchMethod(
             Invocation.method(#requestScopes, [scopes]),
-            returnValue: _i15.Future<bool>.value(false),
+            returnValue: _i17.Future<bool>.value(false),
           )
-          as _i15.Future<bool>);
+          as _i17.Future<bool>);
 
   @override
-  _i15.Future<bool> canAccessScopes(List<String>? scopes, {String? accessToken}) =>
+  _i17.Future<bool> canAccessScopes(List<String>? scopes, {String? accessToken}) =>
       (super.noSuchMethod(
             Invocation.method(#canAccessScopes, [scopes], {#accessToken: accessToken}),
-            returnValue: _i15.Future<bool>.value(false),
+            returnValue: _i17.Future<bool>.value(false),
           )
-          as _i15.Future<bool>);
+          as _i17.Future<bool>);
 }
 
 /// A class which mocks [User].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUser extends _i1.Mock implements _i6.User {
+class MockUser extends _i1.Mock implements _i7.User {
   MockUser() {
     _i1.throwOnMissingStub(this);
   }
@@ -709,251 +793,251 @@ class MockUser extends _i1.Mock implements _i6.User {
       (super.noSuchMethod(Invocation.getter(#isAnonymous), returnValue: false) as bool);
 
   @override
-  _i5.UserMetadata get metadata =>
+  _i6.UserMetadata get metadata =>
       (super.noSuchMethod(
             Invocation.getter(#metadata),
-            returnValue: _FakeUserMetadata_3(this, Invocation.getter(#metadata)),
+            returnValue: _FakeUserMetadata_4(this, Invocation.getter(#metadata)),
           )
-          as _i5.UserMetadata);
+          as _i6.UserMetadata);
 
   @override
-  List<_i5.UserInfo> get providerData =>
-      (super.noSuchMethod(Invocation.getter(#providerData), returnValue: <_i5.UserInfo>[])
-          as List<_i5.UserInfo>);
+  List<_i6.UserInfo> get providerData =>
+      (super.noSuchMethod(Invocation.getter(#providerData), returnValue: <_i6.UserInfo>[])
+          as List<_i6.UserInfo>);
 
   @override
   String get uid =>
       (super.noSuchMethod(
             Invocation.getter(#uid),
-            returnValue: _i18.dummyValue<String>(this, Invocation.getter(#uid)),
+            returnValue: _i20.dummyValue<String>(this, Invocation.getter(#uid)),
           )
           as String);
 
   @override
-  _i6.MultiFactor get multiFactor =>
+  _i7.MultiFactor get multiFactor =>
       (super.noSuchMethod(
             Invocation.getter(#multiFactor),
-            returnValue: _FakeMultiFactor_4(this, Invocation.getter(#multiFactor)),
+            returnValue: _FakeMultiFactor_5(this, Invocation.getter(#multiFactor)),
           )
-          as _i6.MultiFactor);
+          as _i7.MultiFactor);
 
   @override
-  _i15.Future<void> delete() =>
+  _i17.Future<void> delete() =>
       (super.noSuchMethod(
             Invocation.method(#delete, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<String?> getIdToken([bool? forceRefresh = false]) =>
+  _i17.Future<String?> getIdToken([bool? forceRefresh = false]) =>
       (super.noSuchMethod(
             Invocation.method(#getIdToken, [forceRefresh]),
-            returnValue: _i15.Future<String?>.value(),
+            returnValue: _i17.Future<String?>.value(),
           )
-          as _i15.Future<String?>);
+          as _i17.Future<String?>);
 
   @override
-  _i15.Future<_i5.IdTokenResult> getIdTokenResult([bool? forceRefresh = false]) =>
+  _i17.Future<_i6.IdTokenResult> getIdTokenResult([bool? forceRefresh = false]) =>
       (super.noSuchMethod(
             Invocation.method(#getIdTokenResult, [forceRefresh]),
-            returnValue: _i15.Future<_i5.IdTokenResult>.value(
-              _FakeIdTokenResult_5(this, Invocation.method(#getIdTokenResult, [forceRefresh])),
+            returnValue: _i17.Future<_i6.IdTokenResult>.value(
+              _FakeIdTokenResult_6(this, Invocation.method(#getIdTokenResult, [forceRefresh])),
             ),
           )
-          as _i15.Future<_i5.IdTokenResult>);
+          as _i17.Future<_i6.IdTokenResult>);
 
   @override
-  _i15.Future<_i6.UserCredential> linkWithCredential(_i5.AuthCredential? credential) =>
+  _i17.Future<_i7.UserCredential> linkWithCredential(_i6.AuthCredential? credential) =>
       (super.noSuchMethod(
             Invocation.method(#linkWithCredential, [credential]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(this, Invocation.method(#linkWithCredential, [credential])),
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(this, Invocation.method(#linkWithCredential, [credential])),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<_i6.UserCredential> linkWithProvider(_i5.AuthProvider? provider) =>
+  _i17.Future<_i7.UserCredential> linkWithProvider(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#linkWithProvider, [provider]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(this, Invocation.method(#linkWithProvider, [provider])),
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(this, Invocation.method(#linkWithProvider, [provider])),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<_i6.UserCredential> reauthenticateWithProvider(_i5.AuthProvider? provider) =>
+  _i17.Future<_i7.UserCredential> reauthenticateWithProvider(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#reauthenticateWithProvider, [provider]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(
                 this,
                 Invocation.method(#reauthenticateWithProvider, [provider]),
               ),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<_i6.UserCredential> reauthenticateWithPopup(_i5.AuthProvider? provider) =>
+  _i17.Future<_i7.UserCredential> reauthenticateWithPopup(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#reauthenticateWithPopup, [provider]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(this, Invocation.method(#reauthenticateWithPopup, [provider])),
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(this, Invocation.method(#reauthenticateWithPopup, [provider])),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<void> reauthenticateWithRedirect(_i5.AuthProvider? provider) =>
+  _i17.Future<void> reauthenticateWithRedirect(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#reauthenticateWithRedirect, [provider]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<_i6.UserCredential> linkWithPopup(_i5.AuthProvider? provider) =>
+  _i17.Future<_i7.UserCredential> linkWithPopup(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#linkWithPopup, [provider]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(this, Invocation.method(#linkWithPopup, [provider])),
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(this, Invocation.method(#linkWithPopup, [provider])),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<void> linkWithRedirect(_i5.AuthProvider? provider) =>
+  _i17.Future<void> linkWithRedirect(_i6.AuthProvider? provider) =>
       (super.noSuchMethod(
             Invocation.method(#linkWithRedirect, [provider]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<_i6.ConfirmationResult> linkWithPhoneNumber(
+  _i17.Future<_i7.ConfirmationResult> linkWithPhoneNumber(
     String? phoneNumber, [
-    _i6.RecaptchaVerifier? verifier,
+    _i7.RecaptchaVerifier? verifier,
   ]) =>
       (super.noSuchMethod(
             Invocation.method(#linkWithPhoneNumber, [phoneNumber, verifier]),
-            returnValue: _i15.Future<_i6.ConfirmationResult>.value(
-              _FakeConfirmationResult_7(
+            returnValue: _i17.Future<_i7.ConfirmationResult>.value(
+              _FakeConfirmationResult_8(
                 this,
                 Invocation.method(#linkWithPhoneNumber, [phoneNumber, verifier]),
               ),
             ),
           )
-          as _i15.Future<_i6.ConfirmationResult>);
+          as _i17.Future<_i7.ConfirmationResult>);
 
   @override
-  _i15.Future<_i6.UserCredential> reauthenticateWithCredential(_i5.AuthCredential? credential) =>
+  _i17.Future<_i7.UserCredential> reauthenticateWithCredential(_i6.AuthCredential? credential) =>
       (super.noSuchMethod(
             Invocation.method(#reauthenticateWithCredential, [credential]),
-            returnValue: _i15.Future<_i6.UserCredential>.value(
-              _FakeUserCredential_6(
+            returnValue: _i17.Future<_i7.UserCredential>.value(
+              _FakeUserCredential_7(
                 this,
                 Invocation.method(#reauthenticateWithCredential, [credential]),
               ),
             ),
           )
-          as _i15.Future<_i6.UserCredential>);
+          as _i17.Future<_i7.UserCredential>);
 
   @override
-  _i15.Future<void> reload() =>
+  _i17.Future<void> reload() =>
       (super.noSuchMethod(
             Invocation.method(#reload, []),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> sendEmailVerification([_i5.ActionCodeSettings? actionCodeSettings]) =>
+  _i17.Future<void> sendEmailVerification([_i6.ActionCodeSettings? actionCodeSettings]) =>
       (super.noSuchMethod(
             Invocation.method(#sendEmailVerification, [actionCodeSettings]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<_i6.User> unlink(String? providerId) =>
+  _i17.Future<_i7.User> unlink(String? providerId) =>
       (super.noSuchMethod(
             Invocation.method(#unlink, [providerId]),
-            returnValue: _i15.Future<_i6.User>.value(
-              _FakeUser_8(this, Invocation.method(#unlink, [providerId])),
+            returnValue: _i17.Future<_i7.User>.value(
+              _FakeUser_9(this, Invocation.method(#unlink, [providerId])),
             ),
           )
-          as _i15.Future<_i6.User>);
+          as _i17.Future<_i7.User>);
 
   @override
-  _i15.Future<void> updatePassword(String? newPassword) =>
+  _i17.Future<void> updatePassword(String? newPassword) =>
       (super.noSuchMethod(
             Invocation.method(#updatePassword, [newPassword]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> updatePhoneNumber(_i5.PhoneAuthCredential? phoneCredential) =>
+  _i17.Future<void> updatePhoneNumber(_i6.PhoneAuthCredential? phoneCredential) =>
       (super.noSuchMethod(
             Invocation.method(#updatePhoneNumber, [phoneCredential]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> updateDisplayName(String? displayName) =>
+  _i17.Future<void> updateDisplayName(String? displayName) =>
       (super.noSuchMethod(
             Invocation.method(#updateDisplayName, [displayName]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> updatePhotoURL(String? photoURL) =>
+  _i17.Future<void> updatePhotoURL(String? photoURL) =>
       (super.noSuchMethod(
             Invocation.method(#updatePhotoURL, [photoURL]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> updateProfile({String? displayName, String? photoURL}) =>
+  _i17.Future<void> updateProfile({String? displayName, String? photoURL}) =>
       (super.noSuchMethod(
             Invocation.method(#updateProfile, [], {#displayName: displayName, #photoURL: photoURL}),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 
   @override
-  _i15.Future<void> verifyBeforeUpdateEmail(
+  _i17.Future<void> verifyBeforeUpdateEmail(
     String? newEmail, [
-    _i5.ActionCodeSettings? actionCodeSettings,
+    _i6.ActionCodeSettings? actionCodeSettings,
   ]) =>
       (super.noSuchMethod(
             Invocation.method(#verifyBeforeUpdateEmail, [newEmail, actionCodeSettings]),
-            returnValue: _i15.Future<void>.value(),
-            returnValueForMissingStub: _i15.Future<void>.value(),
+            returnValue: _i17.Future<void>.value(),
+            returnValueForMissingStub: _i17.Future<void>.value(),
           )
-          as _i15.Future<void>);
+          as _i17.Future<void>);
 }
 
 /// A class which mocks [UserCredential].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUserCredential extends _i1.Mock implements _i6.UserCredential {
+class MockUserCredential extends _i1.Mock implements _i7.UserCredential {
   MockUserCredential() {
     _i1.throwOnMissingStub(this);
   }

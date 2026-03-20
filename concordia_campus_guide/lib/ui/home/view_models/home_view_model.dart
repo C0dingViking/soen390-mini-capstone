@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
@@ -14,6 +15,7 @@ import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
@@ -51,6 +53,7 @@ class HomeViewModel extends ChangeNotifier {
   String? errorMessage;
   String? generateInfoMessage;
   bool isSearchingPlaces = false;
+  bool isSearchingNearbyPlaces = false;
   bool isResolvingPlace = false;
   bool isResolvingStartLocation = false;
   Marker? searchStartMarker;
@@ -80,8 +83,12 @@ class HomeViewModel extends ChangeNotifier {
   DateTime? suggestedDepartureTime;
 
   List<SearchSuggestion> searchResults = [];
+  List<PlaceSuggestion> nearbySearchResults = [];
+  final Map<String, BitmapDescriptor> _nearbyMarkerIcons = {};
   String _searchQuery = "";
   Timer? _searchDebounce;
+  SearchField _activeSearchField = SearchField.destination;
+  int nearbySearchResultLimit = 5;
 
   bool myLocationEnabled = false;
   bool isSearchBarExpanded = false;
@@ -180,10 +187,27 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Set<Marker> get mapMarkers {
-    final markers = <Marker>{...buildingMarkers};
+    final markers = <Marker>{...buildingMarkers, ..._nearbyResultMarkers()};
     if (searchStartMarker != null) markers.add(searchStartMarker!);
     if (searchDestinationMarker != null) markers.add(searchDestinationMarker!);
     return markers;
+  }
+
+  void setActiveSearchField(final SearchField field) {
+    _activeSearchField = field;
+  }
+
+  void setNearbySearchResultLimit(final int value) {
+    if (nearbySearchResultLimit == value) return;
+    nearbySearchResultLimit = value;
+
+    final trimmed = _searchQuery.trim();
+    if (_activeSearchField == SearchField.destination && trimmed.length >= 3) {
+      updateSearchQuery(_searchQuery);
+      return;
+    }
+
+    notifyListeners();
   }
 
   void updateSearchQuery(final String query) {
@@ -192,7 +216,9 @@ class HomeViewModel extends ChangeNotifier {
 
     final buildingSuggestions = _buildingSuggestions(query);
     searchResults = buildingSuggestions;
+    nearbySearchResults = [];
     isSearchingPlaces = false;
+    isSearchingNearbyPlaces = false;
     notifyListeners();
 
     final trimmed = query.trim();
@@ -200,23 +226,41 @@ class HomeViewModel extends ChangeNotifier {
 
     _searchDebounce = Timer(const Duration(milliseconds: 350), () async {
       if (trimmed != _searchQuery.trim()) return;
+
       isSearchingPlaces = true;
+      final searchNearby = _activeSearchField == SearchField.destination;
+      isSearchingNearbyPlaces = searchNearby;
       notifyListeners();
 
-      final places = await placesInteractor.searchPlaces(trimmed);
+      final autocompleteFuture = placesInteractor.searchPlaces(trimmed);
+      final nearbyFuture = searchNearby
+          ? _searchNearbyPlaces(trimmed)
+          : Future.value(<PlaceSuggestion>[]);
+
+      final autocompleteResults = await autocompleteFuture;
+      final nearbyResults = await nearbyFuture;
+
       if (trimmed != _searchQuery.trim()) {
         isSearchingPlaces = false;
+        isSearchingNearbyPlaces = false;
         notifyListeners();
         return;
       }
 
-      final combined = <SearchSuggestion>[
-        ...buildingSuggestions,
-        ...places.map(SearchSuggestion.place),
-      ];
+      await _primeNearbyMarkerIcons(nearbyResults);
+      nearbySearchResults = nearbyResults;
+      final nearbyPlaceIds = nearbyResults.map((final place) => place.placeId).toSet();
+      final autocompleteSuggestions = autocompleteResults
+          .where((final place) => !nearbyPlaceIds.contains(place.placeId))
+          .map(SearchSuggestion.place);
 
-      searchResults = combined;
+      searchResults = <SearchSuggestion>[
+        ...buildingSuggestions,
+        ...nearbyResults.map(SearchSuggestion.place),
+        ...autocompleteSuggestions,
+      ];
       isSearchingPlaces = false;
+      isSearchingNearbyPlaces = false;
       notifyListeners();
     });
   }
@@ -224,9 +268,14 @@ class HomeViewModel extends ChangeNotifier {
   void clearSearchResults() {
     _searchDebounce?.cancel();
     _searchQuery = "";
-    if (searchResults.isNotEmpty || isSearchingPlaces) {
+    if (searchResults.isNotEmpty ||
+        nearbySearchResults.isNotEmpty ||
+        isSearchingPlaces ||
+        isSearchingNearbyPlaces) {
       searchResults = [];
+      nearbySearchResults = [];
       isSearchingPlaces = false;
+      isSearchingNearbyPlaces = false;
       notifyListeners();
     }
   }
@@ -245,6 +294,7 @@ class HomeViewModel extends ChangeNotifier {
     routeBounds = null;
     routeErrorMessage = null;
     isLoadingRoutes = false;
+    nearbySearchResults = [];
     notifyListeners();
   }
 
@@ -300,9 +350,16 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    if (field == SearchField.destination && startCoordinate == null) {
+      await _applyCurrentLocationAsStart();
+    }
+
     _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
+    cameraTarget = coordinate;
+    isSearchBarExpanded = true;
+    clearSearchResults();
+    requestUnfocusSearchBar();
     await _loadRoutesIfReady();
-    searchResults = [];
     notifyListeners();
   }
 
@@ -773,6 +830,220 @@ class HomeViewModel extends ChangeNotifier {
         subtitle: "$campusLabel - ${building.id.toUpperCase()}",
       );
     }).toList();
+  }
+
+  Future<List<PlaceSuggestion>> _searchNearbyPlaces(final String query) async {
+    try {
+      final origin = await LocationService.instance.getCurrentPosition();
+      myLocationEnabled = true;
+      return await placesInteractor.searchNearbyPlaces(
+        query,
+        origin,
+        maxResults: nearbySearchResultLimit,
+      );
+    } catch (e) {
+      logger.w("HomeViewModel: nearby place search failed", error: e);
+      return [];
+    }
+  }
+
+  Future<void> _applyCurrentLocationAsStart() async {
+    final posCoord = await LocationService.instance.getCurrentPosition();
+    _applySelection(
+      field: SearchField.start,
+      coordinate: posCoord,
+      label: "Current location",
+      campus: null,
+    );
+    myLocationEnabled = true;
+  }
+
+  Future<void> _primeNearbyMarkerIcons(final List<PlaceSuggestion> places) async {
+    for (final place in places) {
+      if (_nearbyMarkerIcons.containsKey(place.placeId)) continue;
+      _nearbyMarkerIcons[place.placeId] = await _buildNearbyMarkerIcon(place.mainText);
+    }
+  }
+
+  Future<BitmapDescriptor> _buildNearbyMarkerIcon(final String label) async {
+    const double imageWidth = 140;
+    const double imageHeight = 150;
+    const double pinCircleRadius = 20;
+    const double pinTipHeight = 24;
+    const double pinStrokeWidth = 3;
+    const double labelHorizontalPadding = 10;
+    const double labelVerticalPadding = 6;
+    const double labelTop = 4;
+    const double labelBottomSpacing = 0;
+    const double maxLabelWidth = 110;
+    const double fontSize = 14;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final centerX = imageWidth / 2;
+    final pinTipY = imageHeight - 4;
+    final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
+
+    final displayLabel = _truncateMarkerLabel(label);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: displayLabel,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      maxLines: 1,
+      ellipsis: "…",
+      textDirection: ui.TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: maxLabelWidth);
+
+    final labelWidth = textPainter.width + (labelHorizontalPadding * 2);
+    final labelHeight = textPainter.height + (labelVerticalPadding * 2);
+    final labelLeft = (imageWidth - labelWidth) / 2;
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(labelLeft, labelTop, labelWidth, labelHeight),
+      const Radius.circular(14),
+    );
+
+    final labelShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.16)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRRect(labelRect.shift(const Offset(0, 2)), labelShadowPaint);
+
+    final labelPaint = Paint()..color = Colors.white;
+    canvas.drawRRect(labelRect, labelPaint);
+
+    final labelBorderPaint = Paint()
+      ..color = Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawRRect(labelRect, labelBorderPaint);
+
+    final textOffset = Offset(
+      (imageWidth - textPainter.width) / 2,
+      labelTop + ((labelHeight - textPainter.height) / 2),
+    );
+    textPainter.paint(canvas, textOffset);
+
+    final connectorTop = labelTop + labelHeight + labelBottomSpacing;
+    final connectorBottom = pinCircleCenter.dy - pinCircleRadius - 2;
+
+    final connectorShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawLine(
+      Offset(centerX, connectorTop + 2),
+      Offset(centerX, connectorBottom + 2),
+      connectorShadowPaint,
+    );
+
+    final connectorPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(centerX, connectorTop),
+      Offset(centerX, connectorBottom),
+      connectorPaint,
+    );
+
+    final pinShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final pinPathShadow = Path()
+      ..moveTo(centerX, pinTipY + 3)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
+      ..arcToPoint(
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 6,
+        centerX,
+        pinTipY + 3,
+      )
+      ..close();
+    canvas.drawPath(pinPathShadow, pinShadowPaint);
+
+    final pinPath = Path()
+      ..moveTo(centerX, pinTipY)
+      ..quadraticBezierTo(
+        centerX - pinCircleRadius - 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX - pinCircleRadius,
+        pinCircleCenter.dy,
+      )
+      ..arcToPoint(
+        Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
+        radius: Radius.circular(pinCircleRadius),
+        clockwise: true,
+      )
+      ..quadraticBezierTo(
+        centerX + pinCircleRadius + 4,
+        pinCircleCenter.dy + pinCircleRadius + 3,
+        centerX,
+        pinTipY,
+      )
+      ..close();
+
+    final pinPaint = Paint()..color = Colors.orange;
+    canvas.drawPath(pinPath, pinPaint);
+
+    final pinStrokePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = pinStrokeWidth;
+    canvas.drawPath(pinPath, pinStrokePaint);
+
+    final innerCirclePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(pinCircleCenter, 8, innerCirclePaint);
+
+    final image = await recorder.endRecording().toImage(imageWidth.toInt(), imageHeight.toInt());
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    }
+    return BitmapDescriptor.bytes(data.buffer.asUint8List());
+  }
+
+  String _truncateMarkerLabel(final String label) {
+    final trimmed = label.trim();
+    if (trimmed.length <= 20) return trimmed;
+    return "${trimmed.substring(0, 19).trimRight()}…";
+  }
+
+  Set<Marker> _nearbyResultMarkers() {
+    return nearbySearchResults.where((final place) => place.coordinate != null).map((final place) {
+      final coordinate = place.coordinate!;
+      return Marker(
+        markerId: MarkerId("nearby-${place.placeId}"),
+        position: coordinate.toLatLng(),
+        anchor: const Offset(0.5, 1.0),
+        onTap: () async {
+          await selectSearchSuggestion(SearchSuggestion.place(place), SearchField.destination);
+        },
+        infoWindow: InfoWindow(
+          title: place.mainText,
+          snippet: place.secondaryText.isNotEmpty ? place.secondaryText : null,
+        ),
+        icon:
+            _nearbyMarkerIcons[place.placeId] ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      );
+    }).toSet();
   }
 
   int _matchRank(final Building building, final String query) {

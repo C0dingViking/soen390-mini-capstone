@@ -14,6 +14,9 @@ class BuildingSearchBar extends StatefulWidget {
 }
 
 class _BuildingSearchBarState extends State<BuildingSearchBar> {
+  bool _keepMarkers = false;
+  bool _showSuggestions = true;
+
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _startFocusNode = FocusNode();
@@ -43,25 +46,44 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _handleFocusChange() {
+    final viewModel = context.read<HomeViewModel>();
+
     if (_startFocusNode.hasFocus) {
       _activeField = SearchField.start;
-      context.read<HomeViewModel>().updateSearchQuery(_startController.text);
+      _showSuggestions = true; // Show suggestions when focusing
+      viewModel.setActiveSearchField(SearchField.start);
+      viewModel.updateSearchQuery(_startController.text);
       return;
     }
     if (_destinationFocusNode.hasFocus) {
       _activeField = SearchField.destination;
-      context.read<HomeViewModel>().updateSearchQuery(_destinationController.text);
+      _showSuggestions = true; // Show suggestions when focusing
+      viewModel.setActiveSearchField(SearchField.destination);
+      viewModel.updateSearchQuery(_destinationController.text);
       return;
     }
 
     if (!_startFocusNode.hasFocus && !_destinationFocusNode.hasFocus) {
-      context.read<HomeViewModel>().clearSearchResults();
+      if (_keepMarkers) {
+        setState(() {
+          _keepMarkers = false;
+          _showSuggestions = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _showSuggestions = false;
+      });
+      viewModel.clearSearchResults();
     }
   }
 
   void _handleQueryChanged(final String query, final SearchField field) {
     _activeField = field;
-    context.read<HomeViewModel>().updateSearchQuery(query);
+    final viewModel = context.read<HomeViewModel>();
+    viewModel.setActiveSearchField(field);
+    viewModel.updateSearchQuery(query);
     setState(() {});
   }
 
@@ -80,9 +102,10 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     _destinationController.clear();
     _expanded = false;
     _activeField = SearchField.destination;
-    context.read<HomeViewModel>().clearSearchResults();
-    context.read<HomeViewModel>().clearRouteSelection();
-    context.read<HomeViewModel>().setSearchBarExpanded(false);
+    final viewModel = context.read<HomeViewModel>();
+    viewModel.clearSearchResults();
+    viewModel.clearRouteSelection();
+    viewModel.setSearchBarExpanded(false);
     FocusScope.of(context).unfocus();
     setState(() {});
   }
@@ -94,11 +117,14 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     controller.text = suggestion.title;
     controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
 
-    await context.read<HomeViewModel>().selectSearchSuggestion(suggestion, _activeField);
+    final viewModel = context.read<HomeViewModel>();
+    await viewModel.selectSearchSuggestion(suggestion, _activeField);
     if (!mounted) return;
-    final shouldAutoSetStart = _activeField == SearchField.destination && !_expanded;
+
+    final shouldAutoSetStart =
+        _activeField == SearchField.destination && !_expanded && viewModel.startCoordinate == null;
     if (shouldAutoSetStart) {
-      await context.read<HomeViewModel>().setStartToCurrentLocation();
+      await viewModel.setStartToCurrentLocation();
       if (!mounted) return;
       _startController.text = "Current location";
       _startController.selection = TextSelection.fromPosition(
@@ -107,8 +133,11 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     }
     if (!_expanded) {
       _expanded = true;
-      context.read<HomeViewModel>().setSearchBarExpanded(true);
+      viewModel.setSearchBarExpanded(true);
     }
+    setState(() {
+      _showSuggestions = false;
+    });
     FocusScope.of(context).unfocus();
   }
 
@@ -118,6 +147,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final showClearStart = _startController.text.isNotEmpty;
     final showClearDestination = _destinationController.text.isNotEmpty;
     final isSearchingPlaces = context.select((final HomeViewModel vm) => vm.isSearchingPlaces);
+    final isSearchingNearbyPlaces = context.select(
+      (final HomeViewModel vm) => vm.isSearchingNearbyPlaces,
+    );
     final isResolvingPlace = context.select((final HomeViewModel vm) => vm.isResolvingPlace);
     final isResolvingStart = context.select(
       (final HomeViewModel vm) => vm.isResolvingStartLocation,
@@ -146,9 +178,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           showClearDestination: showClearDestination,
           isResolvingStart: isResolvingStart,
           isResolvingPlace: isResolvingPlace,
-          isSearchingPlaces: isSearchingPlaces,
+          isSearchingPlaces: isSearchingPlaces || isSearchingNearbyPlaces,
         ),
-        if (results.isNotEmpty) _buildResultsList(context, results),
+        if (_showSuggestions && results.isNotEmpty) _buildResultsList(context, results),
       ],
     );
   }
@@ -162,7 +194,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _handleUnfocusSignal(context, unfocusSignal);
+      _handleUnfocusSignal(unfocusSignal);
       _syncExpandedState(context, isSearchBarExpanded);
       _syncStartLabel(selectedStartLabel);
       _syncDestinationLabel(selectedDestinationLabel);
@@ -175,7 +207,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
 
     setState(() {
       _expanded = isSearchBarExpanded;
-      if (!isSearchBarExpanded) {
+      if (isSearchBarExpanded) {
+        _showSuggestions = false;
+      } else {
         _activeField = SearchField.destination;
       }
     });
@@ -186,7 +220,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     }
   }
 
-  void _handleUnfocusSignal(final BuildContext context, final int unfocusSignal) {
+  void _handleUnfocusSignal(final int unfocusSignal) {
     if (unfocusSignal == _lastUnfocusSignal) return;
     _lastUnfocusSignal = unfocusSignal;
     _startFocusNode.unfocus();
@@ -195,7 +229,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _syncStartLabel(final String? selectedStartLabel) {
-    if (selectedStartLabel == _lastSyncedStartLabel || _startFocusNode.hasFocus) {
+    if (_startFocusNode.hasFocus || selectedStartLabel == _lastSyncedStartLabel) {
       return;
     }
     _lastSyncedStartLabel = selectedStartLabel;
@@ -207,7 +241,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
   }
 
   void _syncDestinationLabel(final String? selectedDestinationLabel) {
-    if (selectedDestinationLabel == _lastSyncedDestinationLabel || _destinationFocusNode.hasFocus) {
+    if (_destinationFocusNode.hasFocus || selectedDestinationLabel == _lastSyncedDestinationLabel) {
       return;
     }
     _lastSyncedDestinationLabel = selectedDestinationLabel;
@@ -330,11 +364,19 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       controller: _destinationController,
       focusNode: _destinationFocusNode,
       onChanged: (final value) => _handleQueryChanged(value, SearchField.destination),
+      onSubmitted: (final value) {
+        setState(() {
+          _showSuggestions = false;
+          _keepMarkers = true;
+        });
+        FocusScope.of(context).unfocus();
+      },
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: _expanded ? "Choose destination" : "Search for a place or address",
+        hintText: _expanded ? "Choose destination" : "Search for a Destination",
         prefixIcon: const Icon(Icons.place_outlined),
         suffixIcon: _buildDestinationSuffix(
+          context,
           showClearDestination: showClearDestination,
           isResolvingPlace: isResolvingPlace,
           isSearchingPlaces: isSearchingPlaces,
@@ -347,37 +389,53 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     );
   }
 
-  Widget? _buildDestinationSuffix({
+  Widget _buildDestinationSuffix(
+    final BuildContext context, {
     required final bool showClearDestination,
     required final bool isResolvingPlace,
     required final bool isSearchingPlaces,
   }) {
-    if (isResolvingPlace) {
-      return const Padding(
-        padding: EdgeInsets.all(12),
-        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
+    final nearbyLimit = context.select((final HomeViewModel vm) => vm.nearbySearchResultLimit);
 
-    if (_expanded) {
-      return IconButton(icon: const Icon(Icons.close), onPressed: _cancelSearch);
-    }
-
-    if (showClearDestination) {
-      return IconButton(
-        icon: const Icon(Icons.close),
-        onPressed: () => _clearQuery(SearchField.destination),
-      );
-    }
-
-    if (isSearchingPlaces) {
-      return const Padding(
-        padding: EdgeInsets.all(12),
-        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
-
-    return null;
+    return SizedBox(
+      width: _expanded ? 48 : 96,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_expanded)
+            PopupMenuButton<int>(
+              tooltip: "Choose how many nearby results to show",
+              initialValue: nearbyLimit,
+              icon: const Icon(Icons.tune),
+              onSelected: (final value) {
+                context.read<HomeViewModel>().setNearbySearchResultLimit(value);
+              },
+              itemBuilder: (final context) => const [
+                PopupMenuItem<int>(value: 3, child: Text("Show Nearest 3 Locations")),
+                PopupMenuItem<int>(value: 5, child: Text("Show Nearest 5 Locations")),
+                PopupMenuItem<int>(value: 10, child: Text("Show Nearest 10 Locations")),
+              ],
+            ),
+          if (isResolvingPlace || isSearchingPlaces)
+            const Padding(
+              padding: EdgeInsets.all(12),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (_expanded)
+            IconButton(icon: const Icon(Icons.close), onPressed: _cancelSearch)
+          else if (showClearDestination)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => _clearQuery(SearchField.destination),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildResultsList(final BuildContext context, final List<SearchSuggestion> results) {

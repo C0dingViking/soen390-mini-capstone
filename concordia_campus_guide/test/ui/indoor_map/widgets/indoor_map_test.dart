@@ -21,13 +21,14 @@ class TestIndoorViewModel extends IndoorViewModel {
     // provide a dummy floorplan so the widget's initial build doesn't crash
     selectedFloorplan = Floorplan(
       buildingId: "T",
-      floorNumber: 1,
+      floorNumber: "1",
       svgPath: "",
       canvasWidth: 100,
       canvasHeight: 100,
     );
     // Initialize loaded room names with test data
     loadedRoomNames = ["T 110", "T 111", "T 112", "T 210", "H 820"];
+    availableFloors = ["1", "2"];
   }
 
   @override
@@ -38,11 +39,11 @@ class TestIndoorViewModel extends IndoorViewModel {
     final normalizedPath = path.toUpperCase();
 
     if (normalizedPath == "H") {
-      availableFloors = [8];
+      availableFloors = ["8"];
       loadedFloorplans = {
-        8: Floorplan(
+        "8": Floorplan(
           buildingId: normalizedPath,
-          floorNumber: 8,
+          floorNumber: "8",
           svgPath: "testfloor8.svg",
           canvasWidth: 100,
           canvasHeight: 100,
@@ -61,16 +62,16 @@ class TestIndoorViewModel extends IndoorViewModel {
           pois: [],
         ),
       };
-      selectedFloorplan = loadedFloorplans![8];
+      selectedFloorplan = loadedFloorplans!["8"];
       notifyListeners();
       return;
     }
 
-    availableFloors = [1, 2];
+    availableFloors = ["1", "2"];
     loadedFloorplans = {
-      1: Floorplan(
+      "1": Floorplan(
         buildingId: normalizedPath,
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "testfloor1.svg",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -88,9 +89,9 @@ class TestIndoorViewModel extends IndoorViewModel {
         ],
         pois: [],
       ),
-      2: Floorplan(
+      "2": Floorplan(
         buildingId: normalizedPath,
-        floorNumber: 2,
+        floorNumber: "2",
         svgPath: "testfloor2.svg",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -109,7 +110,7 @@ class TestIndoorViewModel extends IndoorViewModel {
         pois: [],
       ),
     };
-    selectedFloorplan = loadedFloorplans![1];
+    selectedFloorplan = loadedFloorplans!["1"];
 
     notifyListeners();
   }
@@ -181,7 +182,7 @@ void main() {
     test("maps tap position to clicked room name", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -211,7 +212,7 @@ void main() {
     test("returns null when tap is outside room area", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -241,7 +242,7 @@ void main() {
     test("returns null for taps in letterboxed area outside SVG content", () {
       final floorplan = Floorplan(
         buildingId: "T",
-        floorNumber: 1,
+        floorNumber: "1",
         svgPath: "",
         canvasWidth: 100,
         canvasHeight: 100,
@@ -268,43 +269,52 @@ void main() {
       expect(roomName, isNull);
     });
 
-    testWidgets("floor picker button displays the name of the current floor", (final tester) async {
+    testWidgets("floor picker displays the current floor", (final tester) async {
       await pumpHomeScreen(tester, true);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.text("T1"), findsOneWidget);
+
+      expect(find.text("1"), findsOneWidget);
     });
 
-    testWidgets("floor picker shows available floors when clicked", (final tester) async {
+    testWidgets("floor picker switches to the next floor when up is tapped", (final tester) async {
       await pumpHomeScreen(tester, true);
-      await tester.tap(find.byType(FloatingActionButton));
+
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
       await tester.pumpAndSettle();
-      expect(find.text("Floor 1"), findsOneWidget);
-      expect(find.text("Floor 2"), findsOneWidget);
+
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(find.text("2"), findsOneWidget);
     });
 
-    testWidgets("floor picker switches the selected floor when a floor is tapped", (
-      final tester,
-    ) async {
+    testWidgets("floor picker switches to the prev. floor when down is hit", (final tester) async {
       await pumpHomeScreen(tester, true);
-      await tester.tap(find.byType(FloatingActionButton));
+
+      // go to second floor and back to test
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
       await tester.pumpAndSettle();
-      await tester.tap(find.text("Floor 2"));
+      await tester.tap(find.byIcon(Icons.arrow_downward_rounded));
       await tester.pumpAndSettle();
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
-      expect(find.text("T2"), findsOneWidget);
+
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
+      expect(find.text("1"), findsOneWidget);
     });
 
-    testWidgets("floor picker shows error if changing floor fails", (final tester) async {
+    testWidgets("floor picker hides the up arrow if you can't go higher", (final tester) async {
       await pumpHomeScreen(tester, true);
 
-      // remove floor 2 to simulate failure when changing floors
-      ivm.loadedFloorplans!.remove(2);
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Floor 2"));
-      await tester.pumpAndSettle();
-      expect(find.text("Failed to change floor. Please try again."), findsOneWidget);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsNothing);
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+    });
+
+    testWidgets("floor picker hides the down arrow if you can't go lower", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
     });
 
     testWidgets("tap on map populates destination field", (final tester) async {
@@ -340,8 +350,8 @@ void main() {
       await tester.tap(find.text("Start Navigation"));
       await tester.pumpAndSettle();
 
-      expect(ivm.selectedFloorplan!.floorNumber, 2);
-      expect(find.text("T2"), findsOneWidget);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(find.text("2"), findsOneWidget);
     });
 
     testWidgets("Start Navigation switches to current location building and floor", (
@@ -361,8 +371,8 @@ void main() {
 
       expect(ivm.initPath, "h");
       expect(ivm.selectedFloorplan!.buildingId, "H");
-      expect(ivm.selectedFloorplan!.floorNumber, 8);
-      expect(find.text("H8"), findsOneWidget);
+      expect(ivm.selectedFloorplan!.floorNumber, "8");
+      expect(find.text("8"), findsOneWidget);
     });
   });
 }

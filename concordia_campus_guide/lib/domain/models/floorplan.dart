@@ -94,7 +94,7 @@ class PointOfInterest {
 
 class Floorplan {
   final String buildingId;
-  final int floorNumber;
+  final String floorNumber;
   final String svgPath;
   final double canvasWidth;
   final double canvasHeight;
@@ -117,7 +117,7 @@ class Floorplan {
 
   factory Floorplan.fromXml(
     final String buildingId,
-    final int floorNumber,
+    final String floorNumber,
     final String svgPath,
     final XmlDocument xmlData,
   ) {
@@ -136,7 +136,7 @@ class Floorplan {
 
     final Floorplan floorplan = Floorplan(
       buildingId: buildingId,
-      floorNumber: floorNumber,
+      floorNumber: floorNumber.toUpperCase(),
       svgPath: svgPath,
       canvasWidth: parsedCanvasWidth,
       canvasHeight: parsedCanvasHeight,
@@ -199,7 +199,7 @@ class Floorplan {
 
   List<IndoorMapRoom> _parseRoomData(
     final String buildingId,
-    final int floorNumber,
+    final String floorNumber,
     final XmlElement roomLayer,
     final XmlElement connectorsLayer,
   ) {
@@ -240,7 +240,7 @@ class Floorplan {
 
   List<PointOfInterest> _parsePoiData(
     final String buildingId,
-    final int floorNumber,
+    final String floorNumber,
     final XmlElement poiLayer,
     final XmlElement connectorsLayer,
   ) {

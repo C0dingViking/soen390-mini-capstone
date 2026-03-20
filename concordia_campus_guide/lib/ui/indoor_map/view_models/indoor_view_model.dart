@@ -13,8 +13,8 @@ class IndoorViewModel extends ChangeNotifier {
   bool listLoadFailed = false;
   bool listIsLoading = false;
 
-  Map<int, Floorplan>? loadedFloorplans;
-  List<int>? availableFloors;
+  Map<String, Floorplan>? loadedFloorplans;
+  List<String>? availableFloors;
   Floorplan? selectedFloorplan;
 
   /// The path displayed on the currently selected floor.
@@ -81,7 +81,9 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final Map<int, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(buildingId);
+      final Map<String, Floorplan> floorplans = await floorplanInteractor.loadFloorplans(
+        buildingId,
+      );
 
       if (floorplans.isEmpty) {
         loadFailed = true;
@@ -89,7 +91,9 @@ class IndoorViewModel extends ChangeNotifier {
         loadedFloorplans = floorplans;
         loadedBuildingId = buildingId;
         selectedFloorplan = loadedFloorplans!.values.first;
-        availableFloors = loadedFloorplans!.keys.toList()..sort();
+        availableFloors = sortFloorplanKeys(
+          loadedFloorplans!.keys.map((final k) => k.toUpperCase()).toList(),
+        );
         loadFailed = false;
       }
     } catch (e) {
@@ -98,6 +102,28 @@ class IndoorViewModel extends ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
+  }
+
+  // necessary to ensure "S2" comes before "1".. etc
+  List<String> sortFloorplanKeys(final List<String> keys) {
+    keys.sort((final a, final b) {
+      final aIsSub = a.startsWith("S");
+      final bIsSub = b.startsWith("S");
+
+      if (aIsSub && !bIsSub) return -1;
+      if (!aIsSub && bIsSub) return 1;
+
+      final aNum = int.tryParse(a.replaceAll(RegExp(r"[^0-9]"), ""));
+      final bNum = int.tryParse(b.replaceAll(RegExp(r"[^0-9]"), ""));
+
+      if (aNum != null && bNum != null) {
+        return aNum.compareTo(bNum);
+      }
+
+      return a.compareTo(b);
+    });
+
+    return keys;
   }
 
   void resetFloorplanLoadState() {
@@ -109,7 +135,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool changeFloor(final int floorNumber) {
+  bool changeFloor(final String floorNumber) {
     if (loadedFloorplans == null || !loadedFloorplans!.containsKey(floorNumber)) {
       return false;
     }

@@ -7,7 +7,7 @@ class FloorplanInteractor {
   FloorplanInteractor({final FloorplanRepository? floorplanRepo})
     : _floorplanRepo = floorplanRepo ?? FloorplanRepository();
 
-  Future<Map<int, Floorplan>> loadFloorplans(final String directoryId) async {
+  Future<Map<String, Floorplan>> loadFloorplans(final String directoryId) async {
     return _floorplanRepo.loadBuildingFloorplans(directoryId);
   }
 
