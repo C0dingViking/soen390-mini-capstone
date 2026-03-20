@@ -13,7 +13,7 @@ class FloorTransition {
   final TransitionType type;
 
   /// The group tag shared by transitions that connect across floors.
- 
+  /// For example, "elevator-A" on floor 1 and floor 2 are the same shaft.
   final String groupTag;
 
   const FloorTransition({
@@ -313,7 +313,7 @@ class Floorplan {
       final typeName = match.group(1)!;
       final instanceNum = match.group(2)!;
 
-      // Determine the transition type for bewteen floors.
+      // Determine the canonical transition type.
       TransitionType transitionType;
       String canonicalGroup;
       switch (typeName) {

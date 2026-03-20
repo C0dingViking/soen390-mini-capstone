@@ -173,9 +173,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
     final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
 
-    
-    // Same-floor route 
-    
+    // Same-floor route
+
     if (startFloor == destinationFloor) {
       final changedFloor = _viewModel.changeFloor(startFloor);
       if (!changedFloor) {
@@ -216,9 +215,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
-    
     // Inter-floor route
-  
+
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {
