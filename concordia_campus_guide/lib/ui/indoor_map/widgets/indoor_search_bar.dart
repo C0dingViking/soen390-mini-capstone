@@ -262,29 +262,39 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(
-                Icons.directions_walk,
-                color: !_accessibleMode ? Colors.blue : Colors.grey,
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppTheme.indoorSearchFieldDecoration.fillColor,
+            borderRadius: BorderRadius.circular(_cardRadius),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.directions_walk,
+                  color: !_accessibleMode ? Colors.blue : Colors.grey[700],
+                ),
+                onPressed: () {
+                  setState(() => _accessibleMode = false);
+                },
+                tooltip: "Normal walking route",
               ),
-              onPressed: () {
-                setState(() => _accessibleMode = false);
-              },
-              tooltip: "Normal walking route",
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.accessible,
-                color: _accessibleMode ? Colors.blue : Colors.grey,
+              const SizedBox(width: 16),
+              IconButton(
+                icon: Icon(
+                  Icons.accessible,
+                  color: _accessibleMode ? Colors.blue : Colors.grey[700],
+                ),
+                onPressed: () {
+                  setState(() => _accessibleMode = true);
+                },
+                tooltip: "Accessible route (avoid stairs)",
               ),
-              onPressed: () {
-                setState(() => _accessibleMode = true);
-              },
-              tooltip: "Accessible route (avoid stairs)",
-            ),
-          ],
+            ],
+          ),
         ),
         SearchInputCard(
           elevation: _cardElevation,
