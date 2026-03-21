@@ -4,7 +4,6 @@ import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:flutter_test/flutter_test.dart";
 
-
 // ==========================================================================
 // Shared helpers
 // ==========================================================================
