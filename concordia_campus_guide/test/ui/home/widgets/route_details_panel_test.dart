@@ -128,6 +128,8 @@ void main() {
       final int? durationSeconds,
       final List<RouteStep> steps = const [],
       final String? summary,
+      final DateTime? departureTime,
+      final DateTime? arrivalTime,
     }) {
       return RouteOption(
         mode: mode,
@@ -136,6 +138,8 @@ void main() {
         polyline: const [],
         steps: steps,
         summary: summary,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
       );
     }
 
@@ -211,16 +215,14 @@ void main() {
       expect(find.text("Main route"), findsOneWidget);
     });
 
-    testWidgets("shows arrival time in route summary", (final tester) async {
-      // Set a specific departure time for predictable testing
-      final departureTime = DateTime(2025, 1, 1, 10, 0, 0);
-      vm.selectedDepartureTime = departureTime;
-
+    testWidgets("shows route-provided arrival time in route summary", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
           mode: RouteMode.walking,
           distanceMeters: 1200,
-          durationSeconds: 600, // 10 minutes
+          durationSeconds: 600,
+          departureTime: DateTime(2025, 1, 1, 10, 0, 0),
+          arrivalTime: DateTime(2025, 1, 1, 10, 10, 0),
         ),
       });
       vm.selectedRouteMode = RouteMode.walking;
@@ -228,8 +230,52 @@ void main() {
 
       await pumpPanel(tester);
 
-      // Verify arrival time is displayed (10:00 + 10 minutes = 10:10 AM)
       expect(find.text("Arrive at 10:10 AM"), findsOneWidget);
+    });
+
+    testWidgets("arrive-by summary uses selected arrival time when route arrival is missing", (
+      final tester,
+    ) async {
+      vm.departureMode = DepartureMode.arriveBy;
+      vm.selectedArrivalTime = DateTime(2025, 1, 1, 9, 30);
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          arrivalTime: null,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Arrive at 9:30 AM"), findsOneWidget);
+    });
+
+    testWidgets("arrive-by summary falls back to suggested departure plus duration", (
+      final tester,
+    ) async {
+      vm.departureMode = DepartureMode.arriveBy;
+      vm.suggestedDepartureTime = DateTime(2025, 1, 1, 9, 15);
+      vm.selectedArrivalTime = null;
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          arrivalTime: null,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Arrive at 9:25 AM"), findsOneWidget);
     });
 
     testWidgets("shows time labels and suggested departure", (final tester) async {
@@ -251,6 +297,55 @@ void main() {
       expect(find.text("Depart at 9:05 AM"), findsOneWidget);
       expect(find.text("Arrive by 9:30 AM"), findsOneWidget);
       expect(find.text("Leave at 9:15 AM to arrive on time"), findsOneWidget);
+    });
+
+    testWidgets("transit arrive-by leave-at matches transit suggested departure", (
+      final tester,
+    ) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to stop",
+          distanceMeters: 300,
+          durationSeconds: 300,
+          travelMode: "WALKING",
+        ),
+        RouteStep(
+          instruction: "Board bus",
+          distanceMeters: 2000,
+          durationSeconds: 900,
+          travelMode: "TRANSIT",
+          transitDetails: TransitDetails(
+            lineName: "Campus Loop",
+            shortName: "12",
+            mode: TransitMode.bus,
+            departureStop: "Stop A",
+            arrivalStop: "Stop B",
+            numStops: 5,
+            departureTime: "10:00 AM",
+            arrivalTime: "10:15 AM",
+            departureDateTime: DateTime(2025, 1, 1, 10, 0),
+          ),
+        ),
+      ];
+
+      vm.departureMode = DepartureMode.arriveBy;
+      vm.selectedArrivalTime = DateTime(2025, 1, 1, 10, 20);
+      vm.suggestedDepartureTime = DateTime(2025, 1, 1, 9, 10);
+      vm.setRoutes({
+        RouteMode.transit: makeOption(
+          mode: RouteMode.transit,
+          distanceMeters: 2300,
+          durationSeconds: 1200,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.transit;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(find.text("Leave at 9:55 AM to arrive on time"), findsOneWidget);
+      expect(find.text("Leave at 9:10 AM to arrive on time"), findsNothing);
     });
 
     testWidgets("shows transit steps only when expanded", (final tester) async {
