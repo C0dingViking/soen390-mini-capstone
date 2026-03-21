@@ -364,13 +364,41 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final distance = _formatDistance(option.distanceMeters);
     final duration = _formatDuration(option.durationSeconds);
 
-    // Calculate arrival time based on current departure time and duration
+    // Prefer API-provided times; otherwise compute from a mode-aware baseline.
     final viewModel = context.read<HomeViewModel>();
     String? arrivalTimeText;
 
-    if (option.durationSeconds != null && option.durationSeconds! > 0) {
-      final departureTime = viewModel.selectedDepartureTime ?? DateTime.now();
-      final arrivalTime = departureTime.add(Duration(seconds: option.durationSeconds!));
+    DateTime? arrivalTime = option.arrivalTime;
+
+    if (arrivalTime == null &&
+        viewModel.departureMode == DepartureMode.arriveBy &&
+        viewModel.selectedArrivalTime != null) {
+      arrivalTime = viewModel.selectedArrivalTime;
+    }
+
+    if (arrivalTime == null && option.durationSeconds != null && option.durationSeconds! > 0) {
+      DateTime? departureTime = option.departureTime;
+
+      if (departureTime == null) {
+        switch (viewModel.departureMode) {
+          case DepartureMode.now:
+            departureTime = DateTime.now();
+            break;
+          case DepartureMode.departAt:
+            departureTime = viewModel.selectedDepartureTime;
+            break;
+          case DepartureMode.arriveBy:
+            departureTime = viewModel.suggestedDepartureTime;
+            break;
+        }
+      }
+
+      if (departureTime != null) {
+        arrivalTime = departureTime.add(Duration(seconds: option.durationSeconds!));
+      }
+    }
+
+    if (arrivalTime != null) {
       arrivalTimeText = _formatTime(arrivalTime);
     }
 
