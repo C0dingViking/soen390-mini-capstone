@@ -373,44 +373,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
     final distance = _formatDistance(option.distanceMeters);
     final duration = _formatDuration(option.durationSeconds);
-
-    // Prefer API-provided times; otherwise compute from a mode-aware baseline.
     final viewModel = context.read<HomeViewModel>();
-    String? arrivalTimeText;
 
-    DateTime? arrivalTime = option.arrivalTime;
-
-    if (arrivalTime == null &&
-        viewModel.departureMode == DepartureMode.arriveBy &&
-        viewModel.selectedArrivalTime != null) {
-      arrivalTime = viewModel.selectedArrivalTime;
-    }
-
-    if (arrivalTime == null && option.durationSeconds != null && option.durationSeconds! > 0) {
-      DateTime? departureTime = option.departureTime;
-
-      if (departureTime == null) {
-        switch (viewModel.departureMode) {
-          case DepartureMode.now:
-            departureTime = DateTime.now();
-            break;
-          case DepartureMode.departAt:
-            departureTime = viewModel.selectedDepartureTime;
-            break;
-          case DepartureMode.arriveBy:
-            departureTime = viewModel.suggestedDepartureTime;
-            break;
-        }
-      }
-
-      if (departureTime != null) {
-        arrivalTime = departureTime.add(Duration(seconds: option.durationSeconds!));
-      }
-    }
-
-    if (arrivalTime != null) {
-      arrivalTimeText = _formatTime(arrivalTime);
-    }
+    final arrivalTime = _calculateArrivalTime(option, viewModel);
+    final arrivalTimeText = arrivalTime != null ? _formatTime(arrivalTime) : null;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -446,11 +412,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               ],
             ),
           ),
-          if (_isCollapsed &&
-              option.steps.isNotEmpty &&
-              (selectedMode == RouteMode.transit ||
-                  selectedMode == RouteMode.walking ||
-                  selectedMode == RouteMode.bicycling))
+          if (_shouldShowExpandIndicator(option, selectedMode))
             Icon(Icons.keyboard_arrow_up, color: Colors.grey[700]),
         ],
       ),
@@ -610,6 +572,52 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
         ],
       ),
     );
+  }
+
+  DateTime? _calculateArrivalTime(
+    final RouteOption option,
+    final HomeViewModel viewModel,
+  ) {
+    DateTime? arrivalTime = option.arrivalTime;
+
+    // Use selectedArrivalTime if available in arriveBy mode
+    if (arrivalTime == null &&
+        viewModel.departureMode == DepartureMode.arriveBy &&
+        viewModel.selectedArrivalTime != null) {
+      return viewModel.selectedArrivalTime;
+    }
+
+    // Calculate from departure time + duration if needed
+    if (arrivalTime == null && option.durationSeconds != null && option.durationSeconds! > 0) {
+      final departureTime = option.departureTime ?? _getDepartureTime(viewModel);
+      if (departureTime != null) {
+        arrivalTime = departureTime.add(Duration(seconds: option.durationSeconds!));
+      }
+    }
+
+    return arrivalTime;
+  }
+
+  DateTime? _getDepartureTime(final HomeViewModel viewModel) {
+    switch (viewModel.departureMode) {
+      case DepartureMode.now:
+        return DateTime.now();
+      case DepartureMode.departAt:
+        return viewModel.selectedDepartureTime;
+      case DepartureMode.arriveBy:
+        return viewModel.suggestedDepartureTime;
+    }
+  }
+
+  bool _shouldShowExpandIndicator(
+    final RouteOption option,
+    final RouteMode selectedMode,
+  ) {
+    final hasSteps = option.steps.isNotEmpty;
+    final isExpandableMode = selectedMode == RouteMode.transit ||
+        selectedMode == RouteMode.walking ||
+        selectedMode == RouteMode.bicycling;
+    return _isCollapsed && hasSteps && isExpandableMode;
   }
 
   String _modeLabel(final RouteMode mode) {
