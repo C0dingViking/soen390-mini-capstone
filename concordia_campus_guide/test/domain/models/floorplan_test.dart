@@ -222,9 +222,7 @@ void main() {
     });
   });
 
-  // =========================================================================
   // Floorplan.transitions field
-  // =========================================================================
 
   group("Floorplan transitions field", () {
     test("defaults to empty list", () {
@@ -275,9 +273,7 @@ void main() {
     });
   });
 
-  // =========================================================================
   // Transition parsing from SVG via fromXml
-  // =========================================================================
 
   group("Floorplan.fromXml transition parsing", () {
     test("parses stairs transitions from POI layer", () {
@@ -468,9 +464,7 @@ void main() {
     });
   });
 
-  // =========================================================================
   // PoiType.fromString for transition-related types
-  // =========================================================================
 
   group("PoiType.fromString transition types", () {
     test("parses stairsUp", () {
