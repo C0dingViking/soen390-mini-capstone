@@ -74,7 +74,6 @@ void main() {
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 1));
 
-
       $.log("TEST COMPLETE");
       await $.pump(const Duration(seconds: 10));
     },
