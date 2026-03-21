@@ -230,6 +230,17 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
 
   Widget _buildTimeSelector() {
     final viewModel = context.read<HomeViewModel>();
+    DateTime? leaveAtTime = viewModel.suggestedDepartureTime;
+
+    if (viewModel.departureMode == DepartureMode.arriveBy &&
+        viewModel.selectedRouteMode == RouteMode.transit) {
+      final selectedOption = viewModel.routeOptions[viewModel.selectedRouteMode];
+      if (selectedOption != null) {
+        // Keep arrive-by helper text aligned with transit step suggestion timing.
+        leaveAtTime = _suggestedTransitDepartureTime(selectedOption.steps);
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -283,12 +294,11 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               ),
             ],
           ),
-          if (viewModel.departureMode == DepartureMode.arriveBy &&
-              viewModel.suggestedDepartureTime != null)
+          if (viewModel.departureMode == DepartureMode.arriveBy && leaveAtTime != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                "Leave at ${_formatTime(viewModel.suggestedDepartureTime!)} to arrive on time",
+                "Leave at ${_formatTime(leaveAtTime)} to arrive on time",
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ),
