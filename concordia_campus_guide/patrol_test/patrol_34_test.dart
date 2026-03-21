@@ -56,10 +56,24 @@ void main() {
       if ($.tester.any(find.byKey(const Key("next_class")))) {
         await $(#next_class).tap();
         await $.pumpAndSettle();
+        await $.pump(const Duration(seconds: 2));
       }
 
       // ignore: deprecated_member_use
-      await $.native.tapAt(const Offset(0.48, 0.61));
+      await $.native.tapAt(const Offset(0.48, 0.605));
+      await $.pump(const Duration(seconds: 3));
+
+      $.log("STEP 9: Expanding Route Details Panel...");
+      final handle = find.byKey(const Key("route_details_handle"));
+      expect(handle, findsOneWidget);
+      await $.tester.tap(handle);
+      await $.pumpAndSettle();
+      await $.pump(const Duration(seconds: 2));
+
+      await $.tester.tap(handle);
+      await $.pumpAndSettle();
+      await $.pump(const Duration(seconds: 1));
+
 
       $.log("TEST COMPLETE");
       await $.pump(const Duration(seconds: 10));
