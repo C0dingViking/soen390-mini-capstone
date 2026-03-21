@@ -574,10 +574,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     );
   }
 
-  DateTime? _calculateArrivalTime(
-    final RouteOption option,
-    final HomeViewModel viewModel,
-  ) {
+  DateTime? _calculateArrivalTime(final RouteOption option, final HomeViewModel viewModel) {
     DateTime? arrivalTime = option.arrivalTime;
 
     // Use selectedArrivalTime if available in arriveBy mode
@@ -609,12 +606,10 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     }
   }
 
-  bool _shouldShowExpandIndicator(
-    final RouteOption option,
-    final RouteMode selectedMode,
-  ) {
+  bool _shouldShowExpandIndicator(final RouteOption option, final RouteMode selectedMode) {
     final hasSteps = option.steps.isNotEmpty;
-    final isExpandableMode = selectedMode == RouteMode.transit ||
+    final isExpandableMode =
+        selectedMode == RouteMode.transit ||
         selectedMode == RouteMode.walking ||
         selectedMode == RouteMode.bicycling;
     return _isCollapsed && hasSteps && isExpandableMode;
