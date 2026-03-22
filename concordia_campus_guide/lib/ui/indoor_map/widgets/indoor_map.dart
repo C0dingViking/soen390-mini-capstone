@@ -203,11 +203,13 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         _viewModel.setIndoorPath(path);
       } on StateError catch (_) {
         _viewModel.clearIndoorPath();
+        // TODO: add a clearer error popup
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("No indoor route found between the selected rooms.")),
         );
       } catch (_) {
         _viewModel.clearIndoorPath();
+        // TODO: add a clearer error popup
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
         );
@@ -220,6 +222,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Floor plan data is missing for one of the floors.")),
       );
@@ -230,6 +233,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, destFloorplan);
 
     if (startRoomModel == null || destinationRoomModel == null) {
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both rooms.")));
@@ -250,6 +254,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to compute inter-floor route. Please try again.")),
       );
