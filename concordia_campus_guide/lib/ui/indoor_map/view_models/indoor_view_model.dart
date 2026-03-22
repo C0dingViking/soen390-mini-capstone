@@ -190,7 +190,6 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Advance to the next floor
   bool advanceToNextSegment() {
     if (!hasNextSegment) {
       return false;
