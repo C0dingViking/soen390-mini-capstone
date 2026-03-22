@@ -111,7 +111,7 @@ class _IndoorGraph {
 
     for (final vertexId in candidateVertexIds) {
       final vertexPoint = nodes[vertexId].position;
-      final d = _euclideanDistance(door, vertexPoint);
+      final distanceBtwnDoorAndVertexPoint = _euclideanDistance(door, vertexPoint);
       if (d < bestDistance) {
         bestDistance = d;
         bestVertexId = vertexId;
