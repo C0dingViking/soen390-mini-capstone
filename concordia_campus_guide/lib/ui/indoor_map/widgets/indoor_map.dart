@@ -1,8 +1,12 @@
+import "dart:math";
+
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
+import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
@@ -110,15 +114,69 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     throw Exception("Floor not found for room: $roomName");
   }
 
+  IndoorMapRoom? _findRoomOnFloor(final String roomName, final Floorplan floorplan) {
+    final normalizedName = roomName.trim().toLowerCase();
+
+    String sanitize(final String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r"\s+"), "")
+          .replaceAll(RegExp(r"[-.]"), "");
+    }
+
+    final sanitizedName = sanitize(normalizedName);
+
+    for (final room in floorplan.rooms) {
+      final candidate = room.name.trim().toLowerCase();
+      if (candidate == normalizedName || sanitize(candidate) == sanitizedName) {
+        return room;
+      }
+    }
+    return null;
+  }
+
   Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
+    final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
-    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toUpperCase();
-    final isStartRoomInDifferentBuilding = parsedStartRoom.buildingId != currentBuildingId;
-    if (isStartRoomInDifferentBuilding) {
-      await _viewModel.initializeBuildingFloorplans(parsedStartRoom.buildingId.toLowerCase());
+    final floorplans = await _ensureFloorplansLoadedForBuilding(parsedStartRoom.buildingId);
+    if (floorplans == null || floorplans.isEmpty) {
+      return;
+    }
+
+    if (!_validateSameBuilding(parsedStartRoom.buildingId, parsedDestinationRoom.buildingId)) {
+      return;
+    }
+
+    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+    final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
+
+    // Switch to the current location's floor immediately
+    _viewModel.changeFloor(startFloor);
+
+    if (startFloor == destinationFloor) {
+      await _handleSameFloorNavigation(parsedStartRoom, parsedDestinationRoom, startFloor);
+    } else {
+      await _handleInterFloorNavigation(
+        parsedStartRoom,
+        parsedDestinationRoom,
+        startFloor,
+        destinationFloor,
+        floorplans,
+      );
+    }
+  }
+
+  Future<Map<String, Floorplan>?> _ensureFloorplansLoadedForBuilding(
+    final String targetBuildingId,
+  ) async {
+    final targetIdLower = targetBuildingId.toLowerCase();
+    final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toLowerCase();
+    if (targetIdLower != currentBuildingId) {
+      await _viewModel.initializeBuildingFloorplans(targetIdLower);
       if (!mounted) {
-        return;
+        return null;
       }
     }
 
@@ -127,17 +185,117 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No floor plans available for current location.")),
       );
-      return;
+      return null;
     }
 
-    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+    return floorplans;
+  }
 
+  bool _validateSameBuilding(final String startBuildingId, final String destinationBuildingId) {
+    if (startBuildingId == destinationBuildingId) {
+      return true;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Indoor navigation currently supports routes within a single building."),
+      ),
+    );
+    return false;
+  }
+
+  Future<void> _handleSameFloorNavigation(
+    final ({String buildingId, String roomName}) parsedStartRoom,
+    final ({String buildingId, String roomName}) parsedDestinationRoom,
+    final String startFloor,
+  ) async {
     final changedFloor = _viewModel.changeFloor(startFloor);
     if (!changedFloor) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
       return;
+    }
+
+    final floorplan = _viewModel.selectedFloorplan;
+    if (floorplan == null) {
+      return;
+    }
+
+    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, floorplan);
+    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, floorplan);
+
+    if (startRoomModel == null || destinationRoomModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to locate one or both rooms on this floor.")),
+      );
+      return;
+    }
+
+    try {
+      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
+      _viewModel.setIndoorPath(path);
+    } on StateError catch (_) {
+      _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No indoor route found between the selected rooms.")),
+      );
+    } catch (_) {
+      _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
+      );
+    }
+  }
+
+  Future<void> _handleInterFloorNavigation(
+    final ({String buildingId, String roomName}) parsedStartRoom,
+    final ({String buildingId, String roomName}) parsedDestinationRoom,
+    final String startFloor,
+    final String destinationFloor,
+    final Map<String, Floorplan> floorplans,
+  ) async {
+    final startFloorplan = floorplans[startFloor];
+    final destFloorplan = floorplans[destinationFloor];
+    if (startFloorplan == null || destFloorplan == null) {
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Floor plan data is missing for one of the floors.")),
+      );
+      return;
+    }
+
+    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, startFloorplan);
+    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, destFloorplan);
+
+    if (startRoomModel == null || destinationRoomModel == null) {
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both rooms.")));
+      return;
+    }
+
+    try {
+      final segments = computeInterFloorPath(
+        floorplans: floorplans,
+        startFloor: startFloor,
+        destinationFloor: destinationFloor,
+        startRoom: startRoomModel,
+        destinationRoom: destinationRoomModel,
+      );
+      _viewModel.setInterFloorPath(segments);
+    } on StateError catch (e) {
+      _viewModel.clearIndoorPath();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to compute inter-floor route. Please try again.")),
+      );
     }
   }
 
@@ -247,6 +405,100 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Offset(normalizedX * floorplan.canvasWidth, normalizedY * floorplan.canvasHeight);
   }
 
+  String _getTransitionLabelFromTransitionType(final FloorTransition transition) {
+    switch (transition.type) {
+      case TransitionType.elevator:
+        return "Elevator";
+      case TransitionType.escalator:
+        return "Escalator";
+      case TransitionType.stairs:
+        return "Stairs";
+    }
+  }
+
+  Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
+    final segment = ivm.currentSegment;
+    if (segment == null) {
+      return const SizedBox.shrink();
+    }
+
+    String description;
+    if (segment.entryTransition != null && segment.exitTransition != null) {
+      description =
+          "Floor ${segment.floorNumber}: "
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → "
+          "${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
+    } else if (segment.exitTransition != null) {
+      description =
+          "Floor ${segment.floorNumber}: "
+          "Start → ${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
+    } else if (segment.entryTransition != null) {
+      description =
+          "Floor ${segment.floorNumber}: "
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → Destination";
+    } else {
+      description = "Floor ${segment.floorNumber}";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(200, 8, 187, 241),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Previous button
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, size: 18),
+            onPressed: ivm.hasPreviousSegment ? () => ivm.goToPreviousSegment() : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: "Previous floor",
+            color: Colors.white,
+          ),
+          const SizedBox(width: 8),
+
+          // Segment info
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Step ${ivm.currentSegmentIndex + 1} of ${ivm.totalSegments}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Next button
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios, size: 18),
+            onPressed: ivm.hasNextSegment ? () => ivm.advanceToNextSegment() : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: "Next floor",
+            color: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
@@ -296,7 +548,18 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                           maxScale: maxMapZoom,
                           boundaryMargin: EdgeInsets.zero,
                           clipBehavior: Clip.hardEdge,
-                          child: SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                          child: Stack(
+                            children: [
+                              SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                              if (ivm.indoorPath != null)
+                                Positioned.fill(
+                                  child: _AnimatedIndoorPath(
+                                    floorplan: selectedFloorplan,
+                                    path: ivm.indoorPath!,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -304,7 +567,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 ),
 
                 Positioned(
-                  top: 0.0, // align in the top-left most corner
+                  top: 0.0,
                   child: SafeArea(
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
@@ -338,6 +601,15 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     ),
                   ),
                 ),
+
+                // Inter-floor segment navigation bar
+                if (ivm.isInterFloorRoute)
+                  Positioned(
+                    bottom: floorPickerSpacing + 64,
+                    left: floorPickerSpacing,
+                    right: floorPickerSpacing,
+                    child: SafeArea(child: Center(child: _buildSegmentNavigationBar(ivm))),
+                  ),
               ],
             ),
           );
@@ -393,6 +665,47 @@ class _IndoorMapViewState extends State<IndoorMapView> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// Path painter – delegates to Indoor_Path_Painter.dart
+
+class _AnimatedIndoorPath extends StatefulWidget {
+  final Floorplan floorplan;
+  final List<Point<double>> path;
+
+  const _AnimatedIndoorPath({required this.floorplan, required this.path});
+
+  @override
+  State<_AnimatedIndoorPath> createState() => _AnimatedIndoorPathState();
+}
+
+class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(final BuildContext context) {
+    return CustomPaint(
+      painter: IndoorPathPainter(
+        floorplan: widget.floorplan,
+        path: widget.path,
+        pulseAnimation: _pulse,
       ),
     );
   }

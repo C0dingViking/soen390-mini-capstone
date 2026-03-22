@@ -1,5 +1,8 @@
+import "dart:math";
+
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
+import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:logger/logger.dart";
@@ -179,6 +182,411 @@ void main() {
 
       await ivm.initializeRoomNames();
       expect(ivm.listLoadFailed, true);
+    });
+  });
+
+  // =========================================================================
+  // Inter-floor path segment helpers
+  // =========================================================================
+
+  List<IndoorFloorPathSegment> twoFloorSegments() {
+    return [
+      IndoorFloorPathSegment(
+        floorNumber: "1",
+        path: [const Point(10, 10), const Point(100, 50)],
+        exitTransition: const FloorTransition(
+          id: "h1-stairs-1",
+          location: Point(100, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-1",
+        ),
+      ),
+      IndoorFloorPathSegment(
+        floorNumber: "2",
+        path: [const Point(100, 50), const Point(20, 30)],
+        entryTransition: const FloorTransition(
+          id: "h2-stairs-1",
+          location: Point(100, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-1",
+        ),
+      ),
+    ];
+  }
+
+  List<IndoorFloorPathSegment> threeFloorSegments() {
+    return [
+      IndoorFloorPathSegment(
+        floorNumber: "1",
+        path: [const Point(10, 10), const Point(100, 50)],
+        exitTransition: const FloorTransition(
+          id: "h1-stairs-1",
+          location: Point(100, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-1",
+        ),
+      ),
+      IndoorFloorPathSegment(
+        floorNumber: "2",
+        path: [const Point(100, 50), const Point(200, 50)],
+        entryTransition: const FloorTransition(
+          id: "h2-stairs-1",
+          location: Point(100, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-1",
+        ),
+        exitTransition: const FloorTransition(
+          id: "h2-stairs-2",
+          location: Point(200, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-2",
+        ),
+      ),
+      IndoorFloorPathSegment(
+        floorNumber: "3",
+        path: [const Point(200, 50), const Point(20, 30)],
+        entryTransition: const FloorTransition(
+          id: "h3-stairs-2",
+          location: Point(200, 50),
+          type: TransitionType.stairs,
+          groupTag: "stairs-2",
+        ),
+      ),
+    ];
+  }
+
+  // =========================================================================
+  // Inter-floor route state
+  // =========================================================================
+
+  group("isInterFloorRoute", () {
+    test("returns false when no route is set", () {
+      expect(ivm.isInterFloorRoute, isFalse);
+    });
+
+    test("returns false for a single-floor path set via setIndoorPath", () {
+      ivm.setIndoorPath([const Point(0, 0), const Point(100, 100)]);
+      expect(ivm.isInterFloorRoute, isFalse);
+    });
+
+    test("returns true after setInterFloorPath with multiple segments", () {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+
+      ivm.setInterFloorPath(twoFloorSegments());
+      expect(ivm.isInterFloorRoute, isTrue);
+    });
+
+    test("returns false after setInterFloorPath with a single segment", () {
+      ivm.setInterFloorPath([
+        IndoorFloorPathSegment(floorNumber: "1", path: [const Point(0, 0), const Point(50, 50)]),
+      ]);
+      expect(ivm.isInterFloorRoute, isFalse);
+    });
+  });
+
+  // =========================================================================
+  // setInterFloorPath
+  // =========================================================================
+
+  group("setInterFloorPath", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("sets indoorPath to the first segment's path", () {
+      final segments = twoFloorSegments();
+      ivm.setInterFloorPath(segments);
+
+      expect(ivm.indoorPath, equals(segments[0].path));
+    });
+
+    test("switches selectedFloorplan to the first segment's floor", () {
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["2"];
+      ivm.setInterFloorPath(twoFloorSegments());
+
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
+    });
+
+    test("resets segment index to 0 on new route", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.advanceToNextSegment();
+      expect(ivm.currentSegmentIndex, 1);
+
+      ivm.setInterFloorPath(twoFloorSegments());
+      expect(ivm.currentSegmentIndex, 0);
+    });
+
+    test("clears everything when called with empty segments", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.setInterFloorPath([]);
+
+      expect(ivm.indoorPath, isNull);
+      expect(ivm.isInterFloorRoute, isFalse);
+    });
+
+    test("notifies listeners", () {
+      int notifyCount = 0;
+      ivm.addListener(() => notifyCount++);
+
+      ivm.setInterFloorPath(twoFloorSegments());
+      expect(notifyCount, 1);
+    });
+  });
+
+  // =========================================================================
+  // Segment navigation (advanceToNextSegment / goToPreviousSegment)
+  // =========================================================================
+
+  group("segment navigation", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("advanceToNextSegment moves to segment index 1", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      final result = ivm.advanceToNextSegment();
+
+      expect(result, isTrue);
+      expect(ivm.currentSegmentIndex, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(ivm.indoorPath, equals(twoFloorSegments()[1].path));
+    });
+
+    test("advanceToNextSegment returns false at last segment", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.advanceToNextSegment();
+
+      final result = ivm.advanceToNextSegment();
+      expect(result, isFalse);
+      expect(ivm.currentSegmentIndex, 1);
+    });
+
+    test("goToPreviousSegment moves back to segment index 0", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.advanceToNextSegment();
+
+      final result = ivm.goToPreviousSegment();
+      expect(result, isTrue);
+      expect(ivm.currentSegmentIndex, 0);
+      expect(ivm.selectedFloorplan!.floorNumber, "1");
+    });
+
+    test("goToPreviousSegment returns false at first segment", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+
+      final result = ivm.goToPreviousSegment();
+      expect(result, isFalse);
+      expect(ivm.currentSegmentIndex, 0);
+    });
+
+    test("three-segment navigation walks forward and backward", () {
+      ivm.setInterFloorPath(threeFloorSegments());
+
+      expect(ivm.totalSegments, 3);
+      expect(ivm.currentSegmentIndex, 0);
+      expect(ivm.hasNextSegment, isTrue);
+      expect(ivm.hasPreviousSegment, isFalse);
+
+      ivm.advanceToNextSegment();
+      expect(ivm.currentSegmentIndex, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(ivm.hasNextSegment, isTrue);
+      expect(ivm.hasPreviousSegment, isTrue);
+
+      ivm.advanceToNextSegment();
+      expect(ivm.currentSegmentIndex, 2);
+      expect(ivm.selectedFloorplan!.floorNumber, "3");
+      expect(ivm.hasNextSegment, isFalse);
+      expect(ivm.hasPreviousSegment, isTrue);
+
+      ivm.goToPreviousSegment();
+      expect(ivm.currentSegmentIndex, 1);
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+    });
+
+    test("each navigation step notifies listeners", () {
+      ivm.setInterFloorPath(threeFloorSegments());
+
+      int notifyCount = 0;
+      ivm.addListener(() => notifyCount++);
+
+      ivm.advanceToNextSegment();
+      expect(notifyCount, 1);
+
+      ivm.advanceToNextSegment();
+      expect(notifyCount, 2);
+
+      ivm.goToPreviousSegment();
+      expect(notifyCount, 3);
+    });
+  });
+
+  // =========================================================================
+  // currentSegment
+  // =========================================================================
+
+  group("currentSegment", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("returns null when no route is active", () {
+      expect(ivm.currentSegment, isNull);
+    });
+
+    test("returns the correct segment after navigation", () {
+      final segments = threeFloorSegments();
+      ivm.setInterFloorPath(segments);
+
+      expect(ivm.currentSegment!.floorNumber, segments[0].floorNumber);
+
+      ivm.advanceToNextSegment();
+      expect(ivm.currentSegment!.floorNumber, segments[1].floorNumber);
+    });
+  });
+
+  // =========================================================================
+  // changeFloor interaction with inter-floor route
+  // =========================================================================
+
+  group("changeFloor with active inter-floor route", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+        "3": Floorplan(buildingId: "T", floorNumber: "3", svgPath: "f3.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("syncs indoorPath to the segment for the selected floor", () {
+      final segments = threeFloorSegments();
+      ivm.setInterFloorPath(segments);
+
+      ivm.changeFloor("3");
+
+      expect(ivm.indoorPath, equals(segments[2].path));
+      expect(ivm.currentSegmentIndex, 2);
+    });
+
+    test("clears indoorPath if the selected floor has no segment", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+
+      ivm.changeFloor("3");
+
+      expect(ivm.indoorPath, isNull);
+    });
+
+    test("does not affect path when no inter-floor route is active", () {
+      ivm.setIndoorPath([const Point(0, 0), const Point(50, 50)]);
+      ivm.changeFloor("2");
+
+      expect(ivm.indoorPath, isNull);
+    });
+  });
+
+  // =========================================================================
+  // clearIndoorPath with inter-floor state
+  // =========================================================================
+
+  group("clearIndoorPath with inter-floor state", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("clears inter-floor segments and resets index", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.advanceToNextSegment();
+
+      ivm.clearIndoorPath();
+
+      expect(ivm.indoorPath, isNull);
+      expect(ivm.isInterFloorRoute, isFalse);
+      expect(ivm.currentSegmentIndex, 0);
+      expect(ivm.totalSegments, 0);
+    });
+
+    test("does not notify when already clear", () {
+      int notifyCount = 0;
+      ivm.addListener(() => notifyCount++);
+
+      ivm.clearIndoorPath();
+      expect(notifyCount, 0);
+    });
+  });
+
+  // =========================================================================
+  // resetFloorplanLoadState with inter-floor state
+  // =========================================================================
+
+  group("resetFloorplanLoadState with inter-floor state", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("clears inter-floor route state", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      ivm.advanceToNextSegment();
+
+      ivm.resetFloorplanLoadState();
+
+      expect(ivm.indoorPath, isNull);
+      expect(ivm.isInterFloorRoute, isFalse);
+      expect(ivm.currentSegmentIndex, 0);
+      expect(ivm.loadFailed, isFalse);
+      expect(ivm.isLoading, isFalse);
+    });
+  });
+
+  // =========================================================================
+  // setIndoorPath clears inter-floor state
+  // =========================================================================
+
+  group("setIndoorPath clears inter-floor state", () {
+    setUp(() {
+      ivm.loadedFloorplans = {
+        "1": Floorplan(buildingId: "T", floorNumber: "1", svgPath: "f1.svg", rooms: [], pois: []),
+        "2": Floorplan(buildingId: "T", floorNumber: "2", svgPath: "f2.svg", rooms: [], pois: []),
+      };
+      ivm.selectedFloorplan = ivm.loadedFloorplans!["1"];
+    });
+
+    test("clears any active inter-floor route", () {
+      ivm.setInterFloorPath(twoFloorSegments());
+      expect(ivm.isInterFloorRoute, isTrue);
+
+      ivm.setIndoorPath([const Point(0, 0), const Point(100, 100)]);
+
+      expect(ivm.isInterFloorRoute, isFalse);
+      expect(ivm.currentSegmentIndex, 0);
+      expect(ivm.indoorPath, isNotNull);
     });
   });
 }
