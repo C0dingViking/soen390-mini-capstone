@@ -163,8 +163,7 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
-  // Single-floor path
-
+  /// Single-floor path
   void setIndoorPath(final List<Point<double>> path) {
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
