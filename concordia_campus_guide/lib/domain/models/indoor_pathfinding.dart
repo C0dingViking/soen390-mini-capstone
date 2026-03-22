@@ -65,8 +65,7 @@ class _IndoorGraph {
     );
   }
 
-  // Adds a door node and connects it to the corridor graph.
-  int addDoorNode(final Point<double> door, final List<Corridor> corridors) {
+  int addDoorNodeToCorridorGraph(final Point<double> door, final List<Corridor> corridors) {
     final doorNodeId = nodes.length;
     nodes.add(_IndoorGraphNode(door));
 
@@ -87,7 +86,7 @@ class _IndoorGraph {
       for (var i = 0; i < corridors.length; i++) {
         final corridor = corridors[i];
         for (final point in corridor.bounds) {
-          final d = _euclideanDistance(door, point);
+          final d = _euclideanDistanceBtwnPoints(door, point);
           if (d < bestCorridorDistance) {
             bestCorridorDistance = d;
             bestCorridorIndex = i;
@@ -112,9 +111,9 @@ class _IndoorGraph {
 
     for (final vertexId in candidateVertexIds) {
       final vertexPoint = nodes[vertexId].position;
-      final d = _euclideanDistance(door, vertexPoint);
-      if (d < bestDistance) {
-        bestDistance = d;
+      final distanceBtwnDoorAndVertexPoint = _euclideanDistanceBtwnPoints(door, vertexPoint);
+      if (distanceBtwnDoorAndVertexPoint < bestDistance) {
+        bestDistance = distanceBtwnDoorAndVertexPoint;
         bestVertexId = vertexId;
       }
     }
@@ -147,69 +146,82 @@ class IndoorFloorPathSegment {
   });
 }
 
-// Computes the shortest indoor path between two rooms.
 extension FloorplanPathfinding on Floorplan {
   List<Point<double>> shortestPathBetweenRooms(
     final IndoorMapRoom startRoom,
     final IndoorMapRoom endRoom,
   ) {
     if (corridors.isEmpty) {
+      const description = "No indoor corridors available for pathfinding.";
       developer.log(
-        "Indoor pathfinding error: no corridors available",
+        description,
         name: "IndoorPathfinding",
         error:
             "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
       );
-      throw StateError("No indoor corridors available for pathfinding.");
+      throw StateError(description);
     }
 
     final graph = _IndoorGraph.fromCorridors(corridors);
 
-    final startId = graph.addDoorNode(startRoom.doorLocation, corridors);
-    final endId = graph.addDoorNode(endRoom.doorLocation, corridors);
+    final startId = graph.addDoorNodeToCorridorGraph(startRoom.doorLocation, corridors);
+    final endId = graph.addDoorNodeToCorridorGraph(endRoom.doorLocation, corridors);
 
-    final pathNodeIds = _dijkstra(graph, startId, endId);
+    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
+      final description =
+          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
       developer.log(
-        "Indoor pathfinding error: no path found between rooms",
+        description,
         name: "IndoorPathfinding",
         error:
             "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
       );
-      throw StateError("No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.");
+      throw StateError(description);
     }
 
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
   }
 
-  // Computes the path from a room's door to a specific transition point on this floor.
+  /// Computes the path from a room's door to a specific transition point on this floor.
   List<Point<double>> shortestPathToTransition(
     final Point<double> startPoint,
     final FloorTransition transition,
   ) {
     if (corridors.isEmpty) {
-      throw StateError("No indoor corridors available for pathfinding.");
+      const description = "No indoor corridors available for pathfinding.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
+      );
+      throw StateError(description);
     }
 
     final graph = _IndoorGraph.fromCorridors(corridors);
 
-    final startId = graph.addDoorNode(startPoint, corridors);
-    final endId = graph.addDoorNode(transition.location, corridors);
+    final startId = graph.addDoorNodeToCorridorGraph(startPoint, corridors);
+    final endId = graph.addDoorNodeToCorridorGraph(transition.location, corridors);
 
-    final pathNodeIds = _dijkstra(graph, startId, endId);
+    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
-      throw StateError(
-        "No indoor path found to transition ${transition.id} on floor $floorNumber.",
+      final description =
+          "No indoor path found to transition ${transition.id} on floor $floorNumber.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
       );
+      throw StateError(description);
     }
 
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
   }
 }
-
-// Inter-floor pathfinding
 
 List<IndoorFloorPathSegment> computeInterFloorPath({
   required final Map<String, Floorplan> floorplans,
@@ -226,8 +238,189 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     return [IndoorFloorPathSegment(floorNumber: startFloor, path: path)];
   }
 
-  // Determine the ordered list of floors to traverse.
-  // Parse numeric portion for sorting; non-numeric floors sort alphabetically
+  final floorsToTraverse = _computeFloorsToTraverse(floorplans, startFloor, destinationFloor);
+
+  // Build segments floor by floor.
+  final List<IndoorFloorPathSegment> segments = [];
+  Point<double> currentStartPoint = startRoom.doorLocation;
+
+  for (int i = 0; i < floorsToTraverse.length - 1; i++) {
+    currentStartPoint = _appendSegmentForFloorPair(
+      floorplans: floorplans,
+      preferredTransitionType: preferredTransitionType,
+      accessibleMode: accessibleMode,
+      floorsToTraverse: floorsToTraverse,
+      segments: segments,
+      index: i,
+      currentStartPoint: currentStartPoint,
+    );
+  }
+
+  _appendFinalDestinationSegment(
+    floorplans: floorplans,
+    destinationFloor: destinationFloor,
+    destinationRoom: destinationRoom,
+    segments: segments,
+  );
+
+  return segments;
+}
+
+void _appendFinalDestinationSegment({
+  required final Map<String, Floorplan> floorplans,
+  required final String destinationFloor,
+  required final IndoorMapRoom destinationRoom,
+  required final List<IndoorFloorPathSegment> segments,
+}) {
+  final destFloorplan = floorplans[destinationFloor]!;
+  final lastExitTransition = segments.last.exitTransition!;
+
+  final entryTransition = destFloorplan.transitions.firstWhere(
+    (final t) => t.groupTag == lastExitTransition.groupTag,
+    orElse: () {
+      final description = "No matching entry transition on floor $destinationFloor.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error: "destinationFloor=$destinationFloor lastExitGroupTag=${lastExitTransition.groupTag}",
+      );
+      throw StateError(description);
+    },
+  );
+
+  try {
+    final destPath = destFloorplan.shortestPathToTransition(
+      entryTransition.location,
+      FloorTransition(
+        id: "dest-room",
+        location: destinationRoom.doorLocation,
+        type: TransitionType.stairs,
+        groupTag: "",
+      ),
+    );
+    segments.add(
+      IndoorFloorPathSegment(
+        floorNumber: destinationFloor,
+        path: destPath,
+        entryTransition: entryTransition,
+      ),
+    );
+  } on StateError {
+    final description =
+        "No path found from transition to room ${destinationRoom.name} "
+        "on floor $destinationFloor.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error: "destinationFloor=$destinationFloor room=${destinationRoom.name}",
+    );
+    throw StateError(description);
+  }
+}
+
+Point<double> _appendSegmentForFloorPair({
+  required final Map<String, Floorplan> floorplans,
+  required final TransitionType? preferredTransitionType,
+  required final bool accessibleMode,
+  required final List<String> floorsToTraverse,
+  required final List<IndoorFloorPathSegment> segments,
+  required final int index,
+  required final Point<double> currentStartPoint,
+}) {
+  final currentFloorNum = floorsToTraverse[index];
+  final nextFloorNum = floorsToTraverse[index + 1];
+  final currentFloorplan = floorplans[currentFloorNum]!;
+  final nextFloorplan = floorplans[nextFloorNum]!;
+
+  final allCandidates = _findMatchingTransitions(
+    currentFloorplan.transitions,
+    nextFloorplan.transitions,
+    preferredTransitionType,
+  );
+
+  if (allCandidates.isEmpty) {
+    final description =
+        "No connecting transition found between floor $currentFloorNum "
+        "and floor $nextFloorNum.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "currentFloor=$currentFloorNum nextFloor=$nextFloorNum "
+          "currentTransitions=${currentFloorplan.transitions.length} "
+          "nextTransitions=${nextFloorplan.transitions.length} "
+          "preferredType=$preferredTransitionType",
+    );
+    throw StateError(description);
+  }
+
+  List<_TransitionCandidate> candidates = allCandidates;
+
+  if (accessibleMode) {
+    final nonStairs = allCandidates
+        .where(
+          (final c) =>
+              c.fromTransition.type != TransitionType.stairs &&
+              c.toTransition.type != TransitionType.stairs,
+        )
+        .toList();
+
+    if (nonStairs.isNotEmpty) {
+      candidates = nonStairs;
+    }
+  }
+
+  _TransitionCandidate? bestCandidate;
+  List<Point<double>>? bestPath;
+  double bestCost = double.infinity;
+
+  for (final candidate in candidates) {
+    try {
+      final path = currentFloorplan.shortestPathToTransition(
+        currentStartPoint,
+        candidate.fromTransition,
+      );
+      final cost = _pathLength(path);
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestPath = path;
+        bestCandidate = candidate;
+      }
+    } on StateError {
+      continue;
+    }
+  }
+
+  if (bestCandidate == null || bestPath == null) {
+    final description =
+        "No reachable transition found on floor $currentFloorNum "
+        "to reach floor $nextFloorNum.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "currentFloor=$currentFloorNum nextFloor=$nextFloorNum preferredType=$preferredTransitionType",
+    );
+    throw StateError(description);
+  }
+
+  segments.add(
+    IndoorFloorPathSegment(
+      floorNumber: currentFloorNum,
+      path: bestPath,
+      exitTransition: bestCandidate.fromTransition,
+      entryTransition: index > 0 ? segments.last.exitTransition : null,
+    ),
+  );
+
+  return bestCandidate.toTransition.location;
+}
+
+List<String> _computeFloorsToTraverse(
+  final Map<String, Floorplan> floorplans,
+  final String startFloor,
+  final String destinationFloor,
+) {
   int floorSortKey(final String key) {
     final digits = key.replaceAll(RegExp(r"[^0-9]"), "");
     return digits.isNotEmpty ? int.parse(digits) : 0;
@@ -247,128 +440,18 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   }
 
   if (floorsToTraverse.length < 2) {
-    throw StateError(
-      "Cannot navigate between floor $startFloor and floor $destinationFloor: "
-      "insufficient floorplan data.",
+    final description =
+        "Cannot navigate between floor $startFloor and floor $destinationFloor: "
+        "insufficient floorplan data.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "startFloor=$startFloor destinationFloor=$destinationFloor availableFloors=${floorplans.keys.toList()}",
     );
+    throw StateError(description);
   }
-
-  // Build segments floor by floor.
-  final List<IndoorFloorPathSegment> segments = [];
-  Point<double> currentStartPoint = startRoom.doorLocation;
-
-  for (int i = 0; i < floorsToTraverse.length - 1; i++) {
-    final currentFloorNum = floorsToTraverse[i];
-    final nextFloorNum = floorsToTraverse[i + 1];
-    final currentFloorplan = floorplans[currentFloorNum]!;
-    final nextFloorplan = floorplans[nextFloorNum]!;
-
-    // Find matching transition pairs between these floors
-    final allCandidates = _findMatchingTransitions(
-      currentFloorplan.transitions,
-      nextFloorplan.transitions,
-      preferredTransitionType,
-    );
-
-    if (allCandidates.isEmpty) {
-      throw StateError(
-        "No connecting transition found between floor $currentFloorNum "
-        "and floor $nextFloorNum.",
-      );
-    }
-
-    // Accessibility mode: if accessibleMode is true then populate candidates list with only non stairs transitions (if any)
-    List<_TransitionCandidate> candidates = allCandidates;
-
-    if (accessibleMode) {
-      final nonStairs = allCandidates
-          .where((c) =>
-      c.fromTransition.type != TransitionType.stairs &&
-          c.toTransition.type != TransitionType.stairs)
-          .toList();
-
-      if (nonStairs.isNotEmpty) {
-        candidates = nonStairs;
-      }
-    }
-
-    _TransitionCandidate? bestCandidate;
-    List<Point<double>>? bestPath;
-    double bestCost = double.infinity;
-
-    for (final candidate in candidates) {
-      try {
-        final path = currentFloorplan.shortestPathToTransition(
-          currentStartPoint,
-          candidate.fromTransition,
-        );
-        final cost = _pathLength(path);
-        if (cost < bestCost) {
-          bestCost = cost;
-          bestPath = path;
-          bestCandidate = candidate;
-        }
-      } on StateError {
-        continue;
-      }
-    }
-
-    if (bestCandidate == null || bestPath == null) {
-      throw StateError(
-        "No reachable transition found on floor $currentFloorNum "
-        "to reach floor $nextFloorNum.",
-      );
-    }
-
-    segments.add(
-      IndoorFloorPathSegment(
-        floorNumber: currentFloorNum,
-        path: bestPath,
-        exitTransition: bestCandidate.fromTransition,
-        entryTransition: i > 0 ? segments.last.exitTransition : null,
-      ),
-    );
-
-    currentStartPoint = bestCandidate.toTransition.location;
-  }
-
-  // Final segment
-  final destFloorplan = floorplans[destinationFloor]!;
-  final lastExitTransition = segments.last.exitTransition!;
-
-  final entryTransition = destFloorplan.transitions.firstWhere(
-    (final t) => t.groupTag == lastExitTransition.groupTag,
-    orElse: () => throw StateError("No matching entry transition on floor $destinationFloor."),
-  );
-
-  try {
-    final destPath = destFloorplan.shortestPathToTransition(
-      entryTransition.location,
-      // We need to path from the transition to the destination room.
-      // Reuse shortestPathToTransition by creating a temporary FloorTransition
-      // at the destination room's door location.
-      FloorTransition(
-        id: "dest-room",
-        location: destinationRoom.doorLocation,
-        type: TransitionType.stairs,
-        groupTag: "",
-      ),
-    );
-    segments.add(
-      IndoorFloorPathSegment(
-        floorNumber: destinationFloor,
-        path: destPath,
-        entryTransition: entryTransition,
-      ),
-    );
-  } on StateError {
-    throw StateError(
-      "No path found from transition to room ${destinationRoom.name} "
-      "on floor $destinationFloor.",
-    );
-  }
-
-  return segments;
+  return floorsToTraverse;
 }
 
 // Inter-floor helpers
@@ -380,7 +463,7 @@ class _TransitionCandidate {
   const _TransitionCandidate({required this.fromTransition, required this.toTransition});
 }
 
-// Finds transition pairs that connect two floors by matching
+/// Finds transition pairs that connect two floors by matching their transition type
 List<_TransitionCandidate> _findMatchingTransitions(
   final List<FloorTransition> fromFloorTransitions,
   final List<FloorTransition> toFloorTransitions,
@@ -393,43 +476,45 @@ List<_TransitionCandidate> _findMatchingTransitions(
   final List<_TransitionCandidate> preferred = [];
   final List<_TransitionCandidate> others = [];
 
-  for (final fromT in fromFloorTransitions) {
-    final toT = toTransitionsByGroup[fromT.groupTag];
-    if (toT == null) {
+  for (final fromTransition in fromFloorTransitions) {
+    final toTransition = toTransitionsByGroup[fromTransition.groupTag];
+    if (toTransition == null) {
       continue;
     }
 
-    final candidate = _TransitionCandidate(fromTransition: fromT, toTransition: toT);
+    final transitionCandidate = _TransitionCandidate(
+      fromTransition: fromTransition,
+      toTransition: toTransition,
+    );
 
-    if (preferredType != null && fromT.type == preferredType) {
-      preferred.add(candidate);
+    if (preferredType != null && fromTransition.type == preferredType) {
+      preferred.add(transitionCandidate);
     } else {
-      others.add(candidate);
+      others.add(transitionCandidate);
     }
   }
 
   return [...preferred, ...others];
 }
 
-// Computes the total  length of a polyline path.
+/// Computes the total  length of a polyline path.
 double _pathLength(final List<Point<double>> path) {
   double total = 0;
   for (int i = 0; i < path.length - 1; i++) {
-    total += _euclideanDistance(path[i], path[i + 1]);
+    total += _euclideanDistanceBtwnPoints(path[i], path[i + 1]);
   }
   return total;
 }
 
 // Graph construction helpers
 
-// Euclidean distance between two points.
-double _euclideanDistance(final Point<double> a, final Point<double> b) {
+double _euclideanDistanceBtwnPoints(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
 }
 
-// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
+/// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
 List<List<int>> _createCorridorVertexNodes(
   final List<Corridor> corridors,
   final int Function(Point<double>) getOrCreateNodeId,
@@ -449,7 +534,7 @@ List<List<int>> _createCorridorVertexNodes(
   return corridorVertexNodeIds;
 }
 
-// Connects consecutive corridor vertices along each corridor boundary.
+/// Connects consecutive corridor vertices along each corridor boundary.
 void _connectCorridorEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorVertexNodeIds,
@@ -469,7 +554,7 @@ void _connectCorridorEdges(
 
       final pa = nodes[a].position;
       final pb = nodes[b].position;
-      final weight = _euclideanDistance(pa, pb);
+      final weight = _euclideanDistanceBtwnPoints(pa, pb);
 
       nodes[a].edges.add(_IndoorGraphEdge(b, weight));
       nodes[b].edges.add(_IndoorGraphEdge(a, weight));
@@ -477,10 +562,10 @@ void _connectCorridorEdges(
   }
 }
 
-// Connects nearby corridor vertices to bridge small gaps.
+/// Connects nearby corridor vertices to bridge small gaps.
 void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   const double vertexSnapThreshold = 5.0;
-  final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
+  const double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
 
   for (var i = 0; i < nodes.length; i++) {
     final pi = nodes[i].position;
@@ -500,41 +585,41 @@ void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   }
 }
 
-// Adds midpoints and centroids as interior nodes for each corridor.
+/// Adds midpoints and centroids as interior nodes for each corridor.
 void _addCorridorInteriorPoints(
   final List<Corridor> corridors,
   final List<List<int>> corridorAllNodeIds,
   final int Function(Point<double>) getOrCreateNodeId,
 ) {
   for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
-    final polygon = corridors[corridorIndex].bounds;
-    if (polygon.length < 3) {
+    final polygons = corridors[corridorIndex].bounds;
+    if (polygons.length < 3) {
       continue;
     }
 
     final allNodeIds = corridorAllNodeIds[corridorIndex];
 
-    for (var i = 0; i < polygon.length; i++) {
-      final a = polygon[i];
-      final b = polygon[(i + 1) % polygon.length];
+    for (var i = 0; i < polygons.length; i++) {
+      final a = polygons[i];
+      final b = polygons[(i + 1) % polygons.length];
       final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
-      final midId = getOrCreateNodeId(midpoint);
-      allNodeIds.add(midId);
+      final midPointId = getOrCreateNodeId(midpoint);
+      allNodeIds.add(midPointId);
     }
 
     var sumX = 0.0;
     var sumY = 0.0;
-    for (final p in polygon) {
-      sumX += p.x;
-      sumY += p.y;
+    for (final polygon in polygons) {
+      sumX += polygon.x;
+      sumY += polygon.y;
     }
-    final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
+    final centroid = Point<double>(sumX / polygons.length, sumY / polygons.length);
     final centroidId = getOrCreateNodeId(centroid);
     allNodeIds.add(centroidId);
   }
 }
 
-// Adds global visibility edges over the union of all corridors.
+/// Adds global visibility edges over the union of all corridors.
 void _addGlobalVisibilityEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorAllNodeIds,
@@ -548,7 +633,7 @@ void _addGlobalVisibilityEdges(
   final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
 
   const double maxVisibilityEdgeLength = 200.0;
-  final double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
+  const double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
 
   for (var i = 0; i < allVisibilityNodeIds.length; i++) {
     final idA = allVisibilityNodeIds[i];
@@ -576,7 +661,7 @@ void _addGlobalVisibilityEdges(
   }
 }
 
-// Checks whether segment AB lies entirely inside the union of all corridors.
+/// Checks whether segment AB lies entirely inside the union of all corridors.
 bool _segmentInsideAnyCorridor(
   final Point<double> a,
   final Point<double> b,
@@ -604,7 +689,7 @@ bool _segmentInsideAnyCorridor(
   return true;
 }
 
-// Even–odd point-in-polygon test.
+/// Even–odd point-in-polygon test.
 bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygon) {
   if (polygon.length < 3) {
     return false;
@@ -628,8 +713,11 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   return inside;
 }
 
-// Dijkstra shortest path on the indoor graph.
-List<int> _dijkstra(final _IndoorGraph graph, final int startId, final int endId) {
+List<int> _computeIndoorShortestPathWithDijkstra(
+  final _IndoorGraph graph,
+  final int startId,
+  final int endId,
+) {
   final nodeCount = graph.nodes.length;
   if (startId < 0 || startId >= nodeCount || endId < 0 || endId >= nodeCount) {
     return <int>[];

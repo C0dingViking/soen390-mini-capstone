@@ -203,11 +203,13 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         _viewModel.setIndoorPath(path);
       } on StateError catch (_) {
         _viewModel.clearIndoorPath();
+        // TODO: add a clearer error popup
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("No indoor route found between the selected rooms.")),
         );
       } catch (_) {
         _viewModel.clearIndoorPath();
+        // TODO: add a clearer error popup
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
         );
@@ -220,6 +222,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Floor plan data is missing for one of the floors.")),
       );
@@ -230,6 +233,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, destFloorplan);
 
     if (startRoomModel == null || destinationRoomModel == null) {
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both rooms.")));
@@ -251,6 +255,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to compute inter-floor route. Please try again.")),
       );
@@ -363,9 +368,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Offset(normalizedX * floorplan.canvasWidth, normalizedY * floorplan.canvasHeight);
   }
 
-  // label for a transition type
-
-  String _transitionLabel(final FloorTransition transition) {
+  String _getTransitionLabelFromTransitionType(final FloorTransition transition) {
     switch (transition.type) {
       case TransitionType.elevator:
         return "Elevator";
@@ -376,29 +379,26 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-  // inter-floor segment navigation bar
-
   Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
     final segment = ivm.currentSegment;
     if (segment == null) {
       return const SizedBox.shrink();
     }
 
-    // description text.
     String description;
     if (segment.entryTransition != null && segment.exitTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "${_transitionLabel(segment.entryTransition!)} → "
-          "${_transitionLabel(segment.exitTransition!)}";
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → "
+          "${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
     } else if (segment.exitTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "Start → ${_transitionLabel(segment.exitTransition!)}";
+          "Start → ${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
     } else if (segment.entryTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "${_transitionLabel(segment.entryTransition!)} → Destination";
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → Destination";
     } else {
       description = "Floor ${segment.floorNumber}";
     }
@@ -406,7 +406,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color.fromARGB(200, 8, 187, 241),
+        color: const Color.fromARGB(200, 8, 187, 241),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

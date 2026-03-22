@@ -28,7 +28,6 @@ class IndoorViewModel extends ChangeNotifier {
   bool isLoading = false;
   bool loadFailed = false;
 
-  /// checks Whether the active route spans multiple floors.
   bool get isInterFloorRoute => _interFloorSegments != null && _interFloorSegments!.length > 1;
 
   int get totalSegments => _interFloorSegments?.length ?? 0;
@@ -104,7 +103,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  //  to ensure S2 comes before 1 and other specifications
+  /// Necessary to ensure S2 comes before 1 and other specifications
   List<String> sortFloorplanKeys(final List<String> keys) {
     keys.sort((final a, final b) {
       final aIsSub = a.startsWith("S");
@@ -163,8 +162,7 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
-  // Single-floor path
-
+  /// Single-floor path
   void setIndoorPath(final List<Point<double>> path) {
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
@@ -172,8 +170,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Multi-floor path
-
+  /// Multi-floor path
   void setInterFloorPath(final List<IndoorFloorPathSegment> segments) {
     if (segments.isEmpty) {
       clearIndoorPath();
@@ -192,7 +189,6 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Advance to the next floor
   bool advanceToNextSegment() {
     if (!hasNextSegment) {
       return false;
@@ -210,7 +206,6 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
-  // Goes back to the previous floor segment and switches displayed floor
   bool goToPreviousSegment() {
     if (!hasPreviousSegment) {
       return false;
