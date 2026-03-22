@@ -152,13 +152,14 @@ extension FloorplanPathfinding on Floorplan {
     final IndoorMapRoom endRoom,
   ) {
     if (corridors.isEmpty) {
+      final description = "No indoor corridors available for pathfinding.";
       developer.log(
-        "Indoor pathfinding error: no corridors available",
+        description,
         name: "IndoorPathfinding",
         error:
             "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
       );
-      throw StateError("No indoor corridors available for pathfinding.");
+      throw StateError(description);
     }
 
     final graph = _IndoorGraph.fromCorridors(corridors);
@@ -169,13 +170,15 @@ extension FloorplanPathfinding on Floorplan {
     final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
+      final description =
+          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
       developer.log(
-        "Indoor pathfinding error: no path found between rooms",
+        description,
         name: "IndoorPathfinding",
         error:
             "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
       );
-      throw StateError("No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.");
+      throw StateError(description);
     }
 
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
@@ -187,7 +190,14 @@ extension FloorplanPathfinding on Floorplan {
     final FloorTransition transition,
   ) {
     if (corridors.isEmpty) {
-      throw StateError("No indoor corridors available for pathfinding.");
+      final description = "No indoor corridors available for pathfinding.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
+      );
+      throw StateError(description);
     }
 
     final graph = _IndoorGraph.fromCorridors(corridors);
@@ -198,9 +208,15 @@ extension FloorplanPathfinding on Floorplan {
     final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
-      throw StateError(
-        "No indoor path found to transition ${transition.id} on floor $floorNumber.",
+      final description =
+          "No indoor path found to transition ${transition.id} on floor $floorNumber.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
       );
+      throw StateError(description);
     }
 
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
@@ -242,10 +258,16 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   }
 
   if (floorsToTraverse.length < 2) {
-    throw StateError(
-      "Cannot navigate between floor $startFloor and floor $destinationFloor: "
-      "insufficient floorplan data.",
+    final description =
+        "Cannot navigate between floor $startFloor and floor $destinationFloor: "
+        "insufficient floorplan data.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "startFloor=$startFloor destinationFloor=$destinationFloor availableFloors=${floorplans.keys.toList()}",
     );
+    throw StateError(description);
   }
 
   // Build segments floor by floor.
@@ -266,10 +288,19 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     );
 
     if (candidates.isEmpty) {
-      throw StateError(
-        "No connecting transition found between floor $currentFloorNum "
-        "and floor $nextFloorNum.",
+      final description =
+          "No connecting transition found between floor $currentFloorNum "
+          "and floor $nextFloorNum.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "currentFloor=$currentFloorNum nextFloor=$nextFloorNum "
+            "currentTransitions=${currentFloorplan.transitions.length} "
+            "nextTransitions=${nextFloorplan.transitions.length} "
+            "preferredType=$preferredTransitionType",
       );
+      throw StateError(description);
     }
 
     _TransitionCandidate? bestCandidate;
@@ -294,10 +325,16 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     }
 
     if (bestCandidate == null || bestPath == null) {
-      throw StateError(
-        "No reachable transition found on floor $currentFloorNum "
-        "to reach floor $nextFloorNum.",
+      final description =
+          "No reachable transition found on floor $currentFloorNum "
+          "to reach floor $nextFloorNum.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "currentFloor=$currentFloorNum nextFloor=$nextFloorNum preferredType=$preferredTransitionType",
       );
+      throw StateError(description);
     }
 
     segments.add(
@@ -318,7 +355,15 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
 
   final entryTransition = destFloorplan.transitions.firstWhere(
     (final t) => t.groupTag == lastExitTransition.groupTag,
-    orElse: () => throw StateError("No matching entry transition on floor $destinationFloor."),
+    orElse: () {
+      final description = "No matching entry transition on floor $destinationFloor.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error: "destinationFloor=$destinationFloor lastExitGroupTag=${lastExitTransition.groupTag}",
+      );
+      throw StateError(description);
+    },
   );
 
   try {
@@ -342,10 +387,15 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
       ),
     );
   } on StateError {
-    throw StateError(
-      "No path found from transition to room ${destinationRoom.name} "
-      "on floor $destinationFloor.",
+    final description =
+        "No path found from transition to room ${destinationRoom.name} "
+        "on floor $destinationFloor.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error: "destinationFloor=$destinationFloor room=${destinationRoom.name}",
     );
+    throw StateError(description);
   }
 
   return segments;
