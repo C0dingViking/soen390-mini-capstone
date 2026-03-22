@@ -140,12 +140,43 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
-    final targetBuildingId = parsedStartRoom.buildingId.toLowerCase();
+    final floorplans = await _ensureFloorplansLoadedForBuilding(parsedStartRoom.buildingId);
+    if (floorplans == null || floorplans.isEmpty) {
+      return;
+    }
+
+    if (!_validateSameBuilding(parsedStartRoom.buildingId, parsedDestinationRoom.buildingId)) {
+      return;
+    }
+
+    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+    final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
+
+    // Switch to the current location's floor immediately
+    _viewModel.changeFloor(startFloor);
+
+    if (startFloor == destinationFloor) {
+      await _handleSameFloorNavigation(parsedStartRoom, parsedDestinationRoom, startFloor);
+    } else {
+      await _handleInterFloorNavigation(
+        parsedStartRoom,
+        parsedDestinationRoom,
+        startFloor,
+        destinationFloor,
+        floorplans,
+      );
+    }
+  }
+
+  Future<Map<String, Floorplan>?> _ensureFloorplansLoadedForBuilding(
+    final String targetBuildingId,
+  ) async {
+    final targetIdLower = targetBuildingId.toLowerCase();
     final currentBuildingId = (_viewModel.loadedBuildingId ?? widget.building.id).toLowerCase();
-    if (targetBuildingId != currentBuildingId) {
-      await _viewModel.initializeBuildingFloorplans(targetBuildingId);
+    if (targetIdLower != currentBuildingId) {
+      await _viewModel.initializeBuildingFloorplans(targetIdLower);
       if (!mounted) {
-        return;
+        return null;
       }
     }
 
@@ -154,71 +185,78 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No floor plans available for current location.")),
       );
+      return null;
+    }
+
+    return floorplans;
+  }
+
+  bool _validateSameBuilding(final String startBuildingId, final String destinationBuildingId) {
+    if (startBuildingId == destinationBuildingId) {
+      return true;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Indoor navigation currently supports routes within a single building."),
+      ),
+    );
+    return false;
+  }
+
+  Future<void> _handleSameFloorNavigation(
+    final ({String buildingId, String roomName}) parsedStartRoom,
+    final ({String buildingId, String roomName}) parsedDestinationRoom,
+    final String startFloor,
+  ) async {
+    final changedFloor = _viewModel.changeFloor(startFloor);
+    if (!changedFloor) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
       return;
     }
 
-    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
+    final floorplan = _viewModel.selectedFloorplan;
+    if (floorplan == null) {
+      return;
+    }
 
-    // Switch to the current location's floor immediately
-    _viewModel.changeFloor(startFloor);
+    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, floorplan);
+    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, floorplan);
 
-    if (parsedStartRoom.buildingId != parsedDestinationRoom.buildingId) {
+    if (startRoomModel == null || destinationRoomModel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Indoor navigation currently supports routes within a single building."),
-        ),
+        const SnackBar(content: Text("Unable to locate one or both rooms on this floor.")),
       );
       return;
     }
 
-    final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
-
-    // Same-floor route
-
-    if (startFloor == destinationFloor) {
-      final changedFloor = _viewModel.changeFloor(startFloor);
-      if (!changedFloor) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
-        return;
-      }
-
-      final floorplan = _viewModel.selectedFloorplan;
-      if (floorplan == null) {
-        return;
-      }
-
-      final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, floorplan);
-      final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, floorplan);
-
-      if (startRoomModel == null || destinationRoomModel == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unable to locate one or both rooms on this floor.")),
-        );
-        return;
-      }
-      try {
-        final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
-        _viewModel.setIndoorPath(path);
-      } on StateError catch (_) {
-        _viewModel.clearIndoorPath();
-        // TODO: add a clearer error popup
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No indoor route found between the selected rooms.")),
-        );
-      } catch (_) {
-        _viewModel.clearIndoorPath();
-        // TODO: add a clearer error popup
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
-        );
-      }
-      return;
+    try {
+      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
+      _viewModel.setIndoorPath(path);
+    } on StateError catch (_) {
+      _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No indoor route found between the selected rooms.")),
+      );
+    } catch (_) {
+      _viewModel.clearIndoorPath();
+      // TODO: add a clearer error popup
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
+      );
     }
+  }
 
-    // Inter-floor route
-
+  Future<void> _handleInterFloorNavigation(
+    final ({String buildingId, String roomName}) parsedStartRoom,
+    final ({String buildingId, String roomName}) parsedDestinationRoom,
+    final String startFloor,
+    final String destinationFloor,
+    final Map<String, Floorplan> floorplans,
+  ) async {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {

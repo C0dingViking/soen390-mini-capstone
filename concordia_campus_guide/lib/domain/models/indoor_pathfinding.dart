@@ -69,43 +69,93 @@ class _IndoorGraph {
     final doorNodeId = nodes.length;
     nodes.add(_IndoorGraphNode(door));
 
-    var containingCorridorIndex = -1;
+    final containingCorridorIndex = _findContainingOrNearestCorridorIndex(door, corridors);
+
+    final candidateVertexIds = _candidateVertexIdsForDoor(doorNodeId, containingCorridorIndex);
+
+    final bestConnection = _findBestDoorConnection(door, candidateVertexIds);
+
+    if (bestConnection != null && bestConnection.distance > 0) {
+      nodes[doorNodeId].edges.add(
+        _IndoorGraphEdge(bestConnection.vertexId, bestConnection.distance),
+      );
+      nodes[bestConnection.vertexId].edges.add(
+        _IndoorGraphEdge(doorNodeId, bestConnection.distance),
+      );
+    }
+
+    return doorNodeId;
+  }
+
+  int _findContainingOrNearestCorridorIndex(
+    final Point<double> door,
+    final List<Corridor> corridors,
+  ) {
+    final containingCorridorIndex = _findContainingCorridorIndex(door, corridors);
+
+    if (containingCorridorIndex >= 0 || corridors.isEmpty) {
+      return containingCorridorIndex;
+    }
+
+    const double snapThreshold = 20.0;
+
+    final nearest = _findNearestCorridorIndex(door, corridors);
+    if (nearest == null) {
+      return -1;
+    }
+
+    return nearest.distance <= snapThreshold ? nearest.index : -1;
+  }
+
+  int _findContainingCorridorIndex(final Point<double> door, final List<Corridor> corridors) {
     for (var i = 0; i < corridors.length; i++) {
       if (_pointInPolygon(door, corridors[i].bounds)) {
-        containingCorridorIndex = i;
-        break;
+        return i;
       }
     }
+    return -1;
+  }
 
-    if (containingCorridorIndex < 0 && corridors.isNotEmpty) {
-      const double snapThreshold = 20.0;
+  _NearestCorridorResult? _findNearestCorridorIndex(
+    final Point<double> door,
+    final List<Corridor> corridors,
+  ) {
+    double bestCorridorDistance = double.infinity;
+    int? bestCorridorIndex;
 
-      double bestCorridorDistance = double.infinity;
-      int? bestCorridorIndex;
-
-      for (var i = 0; i < corridors.length; i++) {
-        final corridor = corridors[i];
-        for (final point in corridor.bounds) {
-          final d = _euclideanDistanceBtwnPoints(door, point);
-          if (d < bestCorridorDistance) {
-            bestCorridorDistance = d;
-            bestCorridorIndex = i;
-          }
+    for (var i = 0; i < corridors.length; i++) {
+      final corridor = corridors[i];
+      for (final point in corridor.bounds) {
+        final d = _euclideanDistanceBtwnPoints(door, point);
+        if (d < bestCorridorDistance) {
+          bestCorridorDistance = d;
+          bestCorridorIndex = i;
         }
       }
-
-      if (bestCorridorIndex != null && bestCorridorDistance <= snapThreshold) {
-        containingCorridorIndex = bestCorridorIndex;
-      }
     }
 
-    Iterable<int> candidateVertexIds;
+    if (bestCorridorIndex == null) {
+      return null;
+    }
+
+    return _NearestCorridorResult(index: bestCorridorIndex, distance: bestCorridorDistance);
+  }
+
+  Iterable<int> _candidateVertexIdsForDoor(
+    final int doorNodeId,
+    final int containingCorridorIndex,
+  ) {
     if (containingCorridorIndex >= 0) {
-      candidateVertexIds = corridorAllNodeIds[containingCorridorIndex];
-    } else {
-      candidateVertexIds = Iterable<int>.generate(doorNodeId);
+      return corridorAllNodeIds[containingCorridorIndex];
     }
 
+    return Iterable<int>.generate(doorNodeId);
+  }
+
+  _BestDoorConnection? _findBestDoorConnection(
+    final Point<double> door,
+    final Iterable<int> candidateVertexIds,
+  ) {
     double bestDistance = double.infinity;
     int? bestVertexId;
 
@@ -118,13 +168,26 @@ class _IndoorGraph {
       }
     }
 
-    if (bestVertexId != null && bestDistance > 0) {
-      nodes[doorNodeId].edges.add(_IndoorGraphEdge(bestVertexId, bestDistance));
-      nodes[bestVertexId].edges.add(_IndoorGraphEdge(doorNodeId, bestDistance));
+    if (bestVertexId == null) {
+      return null;
     }
 
-    return doorNodeId;
+    return _BestDoorConnection(vertexId: bestVertexId, distance: bestDistance);
   }
+}
+
+class _NearestCorridorResult {
+  final int index;
+  final double distance;
+
+  const _NearestCorridorResult({required this.index, required this.distance});
+}
+
+class _BestDoorConnection {
+  final int vertexId;
+  final double distance;
+
+  const _BestDoorConnection({required this.vertexId, required this.distance});
 }
 
 // Single-floor path segment used in multi-floor routes
@@ -711,16 +774,27 @@ List<int> _computeIndoorShortestPathWithDijkstra(
 
   distances[startId] = 0;
 
-  for (var iteration = 0; iteration < nodeCount; iteration++) {
-    var u = -1;
-    var bestDistance = double.infinity;
+  _runDijkstra(graph, startId, endId, distances, previous, visited);
 
-    for (var i = 0; i < nodeCount; i++) {
-      if (!visited[i] && distances[i] < bestDistance) {
-        bestDistance = distances[i];
-        u = i;
-      }
-    }
+  if (distances[endId] == double.infinity) {
+    return <int>[];
+  }
+
+  return _reconstructPath(endId, previous);
+}
+
+void _runDijkstra(
+  final _IndoorGraph graph,
+  final int startId,
+  final int endId,
+  final List<double> distances,
+  final List<int?> previous,
+  final List<bool> visited,
+) {
+  final nodeCount = graph.nodes.length;
+
+  for (var iteration = 0; iteration < nodeCount; iteration++) {
+    final u = _selectNextNode(nodeCount, distances, visited);
 
     if (u == -1 || u == endId) {
       break;
@@ -728,23 +802,45 @@ List<int> _computeIndoorShortestPathWithDijkstra(
 
     visited[u] = true;
 
-    for (final edge in graph.nodes[u].edges) {
-      if (visited[edge.to]) {
-        continue;
-      }
+    _relaxNeighbors(graph, u, distances, previous, visited);
+  }
+}
 
-      final alt = distances[u] + edge.weight;
-      if (alt < distances[edge.to]) {
-        distances[edge.to] = alt;
-        previous[edge.to] = u;
-      }
+int _selectNextNode(final int nodeCount, final List<double> distances, final List<bool> visited) {
+  var u = -1;
+  var bestDistance = double.infinity;
+
+  for (var i = 0; i < nodeCount; i++) {
+    if (!visited[i] && distances[i] < bestDistance) {
+      bestDistance = distances[i];
+      u = i;
     }
   }
 
-  if (distances[endId] == double.infinity) {
-    return <int>[];
-  }
+  return u;
+}
 
+void _relaxNeighbors(
+  final _IndoorGraph graph,
+  final int u,
+  final List<double> distances,
+  final List<int?> previous,
+  final List<bool> visited,
+) {
+  for (final edge in graph.nodes[u].edges) {
+    if (visited[edge.to]) {
+      continue;
+    }
+
+    final alt = distances[u] + edge.weight;
+    if (alt < distances[edge.to]) {
+      distances[edge.to] = alt;
+      previous[edge.to] = u;
+    }
+  }
+}
+
+List<int> _reconstructPath(final int endId, final List<int?> previous) {
   final path = <int>[];
   int? current = endId;
   while (current != null) {
