@@ -207,8 +207,6 @@ extension FloorplanPathfinding on Floorplan {
   }
 }
 
-// Inter-floor pathfinding
-
 List<IndoorFloorPathSegment> computeInterFloorPath({
   required final Map<String, Floorplan> floorplans,
   required final String startFloor,
