@@ -391,7 +391,7 @@ List<_TransitionCandidate> _findMatchingTransitions(
   return [...preferred, ...others];
 }
 
-// Computes the total  length of a polyline path.
+/// Computes the total  length of a polyline path.
 double _pathLength(final List<Point<double>> path) {
   double total = 0;
   for (int i = 0; i < path.length - 1; i++) {
