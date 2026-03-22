@@ -25,6 +25,7 @@ import "package:geolocator_platform_interface/geolocator_platform_interface.dart
 
 class _FakeGeolocator extends GeolocatorPlatform {
   bool serviceEnabled = true;
+  LocationAccuracyStatus locationAccuracyStatus = LocationAccuracyStatus.precise;
   LocationPermission checkPermissionResult = LocationPermission.always;
   LocationPermission requestPermissionResult = LocationPermission.always;
   bool throwOnGet = false;
@@ -40,6 +41,9 @@ class _FakeGeolocator extends GeolocatorPlatform {
 
   @override
   Future<LocationPermission> requestPermission() async => requestPermissionResult;
+
+  @override
+  Future<LocationAccuracyStatus> getLocationAccuracy() async => locationAccuracyStatus;
 
   @override
   Future<Position> getCurrentPosition({final LocationSettings? locationSettings}) async {
