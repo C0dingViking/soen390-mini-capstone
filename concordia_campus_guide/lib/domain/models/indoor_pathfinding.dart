@@ -435,7 +435,7 @@ class _TransitionCandidate {
   const _TransitionCandidate({required this.fromTransition, required this.toTransition});
 }
 
-// Finds transition pairs that connect two floors by matching
+/// Finds transition pairs that connect two floors by matching their transition type
 List<_TransitionCandidate> _findMatchingTransitions(
   final List<FloorTransition> fromFloorTransitions,
   final List<FloorTransition> toFloorTransitions,
