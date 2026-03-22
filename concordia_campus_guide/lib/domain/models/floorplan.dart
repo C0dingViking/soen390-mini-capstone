@@ -166,7 +166,6 @@ class Floorplan {
         .firstWhere((final e) => e.getAttribute(_inkscapeLabelRoot) == "points-of-interest");
     floorplan.pois = floorplan._parsePoiData(buildingId, floorNumber, poisLayer, connectorsLayer);
 
-    // Parse floor transitions from the SVG.
     floorplan.transitions = floorplan._parseTransitionData(
       buildingId,
       floorNumber,
