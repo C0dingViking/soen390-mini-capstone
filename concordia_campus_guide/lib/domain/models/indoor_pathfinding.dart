@@ -408,7 +408,7 @@ double _euclideanDistanceBtwnPoints(final Point<double> a, final Point<double> b
   return sqrt(dx * dx + dy * dy);
 }
 
-// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
+/// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
 List<List<int>> _createCorridorVertexNodes(
   final List<Corridor> corridors,
   final int Function(Point<double>) getOrCreateNodeId,
