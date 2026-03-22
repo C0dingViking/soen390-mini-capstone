@@ -287,6 +287,21 @@ class Floorplan {
     return pois;
   }
 
+  MapEntry<TransitionType, String> _resolveTransitionTypeAndGroup(
+    final String typeName,
+    final String instanceNum,
+  ) {
+    switch (typeName) {
+      case "elevator":
+        return MapEntry(TransitionType.elevator, "elevator-$instanceNum");
+      case "escalatorUp":
+      case "escalatorDown":
+        return MapEntry(TransitionType.escalator, "escalator-$instanceNum");
+      default:
+        return MapEntry(TransitionType.stairs, "stairs-$instanceNum");
+    }
+  }
+
   List<FloorTransition> _parseTransitionData(
     final String buildingId,
     final String floorNumber,
@@ -312,24 +327,9 @@ class Floorplan {
       final typeName = match.group(1)!;
       final instanceNum = match.group(2)!;
 
-      // Determine the canonical transition type.
-      TransitionType transitionType;
-      String canonicalGroup;
-      switch (typeName) {
-        case "elevator":
-          transitionType = TransitionType.elevator;
-          canonicalGroup = "elevator-$instanceNum";
-          break;
-        case "escalatorUp":
-        case "escalatorDown":
-          transitionType = TransitionType.escalator;
-          canonicalGroup = "escalator-$instanceNum";
-          break;
-        default: // stairs, stairsUp, stairsDown
-          transitionType = TransitionType.stairs;
-          canonicalGroup = "stairs-$instanceNum";
-          break;
-      }
+      final transitionInfo = _resolveTransitionTypeAndGroup(typeName, instanceNum);
+      final transitionType = transitionInfo.key;
+      final canonicalGroup = transitionInfo.value;
 
       // Resolve the door/connector location for this transition.
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum";
