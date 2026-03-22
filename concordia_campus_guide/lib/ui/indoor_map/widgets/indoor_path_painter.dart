@@ -50,7 +50,6 @@ class IndoorPathPainter extends CustomPainter {
     );
   }
 
-  //Paint
 
   @override
   void paint(final Canvas canvas, final Size size) {
