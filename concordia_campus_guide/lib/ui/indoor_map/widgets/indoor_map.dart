@@ -136,7 +136,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return null;
   }
 
-  Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom) async {
+  Future<void> _handleStartNavigation(
+    final String startRoom,
+    final String destinationRoom,
+    final bool accessibleMode,
+  ) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
@@ -164,6 +168,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         startFloor,
         destinationFloor,
         floorplans,
+        accessibleMode,
       );
     }
   }
@@ -256,6 +261,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final String startFloor,
     final String destinationFloor,
     final Map<String, Floorplan> floorplans,
+    final bool accessibleMode,
   ) async {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
@@ -285,6 +291,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         destinationFloor: destinationFloor,
         startRoom: startRoomModel,
         destinationRoom: destinationRoomModel,
+        accessibleMode: accessibleMode,
       );
       _viewModel.setInterFloorPath(segments);
     } on StateError catch (e) {

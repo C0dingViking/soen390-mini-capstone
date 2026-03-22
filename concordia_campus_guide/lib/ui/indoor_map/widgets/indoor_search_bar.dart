@@ -7,7 +7,8 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
-  final void Function(String startRoom, String destinationRoom)? onStartNavigation;
+  final void Function(String startRoom, String destinationRoom, bool accessibleMode)?
+  onStartNavigation;
 
   const IndoorSearchBar({
     super.key,
@@ -37,6 +38,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
+  bool _accessibleMode = false;
 
   List<String> _filteredRoomList = [];
 
@@ -179,6 +181,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     widget.onStartNavigation?.call(
       _startController.text.trim(),
       _destinationController.text.trim(),
+      _accessibleMode,
     );
   }
 
@@ -260,6 +263,39 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppTheme.indoorSearchFieldDecoration.fillColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(_cardRadius),
+              topRight: Radius.circular(_cardRadius),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _ModeToggleIcon(
+                icon: Icons.directions_walk,
+                isSelected: !_accessibleMode,
+                tooltip: "Normal walking route",
+                onTap: () {
+                  setState(() => _accessibleMode = false);
+                },
+              ),
+              const SizedBox(width: 24),
+              _ModeToggleIcon(
+                icon: Icons.accessible_forward,
+                isSelected: _accessibleMode,
+                tooltip: "Accessible route (avoid stairs)",
+                onTap: () {
+                  setState(() => _accessibleMode = true);
+                },
+              ),
+            ],
+          ),
+        ),
         SearchInputCard(
           elevation: _cardElevation,
           radius: _cardRadius,
@@ -294,6 +330,49 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ModeToggleIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ModeToggleIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(final BuildContext context) {
+    const Color selectedFillColor = AppTheme.concordiaButtonCyanSolid;
+    const Color unselectedBorderColor = Colors.transparent;
+    const Color selectedBorderColor = AppTheme.concordiaButtonCyanSolid;
+    const Color unselectedFillColor = Colors.white;
+    const Color iconColor = AppTheme.concordiaForeground;
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? selectedBorderColor : unselectedBorderColor,
+              width: 2,
+            ),
+            color: isSelected ? selectedFillColor : unselectedFillColor,
+          ),
+          child: Icon(icon, color: iconColor),
+        ),
+      ),
     );
   }
 }

@@ -293,6 +293,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   required final IndoorMapRoom startRoom,
   required final IndoorMapRoom destinationRoom,
   final TransitionType? preferredTransitionType,
+  final bool accessibleMode = false,
 }) {
   if (startFloor == destinationFloor) {
     final floorplan = floorplans[startFloor]!;
@@ -310,6 +311,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     currentStartPoint = _appendSegmentForFloorPair(
       floorplans: floorplans,
       preferredTransitionType: preferredTransitionType,
+      accessibleMode: accessibleMode,
       floorsToTraverse: floorsToTraverse,
       segments: segments,
       index: i,
@@ -382,6 +384,7 @@ void _appendFinalDestinationSegment({
 Point<double> _appendSegmentForFloorPair({
   required final Map<String, Floorplan> floorplans,
   required final TransitionType? preferredTransitionType,
+  required final bool accessibleMode,
   required final List<String> floorsToTraverse,
   required final List<IndoorFloorPathSegment> segments,
   required final int index,
@@ -392,13 +395,13 @@ Point<double> _appendSegmentForFloorPair({
   final currentFloorplan = floorplans[currentFloorNum]!;
   final nextFloorplan = floorplans[nextFloorNum]!;
 
-  final candidates = _findMatchingTransitions(
+  final allCandidates = _findMatchingTransitions(
     currentFloorplan.transitions,
     nextFloorplan.transitions,
     preferredTransitionType,
   );
 
-  if (candidates.isEmpty) {
+  if (allCandidates.isEmpty) {
     final description =
         "No connecting transition found between floor $currentFloorNum "
         "and floor $nextFloorNum.";
@@ -412,6 +415,24 @@ Point<double> _appendSegmentForFloorPair({
           "preferredType=$preferredTransitionType",
     );
     throw StateError(description);
+  }
+
+  List<_TransitionCandidate> candidates = allCandidates;
+
+  if (accessibleMode) {
+    final nonStairs = allCandidates
+        .where(
+          (final c) =>
+              c.fromTransition.type != TransitionType.stairs &&
+              c.toTransition.type != TransitionType.stairs &&
+              c.fromTransition.type != TransitionType.escalator &&
+              c.toTransition.type != TransitionType.escalator,
+        )
+        .toList();
+
+    if (nonStairs.isNotEmpty) {
+      candidates = nonStairs;
+    }
   }
 
   _TransitionCandidate? bestCandidate;
@@ -495,7 +516,6 @@ List<String> _computeFloorsToTraverse(
     );
     throw StateError(description);
   }
-
   return floorsToTraverse;
 }
 
