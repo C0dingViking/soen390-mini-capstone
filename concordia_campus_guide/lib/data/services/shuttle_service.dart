@@ -85,7 +85,7 @@ class ShuttleService {
     );
     final shuttlePolyline = shuttleRoute?.polyline ?? [board.location, alight.location];
 
-    final routeOption = _buildRouteOption(
+    final routeBuildData = _RouteBuildData(
       walkToBoard: walkToBoard,
       walkFromAlight: walkFromAlight,
       board: board,
@@ -95,80 +95,63 @@ class ShuttleService {
       totalTimeSeconds: totalTimeSeconds,
       shuttlePolyline: shuttlePolyline,
     );
+    final routeOption = _buildRouteOption(routeBuildData);
 
     return _CandidateRouteData(routeOption: routeOption, totalTimeSeconds: totalTimeSeconds);
   }
 
-  RouteOption _buildRouteOption({
-    required final RouteOption walkToBoard,
-    required final RouteOption walkFromAlight,
-    required final ShuttleStop board,
-    required final ShuttleStop alight,
-    required final int shuttleRide,
-    required final int waitTimeSeconds,
-    required final int totalTimeSeconds,
-    required final List<Coordinate> shuttlePolyline,
-  }) {
-    final steps = _buildSteps(
-      walkToBoard: walkToBoard,
-      walkFromAlight: walkFromAlight,
-      board: board,
-      alight: alight,
-      shuttleRide: shuttleRide,
-      waitTimeSeconds: waitTimeSeconds,
-      shuttlePolyline: shuttlePolyline,
-    );
+  RouteOption _buildRouteOption(final _RouteBuildData routeBuildData) {
+    final steps = _buildSteps(routeBuildData);
 
     return RouteOption(
       mode: RouteMode.shuttle,
-      distanceMeters: (walkToBoard.distanceMeters ?? 0) + (walkFromAlight.distanceMeters ?? 0),
-      durationSeconds: totalTimeSeconds,
-      polyline: [...walkToBoard.polyline, ...shuttlePolyline, ...walkFromAlight.polyline],
+      distanceMeters:
+          (routeBuildData.walkToBoard.distanceMeters ?? 0) +
+          (routeBuildData.walkFromAlight.distanceMeters ?? 0),
+      durationSeconds: routeBuildData.totalTimeSeconds,
+      polyline: [
+        ...routeBuildData.walkToBoard.polyline,
+        ...routeBuildData.shuttlePolyline,
+        ...routeBuildData.walkFromAlight.polyline,
+      ],
       steps: steps,
-      summary: _buildSummary(waitTimeSeconds),
+      summary: _buildSummary(routeBuildData.waitTimeSeconds),
     );
   }
 
-  List<RouteStep> _buildSteps({
-    required final RouteOption walkToBoard,
-    required final RouteOption walkFromAlight,
-    required final ShuttleStop board,
-    required final ShuttleStop alight,
-    required final int shuttleRide,
-    required final int waitTimeSeconds,
-    required final List<Coordinate> shuttlePolyline,
-  }) {
-    final steps = <RouteStep>[...walkToBoard.steps];
+  List<RouteStep> _buildSteps(final _RouteBuildData routeBuildData) {
+    final steps = <RouteStep>[...routeBuildData.walkToBoard.steps];
 
-    if (waitTimeSeconds > 0) {
+    if (routeBuildData.waitTimeSeconds > 0) {
       steps.add(
         RouteStep(
           instruction: "Wait for shuttle",
           distanceMeters: 0,
-          durationSeconds: waitTimeSeconds,
+          durationSeconds: routeBuildData.waitTimeSeconds,
           travelMode: "WAIT",
-          polyline: [board.location],
+          polyline: [routeBuildData.board.location],
         ),
       );
     }
 
     steps.add(
       RouteStep(
-        instruction: "Take shuttle from ${board.name} to ${alight.name}",
+        instruction:
+            "Take shuttle from ${routeBuildData.board.name} to ${routeBuildData.alight.name}",
         distanceMeters: 0,
-        durationSeconds: shuttleRide,
+        durationSeconds: routeBuildData.shuttleRide,
         travelMode: "SHUTTLE",
         transitDetails: TransitDetails(
           lineName: "Campus Shuttle",
           shortName: "SH",
           mode: TransitMode.bus,
-          departureStop: board.name,
-          arrivalStop: alight.name,
+          departureStop: routeBuildData.board.name,
+          arrivalStop: routeBuildData.alight.name,
         ),
-        polyline: shuttlePolyline,
+        polyline: routeBuildData.shuttlePolyline,
       ),
     );
-    steps.addAll(walkFromAlight.steps);
+    steps.addAll(routeBuildData.walkFromAlight.steps);
     return steps;
   }
 
@@ -208,4 +191,26 @@ class _CandidateRouteData {
   final int totalTimeSeconds;
 
   _CandidateRouteData({required this.routeOption, required this.totalTimeSeconds});
+}
+
+class _RouteBuildData {
+  final RouteOption walkToBoard;
+  final RouteOption walkFromAlight;
+  final ShuttleStop board;
+  final ShuttleStop alight;
+  final int shuttleRide;
+  final int waitTimeSeconds;
+  final int totalTimeSeconds;
+  final List<Coordinate> shuttlePolyline;
+
+  _RouteBuildData({
+    required this.walkToBoard,
+    required this.walkFromAlight,
+    required this.board,
+    required this.alight,
+    required this.shuttleRide,
+    required this.waitTimeSeconds,
+    required this.totalTimeSeconds,
+    required this.shuttlePolyline,
+  });
 }
