@@ -362,9 +362,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Offset(normalizedX * floorplan.canvasWidth, normalizedY * floorplan.canvasHeight);
   }
 
-  // label for a transition type
-
-  String _transitionLabel(final FloorTransition transition) {
+  String _getTransitionLabelFromTransitionType(final FloorTransition transition) {
     switch (transition.type) {
       case TransitionType.elevator:
         return "Elevator";
