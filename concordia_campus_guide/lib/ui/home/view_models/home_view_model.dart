@@ -409,17 +409,11 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> refreshLocationActionAvailability() async {
     bool available = true;
 
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(
-      const Duration(seconds: 2),
-      onTimeout: () => true,
-    );
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       available = false;
     } else {
-      final accuracy = await Geolocator.getLocationAccuracy().timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => LocationAccuracyStatus.precise,
-      );
+      final accuracy = await Geolocator.getLocationAccuracy();
       if (accuracy == LocationAccuracyStatus.reduced) {
         available = false;
       }

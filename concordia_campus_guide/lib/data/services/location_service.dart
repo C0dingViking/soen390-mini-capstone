@@ -42,7 +42,7 @@ class LocationService {
     } on Exception catch (e) {
       // throw a more user friendly message if location accuracy is off
       if (e.toString().contains("The location service on the device is disabled.")) {
-        throw PermissionDeniedException(
+        throw const PermissionDeniedException(
           "Location services are unavailable. Turn on Location and Location Accuracy.",
         );
       }
