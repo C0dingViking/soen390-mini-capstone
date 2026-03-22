@@ -373,8 +373,8 @@ List<_TransitionCandidate> _findMatchingTransitions(
   final List<_TransitionCandidate> preferred = [];
   final List<_TransitionCandidate> others = [];
 
-  for (final fromT in fromFloorTransitions) {
-    final toT = toTransitionsByGroup[fromT.groupTag];
+  for (final fromTransition in fromFloorTransitions) {
+    final toTransition = toTransitionsByGroup[fromT.groupTag];
     if (toT == null) {
       continue;
     }
