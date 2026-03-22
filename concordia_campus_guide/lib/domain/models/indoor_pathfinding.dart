@@ -456,7 +456,7 @@ void _connectCorridorEdges(
   }
 }
 
-// Connects nearby corridor vertices to bridge small gaps.
+/// Connects nearby corridor vertices to bridge small gaps.
 void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   const double vertexSnapThreshold = 5.0;
   final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
