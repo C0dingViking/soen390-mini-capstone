@@ -136,7 +136,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return null;
   }
 
-  Future<void> _handleStartNavigation(final String startRoom, final String destinationRoom, final bool accessibleMode) async {
+  Future<void> _handleStartNavigation(
+    final String startRoom,
+    final String destinationRoom,
+    final bool accessibleMode,
+  ) async {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 

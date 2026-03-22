@@ -7,7 +7,8 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
-  final void Function(String startRoom, String destinationRoom, bool accessibleMode)? onStartNavigation;
+  final void Function(String startRoom, String destinationRoom, bool accessibleMode)?
+  onStartNavigation;
 
   const IndoorSearchBar({
     super.key,

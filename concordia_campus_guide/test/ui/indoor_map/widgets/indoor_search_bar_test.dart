@@ -392,7 +392,7 @@ void main() {
     // Tap the accessible mode button
     await tester.tap(find.byIcon(Icons.accessible));
     await tester.pump();
-    
+
     final startField = find.byType(TextField).first;
     final destField = find.byType(TextField).last;
 
