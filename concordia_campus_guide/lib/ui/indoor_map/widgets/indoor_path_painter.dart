@@ -63,7 +63,6 @@ class IndoorPathPainter extends CustomPainter {
     _drawDestinationPin(canvas, offsets.last);
   }
 
-  // Dashed path
 
   void _drawDashedPath(final Canvas canvas, final List<Offset> offsets) {
     final paint = Paint()
