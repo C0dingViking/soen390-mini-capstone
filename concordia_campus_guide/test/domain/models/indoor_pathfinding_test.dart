@@ -643,6 +643,89 @@ void main() {
       expect(segments[0].exitTransition!.groupTag, "elevator-1");
     });
 
+    test("accessibleMode prefers non-stairs transitions when available (lines 305-332)", () {
+      // Mix of stairs and elevator transitions connecting floors 1 and 2.
+      // With accessibleMode = true the non-stairs pair should be chosen,
+      // exercising the candidates filtering block at lines 305-332.
+      final corridor1 = rectCorridor(0, 0, 300, 50);
+      final corridor2 = rectCorridor(0, 0, 300, 50);
+      final room1 = makeRoom("101", const Point<double>(20, 25));
+      final room2 = makeRoom("201", const Point<double>(20, 25));
+
+      final stairsTransition1 = FloorTransition(
+        id: "h1-stairs-1",
+        location: const Point<double>(280, 25),
+        type: TransitionType.stairs,
+        groupTag: "stairs-1",
+      );
+      final elevatorTransition1 = FloorTransition(
+        id: "h1-elevator-1",
+        location: const Point<double>(50, 25),
+        type: TransitionType.elevator,
+        groupTag: "elevator-1",
+      );
+
+      final stairsTransition2 = FloorTransition(
+        id: "h2-stairs-1",
+        location: const Point<double>(280, 25),
+        type: TransitionType.stairs,
+        groupTag: "stairs-1",
+      );
+      final elevatorTransition2 = FloorTransition(
+        id: "h2-elevator-1",
+        location: const Point<double>(50, 25),
+        type: TransitionType.elevator,
+        groupTag: "elevator-1",
+      );
+
+      final building = {
+        "1": makeFloorplan(
+          floorNumber: "1",
+          corridors: [corridor1],
+          rooms: [room1],
+          transitions: [stairsTransition1, elevatorTransition1],
+        ),
+        "2": makeFloorplan(
+          floorNumber: "2",
+          corridors: [corridor2],
+          rooms: [room2],
+          transitions: [stairsTransition2, elevatorTransition2],
+        ),
+      };
+
+      final segments = computeInterFloorPath(
+        floorplans: building,
+        startFloor: "1",
+        destinationFloor: "2",
+        startRoom: room1,
+        destinationRoom: room2,
+        accessibleMode: true,
+      );
+
+      expect(segments.length, 2);
+      // The non-stairs (elevator) candidate should be selected.
+      expect(segments[0].exitTransition!.type, TransitionType.elevator);
+      expect(segments[0].exitTransition!.groupTag, "elevator-1");
+    });
+
+    test("accessibleMode falls back to stairs when no non-stairs exist (lines 305-332)", () {
+      // Only stairs transitions are available between the floors. With
+      // accessibleMode = true, nonStairs.isEmpty so the algorithm must
+      // fall back to all candidates rather than throwing.
+      final segments = computeInterFloorPath(
+        floorplans: twoFloorBuilding,
+        startFloor: "1",
+        destinationFloor: "2",
+        startRoom: roomOnFloor1,
+        destinationRoom: roomOnFloor2,
+        accessibleMode: true,
+      );
+
+      expect(segments.length, 2);
+      expect(segments[0].exitTransition!.type, TransitionType.stairs);
+      expect(segments[0].exitTransition!.groupTag, "stairs-1");
+    });
+
     test("floor sort key handles non-numeric floor identifiers (lines 230-236)", () {
       // Floors with non-numeric prefixes should be sorted by their numeric
       // portion. "B1" → 1, "2" → 2.
