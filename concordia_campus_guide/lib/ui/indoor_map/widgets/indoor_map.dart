@@ -168,6 +168,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         startFloor,
         destinationFloor,
         floorplans,
+        accessibleMode,
       );
     }
   }
@@ -260,6 +261,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final String startFloor,
     final String destinationFloor,
     final Map<String, Floorplan> floorplans,
+    final bool accessibleMode,
   ) async {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
