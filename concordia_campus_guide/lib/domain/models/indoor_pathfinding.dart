@@ -65,8 +65,7 @@ class _IndoorGraph {
     );
   }
 
-  // Adds a door node and connects it to the corridor graph.
-  int addDoorNode(final Point<double> door, final List<Corridor> corridors) {
+  int addDoorNodeToCorridorGraph(final Point<double> door, final List<Corridor> corridors) {
     final doorNodeId = nodes.length;
     nodes.add(_IndoorGraphNode(door));
 
