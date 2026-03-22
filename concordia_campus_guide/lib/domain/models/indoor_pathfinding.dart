@@ -379,7 +379,7 @@ List<_TransitionCandidate> _findMatchingTransitions(
       continue;
     }
 
-    final candidate = _TransitionCandidate(fromTransition: fromT, toTransition: toT);
+    final transitionCandidate = _TransitionCandidate(fromTransition: fromT, toTransition: toT);
 
     if (preferredType != null && fromT.type == preferredType) {
       preferred.add(candidate);
