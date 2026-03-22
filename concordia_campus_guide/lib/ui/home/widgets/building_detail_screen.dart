@@ -154,7 +154,6 @@ class BuildingDetailScreen extends StatelessWidget {
 
   Widget _buildImage() {
     if (building.images.isNotEmpty) {
-      // TODO: convert to an carousel if we decide to scrape images from google places API
       return building.images.first.toImage(
         width: double.infinity,
         height: 250,
