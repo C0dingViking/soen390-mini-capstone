@@ -104,7 +104,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  //  to ensure S2 comes before 1 and other specifications
+  /// Necessary to ensure S2 comes before 1 and other specifications
   List<String> sortFloorplanKeys(final List<String> keys) {
     keys.sort((final a, final b) {
       final aIsSub = a.startsWith("S");
