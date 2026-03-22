@@ -171,8 +171,7 @@ class IndoorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Multi-floor path
-
+  /// Multi-floor path
   void setInterFloorPath(final List<IndoorFloorPathSegment> segments) {
     if (segments.isEmpty) {
       clearIndoorPath();
