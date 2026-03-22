@@ -146,7 +146,6 @@ class IndoorFloorPathSegment {
   });
 }
 
-// Computes the shortest indoor path between two rooms.
 extension FloorplanPathfinding on Floorplan {
   List<Point<double>> shortestPathBetweenRooms(
     final IndoorMapRoom startRoom,
