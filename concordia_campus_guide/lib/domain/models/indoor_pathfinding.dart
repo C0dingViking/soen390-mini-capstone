@@ -181,7 +181,7 @@ extension FloorplanPathfinding on Floorplan {
     return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
   }
 
-  // Computes the path from a room's door to a specific transition point on this floor.
+  /// Computes the path from a room's door to a specific transition point on this floor.
   List<Point<double>> shortestPathToTransition(
     final Point<double> startPoint,
     final FloorTransition transition,
