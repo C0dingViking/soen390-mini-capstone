@@ -28,7 +28,6 @@ class IndoorViewModel extends ChangeNotifier {
   bool isLoading = false;
   bool loadFailed = false;
 
-  /// checks Whether the active route spans multiple floors.
   bool get isInterFloorRoute => _interFloorSegments != null && _interFloorSegments!.length > 1;
 
   int get totalSegments => _interFloorSegments?.length ?? 0;
