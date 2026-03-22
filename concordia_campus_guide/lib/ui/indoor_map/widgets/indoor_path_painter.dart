@@ -193,7 +193,6 @@ class IndoorPathPainter extends CustomPainter {
 
     canvas.drawPath(stemPath, Paint()..color = endColor);
 
-    // Circle
     canvas.drawCircle(circleCenter, pinRadius, Paint()..color = endColor);
   }
 
