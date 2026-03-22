@@ -180,7 +180,6 @@ class IndoorPathPainter extends CustomPainter {
     );
   }
 
-  //  Destination pin
 
   void _drawDestinationPin(final Canvas canvas, final Offset tip) {
     final circleCenter = tip.translate(0, -(pinRadius + pinStemHeight));
