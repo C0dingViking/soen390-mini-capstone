@@ -86,7 +86,7 @@ class _IndoorGraph {
       for (var i = 0; i < corridors.length; i++) {
         final corridor = corridors[i];
         for (final point in corridor.bounds) {
-          final d = _euclideanDistance(door, point);
+          final d = _euclideanDistanceBtwnPoints(door, point);
           if (d < bestCorridorDistance) {
             bestCorridorDistance = d;
             bestCorridorIndex = i;
@@ -111,9 +111,9 @@ class _IndoorGraph {
 
     for (final vertexId in candidateVertexIds) {
       final vertexPoint = nodes[vertexId].position;
-      final distanceBtwnDoorAndVertexPoint = _euclideanDistance(door, vertexPoint);
-      if (d < bestDistance) {
-        bestDistance = d;
+      final distanceBtwnDoorAndVertexPoint = _euclideanDistanceBtwnPoints(door, vertexPoint);
+      if (distanceBtwnDoorAndVertexPoint < bestDistance) {
+        bestDistance = distanceBtwnDoorAndVertexPoint;
         bestVertexId = vertexId;
       }
     }
@@ -163,10 +163,10 @@ extension FloorplanPathfinding on Floorplan {
 
     final graph = _IndoorGraph.fromCorridors(corridors);
 
-    final startId = graph.addDoorNode(startRoom.doorLocation, corridors);
-    final endId = graph.addDoorNode(endRoom.doorLocation, corridors);
+    final startId = graph.addDoorNodeToCorridorGraph(startRoom.doorLocation, corridors);
+    final endId = graph.addDoorNodeToCorridorGraph(endRoom.doorLocation, corridors);
 
-    final pathNodeIds = _dijkstra(graph, startId, endId);
+    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
       developer.log(
@@ -192,10 +192,10 @@ extension FloorplanPathfinding on Floorplan {
 
     final graph = _IndoorGraph.fromCorridors(corridors);
 
-    final startId = graph.addDoorNode(startPoint, corridors);
-    final endId = graph.addDoorNode(transition.location, corridors);
+    final startId = graph.addDoorNodeToCorridorGraph(startPoint, corridors);
+    final endId = graph.addDoorNodeToCorridorGraph(transition.location, corridors);
 
-    final pathNodeIds = _dijkstra(graph, startId, endId);
+    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
 
     if (pathNodeIds.isEmpty) {
       throw StateError(
@@ -374,17 +374,20 @@ List<_TransitionCandidate> _findMatchingTransitions(
   final List<_TransitionCandidate> others = [];
 
   for (final fromTransition in fromFloorTransitions) {
-    final toTransition = toTransitionsByGroup[fromT.groupTag];
-    if (toT == null) {
+    final toTransition = toTransitionsByGroup[fromTransition.groupTag];
+    if (toTransition == null) {
       continue;
     }
 
-    final transitionCandidate = _TransitionCandidate(fromTransition: fromT, toTransition: toT);
+    final transitionCandidate = _TransitionCandidate(
+      fromTransition: fromTransition,
+      toTransition: toTransition,
+    );
 
-    if (preferredType != null && fromT.type == preferredType) {
-      preferred.add(candidate);
+    if (preferredType != null && fromTransition.type == preferredType) {
+      preferred.add(transitionCandidate);
     } else {
-      others.add(candidate);
+      others.add(transitionCandidate);
     }
   }
 
@@ -395,7 +398,7 @@ List<_TransitionCandidate> _findMatchingTransitions(
 double _pathLength(final List<Point<double>> path) {
   double total = 0;
   for (int i = 0; i < path.length - 1; i++) {
-    total += _euclideanDistance(path[i], path[i + 1]);
+    total += _euclideanDistanceBtwnPoints(path[i], path[i + 1]);
   }
   return total;
 }
@@ -448,7 +451,7 @@ void _connectCorridorEdges(
 
       final pa = nodes[a].position;
       final pb = nodes[b].position;
-      final weight = _euclideanDistance(pa, pb);
+      final weight = _euclideanDistanceBtwnPoints(pa, pb);
 
       nodes[a].edges.add(_IndoorGraphEdge(b, weight));
       nodes[b].edges.add(_IndoorGraphEdge(a, weight));
@@ -487,18 +490,18 @@ void _addCorridorInteriorPoints(
 ) {
   for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
     final polygons = corridors[corridorIndex].bounds;
-    if (polygon.length < 3) {
+    if (polygons.length < 3) {
       continue;
     }
 
     final allNodeIds = corridorAllNodeIds[corridorIndex];
 
-    for (var i = 0; i < polygon.length; i++) {
-      final a = polygon[i];
-      final b = polygon[(i + 1) % polygon.length];
+    for (var i = 0; i < polygons.length; i++) {
+      final a = polygons[i];
+      final b = polygons[(i + 1) % polygons.length];
       final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
       final midPointId = getOrCreateNodeId(midpoint);
-      allNodeIds.add(midId);
+      allNodeIds.add(midPointId);
     }
 
     var sumX = 0.0;
@@ -507,7 +510,7 @@ void _addCorridorInteriorPoints(
       sumX += polygon.x;
       sumY += polygon.y;
     }
-    final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
+    final centroid = Point<double>(sumX / polygons.length, sumY / polygons.length);
     final centroidId = getOrCreateNodeId(centroid);
     allNodeIds.add(centroidId);
   }
@@ -607,7 +610,11 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   return inside;
 }
 
-List<int> _computeIndoorShortestPathWithDijkstra(final _IndoorGraph graph, final int startId, final int endId) {
+List<int> _computeIndoorShortestPathWithDijkstra(
+  final _IndoorGraph graph,
+  final int startId,
+  final int endId,
+) {
   final nodeCount = graph.nodes.length;
   if (startId < 0 || startId >= nodeCount || endId < 0 || endId >= nodeCount) {
     return <int>[];

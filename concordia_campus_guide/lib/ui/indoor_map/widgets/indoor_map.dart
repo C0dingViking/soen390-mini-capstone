@@ -373,7 +373,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-
   Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
     final segment = ivm.currentSegment;
     if (segment == null) {
@@ -384,16 +383,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (segment.entryTransition != null && segment.exitTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "${_transitionLabel(segment.entryTransition!)} → "
-          "${_transitionLabel(segment.exitTransition!)}";
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → "
+          "${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
     } else if (segment.exitTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "Start → ${_transitionLabel(segment.exitTransition!)}";
+          "Start → ${_getTransitionLabelFromTransitionType(segment.exitTransition!)}";
     } else if (segment.entryTransition != null) {
       description =
           "Floor ${segment.floorNumber}: "
-          "${_transitionLabel(segment.entryTransition!)} → Destination";
+          "${_getTransitionLabelFromTransitionType(segment.entryTransition!)} → Destination";
     } else {
       description = "Floor ${segment.floorNumber}";
     }
