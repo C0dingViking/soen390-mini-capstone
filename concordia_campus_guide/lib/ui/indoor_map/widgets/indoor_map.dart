@@ -380,7 +380,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return const SizedBox.shrink();
     }
 
-    // description text.
     String description;
     if (segment.entryTransition != null && segment.exitTransition != null) {
       description =
