@@ -275,10 +275,18 @@ class DirectionsService {
 
   // not using regexp cus sonarqube doesn't like it so have to do this instead... yuck
   String _stripHtml(final String html) {
+    final withBreaks = html
+      .replaceAll("<br>", "\n")
+      .replaceAll("<br/>", "\n")
+      .replaceAll("<br />", "\n")
+      .replaceAll("<div>", "\n")
+      .replaceAll("</div>", "")
+      .replaceAll("<div style=\"font-size:0.9em\">", "\n");
+
     final buffer = StringBuffer();
     var inTag = false;
-    for (var i = 0; i < html.length; i++) {
-      final char = html[i];
+    for (var i = 0; i < withBreaks.length; i++) {
+      final char = withBreaks[i];
       if (char == "<") {
         inTag = true;
         continue;
