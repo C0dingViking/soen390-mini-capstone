@@ -267,32 +267,31 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppTheme.indoorSearchFieldDecoration.fillColor,
-            borderRadius: BorderRadius.circular(_cardRadius),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(_cardRadius),
+              topRight: Radius.circular(_cardRadius),
+            ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.directions_walk,
-                  color: !_accessibleMode ? Colors.blue : Colors.grey[700],
-                ),
-                onPressed: () {
+              _ModeToggleIcon(
+                icon: Icons.directions_walk,
+                isSelected: !_accessibleMode,
+                tooltip: "Normal walking route",
+                onTap: () {
                   setState(() => _accessibleMode = false);
                 },
-                tooltip: "Normal walking route",
               ),
-              const SizedBox(width: 16),
-              IconButton(
-                icon: Icon(
-                  Icons.accessible,
-                  color: _accessibleMode ? Colors.blue : Colors.grey[700],
-                ),
-                onPressed: () {
+              const SizedBox(width: 24),
+              _ModeToggleIcon(
+                icon: Icons.accessible_forward,
+                isSelected: _accessibleMode,
+                tooltip: "Accessible route (avoid stairs)",
+                onTap: () {
                   setState(() => _accessibleMode = true);
                 },
-                tooltip: "Accessible route (avoid stairs)",
               ),
             ],
           ),
@@ -331,6 +330,49 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ModeToggleIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ModeToggleIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(final BuildContext context) {
+    const Color selectedFillColor = AppTheme.concordiaButtonCyanSolid;
+    const Color unselectedBorderColor = Colors.transparent;
+    const Color selectedBorderColor = AppTheme.concordiaButtonCyanSolid;
+    const Color unselectedFillColor = Colors.white;
+    const Color iconColor = AppTheme.concordiaForeground;
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? selectedBorderColor : unselectedBorderColor,
+              width: 2,
+            ),
+            color: isSelected ? selectedFillColor : unselectedFillColor,
+          ),
+          child: Icon(icon, color: iconColor),
+        ),
+      ),
     );
   }
 }
