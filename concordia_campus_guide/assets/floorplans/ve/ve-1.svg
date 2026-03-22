@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1024"
+   height="1024"
+   viewBox="0 0 1024 1024"
+   id="svg2"
+   version="1.1"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   sodipodi:docname="ve-1.svg"
+   inkscape:export-filename="G:\SOEN 390 Floorplans\VL-2.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.959798"
+     inkscape:cx="688.92404"
+     inkscape:cy="147.73481"
+     inkscape:document-units="px"
+     inkscape:current-layer="g4664"
+     showgrid="false"
+     inkscape:snap-page="false"
+     units="px"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-nodes="true"
+     inkscape:snap-bbox="false"
+     inkscape:window-width="1934"
+     inkscape:window-height="1189"
+     inkscape:window-x="181"
+     inkscape:window-y="756"
+     inkscape:window-maximized="0"
+     inkscape:snap-nodes="true"
+     inkscape:snap-others="false"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     style="display:inline"
+     inkscape:label="base"
+     id="g4664"
+     inkscape:groupmode="layer">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;stroke-linejoin:round;stroke-opacity:1"
+       id="rect6"
+       width="153.03822"
+       height="169.45305"
+       x="686.39868"
+       y="38.133259"
+       ry="0" />
+    <path
+       id="path4672"
+       d="m 790.17773,42.214844 0,94.642576 -97.21289,0 0,32.04883 0,25.75781 14.64649,0 0,6.0625 33.83984,0 0,-31.82031 48.72656,0 0,1.00977 33.60157,0 0,-47.34375 6.5664,0 0,-80.357426 -6.5664,0 -33.60157,0 z"
+       style="fill:#b2c5da;fill-opacity:0.30434781;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:connector-curvature="0" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="points-of-interest">
+    <rect
+       y="168.90587"
+       x="707.61188"
+       height="31.819807"
+       width="33.840092"
+       id="rect4666"
+       style="display:inline;fill:#b2c5da;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:label="stairs-1" />
+    <path
+       fill="currentColor"
+       d="m 721.56229,188.66931 h 2.97449 v -2.23507 h 1.73092 v -2.23507 h 1.73092 v -2.25187 h 1.63008 v -1.3444 h -2.97448 v 2.23507 h -1.73092 v 2.23507 h -1.73092 v 2.25187 h -1.63009 z m -0.6722,2.0166 q -0.55457,0 -0.94915,-0.39458 -0.39458,-0.39458 -0.39525,-0.94982 v -9.41081 q 0,-0.55457 0.39525,-0.94915 0.39526,-0.39458 0.94915,-0.39525 h 9.41081 q 0.55457,0 0.94982,0.39525 0.39526,0.39525 0.39458,0.94915 v 9.41081 q 0,0.55457 -0.39458,0.94982 -0.39458,0.39526 -0.94982,0.39458 z"
+       id="path1-0-4"
+       style="fill:#000000;fill-opacity:1;stroke-width:0.6722" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="rooms">
+    <path
+       inkscape:connector-curvature="0"
+       id="path4668"
+       d="m 790.17773,42.214844 0,127.701176 33.60157,0 0,-47.34375 6.5664,0 0,-80.357426 -6.5664,0 -33.60157,0 z"
+       style="display:inline;fill:#b2c5da;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:label="room-VE-101" />
+    <rect
+       y="168.90587"
+       x="692.96466"
+       height="25.758892"
+       width="14.647231"
+       id="rect4670"
+       style="display:inline;fill:#b2c5da;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:label="room-VE-103" />
+    <text
+       xml:space="preserve"
+       style="font-size:10.6667px;line-height:1.3;writing-mode:lr-tb;direction:ltr;fill:#b2c5da;fill-opacity:0.304348;stroke:#ff6700;stroke-width:2;stroke-linejoin:round;stroke-opacity:0.935368"
+       x="800.5459"
+       y="92.176422"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="800.5459"
+         y="92.176422"
+         style="font-size:10.6667px;line-height:1.3;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1">VE-</tspan><tspan
+         sodipodi:role="line"
+         x="800.5459"
+         y="106.04313"
+         style="font-size:10.6667px;line-height:1.3;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="tspan2">101</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.33333px;line-height:1.3;writing-mode:lr-tb;direction:ltr;fill:#b2c5da;fill-opacity:0.304348;stroke:#ff6700;stroke-width:2;stroke-linejoin:round;stroke-opacity:0.935368"
+       x="695.43604"
+       y="180.18381"
+       id="text1-0"><tspan
+         sodipodi:role="line"
+         id="tspan1-5"
+         x="695.43604"
+         y="180.18381"
+         style="font-size:5.33333px;line-height:1.3;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1">VE-</tspan><tspan
+         sodipodi:role="line"
+         x="695.43604"
+         y="187.11714"
+         style="font-size:5.33333px;line-height:1.3;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="tspan2-6">103</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="connectors"
+     style="fill:none">
+    <ellipse
+       style="fill:none;fill-opacity:1;stroke:none;stroke-width:2;stroke-linejoin:round;stroke-opacity:1"
+       id="path3"
+       cx="700.31982"
+       cy="169.29526"
+       rx="3.1882939"
+       ry="2.6200831"
+       inkscape:label="door-ve1-103" />
+    <ellipse
+       style="fill:none;fill-opacity:1;stroke:none;stroke-width:2;stroke-linejoin:round;stroke-opacity:1"
+       id="path4"
+       cx="724.05841"
+       cy="169.20056"
+       rx="4.4509845"
+       ry="3.4723995"
+       inkscape:label="door-ve1-stairs-1" />
+    <ellipse
+       style="fill:none;fill-opacity:1;stroke:none;stroke-width:2;stroke-linejoin:round;stroke-opacity:1"
+       id="path5"
+       cx="790.3125"
+       cy="152.58928"
+       rx="4.5982141"
+       ry="5.2678571"
+       inkscape:label="door-ve1-101" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="walkable">
+    <path
+       style="fill:none;fill-opacity:1;stroke:none;stroke-width:2;stroke-linejoin:round;stroke-opacity:1"
+       d="m 692.58929,136.875 97.58928,0.17857 -0.0893,32.14286 -97.58929,-0.35714 -0.71428,-32.05358 z"
+       id="path6"
+       inkscape:label="walkable-1" />
+  </g>
+</svg>
