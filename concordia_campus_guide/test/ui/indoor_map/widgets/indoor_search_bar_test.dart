@@ -416,19 +416,19 @@ void main() {
       ),
     );
 
-    Finder _containerForIcon(final IconData icon) {
+    Finder containerForIcon(final IconData icon) {
       final iconFinder = find.byIcon(icon);
       return find.ancestor(of: iconFinder, matching: find.byType(Container)).first;
     }
 
-    BoxDecoration _decorationForIcon(final IconData icon) {
-      final container = tester.widget<Container>(_containerForIcon(icon));
+    BoxDecoration decorationForIcon(final IconData icon) {
+      final container = tester.widget<Container>(containerForIcon(icon));
       return container.decoration! as BoxDecoration;
     }
 
     // Initially walking is selected and accessible is not.
-    final initialWalkDecoration = _decorationForIcon(Icons.directions_walk);
-    final initialAccessibleDecoration = _decorationForIcon(Icons.accessible_forward);
+    final initialWalkDecoration = decorationForIcon(Icons.directions_walk);
+    final initialAccessibleDecoration = decorationForIcon(Icons.accessible_forward);
 
     expect(initialWalkDecoration.color, AppTheme.concordiaButtonCyanSolid);
     expect(initialAccessibleDecoration.color, Colors.white);
@@ -437,8 +437,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.accessible_forward));
     await tester.pumpAndSettle();
 
-    final updatedWalkDecoration = _decorationForIcon(Icons.directions_walk);
-    final updatedAccessibleDecoration = _decorationForIcon(Icons.accessible_forward);
+    final updatedWalkDecoration = decorationForIcon(Icons.directions_walk);
+    final updatedAccessibleDecoration = decorationForIcon(Icons.accessible_forward);
 
     expect(updatedWalkDecoration.color, Colors.white);
     expect(updatedAccessibleDecoration.color, AppTheme.concordiaButtonCyanSolid);
