@@ -513,7 +513,7 @@ void _addCorridorInteriorPoints(
   }
 }
 
-// Adds global visibility edges over the union of all corridors.
+/// Adds global visibility edges over the union of all corridors.
 void _addGlobalVisibilityEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorAllNodeIds,
