@@ -207,7 +207,6 @@ class IndoorViewModel extends ChangeNotifier {
     return true;
   }
 
-  // Goes back to the previous floor segment and switches displayed floor
   bool goToPreviousSegment() {
     if (!hasPreviousSegment) {
       return false;
