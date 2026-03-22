@@ -59,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      _viewModel.consumeErrorMessage();
     }
     if (_viewModel.generateInfoMessage != null) {
       ScaffoldMessenger.of(

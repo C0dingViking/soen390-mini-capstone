@@ -16,14 +16,18 @@ class LocationService {
 
   Future<Coordinate> getCurrentPosition() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const PermissionDeniedException("Location services disabled");
+      throw const PermissionDeniedException(
+        "Location services disabled. Enter locations manually or enable location services.",
+      );
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw const PermissionDeniedException("Location permission denied");
+        throw const PermissionDeniedException(
+          "Location permission denied. Enter locations manually or enable location permissions.",
+        );
       }
     }
     if (permission == LocationPermission.deniedForever) {

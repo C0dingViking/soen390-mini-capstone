@@ -315,6 +315,12 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void consumeErrorMessage() {
+    if (errorMessage == null) return;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> selectSearchSuggestion(
     final SearchSuggestion suggestion,
     final SearchField field,
