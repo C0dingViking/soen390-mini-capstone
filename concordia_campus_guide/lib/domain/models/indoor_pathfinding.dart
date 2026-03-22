@@ -424,7 +424,9 @@ Point<double> _appendSegmentForFloorPair({
         .where(
           (final c) =>
               c.fromTransition.type != TransitionType.stairs &&
-              c.toTransition.type != TransitionType.stairs,
+              c.toTransition.type != TransitionType.stairs &&
+              c.fromTransition.type != TransitionType.escalator &&
+              c.toTransition.type != TransitionType.escalator,
         )
         .toList();
 
