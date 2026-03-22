@@ -583,7 +583,7 @@ bool _segmentInsideAnyCorridor(
   return true;
 }
 
-// Even–odd point-in-polygon test.
+/// Even–odd point-in-polygon test.
 bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygon) {
   if (polygon.length < 3) {
     return false;
