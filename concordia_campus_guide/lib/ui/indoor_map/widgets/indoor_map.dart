@@ -373,7 +373,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
-  // inter-floor segment navigation bar
 
   Widget _buildSegmentNavigationBar(final IndoorViewModel ivm) {
     final segment = ivm.currentSegment;
