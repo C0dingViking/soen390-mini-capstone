@@ -497,7 +497,7 @@ void _addCorridorInteriorPoints(
       final a = polygon[i];
       final b = polygon[(i + 1) % polygon.length];
       final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
-      final midId = getOrCreateNodeId(midpoint);
+      final midPointId = getOrCreateNodeId(midpoint);
       allNodeIds.add(midId);
     }
 
