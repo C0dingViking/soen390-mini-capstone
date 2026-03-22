@@ -486,7 +486,7 @@ void _addCorridorInteriorPoints(
   final int Function(Point<double>) getOrCreateNodeId,
 ) {
   for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
-    final polygon = corridors[corridorIndex].bounds;
+    final polygons = corridors[corridorIndex].bounds;
     if (polygon.length < 3) {
       continue;
     }
