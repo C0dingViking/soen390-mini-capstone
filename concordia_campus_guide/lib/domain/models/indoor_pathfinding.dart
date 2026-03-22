@@ -402,8 +402,7 @@ double _pathLength(final List<Point<double>> path) {
 
 // Graph construction helpers
 
-// Euclidean distance between two points.
-double _euclideanDistance(final Point<double> a, final Point<double> b) {
+double _euclideanDistanceBtwnPoints(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
