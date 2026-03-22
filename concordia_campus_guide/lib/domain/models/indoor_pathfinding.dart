@@ -607,8 +607,7 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   return inside;
 }
 
-// Dijkstra shortest path on the indoor graph.
-List<int> _dijkstra(final _IndoorGraph graph, final int startId, final int endId) {
+List<int> _computeIndoorShortestPathWithDijkstra(final _IndoorGraph graph, final int startId, final int endId) {
   final nodeCount = graph.nodes.length;
   if (startId < 0 || startId >= nodeCount || endId < 0 || endId >= nodeCount) {
     return <int>[];
