@@ -428,7 +428,7 @@ List<List<int>> _createCorridorVertexNodes(
   return corridorVertexNodeIds;
 }
 
-// Connects consecutive corridor vertices along each corridor boundary.
+/// Connects consecutive corridor vertices along each corridor boundary.
 void _connectCorridorEdges(
   final List<_IndoorGraphNode> nodes,
   final List<List<int>> corridorVertexNodeIds,
