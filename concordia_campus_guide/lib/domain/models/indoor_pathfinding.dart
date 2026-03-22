@@ -244,78 +244,14 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   Point<double> currentStartPoint = startRoom.doorLocation;
 
   for (int i = 0; i < floorsToTraverse.length - 1; i++) {
-    final currentFloorNum = floorsToTraverse[i];
-    final nextFloorNum = floorsToTraverse[i + 1];
-    final currentFloorplan = floorplans[currentFloorNum]!;
-    final nextFloorplan = floorplans[nextFloorNum]!;
-
-    // Find matching transition pairs between these floors
-    final candidates = _findMatchingTransitions(
-      currentFloorplan.transitions,
-      nextFloorplan.transitions,
-      preferredTransitionType,
+    currentStartPoint = _appendSegmentForFloorPair(
+      floorplans: floorplans,
+      preferredTransitionType: preferredTransitionType,
+      floorsToTraverse: floorsToTraverse,
+      segments: segments,
+      index: i,
+      currentStartPoint: currentStartPoint,
     );
-
-    if (candidates.isEmpty) {
-      final description =
-          "No connecting transition found between floor $currentFloorNum "
-          "and floor $nextFloorNum.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "currentFloor=$currentFloorNum nextFloor=$nextFloorNum "
-            "currentTransitions=${currentFloorplan.transitions.length} "
-            "nextTransitions=${nextFloorplan.transitions.length} "
-            "preferredType=$preferredTransitionType",
-      );
-      throw StateError(description);
-    }
-
-    _TransitionCandidate? bestCandidate;
-    List<Point<double>>? bestPath;
-    double bestCost = double.infinity;
-
-    for (final candidate in candidates) {
-      try {
-        final path = currentFloorplan.shortestPathToTransition(
-          currentStartPoint,
-          candidate.fromTransition,
-        );
-        final cost = _pathLength(path);
-        if (cost < bestCost) {
-          bestCost = cost;
-          bestPath = path;
-          bestCandidate = candidate;
-        }
-      } on StateError {
-        continue;
-      }
-    }
-
-    if (bestCandidate == null || bestPath == null) {
-      final description =
-          "No reachable transition found on floor $currentFloorNum "
-          "to reach floor $nextFloorNum.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "currentFloor=$currentFloorNum nextFloor=$nextFloorNum preferredType=$preferredTransitionType",
-      );
-      throw StateError(description);
-    }
-
-    segments.add(
-      IndoorFloorPathSegment(
-        floorNumber: currentFloorNum,
-        path: bestPath,
-        exitTransition: bestCandidate.fromTransition,
-        entryTransition: i > 0 ? segments.last.exitTransition : null,
-      ),
-    );
-
-    currentStartPoint = bestCandidate.toTransition.location;
   }
 
   // Final segment
@@ -368,6 +304,87 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   }
 
   return segments;
+}
+
+Point<double> _appendSegmentForFloorPair({
+  required final Map<String, Floorplan> floorplans,
+  required final TransitionType? preferredTransitionType,
+  required final List<String> floorsToTraverse,
+  required final List<IndoorFloorPathSegment> segments,
+  required final int index,
+  required final Point<double> currentStartPoint,
+}) {
+  final currentFloorNum = floorsToTraverse[index];
+  final nextFloorNum = floorsToTraverse[index + 1];
+  final currentFloorplan = floorplans[currentFloorNum]!;
+  final nextFloorplan = floorplans[nextFloorNum]!;
+
+  final candidates = _findMatchingTransitions(
+    currentFloorplan.transitions,
+    nextFloorplan.transitions,
+    preferredTransitionType,
+  );
+
+  if (candidates.isEmpty) {
+    final description =
+        "No connecting transition found between floor $currentFloorNum "
+        "and floor $nextFloorNum.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "currentFloor=$currentFloorNum nextFloor=$nextFloorNum "
+          "currentTransitions=${currentFloorplan.transitions.length} "
+          "nextTransitions=${nextFloorplan.transitions.length} "
+          "preferredType=$preferredTransitionType",
+    );
+    throw StateError(description);
+  }
+
+  _TransitionCandidate? bestCandidate;
+  List<Point<double>>? bestPath;
+  double bestCost = double.infinity;
+
+  for (final candidate in candidates) {
+    try {
+      final path = currentFloorplan.shortestPathToTransition(
+        currentStartPoint,
+        candidate.fromTransition,
+      );
+      final cost = _pathLength(path);
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestPath = path;
+        bestCandidate = candidate;
+      }
+    } on StateError {
+      continue;
+    }
+  }
+
+  if (bestCandidate == null || bestPath == null) {
+    final description =
+        "No reachable transition found on floor $currentFloorNum "
+        "to reach floor $nextFloorNum.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "currentFloor=$currentFloorNum nextFloor=$nextFloorNum preferredType=$preferredTransitionType",
+    );
+    throw StateError(description);
+  }
+
+  segments.add(
+    IndoorFloorPathSegment(
+      floorNumber: currentFloorNum,
+      path: bestPath,
+      exitTransition: bestCandidate.fromTransition,
+      entryTransition: index > 0 ? segments.last.exitTransition : null,
+    ),
+  );
+
+  return bestCandidate.toTransition.location;
 }
 
 List<String> _computeFloorsToTraverse(
