@@ -237,38 +237,7 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     return [IndoorFloorPathSegment(floorNumber: startFloor, path: path)];
   }
 
-  // Determine the ordered list of floors to traverse.
-  // Parse numeric portion for sorting; non-numeric floors sort alphabetically
-  int floorSortKey(final String key) {
-    final digits = key.replaceAll(RegExp(r"[^0-9]"), "");
-    return digits.isNotEmpty ? int.parse(digits) : 0;
-  }
-
-  final allKeys = floorplans.keys.toList()
-    ..sort((final a, final b) => floorSortKey(a).compareTo(floorSortKey(b)));
-
-  final startIdx = allKeys.indexOf(startFloor);
-  final destIdx = allKeys.indexOf(destinationFloor);
-
-  final List<String> floorsToTraverse;
-  if (startIdx <= destIdx) {
-    floorsToTraverse = allKeys.sublist(startIdx, destIdx + 1);
-  } else {
-    floorsToTraverse = allKeys.sublist(destIdx, startIdx + 1).reversed.toList();
-  }
-
-  if (floorsToTraverse.length < 2) {
-    final description =
-        "Cannot navigate between floor $startFloor and floor $destinationFloor: "
-        "insufficient floorplan data.";
-    developer.log(
-      description,
-      name: "IndoorPathfinding",
-      error:
-          "startFloor=$startFloor destinationFloor=$destinationFloor availableFloors=${floorplans.keys.toList()}",
-    );
-    throw StateError(description);
-  }
+  final floorsToTraverse = _computeFloorsToTraverse(floorplans, startFloor, destinationFloor);
 
   // Build segments floor by floor.
   final List<IndoorFloorPathSegment> segments = [];
@@ -399,6 +368,45 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   }
 
   return segments;
+}
+
+List<String> _computeFloorsToTraverse(
+  final Map<String, Floorplan> floorplans,
+  final String startFloor,
+  final String destinationFloor,
+) {
+  int floorSortKey(final String key) {
+    final digits = key.replaceAll(RegExp(r"[^0-9]"), "");
+    return digits.isNotEmpty ? int.parse(digits) : 0;
+  }
+
+  final allKeys = floorplans.keys.toList()
+    ..sort((final a, final b) => floorSortKey(a).compareTo(floorSortKey(b)));
+
+  final startIdx = allKeys.indexOf(startFloor);
+  final destIdx = allKeys.indexOf(destinationFloor);
+
+  final List<String> floorsToTraverse;
+  if (startIdx <= destIdx) {
+    floorsToTraverse = allKeys.sublist(startIdx, destIdx + 1);
+  } else {
+    floorsToTraverse = allKeys.sublist(destIdx, startIdx + 1).reversed.toList();
+  }
+
+  if (floorsToTraverse.length < 2) {
+    final description =
+        "Cannot navigate between floor $startFloor and floor $destinationFloor: "
+        "insufficient floorplan data.";
+    developer.log(
+      description,
+      name: "IndoorPathfinding",
+      error:
+          "startFloor=$startFloor destinationFloor=$destinationFloor availableFloors=${floorplans.keys.toList()}",
+    );
+    throw StateError(description);
+  }
+
+  return floorsToTraverse;
 }
 
 // Inter-floor helpers
