@@ -1,6 +1,7 @@
 import "dart:math";
 
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:flutter/material.dart";
 
 class IndoorPathPainter extends CustomPainter {
@@ -23,14 +24,14 @@ class IndoorPathPainter extends CustomPainter {
   const IndoorPathPainter({
     required this.floorplan,
     required this.path,
-    this.pathColor = const Color.fromARGB(200, 8, 187, 241),
+    this.pathColor = AppTheme.concordiaIndoorPath,
     this.strokeWidth = 2.0,
     this.dashLength = 12.0,
     this.gapLength = 10.0,
-    this.startColor = const Color.fromARGB(200, 8, 187, 241),
+    this.startColor = AppTheme.concordiaIndoorPath,
     this.startRadius = 7.0,
     this.pulseAnimation,
-    this.endColor = const Color.fromARGB(200, 8, 187, 241),
+    this.endColor = AppTheme.concordiaIndoorPath,
     this.pinRadius = 5.0,
     this.pinStemHeight = 10.0,
   }) : super(repaint: pulseAnimation);
@@ -50,7 +51,6 @@ class IndoorPathPainter extends CustomPainter {
     );
   }
 
-
   @override
   void paint(final Canvas canvas, final Size size) {
     if (path.length < 2 || floorplan.canvasWidth <= 0 || floorplan.canvasHeight <= 0) return;
@@ -62,7 +62,6 @@ class IndoorPathPainter extends CustomPainter {
     _drawStartIndicator(canvas, offsets.first);
     _drawDestinationPin(canvas, offsets.last);
   }
-
 
   void _drawDashedPath(final Canvas canvas, final List<Offset> offsets) {
     final paint = Paint()
@@ -116,9 +115,8 @@ class IndoorPathPainter extends CustomPainter {
     }
   }
 
-
   void _drawStartIndicator(final Canvas canvas, final Offset center) {
-    const Color iconColor = Color.fromARGB(200, 8, 187, 241);
+    final Color iconColor = startColor;
 
     const double outerRingRadius = 6.0;
     const double innerDotRadius = 3.5;
@@ -179,7 +177,6 @@ class IndoorPathPainter extends CustomPainter {
       tickPaint,
     );
   }
-
 
   void _drawDestinationPin(final Canvas canvas, final Offset tip) {
     final circleCenter = tip.translate(0, -(pinRadius + pinStemHeight));
