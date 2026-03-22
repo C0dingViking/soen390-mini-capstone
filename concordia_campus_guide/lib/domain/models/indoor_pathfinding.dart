@@ -479,7 +479,7 @@ void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   }
 }
 
-// Adds midpoints and centroids as interior nodes for each corridor.
+/// Adds midpoints and centroids as interior nodes for each corridor.
 void _addCorridorInteriorPoints(
   final List<Corridor> corridors,
   final List<List<int>> corridorAllNodeIds,
