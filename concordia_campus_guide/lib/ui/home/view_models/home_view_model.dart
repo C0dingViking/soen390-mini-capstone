@@ -133,10 +133,11 @@ class HomeViewModel extends ChangeNotifier {
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
       await refreshLocationActionAvailability();
-      // start location service and subscribe to updates
-      await LocationService.instance.start();
       _locationSubscription?.cancel();
       _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
+      // start location service and subscribe to updates
+      await LocationService.instance.start();
+      await refreshLocationActionAvailability();
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -413,12 +414,17 @@ class HomeViewModel extends ChangeNotifier {
     if (!serviceEnabled) {
       available = false;
     } else {
-      final accuracy = await Geolocator.getLocationAccuracy();
-      if (accuracy == LocationAccuracyStatus.reduced) {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         available = false;
+      } else {
+        final accuracy = await Geolocator.getLocationAccuracy();
+        if (accuracy == LocationAccuracyStatus.reduced) {
+          available = false;
+        }
       }
     }
-
     _setLocationActionAvailable(available);
   }
 

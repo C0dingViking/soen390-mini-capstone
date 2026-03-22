@@ -44,7 +44,11 @@ class LocationService {
 
     Position pos;
     try {
-      pos = await Geolocator.getCurrentPosition();
+      pos = await Geolocator.getCurrentPosition().timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      throw const PermissionDeniedException(
+        "Location request timed out. Location service may be disabled.",
+      );
     } on Exception catch (e) {
       // throw a more user friendly message if location accuracy is off
       if (e.toString().contains("The location service on the device is disabled.")) {
@@ -63,11 +67,21 @@ class LocationService {
     final int distanceFilter = 5,
   }) async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return;
+      if (!await Geolocator.isLocationServiceEnabled().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => false,
+      ))
+        return;
 
-      LocationPermission permission = await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => LocationPermission.denied,
+      );
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+        permission = await Geolocator.requestPermission().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => LocationPermission.denied,
+        );
         if (permission == LocationPermission.denied) return;
       }
       if (permission == LocationPermission.deniedForever) return;
