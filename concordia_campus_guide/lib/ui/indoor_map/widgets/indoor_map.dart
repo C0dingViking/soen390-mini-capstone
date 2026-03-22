@@ -405,7 +405,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color.fromARGB(200, 8, 187, 241),
+        color: const Color.fromARGB(200, 8, 187, 241),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

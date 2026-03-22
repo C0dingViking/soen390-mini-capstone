@@ -149,8 +149,8 @@ class IndoorPathPainter extends CustomPainter {
       ..strokeWidth = strokeW
       ..strokeCap = StrokeCap.square;
 
-    final tickStart = outerRingRadius + tickGap;
-    final tickEnd = tickStart + tickLength;
+    const tickStart = outerRingRadius + tickGap;
+    const tickEnd = tickStart + tickLength;
 
     // Top
     canvas.drawLine(

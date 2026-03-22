@@ -152,7 +152,7 @@ extension FloorplanPathfinding on Floorplan {
     final IndoorMapRoom endRoom,
   ) {
     if (corridors.isEmpty) {
-      final description = "No indoor corridors available for pathfinding.";
+      const description = "No indoor corridors available for pathfinding.";
       developer.log(
         description,
         name: "IndoorPathfinding",
@@ -190,7 +190,7 @@ extension FloorplanPathfinding on Floorplan {
     final FloorTransition transition,
   ) {
     if (corridors.isEmpty) {
-      final description = "No indoor corridors available for pathfinding.";
+      const description = "No indoor corridors available for pathfinding.";
       developer.log(
         description,
         name: "IndoorPathfinding",
@@ -547,7 +547,7 @@ void _connectCorridorEdges(
 /// Connects nearby corridor vertices to bridge small gaps.
 void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
   const double vertexSnapThreshold = 5.0;
-  final double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
+  const double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
 
   for (var i = 0; i < nodes.length; i++) {
     final pi = nodes[i].position;
@@ -615,7 +615,7 @@ void _addGlobalVisibilityEdges(
   final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
 
   const double maxVisibilityEdgeLength = 200.0;
-  final double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
+  const double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
 
   for (var i = 0; i < allVisibilityNodeIds.length; i++) {
     final idA = allVisibilityNodeIds[i];
