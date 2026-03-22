@@ -639,7 +639,7 @@ void main() {
     });
 
     test(
-      "selectSearchSuggestion for destination without embedded coordinate sets current location start",
+      "selectSearchSuggestion for destination without embedded coordinate sets destination only",
       () async {
         fakeGeolocator.lat = 45.2;
         fakeGeolocator.lng = -73.2;
@@ -665,15 +665,13 @@ void main() {
 
         await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
 
-        expect(hvm.startCoordinate, isNotNull);
-        expect(hvm.startCoordinate!.latitude, 45.2);
-        expect(hvm.startCoordinate!.longitude, -73.2);
-        expect(hvm.selectedStartLabel, "Current location");
+        expect(hvm.startCoordinate, isNull);
+        expect(hvm.selectedStartLabel, isNull);
         expect(hvm.destinationCoordinate, isNotNull);
         expect(hvm.destinationCoordinate!.latitude, 45.3);
         expect(hvm.destinationCoordinate!.longitude, -73.3);
         expect(hvm.selectedDestinationLabel, "Cafe Place");
-        expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+        expect(hvm.routeOptions, isEmpty);
       },
     );
 
@@ -727,7 +725,7 @@ void main() {
 
       expect(hvm.searchResults, isEmpty);
       expect(hvm.nearbySearchResults, isEmpty);
-      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+      expect(hvm.routeOptions, isEmpty);
     });
     test("updateSearchQuery returns building suggestions without places", () {
       hvm.buildings = {
@@ -1016,19 +1014,14 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(places.lastResolvedSuggestion?.placeId, equals("nearby-1"));
-      expect(hvm.startCoordinate, isNotNull);
-      expect(hvm.startCoordinate!.latitude, 45.0);
-      expect(hvm.startCoordinate!.longitude, -73.0);
-      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.startCoordinate, isNull);
+      expect(hvm.selectedStartLabel, isNull);
       expect(hvm.destinationCoordinate, isNotNull);
       expect(hvm.destinationCoordinate!.latitude, 45.1);
       expect(hvm.destinationCoordinate!.longitude, -73.1);
       expect(hvm.selectedDestinationLabel, equals("Restaurant"));
-      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
-      expect(
-        directions.lastDestination,
-        equals(const Coordinate(latitude: 45.1, longitude: -73.1)),
-      );
+      expect(hvm.routeOptions, isEmpty);
+      expect(directions.lastDestination, isNull);
     });
 
     test("selectSearchSuggestion for nearby place loads routes", () async {
@@ -1061,26 +1054,21 @@ void main() {
       await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
 
       expect(places.lastResolvedSuggestion, equals(place));
-      expect(hvm.startCoordinate, isNotNull);
-      expect(hvm.startCoordinate!.latitude, 45.0);
-      expect(hvm.startCoordinate!.longitude, -73.0);
-      expect(hvm.selectedStartLabel, equals("Current location"));
+      expect(hvm.startCoordinate, isNull);
+      expect(hvm.selectedStartLabel, isNull);
       expect(hvm.destinationCoordinate, isNotNull);
       expect(hvm.destinationCoordinate!.latitude, 45.1);
       expect(hvm.destinationCoordinate!.longitude, -73.1);
       expect(hvm.selectedDestinationLabel, equals("Restaurant"));
       expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.1, longitude: -73.1)));
-      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
-      expect(hvm.routePolylines.length, 1);
+      expect(hvm.routeOptions, isEmpty);
+      expect(hvm.routePolylines, isEmpty);
       expect(hvm.searchResults, isEmpty);
       expect(hvm.nearbySearchResults, isEmpty);
       expect(hvm.cameraTarget, isNotNull);
       expect(hvm.cameraTarget!.latitude, 45.1);
       expect(hvm.cameraTarget!.longitude, -73.1);
-      expect(
-        directions.lastDestination,
-        equals(const Coordinate(latitude: 45.1, longitude: -73.1)),
-      );
+      expect(directions.lastDestination, isNull);
     });
 
     test("setDepartureTime and setArrivalTime update time state", () {

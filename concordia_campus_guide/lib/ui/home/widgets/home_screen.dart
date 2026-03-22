@@ -307,6 +307,9 @@ class _HomeScreenState extends State<HomeScreen> {
             final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                 ? actionBottomWithRoutes
                 : actionBottom;
+            final locationFabIcon = hvm.isLocationActionAvailable
+              ? Icons.my_location
+              : Icons.location_disabled;
 
             return Stack(
               children: [
@@ -339,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           heroTag: "my_location",
                           onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          icon: const Icon(Icons.my_location, color: Colors.white),
+                          icon: Icon(locationFabIcon, color: Colors.white),
                           label: Text(
                             hvm.currentBuilding!.id.toUpperCase(),
                             style: const TextStyle(
@@ -354,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           heroTag: "my_location",
                           onPressed: () => context.read<HomeViewModel>().goToCurrentLocation(),
                           backgroundColor: _buttonColor,
-                          child: const Icon(Icons.my_location, color: Colors.white),
+                          child: Icon(locationFabIcon, color: Colors.white),
                         ),
                 ),
                 Positioned(

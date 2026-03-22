@@ -36,7 +36,19 @@ class LocationService {
       );
     }
 
-    final pos = await Geolocator.getCurrentPosition();
+    Position pos;
+    try {
+      pos = await Geolocator.getCurrentPosition();
+    } on Exception catch (e) {
+      // throw a more user friendly message if location accuracy is off
+      if (e.toString().contains("The location service on the device is disabled.")) {
+        throw PermissionDeniedException(
+          "Location services are unavailable. Turn on Location and Location Accuracy.",
+        );
+      }
+      rethrow;
+    }
+
     return Coordinate(latitude: pos.latitude, longitude: pos.longitude);
   }
 
