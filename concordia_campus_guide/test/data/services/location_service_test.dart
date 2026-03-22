@@ -41,6 +41,9 @@ class _FakeGeolocator extends GeolocatorPlatform {
   }
 
   @override
+  Future<LocationAccuracyStatus> getLocationAccuracy() async => LocationAccuracyStatus.precise;
+
+  @override
   Stream<Position> getPositionStream({final LocationSettings? locationSettings}) {
     streamCallCount++;
     if (throwOnGetStream) {

@@ -35,6 +35,12 @@ class LocationService {
         "Location permission deniedForever. Please enable it in settings.",
       );
     }
+    final accuracy = await Geolocator.getLocationAccuracy();
+    if (accuracy == LocationAccuracyStatus.reduced) {
+      throw const PermissionDeniedException(
+        "Location accuracy is reduced. Turn on Location Accuracy the Concordia Campus Guide app for full location functionality.",
+      );
+    }
 
     Position pos;
     try {
