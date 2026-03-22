@@ -116,7 +116,6 @@ class IndoorPathPainter extends CustomPainter {
     }
   }
 
-  // Start indicator
 
   void _drawStartIndicator(final Canvas canvas, final Offset center) {
     const Color iconColor = Color.fromARGB(200, 8, 187, 241);
