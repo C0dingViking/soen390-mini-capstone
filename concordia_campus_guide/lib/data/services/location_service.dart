@@ -70,8 +70,9 @@ class LocationService {
       if (!await Geolocator.isLocationServiceEnabled().timeout(
         const Duration(seconds: 2),
         onTimeout: () => false,
-      ))
+      )) {
         return;
+      }
 
       LocationPermission permission = await Geolocator.checkPermission().timeout(
         const Duration(seconds: 2),
