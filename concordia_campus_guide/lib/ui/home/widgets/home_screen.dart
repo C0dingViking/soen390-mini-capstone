@@ -308,8 +308,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? actionBottomWithRoutes
                 : actionBottom;
             final locationFabIcon = hvm.isLocationActionAvailable
-              ? Icons.my_location
-              : Icons.location_disabled;
+                ? Icons.my_location
+                : Icons.location_disabled;
 
             return Stack(
               children: [

@@ -345,9 +345,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
-            isLocationActionAvailable ? Icons.my_location : Icons.location_disabled,
-          ),
+          icon: Icon(isLocationActionAvailable ? Icons.my_location : Icons.location_disabled),
           onPressed: () async {
             await context.read<HomeViewModel>().setStartToCurrentLocation();
             _startController.text = "Current location";
