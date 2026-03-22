@@ -555,7 +555,7 @@ void _addGlobalVisibilityEdges(
   }
 }
 
-// Checks whether segment AB lies entirely inside the union of all corridors.
+/// Checks whether segment AB lies entirely inside the union of all corridors.
 bool _segmentInsideAnyCorridor(
   final Point<double> a,
   final Point<double> b,
