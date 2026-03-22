@@ -503,9 +503,9 @@ void _addCorridorInteriorPoints(
 
     var sumX = 0.0;
     var sumY = 0.0;
-    for (final p in polygon) {
-      sumX += p.x;
-      sumY += p.y;
+    for (final polygon in polygons) {
+      sumX += polygon.x;
+      sumY += polygon.y;
     }
     final centroid = Point<double>(sumX / polygon.length, sumY / polygon.length);
     final centroidId = getOrCreateNodeId(centroid);
