@@ -254,7 +254,22 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     );
   }
 
-  // Final segment
+  _appendFinalDestinationSegment(
+    floorplans: floorplans,
+    destinationFloor: destinationFloor,
+    destinationRoom: destinationRoom,
+    segments: segments,
+  );
+
+  return segments;
+}
+
+void _appendFinalDestinationSegment({
+  required final Map<String, Floorplan> floorplans,
+  required final String destinationFloor,
+  required final IndoorMapRoom destinationRoom,
+  required final List<IndoorFloorPathSegment> segments,
+}) {
   final destFloorplan = floorplans[destinationFloor]!;
   final lastExitTransition = segments.last.exitTransition!;
 
@@ -274,9 +289,6 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
   try {
     final destPath = destFloorplan.shortestPathToTransition(
       entryTransition.location,
-      // We need to path from the transition to the destination room.
-      // Reuse shortestPathToTransition by creating a temporary FloorTransition
-      // at the destination room's door location.
       FloorTransition(
         id: "dest-room",
         location: destinationRoom.doorLocation,
@@ -302,8 +314,6 @@ List<IndoorFloorPathSegment> computeInterFloorPath({
     );
     throw StateError(description);
   }
-
-  return segments;
 }
 
 Point<double> _appendSegmentForFloorPair({
