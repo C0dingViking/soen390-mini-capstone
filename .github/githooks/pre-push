@@ -2,7 +2,7 @@
 
 # Run 'git config core.hooksPath .github/githooks/' to set up the hooks
 
-dart analyze --set-exit-if-changed concordia_campus_guide/.
+dart format --set-exit-if-changed concordia_campus_guide/.
 if [ $? -ne 0 ]; then
   echo "❌ Code is not properly formatted ❌"
   echo "Run 'dart format .' to fix formatting"
