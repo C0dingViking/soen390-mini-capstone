@@ -64,6 +64,14 @@ class MockGeolocatorPlatform extends Mock
             ),
           )
           as Future<Position>;
+
+  @override
+  Future<LocationAccuracyStatus> getLocationAccuracy() =>
+      super.noSuchMethod(
+            Invocation.method(#getLocationAccuracy, []),
+            returnValue: Future<LocationAccuracyStatus>.value(LocationAccuracyStatus.precise),
+          )
+          as Future<LocationAccuracyStatus>;
 }
 
 void main() {
@@ -265,6 +273,9 @@ void main() {
       ),
     );
     when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+    when(
+      mockGeolocatorPlatform.getLocationAccuracy(),
+    ).thenAnswer((_) async => LocationAccuracyStatus.precise);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -411,6 +422,9 @@ void main() {
       mockGeolocatorPlatform.getCurrentPosition(locationSettings: anyNamed("locationSettings")),
     ).thenThrow(Exception("boom"));
     when(mockMapController.animateCamera(any)).thenAnswer((_) async => {});
+    when(
+      mockGeolocatorPlatform.getLocationAccuracy(),
+    ).thenAnswer((_) async => LocationAccuracyStatus.precise);
 
     await tester.pumpWidget(
       MaterialApp(

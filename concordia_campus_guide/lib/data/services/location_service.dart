@@ -16,14 +16,18 @@ class LocationService {
 
   Future<Coordinate> getCurrentPosition() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const PermissionDeniedException("Location services disabled");
+      throw const PermissionDeniedException(
+        "Location services disabled. Enter locations manually or enable location services.",
+      );
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw const PermissionDeniedException("Location permission denied");
+        throw const PermissionDeniedException(
+          "Location permission denied. Enter locations manually or enable location permissions.",
+        );
       }
     }
     if (permission == LocationPermission.deniedForever) {
@@ -31,8 +35,30 @@ class LocationService {
         "Location permission deniedForever. Please enable it in settings.",
       );
     }
+    final accuracy = await Geolocator.getLocationAccuracy();
+    if (accuracy == LocationAccuracyStatus.reduced) {
+      throw const PermissionDeniedException(
+        "Location accuracy is reduced. Turn on Location Accuracy the Concordia Campus Guide app for full location functionality.",
+      );
+    }
 
-    final pos = await Geolocator.getCurrentPosition();
+    Position pos;
+    try {
+      pos = await Geolocator.getCurrentPosition().timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      throw const PermissionDeniedException(
+        "Location request timed out. Location service may be disabled.",
+      );
+    } on Exception catch (e) {
+      // throw a more user friendly message if location accuracy is off
+      if (e.toString().contains("The location service on the device is disabled.")) {
+        throw const PermissionDeniedException(
+          "Location services are unavailable. Turn on Location and Location Accuracy.",
+        );
+      }
+      rethrow;
+    }
+
     return Coordinate(latitude: pos.latitude, longitude: pos.longitude);
   }
 
@@ -41,11 +67,22 @@ class LocationService {
     final int distanceFilter = 5,
   }) async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return;
+      if (!await Geolocator.isLocationServiceEnabled().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => false,
+      )) {
+        return;
+      }
 
-      LocationPermission permission = await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => LocationPermission.denied,
+      );
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+        permission = await Geolocator.requestPermission().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => LocationPermission.denied,
+        );
         if (permission == LocationPermission.denied) return;
       }
       if (permission == LocationPermission.deniedForever) return;

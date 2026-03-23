@@ -6,6 +6,7 @@ import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
+import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
@@ -91,6 +92,7 @@ class HomeViewModel extends ChangeNotifier {
   int nearbySearchResultLimit = 5;
 
   bool myLocationEnabled = false;
+  bool isLocationActionAvailable = true;
   bool isSearchBarExpanded = false;
   int _unfocusSearchBarSignal = 0;
 
@@ -130,10 +132,12 @@ class HomeViewModel extends ChangeNotifier {
       buildings = payload.buildings;
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
-      // start location service and subscribe to updates
-      await LocationService.instance.start();
+      await refreshLocationActionAvailability();
       _locationSubscription?.cancel();
       _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
+      // start location service and subscribe to updates
+      await LocationService.instance.start();
+      await refreshLocationActionAvailability();
     } else {
       errorMessage = payload.errorMessage;
       logger.e(
@@ -150,6 +154,7 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      await refreshLocationActionAvailability();
       // ask LocationService for current position and ensure streaming
       final posCoord = await LocationService.instance.getCurrentPosition();
       bool changed = false;
@@ -162,9 +167,13 @@ class HomeViewModel extends ChangeNotifier {
         changed = true;
       }
       if (changed) notifyListeners();
+      _setLocationActionAvailable(true);
 
       await LocationService.instance.start();
     } catch (e) {
+      if (_looksLikeLocationUnavailable(e)) {
+        _setLocationActionAvailable(false);
+      }
       errorMessage = "Error: $e";
       notifyListeners();
     }
@@ -315,6 +324,12 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void consumeErrorMessage() {
+    if (errorMessage == null) return;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> selectSearchSuggestion(
     final SearchSuggestion suggestion,
     final SearchField field,
@@ -350,10 +365,6 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    if (field == SearchField.destination && startCoordinate == null) {
-      await _applyCurrentLocationAsStart();
-    }
-
     _applySelection(field: field, coordinate: coordinate, label: suggestion.title, campus: null);
     cameraTarget = coordinate;
     isSearchBarExpanded = true;
@@ -369,6 +380,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await refreshLocationActionAvailability();
       _suppressNextCameraTarget = true;
       final posCoord = await LocationService.instance.getCurrentPosition();
       _applySelection(
@@ -381,14 +393,52 @@ class HomeViewModel extends ChangeNotifier {
 
       myLocationEnabled = true;
       isResolvingStartLocation = false;
+      _setLocationActionAvailable(true);
       notifyListeners();
 
       await LocationService.instance.start();
     } catch (e) {
+      if (_looksLikeLocationUnavailable(e)) {
+        _setLocationActionAvailable(false);
+      }
       isResolvingStartLocation = false;
       errorMessage = "Error: $e";
       notifyListeners();
     }
+  }
+
+  Future<void> refreshLocationActionAvailability() async {
+    bool available = true;
+
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      available = false;
+    } else {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        available = false;
+      } else {
+        final accuracy = await Geolocator.getLocationAccuracy();
+        if (accuracy == LocationAccuracyStatus.reduced) {
+          available = false;
+        }
+      }
+    }
+    _setLocationActionAvailable(available);
+  }
+
+  bool _looksLikeLocationUnavailable(final Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains("location service") ||
+        message.contains("disabled") ||
+        message.contains("denied");
+  }
+
+  void _setLocationActionAvailable(final bool value) {
+    if (isLocationActionAvailable == value) return;
+    isLocationActionAvailable = value;
+    notifyListeners();
   }
 
   void stopLocationTracking() {
@@ -845,17 +895,6 @@ class HomeViewModel extends ChangeNotifier {
       logger.w("HomeViewModel: nearby place search failed", error: e);
       return [];
     }
-  }
-
-  Future<void> _applyCurrentLocationAsStart() async {
-    final posCoord = await LocationService.instance.getCurrentPosition();
-    _applySelection(
-      field: SearchField.start,
-      coordinate: posCoord,
-      label: "Current location",
-      campus: null,
-    );
-    myLocationEnabled = true;
   }
 
   Future<void> _primeNearbyMarkerIcons(final List<PlaceSuggestion> places) async {

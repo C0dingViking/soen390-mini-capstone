@@ -158,6 +158,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final selectedDestinationLabel = context.select(
       (final HomeViewModel vm) => vm.selectedDestinationLabel,
     );
+    final isLocationActionAvailable = context.select(
+      (final HomeViewModel vm) => vm.isLocationActionAvailable,
+    );
     final unfocusSignal = context.select((final HomeViewModel vm) => vm.unfocusSearchBarSignal);
     final isSearchBarExpanded = context.select((final HomeViewModel vm) => vm.isSearchBarExpanded);
 
@@ -179,6 +182,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           isResolvingStart: isResolvingStart,
           isResolvingPlace: isResolvingPlace,
           isSearchingPlaces: isSearchingPlaces || isSearchingNearbyPlaces,
+          isLocationActionAvailable: isLocationActionAvailable,
         ),
         if (_showSuggestions && results.isNotEmpty) _buildResultsList(context, results),
       ],
@@ -274,6 +278,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     required final bool isResolvingStart,
     required final bool isResolvingPlace,
     required final bool isSearchingPlaces,
+    required final bool isLocationActionAvailable,
   }) {
     return SearchInputCard(
       children: [
@@ -282,6 +287,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
             context,
             showClearStart: showClearStart,
             isResolvingStart: isResolvingStart,
+            isLocationActionAvailable: isLocationActionAvailable,
           ),
         if (_expanded) const Divider(height: 1),
         _buildDestinationField(
@@ -298,6 +304,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final BuildContext context, {
     required final bool showClearStart,
     required final bool isResolvingStart,
+    required final bool isLocationActionAvailable,
   }) {
     return TextField(
       controller: _startController,
@@ -311,6 +318,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           context,
           showClearStart: showClearStart,
           isResolvingStart: isResolvingStart,
+          isLocationActionAvailable: isLocationActionAvailable,
         ),
         filled: true,
         fillColor: Colors.white,
@@ -324,6 +332,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     final BuildContext context, {
     required final bool showClearStart,
     required final bool isResolvingStart,
+    required final bool isLocationActionAvailable,
   }) {
     if (isResolvingStart) {
       return const Padding(
@@ -336,7 +345,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: const Icon(Icons.my_location),
+          icon: Icon(isLocationActionAvailable ? Icons.my_location : Icons.location_disabled),
           onPressed: () async {
             await context.read<HomeViewModel>().setStartToCurrentLocation();
             _startController.text = "Current location";
