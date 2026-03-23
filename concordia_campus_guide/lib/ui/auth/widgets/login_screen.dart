@@ -7,14 +7,13 @@ import "package:flutter/material.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:google_sign_in/google_sign_in.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
-import 'package:provider/provider.dart';
+import "package:provider/provider.dart";
 
 class LoginScreen extends StatelessWidget {
   final GoogleSignIn googleSignIn;
 
   // include GoogleSignIn as field to allow injection of a mock during tests
-  LoginScreen({super.key, final GoogleSignIn? googleSignIn})
-    : googleSignIn = googleSignIn ?? GoogleSignIn();
+  LoginScreen({super.key, final GoogleSignIn? googleSignIn}) : googleSignIn = googleSignIn ?? GoogleSignIn();
 
   /// Signs out of all cached accounts to ensure a clean login state.
   /// This is necessary because Firebase may cache previous sign-ins, which can lead to unexpected behavior when trying to sign in with a different account.
