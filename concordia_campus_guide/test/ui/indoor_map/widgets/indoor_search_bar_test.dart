@@ -1,3 +1,4 @@
+import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -372,20 +373,26 @@ void main() {
   ) async {
     String? selectedStartRoom;
     String? selectedDestinationRoom;
+    bool? selectedAccMode;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: IndoorSearchBar(
             queryableRooms: ["H 849", "MB 1-310"],
-            onStartNavigation: (final startRoom, final destinationRoom) {
+            onStartNavigation: (final startRoom, final destinationRoom, final accMode) {
               selectedStartRoom = startRoom;
               selectedDestinationRoom = destinationRoom;
+              selectedAccMode = accMode;
             },
           ),
         ),
       ),
     );
+
+    // Tap the accessible mode button
+    await tester.tap(find.byIcon(Icons.accessible_forward));
+    await tester.pump();
 
     final startField = find.byType(TextField).first;
     final destField = find.byType(TextField).last;
@@ -399,5 +406,41 @@ void main() {
 
     expect(selectedStartRoom, "H 849");
     expect(selectedDestinationRoom, "MB 1-310");
+    expect(selectedAccMode, isTrue);
+  });
+
+  testWidgets("mode toggle selection updates visual state", (final tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: IndoorSearchBar(queryableRooms: [])),
+      ),
+    );
+
+    Finder containerForIcon(final IconData icon) {
+      final iconFinder = find.byIcon(icon);
+      return find.ancestor(of: iconFinder, matching: find.byType(Container)).first;
+    }
+
+    BoxDecoration decorationForIcon(final IconData icon) {
+      final container = tester.widget<Container>(containerForIcon(icon));
+      return container.decoration! as BoxDecoration;
+    }
+
+    // Initially walking is selected and accessible is not.
+    final initialWalkDecoration = decorationForIcon(Icons.directions_walk);
+    final initialAccessibleDecoration = decorationForIcon(Icons.accessible_forward);
+
+    expect(initialWalkDecoration.color, AppTheme.concordiaButtonCyanSolid);
+    expect(initialAccessibleDecoration.color, Colors.white);
+
+    // Tap accessible icon to toggle selection.
+    await tester.tap(find.byIcon(Icons.accessible_forward));
+    await tester.pumpAndSettle();
+
+    final updatedWalkDecoration = decorationForIcon(Icons.directions_walk);
+    final updatedAccessibleDecoration = decorationForIcon(Icons.accessible_forward);
+
+    expect(updatedWalkDecoration.color, Colors.white);
+    expect(updatedAccessibleDecoration.color, AppTheme.concordiaButtonCyanSolid);
   });
 }

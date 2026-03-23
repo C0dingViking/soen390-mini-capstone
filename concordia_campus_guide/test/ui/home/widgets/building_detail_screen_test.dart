@@ -1,3 +1,6 @@
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.dart";
@@ -6,7 +9,15 @@ import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter_google_maps_webservices/places.dart";
+import "package:mockito/annotations.dart";
+import "package:mockito/mockito.dart";
+import "package:provider/provider.dart";
 
+import "building_detail_screen_test.mocks.dart";
+import "home_screen_test.dart";
+
+@GenerateNiceMocks([MockSpec<IndoorViewModel>()])
+@GenerateMocks([HomeViewModel])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -249,6 +260,59 @@ void main() {
         (final w) => w is FloatingActionButton && w.heroTag == "indoor_floor_plans",
       );
       expect(finder, findsNothing);
+    });
+
+    testWidgets("Floor Plans button pushes IndoorMapView", (final tester) async {
+      final mockIndoorVM = MockIndoorViewModel();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<HomeViewModel>(create: (_) => TestHomeViewModel()),
+            ChangeNotifierProvider<IndoorViewModel>(create: (_) => mockIndoorVM),
+          ],
+          child: MaterialApp(
+            home: Navigator(
+              onGenerateRoute: (_) =>
+                  MaterialPageRoute(builder: (_) => BuildingDetailScreen(building: testBuilding)),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text("Floor Plans"));
+      await tester.pump();
+
+      expect(find.byType(IndoorMapView), findsOneWidget);
+    });
+
+    testWidgets("Directions button pops the screen", (final tester) async {
+      final mockHomeVM = MockHomeViewModel();
+
+      // Required stubs
+      when(mockHomeVM.isSearchBarExpanded).thenReturn(false);
+      when(mockHomeVM.setStartToCurrentLocation()).thenAnswer((_) async {});
+      when(mockHomeVM.selectSearchSuggestion(any, any)).thenAnswer((_) async {});
+      when(mockHomeVM.requestUnfocusSearchBar()).thenReturn(null);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<HomeViewModel>.value(
+            value: mockHomeVM,
+            child: Navigator(
+              onGenerateRoute: (_) =>
+                  MaterialPageRoute(builder: (_) => BuildingDetailScreen(building: testBuilding)),
+            ),
+          ),
+        ),
+      );
+
+      // Tap the Directions button
+      await tester.tap(find.text("Directions"));
+      await tester.pumpAndSettle();
+
+      // Screen should pop
+      expect(find.byType(BuildingDetailScreen), findsNothing);
     });
   });
 }

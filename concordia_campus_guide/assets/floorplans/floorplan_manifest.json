@@ -1,14 +1,29 @@
 {
   "mb": [
-    "assets/floorplans/mb/mb-1.svg"
+    "assets/floorplans/mb/mb-1.svg",
+    "assets/floorplans/mb/mb-s2.svg"
   ],
   "h": [
     "assets/floorplans/h/h-1.svg",
+    "assets/floorplans/h/h-2.svg",
     "assets/floorplans/h/h-8.svg",
     "assets/floorplans/h/h-9.svg"
   ],
   "vl": [
     "assets/floorplans/vl/vl-1.svg",
     "assets/floorplans/vl/vl-2.svg"
+  ],
+  "cc": [
+    "assets/floorplans/cc/cc-1.svg"
+  ],
+  "lb": [
+    "assets/floorplans/lb/lb-2.svg",
+    "assets/floorplans/lb/lb-3.svg",
+    "assets/floorplans/lb/lb-4.svg",
+    "assets/floorplans/lb/lb-5.svg"
+  ],
+  "ve": [
+    "assets/floorplans/ve/ve-1.svg",
+    "assets/floorplans/ve/ve-2.svg"
   ]
 }

@@ -25,6 +25,7 @@ class HamburgerMenu extends StatelessWidget {
         children: [
           CustomDrawerHeader(currentUser: currentUser),
           ListTile(
+            key: const Key("hamburger_login_tile"),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             leading: Icon(isSignedIn ? Icons.logout_sharp : Icons.login_sharp),
             title: Text(
@@ -51,6 +52,7 @@ class HamburgerMenu extends StatelessWidget {
           ),
           if (isSignedIn)
             ListTile(
+              key: const Key("hamburger_calendar"),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
               leading: const Icon(Icons.calendar_today),
               title: Text(
