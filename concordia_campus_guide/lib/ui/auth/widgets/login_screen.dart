@@ -7,7 +7,7 @@ import "package:flutter/material.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:google_sign_in/google_sign_in.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
-import "package:provider/provider.dart";
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
   final GoogleSignIn googleSignIn;
