@@ -5,7 +5,8 @@
 dart format --set-exit-if-changed concordia_campus_guide/.
 if [ $? -ne 0 ]; then
   echo "❌ Code is not properly formatted ❌"
-  echo "Run 'dart format .' to fix formatting"
+  echo "The code should now be formatted." 
+  echo "Please review the changes and commit them before pushing."
   exit 1
 fi
 

@@ -13,7 +13,8 @@ class LoginScreen extends StatelessWidget {
   final GoogleSignIn googleSignIn;
 
   // include GoogleSignIn as field to allow injection of a mock during tests
-  LoginScreen({super.key, final GoogleSignIn? googleSignIn}) : googleSignIn = googleSignIn ?? GoogleSignIn();
+  LoginScreen({super.key, final GoogleSignIn? googleSignIn})
+    : googleSignIn = googleSignIn ?? GoogleSignIn();
 
   /// Signs out of all cached accounts to ensure a clean login state.
   /// This is necessary because Firebase may cache previous sign-ins, which can lead to unexpected behavior when trying to sign in with a different account.
