@@ -1,0 +1,22 @@
+#! /bin/sh
+
+# Run 'git config core.hooksPath .github/githooks/' to set up the hooks
+
+dart analyze --set-exit-if-changed concordia_campus_guide/.
+if [ $? -ne 0 ]; then
+  echo "❌ Code is not properly formatted ❌"
+  echo "Run 'dart format .' to fix formatting"
+  exit 1
+fi
+
+echo "✅ Code formatting passed ✅"
+
+flutter analyze concordia_campus_guide/.
+if [ $? -ne 0 ]; then
+  echo "❌ Flutter analyze failed ❌"
+  echo "Please fix the issues before pushing"
+  exit 1
+fi
+
+echo "✅ Flutter analyze passed ✅"
+exit 0
