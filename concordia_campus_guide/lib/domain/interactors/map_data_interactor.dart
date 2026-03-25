@@ -60,7 +60,6 @@ class MapDataInteractor {
           (final b) => Marker(
             markerId: MarkerId("${b.id}-marker"),
             position: _calculateBuildingCentroid(b.outlinePoints),
-            infoWindow: InfoWindow(title: b.name, snippet: b.address),
           ),
         )
         .toSet();
