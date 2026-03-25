@@ -1,7 +1,7 @@
 import "package:concordia_campus_guide/main.dart" as app;
 import "package:flutter_test/flutter_test.dart";
-import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:patrol/patrol.dart";
+import "package:flutter/material.dart";
 
 void main() {
   patrolTest("US 1.5 Show Building info", (final $) async {
@@ -18,17 +18,26 @@ void main() {
     await $.pumpAndSettle();
     await $.pump(const Duration(seconds: 6));
 
-    final mapFinder = find.byType(GoogleMap);
-
-    $.log("STEP 3: Tapping the Hall building");
-    final center = $.tester.getCenter(mapFinder);
-    final tapPoint = center + const Offset(-5, 5);
-    await $.tester.tapAt(tapPoint);
+    $.log("STEP 4: Opening Hall Building Information page...");
+    await $(#destination_search_field).tap();
     await $.pumpAndSettle();
 
-    $.log("STEP 4: Waiting for building info to appear...");
-    await $.tester.pump(const Duration(seconds: 5));
+    await $.enterText($(#destination_search_field), "Hall");
+    await $.pumpAndSettle();
 
-    $.log("TEST COMPLETE");
+    final hallInfoButton = find.byKey(const Key("building_info_Henry F. Hall Building (H)"));
+    await $.tester.tap(hallInfoButton);
+    await $.pumpAndSettle();
+
+    $.log("STEP 5: Verifying Building Name and Address are visible...");
+    final buildingName = find.byKey(const Key("building_name"));
+    expect(buildingName, findsOneWidget, reason: "Building name should be displayed");
+    $.log("Building name is visible");
+
+    final buildingAddress = find.byKey(const Key("building_address"));
+    expect(buildingAddress, findsOneWidget, reason: "Building address should be displayed");
+    $.log("Building address is visible");
+
+    await $.pump(const Duration(seconds: 5));
   });
 }
