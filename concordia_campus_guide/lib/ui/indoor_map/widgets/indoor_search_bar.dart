@@ -353,7 +353,7 @@ class _ModeToggleIcon extends StatelessWidget {
     required this.isSelected,
     required this.tooltip,
     required this.onTap,
-    required Key key,
+    required final Key key,
   });
 
   @override
