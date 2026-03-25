@@ -7,15 +7,19 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
+  final bool isIndoorNavigationDisplayed;
   final void Function(String startRoom, String destinationRoom, bool accessibleMode)?
   onStartNavigation;
+  final VoidCallback? onEndNavigation;
 
   const IndoorSearchBar({
     super.key,
     this.startController,
     this.destinationController,
     this.destinationFocusNode,
+    this.isIndoorNavigationDisplayed = false,
     this.onStartNavigation,
+    this.onEndNavigation,
     required this.queryableRooms,
   });
 
@@ -38,6 +42,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
+  late bool _wasStartEmpty;
+  late bool _wasDestinationEmpty;
   bool _accessibleMode = false;
 
   List<String> _filteredRoomList = [];
@@ -64,6 +70,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _destinationFocus = widget.destinationFocusNode ?? FocusNode();
     _ownsDestinationFocus = widget.destinationFocusNode == null;
     _activeField = FocusedField.neither;
+    _wasStartEmpty = _startController.text.trim().isEmpty;
+    _wasDestinationEmpty = _destinationController.text.trim().isEmpty;
 
     _startFocus.addListener(_handleFocusChange);
     _destinationFocus.addListener(_handleFocusChange);
@@ -98,6 +106,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _startController = widget.startController ?? TextEditingController();
       _ownsStartController = widget.startController == null;
       _startController.addListener(_onFieldTextChanged);
+      _wasStartEmpty = _startController.text.trim().isEmpty;
     }
 
     if (oldWidget.destinationController != widget.destinationController) {
@@ -109,6 +118,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController = widget.destinationController ?? TextEditingController();
       _ownsDestinationController = widget.destinationController == null;
       _destinationController.addListener(_onFieldTextChanged);
+      _wasDestinationEmpty = _destinationController.text.trim().isEmpty;
     }
 
     if (oldWidget.destinationFocusNode != widget.destinationFocusNode) {
@@ -128,6 +138,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       return;
     }
 
+    _endNavigationIfLocationCleared();
+
     final activeController = _activeController;
 
     if (activeController != null) {
@@ -135,6 +147,27 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         _filteredRoomList = _getFilteredRoomList(activeController.text);
       });
     }
+  }
+
+  void _endNavigationIfLocationCleared() {
+    final isStartEmpty = _startController.text.trim().isEmpty;
+    final isDestinationEmpty = _destinationController.text.trim().isEmpty;
+
+    if (!widget.isIndoorNavigationDisplayed) {
+      _wasStartEmpty = isStartEmpty;
+      _wasDestinationEmpty = isDestinationEmpty;
+      return;
+    }
+
+    final startCleared = !_wasStartEmpty && isStartEmpty;
+    final destinationCleared = !_wasDestinationEmpty && isDestinationEmpty;
+
+    if (startCleared || destinationCleared) {
+      widget.onEndNavigation?.call();
+    }
+
+    _wasStartEmpty = isStartEmpty;
+    _wasDestinationEmpty = isDestinationEmpty;
   }
 
   List<String> _getFilteredRoomList(final String query) {
@@ -183,6 +216,11 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController.text.trim(),
       _accessibleMode,
     );
+  }
+
+  void _handleEndNavigationPressed() {
+    FocusScope.of(context).unfocus();
+    widget.onEndNavigation?.call();
   }
 
   void _clearController(final TextEditingController controller) {
@@ -317,7 +355,18 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           ],
         ),
         if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
-        if (showStartNavigationButton) ...[
+        if (widget.isIndoorNavigationDisplayed) ...[
+          const SizedBox(height: _buttonHeight),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _handleEndNavigationPressed,
+              style: AppTheme.indoorNavigationButtonStyle,
+              icon: const Icon(Icons.stop_circle_outlined),
+              label: const Text("End Navigation"),
+            ),
+          ),
+        ] else if (showStartNavigationButton) ...[
           const SizedBox(height: _buttonHeight),
           Align(
             alignment: Alignment.centerRight,

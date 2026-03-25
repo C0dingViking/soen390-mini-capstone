@@ -173,6 +173,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
   }
 
+  void _handleEndNavigation() {
+    _viewModel.clearIndoorPath();
+  }
+
   Future<Map<String, Floorplan>?> _ensureFloorplansLoadedForBuilding(
     final String targetBuildingId,
   ) async {
@@ -603,7 +607,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                       startController: _startController,
                       destinationController: _destinationController,
                       destinationFocusNode: _destinationFocusNode,
+                      isIndoorNavigationDisplayed: ivm.indoorPath != null,
                       onStartNavigation: _handleStartNavigation,
+                      onEndNavigation: _handleEndNavigation,
                       queryableRooms: ivm.loadedRoomNames!,
                     ),
                   ),

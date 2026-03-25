@@ -822,6 +822,70 @@ void main() {
     });
   });
 
+  group("End indoor navigation behavior", () {
+    testWidgets("End Navigation button is hidden when no indoor navigation is displayed", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      expect(find.text("End Navigation"), findsNothing);
+    });
+
+    testWidgets("End Navigation button appears when indoor navigation is displayed", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
+      await tester.pump();
+
+      expect(find.text("End Navigation"), findsOneWidget);
+    });
+
+    testWidgets("pressing End Navigation ends indoor navigation", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
+      await tester.pump();
+
+      await tester.tap(find.text("End Navigation"));
+      await tester.pump();
+
+      expect(ivm.indoorPath, isNull);
+      expect(find.text("End Navigation"), findsNothing);
+    });
+
+    testWidgets(
+      "clearing start or destination ends navigation when indoor navigation is displayed",
+      (final tester) async {
+        await pumpHomeScreen(tester, true);
+
+        final startField = find.byType(TextField).first;
+        final destinationField = find.byType(TextField).last;
+
+        await tester.enterText(startField, "T 110");
+        await tester.enterText(destinationField, "T 111");
+        await tester.pump();
+
+        ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
+        await tester.pump();
+
+        await tester.tap(find.descendant(of: startField, matching: find.byIcon(Icons.close)));
+        await tester.pump();
+
+        expect(ivm.indoorPath, isNull);
+
+        ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
+        await tester.pump();
+
+        await tester.tap(find.descendant(of: destinationField, matching: find.byIcon(Icons.close)));
+        await tester.pump();
+
+        expect(ivm.indoorPath, isNull);
+      },
+    );
+  });
+
   // Lines 641-670: _AnimatedIndoorPath widget
 
   group("AnimatedIndoorPath (lines 641-670)", () {
