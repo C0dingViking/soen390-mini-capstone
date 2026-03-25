@@ -39,6 +39,31 @@ void main() {
       await $.pumpAndSettle();
 
       $.log("STEP 6: Selecting Start and Destination Floors...");
+      final indoorSearchCard = find.byKey(const Key("indoor_search_card"));
+      expect(indoorSearchCard, findsOneWidget, reason: "Indoor search card should be visible");
+      $.log("Indoor search card is visible");
+
+      final startSearchField = find.byKey(Key("indoor_start_search_field"));
+      final destinationSearchField = find.byKey(Key("indoor_destination_search_field"));
+
+      await $.tester.tap(startSearchField);
+      await $.pumpAndSettle();
+
+      await $.enterText(startSearchField, "H 110");
+      await $.pumpAndSettle();
+
+      await $.tester.tap(destinationSearchField);
+      await $.pumpAndSettle();
+
+      await $.enterText(destinationSearchField, "H 964");
+      await $.pumpAndSettle();
+
+      $.log("STEP 7: Verifying that the 'Start Navigation' button is enabled...");
+      final startNavigationButton = find.byKey(const Key("start_navigation_button"));
+      expect(startNavigationButton, findsOneWidget);
+      $.log("'Start Navigation' button is visible and enabled");
+
+      await $.pump(const Duration(seconds: 5));
     },
   );
 }

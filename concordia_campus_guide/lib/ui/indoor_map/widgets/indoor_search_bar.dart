@@ -235,6 +235,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     required final FocusNode focusNode,
     required final String hintText,
     required final Widget prefixIcon,
+    required final Key key,
     final TextInputAction? textInputAction,
   }) {
     final showClearButton = controller.text.isNotEmpty;
@@ -243,6 +244,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       controller: controller,
       focusNode: focusNode,
       textInputAction: textInputAction,
+      key: key,
       decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
         hintText: hintText,
         prefixIcon: prefixIcon,
@@ -299,11 +301,13 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         SearchInputCard(
           elevation: _cardElevation,
           radius: _cardRadius,
+          key: const Key("indoor_search_card"),
           children: [
             _buildSearchField(
               controller: _startController,
               focusNode: _startFocus,
               hintText: "Current location",
+              key: const Key("indoor_start_search_field"),
               prefixIcon: const Icon(Icons.trip_origin),
             ),
             const Divider(height: 1),
@@ -312,6 +316,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               focusNode: _destinationFocus,
               textInputAction: TextInputAction.search,
               hintText: "Choose destination",
+              key: const Key("indoor_destination_search_field"),
               prefixIcon: const Icon(Icons.place_outlined),
             ),
           ],
@@ -326,6 +331,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               style: AppTheme.indoorNavigationButtonStyle,
               icon: const Icon(Icons.navigation),
               label: const Text("Start Navigation"),
+              key: const Key("start_navigation_button"),
             ),
           ),
         ],
