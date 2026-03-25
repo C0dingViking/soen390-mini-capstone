@@ -20,7 +20,7 @@ void main() {
     await $.pump(const Duration(seconds: 6));
 
     $.log("STEP 4: Finding and tapping the search bar...");
-    final searchField = find.byType(TextField);
+    final searchField = find.byKey(const Key("destination_search_field"));
     expect(searchField, findsOneWidget);
 
     await $.tester.tap(searchField);
