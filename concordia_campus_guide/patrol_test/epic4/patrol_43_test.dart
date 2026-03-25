@@ -6,7 +6,7 @@ import "package:concordia_campus_guide/main.dart" as app;
 
 void main() {
   patrolTest(
-    "[US-4.1] Select Indoor Start and Destination\n[US-4.2] Show Indoor Route on Map",
+    "[US-4.3] Accessibility-Aware Indoor Directions",
     framePolicy: LiveTestWidgetsFlutterBindingFramePolicy.fullyLive,
     (final $) async {
       $.log("STEP 1: Launching the app...");
@@ -23,15 +23,15 @@ void main() {
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 4));
 
-      $.log("STEP 4: Opening Hall Building Information page...");
+      $.log("STEP 4: Opening Vanier Library Building Information page...");
       await $(#destination_search_field).tap();
       await $.pumpAndSettle();
 
-      await $.enterText($(#destination_search_field), "Hall");
+      await $.enterText($(#destination_search_field), "VL");
       await $.pumpAndSettle();
 
-      final hallInfoButton = find.byKey(const Key("building_info_Henry F. Hall Building (H)"));
-      await $.tester.tap(hallInfoButton);
+      final infoButton = find.byKey(const Key("building_info_Vanier Library Building (VL)"));
+      await $.tester.tap(infoButton);
       await $.pumpAndSettle();
 
       $.log("STEP 5: Opening Floor Plans...");
@@ -49,25 +49,24 @@ void main() {
       await $.tester.tap(startSearchField);
       await $.pumpAndSettle();
 
-      await $.enterText(startSearchField, "H 822");
+      await $.enterText(startSearchField, "VL 204");
       await $.pumpAndSettle();
 
       await $.tester.tap(destinationSearchField);
       await $.pumpAndSettle();
 
-      await $.enterText(destinationSearchField, "H 964");
+      await $.enterText(destinationSearchField, "VL 104");
       await $.pumpAndSettle();
 
-      $.log("STEP 7: Verifying that the 'Start Navigation' button is enabled...");
-      final startNavigationButton = find.byKey(const Key("start_navigation_button"));
-      expect(startNavigationButton, findsOneWidget);
-      $.log("'Start Navigation' button is visible and enabled");
+      $.log("STEP 7: Selecting Accessibility-Aware Route and Starting the Navigation...");
+      final accessibilityToggle = find.byKey(const Key("accessibility_mode_toggle"));
+      await $.tester.tap(accessibilityToggle);
+      await $.pumpAndSettle();
 
-      $.log("Step 8: Tapping 'Start Navigation' button...");
-      await $.tester.tap(startNavigationButton);
-      await $.pump(const Duration(seconds: 5)); // use fixed delay since pupmAndSettle times out
+      $(#start_navigation_button).tap();
+      await $.pump(const Duration(seconds: 5));
 
-      $.log("STEP 9: Verifying that the indoor path is displayed on the map...");
+      $.log("STEP 8: Verifying that the Indoor Path is Displayed on the Map...");
       final indoorPathPainter = find.byKey(const Key("indoor_path_painter"));
       expect(
         indoorPathPainter,

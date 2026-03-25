@@ -282,6 +282,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
                 icon: Icons.directions_walk,
                 isSelected: !_accessibleMode,
                 tooltip: "Normal walking route",
+                key: const Key("normal_mode_toggle"),
                 onTap: () {
                   setState(() => _accessibleMode = false);
                 },
@@ -291,6 +292,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
                 icon: Icons.accessible_forward,
                 isSelected: _accessibleMode,
                 tooltip: "Accessible route (avoid stairs)",
+                key: const Key("accessibility_mode_toggle"),
                 onTap: () {
                   setState(() => _accessibleMode = true);
                 },
@@ -351,6 +353,7 @@ class _ModeToggleIcon extends StatelessWidget {
     required this.isSelected,
     required this.tooltip,
     required this.onTap,
+    required Key key,
   });
 
   @override
@@ -364,6 +367,7 @@ class _ModeToggleIcon extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: InkWell(
+        key: key,
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Container(
