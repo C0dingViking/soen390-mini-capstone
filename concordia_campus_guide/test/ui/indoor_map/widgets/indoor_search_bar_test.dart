@@ -462,7 +462,36 @@ void main() {
     expect(endNavigationCallCount, 1);
   });
 
-  testWidgets("clearing start or destination ends indoor navigation when displayed", (
+  testWidgets("pressing End Navigation clears both start and destination fields", (
+    final tester,
+  ) async {
+    final startController = TextEditingController(text: "H 849");
+    final destinationController = TextEditingController(text: "MB 1-310");
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: const ["H 849", "MB 1-310"],
+            startController: startController,
+            destinationController: destinationController,
+            isIndoorNavigationDisplayed: true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text("End Navigation"));
+    await tester.pump();
+
+    expect(startController.text, isEmpty);
+    expect(destinationController.text, isEmpty);
+
+    startController.dispose();
+    destinationController.dispose();
+  });
+
+  testWidgets("changing start or destination ends indoor navigation when displayed", (
     final tester,
   ) async {
     final startController = TextEditingController(text: "H 849");
@@ -488,10 +517,12 @@ void main() {
     final startField = find.byType(TextField).first;
     final destinationField = find.byType(TextField).last;
 
-    await tester.tap(find.descendant(of: startField, matching: find.byIcon(Icons.close)));
+    await tester.tap(startField);
+    await tester.enterText(startField, "H 101");
     await tester.pump();
 
-    await tester.tap(find.descendant(of: destinationField, matching: find.byIcon(Icons.close)));
+    await tester.tap(destinationField);
+    await tester.enterText(destinationField, "H 849");
     await tester.pump();
 
     expect(endNavigationCallCount, 2);

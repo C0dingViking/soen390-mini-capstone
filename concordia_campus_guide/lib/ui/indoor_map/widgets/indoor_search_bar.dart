@@ -42,8 +42,9 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
-  late bool _wasStartEmpty;
-  late bool _wasDestinationEmpty;
+  late String _lastStartValue;
+  late String _lastDestinationValue;
+  bool _isClearingFields = false;
   bool _accessibleMode = false;
 
   List<String> _filteredRoomList = [];
@@ -70,8 +71,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _destinationFocus = widget.destinationFocusNode ?? FocusNode();
     _ownsDestinationFocus = widget.destinationFocusNode == null;
     _activeField = FocusedField.neither;
-    _wasStartEmpty = _startController.text.trim().isEmpty;
-    _wasDestinationEmpty = _destinationController.text.trim().isEmpty;
+    _lastStartValue = _startController.text;
+    _lastDestinationValue = _destinationController.text;
 
     _startFocus.addListener(_handleFocusChange);
     _destinationFocus.addListener(_handleFocusChange);
@@ -106,7 +107,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _startController = widget.startController ?? TextEditingController();
       _ownsStartController = widget.startController == null;
       _startController.addListener(_onFieldTextChanged);
-      _wasStartEmpty = _startController.text.trim().isEmpty;
+      _lastStartValue = _startController.text;
     }
 
     if (oldWidget.destinationController != widget.destinationController) {
@@ -118,7 +119,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController = widget.destinationController ?? TextEditingController();
       _ownsDestinationController = widget.destinationController == null;
       _destinationController.addListener(_onFieldTextChanged);
-      _wasDestinationEmpty = _destinationController.text.trim().isEmpty;
+      _lastDestinationValue = _destinationController.text;
     }
 
     if (oldWidget.destinationFocusNode != widget.destinationFocusNode) {
@@ -138,7 +139,11 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       return;
     }
 
-    _endNavigationIfLocationCleared();
+    _endNavigationIfLocationChanged();
+
+    if (_isClearingFields) {
+      return;
+    }
 
     final activeController = _activeController;
 
@@ -149,25 +154,25 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     }
   }
 
-  void _endNavigationIfLocationCleared() {
-    final isStartEmpty = _startController.text.trim().isEmpty;
-    final isDestinationEmpty = _destinationController.text.trim().isEmpty;
+  void _endNavigationIfLocationChanged() {
+    final currentStart = _startController.text;
+    final currentDestination = _destinationController.text;
 
     if (!widget.isIndoorNavigationDisplayed) {
-      _wasStartEmpty = isStartEmpty;
-      _wasDestinationEmpty = isDestinationEmpty;
+      _lastStartValue = currentStart;
+      _lastDestinationValue = currentDestination;
       return;
     }
 
-    final startCleared = !_wasStartEmpty && isStartEmpty;
-    final destinationCleared = !_wasDestinationEmpty && isDestinationEmpty;
+    final startChanged = currentStart != _lastStartValue;
+    final destinationChanged = currentDestination != _lastDestinationValue;
 
-    if (startCleared || destinationCleared) {
+    if (startChanged || destinationChanged) {
       widget.onEndNavigation?.call();
     }
 
-    _wasStartEmpty = isStartEmpty;
-    _wasDestinationEmpty = isDestinationEmpty;
+    _lastStartValue = currentStart;
+    _lastDestinationValue = currentDestination;
   }
 
   List<String> _getFilteredRoomList(final String query) {
@@ -220,7 +225,22 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
 
   void _handleEndNavigationPressed() {
     FocusScope.of(context).unfocus();
+    _clearBothFields();
     widget.onEndNavigation?.call();
+  }
+
+  void _clearBothFields() {
+    _isClearingFields = true;
+    _startController.clear();
+    _destinationController.clear();
+    _lastStartValue = _startController.text;
+    _lastDestinationValue = _destinationController.text;
+    _isClearingFields = false;
+
+    setState(() {
+      _filteredRoomList = [];
+      _activeField = FocusedField.neither;
+    });
   }
 
   void _clearController(final TextEditingController controller) {
