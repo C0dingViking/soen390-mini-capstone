@@ -152,4 +152,37 @@ void main() {
       }
     });
   });
+
+  group("MapWrapper Marker Tap Tests", () {
+    testWidgets("MapWrapper accepts onMarkerTap callback", (final tester) async {
+      final testMarker = Marker(
+        markerId: const MarkerId("H-marker"),
+        position: const LatLng(45.497, -73.579),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MapWrapper(
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(45.4972, -73.5786),
+                zoom: 15,
+              ),
+              onMapCreated: (_) {},
+              myLocationEnabled: false,
+              polygons: const {},
+              markers: {testMarker},
+              onMarkerTap: (final markerId) {
+                // Callback is provided to test it's accepted
+                expect(markerId.value, equals("H-marker"));
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(MapWrapper), findsOneWidget);
+      expect(find.byType(GoogleMap), findsOneWidget);
+    });
+  });
 }

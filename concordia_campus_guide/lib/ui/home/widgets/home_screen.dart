@@ -98,6 +98,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onBuildingTapped(final PolygonId polygonId) {
     // Extract building ID from polygon ID (format: "buildingId-poly")
     final buildingId = polygonId.value.replaceAll("-poly", "");
+    _navigateToBuilding(buildingId);
+  }
+
+  void _onBuildingMarkerTapped(final MarkerId markerId) {
+    final buildingId = markerId.value.replaceAll("-marker", "");
+    _navigateToBuilding(buildingId);
+  }
+
+  void _navigateToBuilding(final String buildingId) {
     final building = _viewModel.buildings[buildingId];
 
     if (building != null) {
@@ -326,6 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   polylines: hvm.routePolylines,
                   circles: hvm.transitChangeCircles,
                   onPolygonTap: _onBuildingTapped,
+                  onMarkerTap: _onBuildingMarkerTapped,
                 ),
                 const Positioned(
                   left: searchBarInset,

@@ -530,5 +530,18 @@ void main() {
         expect(building, isNotNull);
       }
     });
+
+    testWidgets("building marker tap lookup finds correct building", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      const markerId = MarkerId("H-marker");
+      final buildingId = markerId.value.replaceAll("-marker", "");
+      final building = vm.buildings[buildingId];
+
+      expect(buildingId, equals("H"));
+      expect(building, isNotNull);
+      expect(building?.id, equals("H"));
+      expect(building?.name, equals("Science Hall"));
+    });
   });
 }
