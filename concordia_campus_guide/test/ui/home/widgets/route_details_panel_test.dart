@@ -12,7 +12,7 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
-import "package:flutter_google_maps_webservices/places.dart";
+import "package:flutter_google_maps_webservices/places.dart" hide TransitMode;
 import "package:flutter_test/flutter_test.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
@@ -793,6 +793,58 @@ void main() {
 
       expect(find.byKey(const Key("route_details_reached_building_jump_button")), findsNothing);
       expect(find.byKey(const Key("switch_to_indoor_navigation_button")), findsNothing);
+    });
+
+    testWidgets("reached-building jump button scrolls route details to bottom", (
+      final tester,
+    ) async {
+      final longSteps = List<RouteStep>.generate(
+        28,
+        (final i) => RouteStep(
+          instruction: "Step ${i + 1}",
+          distanceMeters: 120,
+          durationSeconds: 90,
+          travelMode: "WALKING",
+        ),
+      );
+
+      vm.buildings = {"h": makeBuildingWithIndoorSupport()};
+      vm.selectedDestinationLabel = "H 110";
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 3360,
+          durationSeconds: 2520,
+          steps: longSteps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      final detailsScrollable = find.descendant(
+        of: find.byType(SingleChildScrollView),
+        matching: find.byType(Scrollable),
+      );
+      final scrollableState = tester.state<ScrollableState>(detailsScrollable);
+      final initialOffset = scrollableState.position.pixels;
+      final maxOffset = scrollableState.position.maxScrollExtent;
+      expect(maxOffset, greaterThan(0));
+
+      final jumpButton = find.byKey(const Key("route_details_reached_building_jump_button"));
+      await tester.ensureVisible(jumpButton);
+      await tester.tap(jumpButton);
+      await tester.pumpAndSettle();
+
+      final updatedScrollableState = tester.state<ScrollableState>(detailsScrollable);
+      expect(updatedScrollableState.position.pixels, greaterThan(initialOffset));
+      expect(
+        updatedScrollableState.position.pixels,
+        closeTo(updatedScrollableState.position.maxScrollExtent, 1.0),
+      );
     });
   });
 }
