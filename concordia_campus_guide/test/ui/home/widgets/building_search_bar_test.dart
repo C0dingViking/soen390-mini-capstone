@@ -635,5 +635,39 @@ void main() {
 
       expect(find.byType(BuildingDetailScreen), findsOneWidget);
     });
+
+    testWidgets("shows room icon for room destination suggestions", (final tester) async {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Science Hall",
+        description: "Test building",
+        street: "7141 Rue Sherbrooke O",
+        postalCode: "H4B 1R6",
+        location: const Coordinate(latitude: 45.4572, longitude: -73.6404),
+        hours: OpeningHoursDetail(),
+        campus: Campus.loyola,
+        outlinePoints: const [],
+        images: const [],
+        supportedIndoorFloors: const [1],
+        buildingFeatures: null,
+      );
+
+      vm.searchResults = [
+        SearchSuggestion.room(
+          building: building,
+          roomLabel: "H 110",
+          subtitle: "LOY - Science Hall",
+        ),
+      ];
+
+      await pumpSearchBar(tester);
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.text("H 110"), findsOneWidget);
+      expect(find.byIcon(Icons.meeting_room_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.info_outline), findsNothing);
+    });
   });
 }

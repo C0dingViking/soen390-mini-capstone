@@ -949,6 +949,68 @@ void main() {
       expect(hvm.selectedCampusIndex, 1);
     });
 
+    test("selectSearchSuggestion applies room selection using destination building", () async {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [],
+        images: [],
+        supportedIndoorFloors: const [1, 2],
+        buildingFeatures: null,
+      );
+
+      final suggestion = SearchSuggestion.room(
+        building: building,
+        roomLabel: "H 110",
+        subtitle: "SGW - Hall Building",
+      );
+
+      hvm.searchResults = [suggestion];
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+
+      expect(hvm.destinationCoordinate, equals(const Coordinate(latitude: 45.0, longitude: -73.0)));
+      expect(hvm.selectedDestinationLabel, equals("H 110"));
+      expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.0, longitude: -73.0)));
+      expect(hvm.searchDestinationMarker?.markerId.value, equals("search-destination"));
+      expect(hvm.searchResults, isEmpty);
+    });
+
+    test("indoorNavigationDestination returns room metadata only for supported room destinations", () {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [],
+        images: [],
+        supportedIndoorFloors: const [1, 2],
+        buildingFeatures: null,
+      );
+      hvm.buildings = {"h": building};
+
+      hvm.selectedDestinationLabel = "H 110";
+      final indoorTarget = hvm.indoorNavigationDestination;
+      expect(indoorTarget, isNotNull);
+      expect(indoorTarget!.building.id, equals("H"));
+      expect(indoorTarget.destinationRoomLabel, equals("H 110"));
+      expect(indoorTarget.roomNumber, equals("110"));
+
+      hvm.selectedDestinationLabel = "Hall Building";
+      expect(hvm.indoorNavigationDestination, isNull);
+    });
+
     test("selectSearchSuggestion resolves place and loads routes", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
       final place = const PlaceSuggestion(

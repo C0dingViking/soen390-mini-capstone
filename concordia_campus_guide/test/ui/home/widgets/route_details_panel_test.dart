@@ -5,11 +5,14 @@ import "package:concordia_campus_guide/domain/interactors/directions_interactor.
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
+import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
+import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
+import "package:flutter_google_maps_webservices/places.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
@@ -140,6 +143,23 @@ void main() {
         summary: summary,
         departureTime: departureTime,
         arrivalTime: arrivalTime,
+      );
+    }
+
+    Building makeBuildingWithIndoorSupport() {
+      return Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "1455 De Maisonneuve Blvd W",
+        postalCode: "H3G 1M8",
+        location: const Coordinate(latitude: 45.4973, longitude: -73.5788),
+        hours: OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: const [],
+        images: const [],
+        supportedIndoorFloors: const [1, 2],
       );
     }
 
@@ -708,6 +728,71 @@ void main() {
 
       final iconButton = tester.widget<IconButton>(refreshIconButtonFinder);
       expect(iconButton.onPressed, isNotNull);
+    });
+
+    testWidgets("shows indoor switch and reached-building jump buttons for room destination", (
+      final tester,
+    ) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to Hall Building",
+          distanceMeters: 300,
+          durationSeconds: 240,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.buildings = {"h": makeBuildingWithIndoorSupport()};
+      vm.selectedDestinationLabel = "H 110";
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 300,
+          durationSeconds: 240,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key("route_details_reached_building_jump_button")), findsOneWidget);
+      expect(find.text("Reached building?"), findsOneWidget);
+      expect(find.byKey(const Key("switch_to_indoor_navigation_button")), findsOneWidget);
+    });
+
+    testWidgets("hides indoor switch buttons for non-room destination", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to Hall Building",
+          distanceMeters: 300,
+          durationSeconds: 240,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.buildings = {"h": makeBuildingWithIndoorSupport()};
+      vm.selectedDestinationLabel = "Hall Building";
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 300,
+          durationSeconds: 240,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key("route_details_reached_building_jump_button")), findsNothing);
+      expect(find.byKey(const Key("switch_to_indoor_navigation_button")), findsNothing);
     });
   });
 }

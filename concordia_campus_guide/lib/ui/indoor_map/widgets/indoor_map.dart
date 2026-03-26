@@ -730,6 +730,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       _destinationController.selection = TextSelection.collapsed(offset: initialDestination.length);
     }
 
+    if (ivm.loadedFloorplans == null || ivm.loadedFloorplans!.isEmpty) {
+      return;
+    }
+
     final derivedStart = _deriveOutdoorHandoffStartLabel(ivm);
     if (derivedStart != null && derivedStart.isNotEmpty) {
       _startController.text = derivedStart;
