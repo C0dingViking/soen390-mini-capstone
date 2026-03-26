@@ -982,34 +982,37 @@ void main() {
       expect(hvm.searchResults, isEmpty);
     });
 
-    test("indoorNavigationDestination returns room metadata only for supported room destinations", () {
-      final building = Building(
-        id: "H",
-        googlePlacesId: null,
-        name: "Hall Building",
-        description: "Desc",
-        street: "Street",
-        postalCode: "H3Z 2Y7",
-        location: const Coordinate(latitude: 45.0, longitude: -73.0),
-        hours: gmw.OpeningHoursDetail(),
-        campus: Campus.sgw,
-        outlinePoints: [],
-        images: [],
-        supportedIndoorFloors: const [1, 2],
-        buildingFeatures: null,
-      );
-      hvm.buildings = {"h": building};
+    test(
+      "indoorNavigationDestination returns room metadata only for supported room destinations",
+      () {
+        final building = Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        );
+        hvm.buildings = {"h": building};
 
-      hvm.selectedDestinationLabel = "H 110";
-      final indoorTarget = hvm.indoorNavigationDestination;
-      expect(indoorTarget, isNotNull);
-      expect(indoorTarget!.building.id, equals("H"));
-      expect(indoorTarget.destinationRoomLabel, equals("H 110"));
-      expect(indoorTarget.roomNumber, equals("110"));
+        hvm.selectedDestinationLabel = "H 110";
+        final indoorTarget = hvm.indoorNavigationDestination;
+        expect(indoorTarget, isNotNull);
+        expect(indoorTarget!.building.id, equals("H"));
+        expect(indoorTarget.destinationRoomLabel, equals("H 110"));
+        expect(indoorTarget.roomNumber, equals("110"));
 
-      hvm.selectedDestinationLabel = "Hall Building";
-      expect(hvm.indoorNavigationDestination, isNull);
-    });
+        hvm.selectedDestinationLabel = "Hall Building";
+        expect(hvm.indoorNavigationDestination, isNull);
+      },
+    );
 
     test("selectSearchSuggestion resolves place and loads routes", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);

@@ -323,14 +323,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Icons.location_disabled;
             final indoorDestination = hvm.indoorNavigationDestination;
             final isInsideDestinationBuilding =
-              indoorDestination != null &&
-              hvm.currentBuilding != null &&
-              hvm.currentBuilding!.id.toLowerCase() == indoorDestination.building.id.toLowerCase();
+                indoorDestination != null &&
+                hvm.currentBuilding != null &&
+                hvm.currentBuilding!.id.toLowerCase() ==
+                    indoorDestination.building.id.toLowerCase();
             final canSwitchToIndoorNavigation =
-              indoorDestination != null &&
-              isInsideDestinationBuilding &&
-              hvm.routeOptions.isNotEmpty &&
-              !hvm.isLoadingRoutes;
+                indoorDestination != null &&
+                isInsideDestinationBuilding &&
+                hvm.routeOptions.isNotEmpty &&
+                !hvm.isLoadingRoutes;
 
             return Stack(
               children: [

@@ -25,11 +25,7 @@ class IndoorMapView extends StatefulWidget {
   final Building building;
   final String? initialDestinationRoomLabel;
 
-  const IndoorMapView({
-    super.key,
-    required this.building,
-    this.initialDestinationRoomLabel,
-  });
+  const IndoorMapView({super.key, required this.building, this.initialDestinationRoomLabel});
 
   @override
   State<IndoorMapView> createState() => _IndoorMapViewState();
@@ -56,9 +52,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final initialDestination = widget.initialDestinationRoomLabel?.trim();
     if (initialDestination != null && initialDestination.isNotEmpty) {
       _destinationController.text = initialDestination;
-      _destinationController.selection = TextSelection.collapsed(
-        offset: initialDestination.length,
-      );
+      _destinationController.selection = TextSelection.collapsed(offset: initialDestination.length);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -654,7 +648,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   String? _deriveOutdoorHandoffStartLabel(final IndoorViewModel ivm) {
     final floorplans = ivm.loadedFloorplans;
     final availableFloors = ivm.availableFloors;
-    if (floorplans == null || floorplans.isEmpty || availableFloors == null || availableFloors.isEmpty) {
+    if (floorplans == null ||
+        floorplans.isEmpty ||
+        availableFloors == null ||
+        availableFloors.isEmpty) {
       return null;
     }
 
@@ -679,34 +676,33 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     final lowestFloorplan = orderedFloorplans.first;
-    final elevators = lowestFloorplan.pois
-        .where((final poi) => poi.type == PoiType.elevator)
-        .map((final poi) => poi.name)
-        .toList()
-      ..sort();
+    final elevators =
+        lowestFloorplan.pois
+            .where((final poi) => poi.type == PoiType.elevator)
+            .map((final poi) => poi.name)
+            .toList()
+          ..sort();
     if (elevators.isNotEmpty) {
       return "${lowestFloorplan.buildingId.toUpperCase()} ${elevators.first}";
     }
 
-    final stairs = lowestFloorplan.pois
-        .where(
-          (final poi) =>
-              poi.type == PoiType.stairs ||
-              poi.type == PoiType.stairsUp ||
-              poi.type == PoiType.stairsDown,
-        )
-        .map((final poi) => poi.name)
-        .toList()
-      ..sort();
+    final stairs =
+        lowestFloorplan.pois
+            .where(
+              (final poi) =>
+                  poi.type == PoiType.stairs ||
+                  poi.type == PoiType.stairsUp ||
+                  poi.type == PoiType.stairsDown,
+            )
+            .map((final poi) => poi.name)
+            .toList()
+          ..sort();
     if (stairs.isNotEmpty) {
       return "${lowestFloorplan.buildingId.toUpperCase()} ${stairs.first}";
     }
 
-    final transitionNames = lowestFloorplan.transitions
-        .map(_transitionToken)
-        .whereType<String>()
-        .toList()
-      ..sort();
+    final transitionNames =
+        lowestFloorplan.transitions.map(_transitionToken).whereType<String>().toList()..sort();
     if (transitionNames.isNotEmpty) {
       return "${lowestFloorplan.buildingId.toUpperCase()} ${transitionNames.first}";
     }

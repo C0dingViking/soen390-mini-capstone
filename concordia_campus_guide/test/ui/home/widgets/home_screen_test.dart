@@ -416,7 +416,10 @@ void main() {
       vm.notifyListeners();
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")), findsOneWidget);
+      expect(
+        find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")),
+        findsOneWidget,
+      );
       expect(find.text("Switch Indoor"), findsOneWidget);
     });
 
@@ -441,26 +444,30 @@ void main() {
       expect(find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")), findsNothing);
     });
 
-    testWidgets("hides main-screen indoor switch button when user is outside destination building", (
-      final tester,
-    ) async {
-      await pumpHomeScreen(tester);
+    testWidgets(
+      "hides main-screen indoor switch button when user is outside destination building",
+      (final tester) async {
+        await pumpHomeScreen(tester);
 
-      vm.selectedDestinationLabel = "H 110";
-      vm.currentBuilding = vm.buildings["MB"];
-      vm.routeOptions = {
-        RouteMode.walking: const RouteOption(
-          mode: RouteMode.walking,
-          distanceMeters: 600,
-          durationSeconds: 480,
-          polyline: [],
-        ),
-      };
-      vm.notifyListeners();
-      await tester.pumpAndSettle();
+        vm.selectedDestinationLabel = "H 110";
+        vm.currentBuilding = vm.buildings["MB"];
+        vm.routeOptions = {
+          RouteMode.walking: const RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 600,
+            durationSeconds: 480,
+            polyline: [],
+          ),
+        };
+        vm.notifyListeners();
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")), findsNothing);
-    });
+        expect(
+          find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")),
+          findsNothing,
+        );
+      },
+    );
 
     testWidgets("hides main-screen indoor switch button without active route", (
       final tester,

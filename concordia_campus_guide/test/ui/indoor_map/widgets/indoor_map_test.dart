@@ -175,11 +175,7 @@ class TestIndoorViewModel extends IndoorViewModel {
             type: PoiType.elevator,
             location: Point<double>(15, 15),
           ),
-          PointOfInterest(
-            name: "stairs-1",
-            type: PoiType.stairs,
-            location: Point<double>(20, 20),
-          ),
+          PointOfInterest(name: "stairs-1", type: PoiType.stairs, location: Point<double>(20, 20)),
         ],
       ),
       "2": Floorplan(
@@ -201,11 +197,7 @@ class TestIndoorViewModel extends IndoorViewModel {
           ),
         ],
         pois: const [
-          PointOfInterest(
-            name: "stairs-2",
-            type: PoiType.stairs,
-            location: Point<double>(25, 25),
-          ),
+          PointOfInterest(name: "stairs-2", type: PoiType.stairs, location: Point<double>(25, 25)),
         ],
       ),
     };
@@ -296,11 +288,7 @@ void main() {
     testWidgets("prefills destination and start from building entrance on outdoor handoff", (
       final tester,
     ) async {
-      await pumpHomeScreen(
-        tester,
-        true,
-        initialDestinationRoomLabel: "T 111",
-      );
+      await pumpHomeScreen(tester, true, initialDestinationRoomLabel: "T 111");
       await tester.pumpAndSettle();
 
       expect(find.text("T 111"), findsOneWidget);
