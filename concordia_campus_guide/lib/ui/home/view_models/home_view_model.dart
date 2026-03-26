@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:convert";
 import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
@@ -6,6 +7,7 @@ import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
@@ -86,6 +88,9 @@ class HomeViewModel extends ChangeNotifier {
   List<SearchSuggestion> searchResults = [];
   List<PlaceSuggestion> nearbySearchResults = [];
   final Map<String, BitmapDescriptor> _nearbyMarkerIcons = {};
+  List<String> _allRoomLabels = [];
+  List<String> _campusRoomLabels = [];
+  bool _didAttemptRoomManifestLoad = false;
   String _searchQuery = "";
   Timer? _searchDebounce;
   SearchField _activeSearchField = SearchField.destination;
@@ -132,6 +137,8 @@ class HomeViewModel extends ChangeNotifier {
       buildings = payload.buildings;
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
+      await _loadRoomManifestIfNeeded();
+      _rebuildCampusRoomLabels();
       await refreshLocationActionAvailability();
       _locationSubscription?.cancel();
       _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
@@ -223,7 +230,10 @@ class HomeViewModel extends ChangeNotifier {
     _searchQuery = query;
     _searchDebounce?.cancel();
 
-    final buildingSuggestions = _buildingSuggestions(query);
+    final buildingSuggestions = _buildingSuggestions(
+      query,
+      includeRooms: _activeSearchField == SearchField.destination,
+    );
     searchResults = buildingSuggestions;
     nearbySearchResults = [];
     isSearchingPlaces = false;
@@ -334,6 +344,26 @@ class HomeViewModel extends ChangeNotifier {
     final SearchSuggestion suggestion,
     final SearchField field,
   ) async {
+    if (suggestion.type == SearchSuggestionType.room) {
+      final building = suggestion.building;
+      final roomLabel = suggestion.roomLabel;
+      if (building == null || roomLabel == null) return;
+
+      _applySelection(
+        field: field,
+        coordinate: building.location,
+        label: roomLabel,
+        campus: building.campus,
+      );
+      cameraTarget = building.location;
+      isSearchBarExpanded = true;
+      clearSearchResults();
+      requestUnfocusSearchBar();
+      await _loadRoutesIfReady();
+      notifyListeners();
+      return;
+    }
+
     if (suggestion.type == SearchSuggestionType.building) {
       final building = suggestion.building;
       if (building == null) return;
@@ -856,7 +886,10 @@ class HomeViewModel extends ChangeNotifier {
     return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
   }
 
-  List<SearchSuggestion> _buildingSuggestions(final String query) {
+  List<SearchSuggestion> _buildingSuggestions(
+    final String query, {
+    final bool includeRooms = false,
+  }) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return [];
 
@@ -873,13 +906,122 @@ class HomeViewModel extends ChangeNotifier {
       return a.name.compareTo(b.name);
     });
 
-    return matches.take(6).map((final building) {
+    final buildingSuggestions = matches.map((final building) {
       final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
       return SearchSuggestion.building(
         building,
         subtitle: "$campusLabel - ${building.id.toUpperCase()}",
       );
     }).toList();
+
+    if (!includeRooms || _campusRoomLabels.isEmpty) {
+      return buildingSuggestions.take(8).toList();
+    }
+
+    final roomMatches = _campusRoomLabels
+        .where((final roomLabel) => _roomMatchesQuery(roomLabel, q))
+        .toList();
+
+    roomMatches.sort((final a, final b) {
+      final rankA = _roomMatchRank(a, q);
+      final rankB = _roomMatchRank(b, q);
+      if (rankA != rankB) return rankA.compareTo(rankB);
+      return a.compareTo(b);
+    });
+
+    final roomSuggestions = <SearchSuggestion>[];
+    for (final roomLabel in roomMatches) {
+      final parsed = _parseRoomLabel(roomLabel);
+      if (parsed == null) continue;
+
+      final building = _findBuildingById(parsed.buildingId);
+      if (building == null) continue;
+
+      final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
+      roomSuggestions.add(
+        SearchSuggestion.room(
+          building: building,
+          roomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
+          subtitle: "$campusLabel - ${building.name}",
+        ),
+      );
+
+      if (roomSuggestions.length >= 8) break;
+    }
+
+    return [...buildingSuggestions.take(4), ...roomSuggestions].take(10).toList();
+  }
+
+  Future<void> _loadRoomManifestIfNeeded() async {
+    if (_didAttemptRoomManifestLoad) return;
+    _didAttemptRoomManifestLoad = true;
+
+    try {
+      final roomManifestJson = await rootBundle.loadString("assets/floorplans/room_manifest.json");
+      final roomEntries = jsonDecode(roomManifestJson) as List<dynamic>;
+      _allRoomLabels = roomEntries.cast<String>();
+    } catch (e) {
+      logger.w("HomeViewModel: failed to load room manifest", error: e);
+      _allRoomLabels = [];
+    }
+  }
+
+  void _rebuildCampusRoomLabels() {
+    if (_allRoomLabels.isEmpty || buildings.isEmpty) {
+      _campusRoomLabels = [];
+      return;
+    }
+
+    _campusRoomLabels = _allRoomLabels.where(_isCampusRoomLabel).toList(growable: false);
+  }
+
+  bool _isCampusRoomLabel(final String roomLabel) {
+    final parsed = _parseRoomLabel(roomLabel);
+    if (parsed == null) return false;
+
+    final building = _findBuildingById(parsed.buildingId);
+    if (building == null || building.supportedIndoorFloors.isEmpty) {
+      return false;
+    }
+
+    return building.campus == Campus.sgw || building.campus == Campus.loyola;
+  }
+
+  ({String buildingId, String roomNumber})? _parseRoomLabel(final String rawLabel) {
+    final trimmed = rawLabel.trim();
+    if (trimmed.isEmpty) return null;
+
+    final parts = trimmed.split(RegExp(r"\s+"));
+    if (parts.length < 2) return null;
+
+    final buildingId = parts.first.trim();
+    final roomNumber = trimmed.substring(parts.first.length).trim();
+    if (buildingId.isEmpty || roomNumber.isEmpty) return null;
+
+    return (buildingId: buildingId, roomNumber: roomNumber);
+  }
+
+  bool _roomMatchesQuery(final String roomLabel, final String query) {
+    final normalizedQuery = _normalizeSearchToken(query);
+    final normalizedLabel = _normalizeSearchToken(roomLabel);
+    return roomLabel.toLowerCase().contains(query) ||
+        (normalizedQuery.isNotEmpty && normalizedLabel.contains(normalizedQuery));
+  }
+
+  int _roomMatchRank(final String roomLabel, final String query) {
+    final normalizedQuery = _normalizeSearchToken(query);
+    final normalizedLabel = _normalizeSearchToken(roomLabel);
+    final roomLower = roomLabel.toLowerCase();
+
+    if (roomLower.startsWith(query)) return 0;
+    if (roomLower.contains(query)) return 1;
+    if (normalizedQuery.isNotEmpty && normalizedLabel.startsWith(normalizedQuery)) return 2;
+    if (normalizedQuery.isNotEmpty && normalizedLabel.contains(normalizedQuery)) return 3;
+    return 4;
+  }
+
+  String _normalizeSearchToken(final String value) {
+    return value.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "");
   }
 
   Future<List<PlaceSuggestion>> _searchNearbyPlaces(final String query) async {
@@ -1093,6 +1235,27 @@ class HomeViewModel extends ChangeNotifier {
     if (id.startsWith(query)) return 2;
     if (id.contains(query)) return 3;
     return 4;
+  }
+
+  ({Building building, String destinationRoomLabel, String roomNumber})?
+  get indoorNavigationDestination {
+    final parsed = _parseRoomLabel(selectedDestinationLabel ?? "");
+    if (parsed == null) return null;
+
+    final building = _findBuildingById(parsed.buildingId);
+    if (building == null || building.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    if (building.campus != Campus.sgw && building.campus != Campus.loyola) {
+      return null;
+    }
+
+    return (
+      building: building,
+      destinationRoomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
+      roomNumber: parsed.roomNumber,
+    );
   }
 
   @override

@@ -1,6 +1,8 @@
+import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -423,6 +425,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final suggestedTransitDeparture = selectedMode == RouteMode.transit
         ? _suggestedTransitDepartureTime(steps)
         : null;
+    final indoorDestination = context.read<HomeViewModel>().indoorNavigationDestination;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -437,7 +441,60 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           ),
         const SizedBox(height: 8),
         ...steps.map((final step) => _buildStepItem(step)),
+        if (indoorDestination != null) ...[
+          const SizedBox(height: 8),
+          _buildIndoorNavigationButton(
+            building: indoorDestination.building,
+            destinationRoomLabel: indoorDestination.destinationRoomLabel,
+            roomNumber: indoorDestination.roomNumber,
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildIndoorNavigationButton({
+    required final Building building,
+    required final String destinationRoomLabel,
+    required final String roomNumber,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Reached ${building.name}? Continue indoors to room $roomNumber.",
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: const Key("switch_to_indoor_navigation_button"),
+              style: AppTheme.indoorNavigationButtonStyle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (final context) => IndoorMapView(
+                      building: building,
+                      initialDestinationRoomLabel: destinationRoomLabel,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.schema),
+              label: const Text("Switch to Indoor Navigation"),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

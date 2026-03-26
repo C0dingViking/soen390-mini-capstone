@@ -453,10 +453,11 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       itemBuilder: (final context, final index) {
         final suggestion = results[index];
         final isBuilding = suggestion.type == SearchSuggestionType.building;
+        final isRoom = suggestion.type == SearchSuggestionType.room;
         return ListTile(
           leading: isBuilding
               ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
-              : const Icon(Icons.location_on_outlined),
+              : Icon(isRoom ? Icons.meeting_room_outlined : Icons.location_on_outlined),
           title: Text(suggestion.title),
           subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
           trailing: isBuilding && suggestion.building != null

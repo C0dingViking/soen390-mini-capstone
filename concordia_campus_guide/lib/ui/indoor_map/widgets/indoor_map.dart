@@ -23,8 +23,13 @@ String? resolveRoomNameFromTapPosition(
 
 class IndoorMapView extends StatefulWidget {
   final Building building;
+  final String? initialDestinationRoomLabel;
 
-  const IndoorMapView({super.key, required this.building});
+  const IndoorMapView({
+    super.key,
+    required this.building,
+    this.initialDestinationRoomLabel,
+  });
 
   @override
   State<IndoorMapView> createState() => _IndoorMapViewState();
@@ -35,6 +40,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _destinationFocusNode = FocusNode();
+  bool _didApplyOutdoorHandoffDefaults = false;
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
   final floorPickerSpacing = 16.0;
@@ -47,6 +53,14 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void initState() {
     super.initState();
+    final initialDestination = widget.initialDestinationRoomLabel?.trim();
+    if (initialDestination != null && initialDestination.isNotEmpty) {
+      _destinationController.text = initialDestination;
+      _destinationController.selection = TextSelection.collapsed(
+        offset: initialDestination.length,
+      );
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<IndoorViewModel>().initializeRoomNames();
@@ -85,33 +99,61 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return (buildingId: buildingId, roomName: roomName);
   }
 
-  String _findFloorForRoomName(final String roomName, final Map<String, Floorplan> floorplans) {
-    final normalizedRoomName = roomName.trim().toLowerCase();
+  String _normalizeLocationToken(final String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "");
+  }
 
-    String sanitizeRoomName(final String value) {
-      return value
-          .trim()
-          .toLowerCase()
-          .replaceAll(RegExp(r"\s+"), "")
-          .replaceAll(RegExp(r"[-.]"), "");
+  String? _transitionToken(final FloorTransition transition) {
+    final separatorIndex = transition.id.indexOf("-");
+    if (separatorIndex < 0 || separatorIndex >= transition.id.length - 1) {
+      return null;
+    }
+    return transition.id.substring(separatorIndex + 1);
+  }
+
+  bool _locationMatchesToken(final String locationName, final String normalizedLocationToken) {
+    final candidate = _normalizeLocationToken(locationName);
+    if (candidate == normalizedLocationToken) {
+      return true;
     }
 
-    final sanitizedRoomName = sanitizeRoomName(normalizedRoomName);
+    return candidate.contains(normalizedLocationToken) ||
+        normalizedLocationToken.contains(candidate);
+  }
+
+  String _findFloorForLocationName(
+    final String locationName,
+    final Map<String, Floorplan> floorplans,
+  ) {
+    final normalizedLocationToken = _normalizeLocationToken(locationName);
 
     for (final floorplanEntry in floorplans.entries) {
-      final hasRoom = floorplanEntry.value.rooms.any((final room) {
-        final candidate = room.name.trim().toLowerCase();
-        if (candidate == normalizedRoomName) {
-          return true;
-        }
-
-        return sanitizeRoomName(candidate) == sanitizedRoomName;
-      });
+      final floorplan = floorplanEntry.value;
+      final hasRoom = floorplan.rooms.any(
+        (final room) => _locationMatchesToken(room.name, normalizedLocationToken),
+      );
       if (hasRoom) {
         return floorplanEntry.key;
       }
+
+      final hasPoi = floorplan.pois.any(
+        (final poi) => _locationMatchesToken(poi.name, normalizedLocationToken),
+      );
+      if (hasPoi) {
+        return floorplanEntry.key;
+      }
+
+      final hasTransition = floorplan.transitions.any((final transition) {
+        final transitionToken = _transitionToken(transition);
+        if (transitionToken == null) return false;
+        return _locationMatchesToken(transitionToken, normalizedLocationToken);
+      });
+      if (hasTransition) {
+        return floorplanEntry.key;
+      }
     }
-    throw Exception("Floor not found for room: $roomName");
+
+    throw Exception("Floor not found for location: $locationName");
   }
 
   IndoorMapRoom? _findRoomOnFloor(final String roomName, final Floorplan floorplan) {
@@ -136,6 +178,57 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return null;
   }
 
+  PointOfInterest? _findPoiOnFloor(final String locationName, final Floorplan floorplan) {
+    final normalizedLocationToken = _normalizeLocationToken(locationName);
+    for (final poi in floorplan.pois) {
+      if (_locationMatchesToken(poi.name, normalizedLocationToken)) {
+        return poi;
+      }
+    }
+    return null;
+  }
+
+  FloorTransition? _findTransitionOnFloor(final String locationName, final Floorplan floorplan) {
+    final normalizedLocationToken = _normalizeLocationToken(locationName);
+
+    for (final transition in floorplan.transitions) {
+      final transitionToken = _transitionToken(transition);
+      if (transitionToken == null) {
+        continue;
+      }
+
+      if (_locationMatchesToken(transitionToken, normalizedLocationToken)) {
+        return transition;
+      }
+    }
+
+    return null;
+  }
+
+  IndoorMapRoom? _resolveLocationOnFloor(final String locationName, final Floorplan floorplan) {
+    final room = _findRoomOnFloor(locationName, floorplan);
+    if (room != null) {
+      return room;
+    }
+
+    final poi = _findPoiOnFloor(locationName, floorplan);
+    if (poi != null) {
+      return IndoorMapRoom(name: poi.name, doorLocation: poi.location, points: const []);
+    }
+
+    final transition = _findTransitionOnFloor(locationName, floorplan);
+    if (transition != null) {
+      final transitionName = _transitionToken(transition) ?? transition.id;
+      return IndoorMapRoom(
+        name: transitionName,
+        doorLocation: transition.location,
+        points: const [],
+      );
+    }
+
+    return null;
+  }
+
   Future<void> _handleStartNavigation(
     final String startRoom,
     final String destinationRoom,
@@ -153,8 +246,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
-    final startFloor = _findFloorForRoomName(parsedStartRoom.roomName, floorplans);
-    final destinationFloor = _findFloorForRoomName(parsedDestinationRoom.roomName, floorplans);
+    final startFloor = _findFloorForLocationName(parsedStartRoom.roomName, floorplans);
+    final destinationFloor = _findFloorForLocationName(parsedDestinationRoom.roomName, floorplans);
 
     // Switch to the current location's floor immediately
     _viewModel.changeFloor(startFloor);
@@ -231,12 +324,12 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
-    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, floorplan);
-    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, floorplan);
+    final startRoomModel = _resolveLocationOnFloor(parsedStartRoom.roomName, floorplan);
+    final destinationRoomModel = _resolveLocationOnFloor(parsedDestinationRoom.roomName, floorplan);
 
     if (startRoomModel == null || destinationRoomModel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to locate one or both rooms on this floor.")),
+        const SnackBar(content: Text("Unable to locate one or both locations on this floor.")),
       );
       return;
     }
@@ -277,14 +370,17 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
-    final startRoomModel = _findRoomOnFloor(parsedStartRoom.roomName, startFloorplan);
-    final destinationRoomModel = _findRoomOnFloor(parsedDestinationRoom.roomName, destFloorplan);
+    final startRoomModel = _resolveLocationOnFloor(parsedStartRoom.roomName, startFloorplan);
+    final destinationRoomModel = _resolveLocationOnFloor(
+      parsedDestinationRoom.roomName,
+      destFloorplan,
+    );
 
     if (startRoomModel == null || destinationRoomModel == null) {
       // TODO: add a clearer error popup
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both rooms.")));
+      ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both locations.")));
       return;
     }
 
@@ -510,6 +606,139 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     );
   }
 
+  List<String> _queryableLocationsForBuilding(final IndoorViewModel ivm) {
+    final labels = <String>{};
+    final buildingIdUpper = widget.building.id.toUpperCase();
+
+    for (final roomLabel in (ivm.loadedRoomNames ?? const <String>[])) {
+      final parts = roomLabel.trim().split(RegExp(r"\s+"));
+      if (parts.isEmpty) {
+        continue;
+      }
+
+      if (parts.first.toUpperCase() == buildingIdUpper) {
+        labels.add(roomLabel.trim());
+      }
+    }
+
+    final floorplans = ivm.loadedFloorplans;
+    if (floorplans != null) {
+      for (final floorplan in floorplans.values) {
+        for (final room in floorplan.rooms) {
+          labels.add("$buildingIdUpper ${room.name}");
+        }
+
+        for (final poi in floorplan.pois) {
+          if (poi.type == PoiType.buildingEntrance ||
+              poi.type == PoiType.elevator ||
+              poi.type == PoiType.stairs ||
+              poi.type == PoiType.stairsUp ||
+              poi.type == PoiType.stairsDown) {
+            labels.add("$buildingIdUpper ${poi.name}");
+          }
+        }
+
+        for (final transition in floorplan.transitions) {
+          final transitionName = _transitionToken(transition);
+          if (transitionName != null) {
+            labels.add("$buildingIdUpper $transitionName");
+          }
+        }
+      }
+    }
+
+    final sorted = labels.toList()..sort();
+    return sorted;
+  }
+
+  String? _deriveOutdoorHandoffStartLabel(final IndoorViewModel ivm) {
+    final floorplans = ivm.loadedFloorplans;
+    final availableFloors = ivm.availableFloors;
+    if (floorplans == null || floorplans.isEmpty || availableFloors == null || availableFloors.isEmpty) {
+      return null;
+    }
+
+    final orderedFloorplans = availableFloors
+        .where((final floor) => floorplans.containsKey(floor))
+        .map((final floor) => floorplans[floor]!)
+        .toList(growable: false);
+    if (orderedFloorplans.isEmpty) {
+      return null;
+    }
+
+    for (final floorplan in orderedFloorplans) {
+      final entrances = floorplan.pois
+          .where((final poi) => poi.type == PoiType.buildingEntrance)
+          .toList();
+      if (entrances.isEmpty) {
+        continue;
+      }
+
+      entrances.sort((final a, final b) => a.name.compareTo(b.name));
+      return "${floorplan.buildingId.toUpperCase()} ${entrances.first.name}";
+    }
+
+    final lowestFloorplan = orderedFloorplans.first;
+    final elevators = lowestFloorplan.pois
+        .where((final poi) => poi.type == PoiType.elevator)
+        .map((final poi) => poi.name)
+        .toList()
+      ..sort();
+    if (elevators.isNotEmpty) {
+      return "${lowestFloorplan.buildingId.toUpperCase()} ${elevators.first}";
+    }
+
+    final stairs = lowestFloorplan.pois
+        .where(
+          (final poi) =>
+              poi.type == PoiType.stairs ||
+              poi.type == PoiType.stairsUp ||
+              poi.type == PoiType.stairsDown,
+        )
+        .map((final poi) => poi.name)
+        .toList()
+      ..sort();
+    if (stairs.isNotEmpty) {
+      return "${lowestFloorplan.buildingId.toUpperCase()} ${stairs.first}";
+    }
+
+    final transitionNames = lowestFloorplan.transitions
+        .map(_transitionToken)
+        .whereType<String>()
+        .toList()
+      ..sort();
+    if (transitionNames.isNotEmpty) {
+      return "${lowestFloorplan.buildingId.toUpperCase()} ${transitionNames.first}";
+    }
+
+    return null;
+  }
+
+  void _applyOutdoorHandoffDefaultsIfNeeded(final IndoorViewModel ivm) {
+    if (_didApplyOutdoorHandoffDefaults) {
+      return;
+    }
+
+    final initialDestination = widget.initialDestinationRoomLabel?.trim();
+    if (initialDestination == null || initialDestination.isEmpty) {
+      _didApplyOutdoorHandoffDefaults = true;
+      return;
+    }
+
+    if (_destinationController.text.trim().isEmpty) {
+      _destinationController.text = initialDestination;
+      _destinationController.selection = TextSelection.collapsed(offset: initialDestination.length);
+    }
+
+    final derivedStart = _deriveOutdoorHandoffStartLabel(ivm);
+    if (derivedStart != null && derivedStart.isNotEmpty) {
+      _startController.text = derivedStart;
+      _startController.selection = TextSelection.collapsed(offset: derivedStart.length);
+    }
+
+    _didApplyOutdoorHandoffDefaults = true;
+  }
+
   @override
   Widget build(final BuildContext context) {
     return Scaffold(
@@ -540,6 +769,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
           final selectedFloorplan = ivm.selectedFloorplan!;
           final svgPath = selectedFloorplan.svgPath;
+          _applyOutdoorHandoffDefaultsIfNeeded(ivm);
+          final queryableLocations = _queryableLocationsForBuilding(ivm);
 
           return Container(
             color: AppTheme.concordiaGold,
@@ -610,7 +841,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                       isIndoorNavigationDisplayed: ivm.indoorPath != null,
                       onStartNavigation: _handleStartNavigation,
                       onEndNavigation: _handleEndNavigation,
-                      queryableRooms: ivm.loadedRoomNames!,
+                      queryableRooms: queryableLocations,
                     ),
                   ),
                 ),
