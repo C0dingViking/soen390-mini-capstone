@@ -409,6 +409,128 @@ void main() {
     expect(selectedAccMode, isTrue);
   });
 
+  testWidgets("End Navigation button is visible only when indoor navigation is displayed", (
+    final tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: ["H 849", "MB 1-310"],
+            isIndoorNavigationDisplayed: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("End Navigation"), findsNothing);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: ["H 849", "MB 1-310"],
+            isIndoorNavigationDisplayed: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("End Navigation"), findsOneWidget);
+  });
+
+  testWidgets("pressing End Navigation triggers callback", (final tester) async {
+    var endNavigationCallCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: const ["H 849", "MB 1-310"],
+            isIndoorNavigationDisplayed: true,
+            onEndNavigation: () {
+              endNavigationCallCount++;
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text("End Navigation"));
+    await tester.pump();
+
+    expect(endNavigationCallCount, 1);
+  });
+
+  testWidgets("pressing End Navigation clears both start and destination fields", (
+    final tester,
+  ) async {
+    final startController = TextEditingController(text: "H 849");
+    final destinationController = TextEditingController(text: "MB 1-310");
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: const ["H 849", "MB 1-310"],
+            startController: startController,
+            destinationController: destinationController,
+            isIndoorNavigationDisplayed: true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text("End Navigation"));
+    await tester.pump();
+
+    expect(startController.text, isEmpty);
+    expect(destinationController.text, isEmpty);
+
+    startController.dispose();
+    destinationController.dispose();
+  });
+
+  testWidgets("changing start or destination ends indoor navigation when displayed", (
+    final tester,
+  ) async {
+    final startController = TextEditingController(text: "H 849");
+    final destinationController = TextEditingController(text: "MB 1-310");
+    var endNavigationCallCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndoorSearchBar(
+            queryableRooms: const ["H 849", "MB 1-310"],
+            startController: startController,
+            destinationController: destinationController,
+            isIndoorNavigationDisplayed: true,
+            onEndNavigation: () {
+              endNavigationCallCount++;
+            },
+          ),
+        ),
+      ),
+    );
+
+    final startField = find.byType(TextField).first;
+    final destinationField = find.byType(TextField).last;
+
+    await tester.tap(startField);
+    await tester.enterText(startField, "H 101");
+    await tester.pump();
+
+    await tester.tap(destinationField);
+    await tester.enterText(destinationField, "H 849");
+    await tester.pump();
+
+    expect(endNavigationCallCount, 2);
+
+    startController.dispose();
+    destinationController.dispose();
+  });
+
   testWidgets("mode toggle selection updates visual state", (final tester) async {
     await tester.pumpWidget(
       const MaterialApp(

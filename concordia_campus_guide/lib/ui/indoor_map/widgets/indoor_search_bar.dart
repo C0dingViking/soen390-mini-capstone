@@ -7,15 +7,19 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
+  final bool isIndoorNavigationDisplayed;
   final void Function(String startRoom, String destinationRoom, bool accessibleMode)?
   onStartNavigation;
+  final VoidCallback? onEndNavigation;
 
   const IndoorSearchBar({
     super.key,
     this.startController,
     this.destinationController,
     this.destinationFocusNode,
+    this.isIndoorNavigationDisplayed = false,
     this.onStartNavigation,
+    this.onEndNavigation,
     required this.queryableRooms,
   });
 
@@ -38,6 +42,9 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
+  late String _lastStartValue;
+  late String _lastDestinationValue;
+  bool _isClearingFields = false;
   bool _accessibleMode = false;
 
   List<String> _filteredRoomList = [];
@@ -64,6 +71,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _destinationFocus = widget.destinationFocusNode ?? FocusNode();
     _ownsDestinationFocus = widget.destinationFocusNode == null;
     _activeField = FocusedField.neither;
+    _lastStartValue = _startController.text;
+    _lastDestinationValue = _destinationController.text;
 
     _startFocus.addListener(_handleFocusChange);
     _destinationFocus.addListener(_handleFocusChange);
@@ -98,6 +107,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _startController = widget.startController ?? TextEditingController();
       _ownsStartController = widget.startController == null;
       _startController.addListener(_onFieldTextChanged);
+      _lastStartValue = _startController.text;
     }
 
     if (oldWidget.destinationController != widget.destinationController) {
@@ -109,6 +119,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController = widget.destinationController ?? TextEditingController();
       _ownsDestinationController = widget.destinationController == null;
       _destinationController.addListener(_onFieldTextChanged);
+      _lastDestinationValue = _destinationController.text;
     }
 
     if (oldWidget.destinationFocusNode != widget.destinationFocusNode) {
@@ -128,6 +139,12 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       return;
     }
 
+    _endNavigationIfLocationChanged();
+
+    if (_isClearingFields) {
+      return;
+    }
+
     final activeController = _activeController;
 
     if (activeController != null) {
@@ -135,6 +152,27 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         _filteredRoomList = _getFilteredRoomList(activeController.text);
       });
     }
+  }
+
+  void _endNavigationIfLocationChanged() {
+    final currentStart = _startController.text;
+    final currentDestination = _destinationController.text;
+
+    if (!widget.isIndoorNavigationDisplayed) {
+      _lastStartValue = currentStart;
+      _lastDestinationValue = currentDestination;
+      return;
+    }
+
+    final startChanged = currentStart != _lastStartValue;
+    final destinationChanged = currentDestination != _lastDestinationValue;
+
+    if (startChanged || destinationChanged) {
+      widget.onEndNavigation?.call();
+    }
+
+    _lastStartValue = currentStart;
+    _lastDestinationValue = currentDestination;
   }
 
   List<String> _getFilteredRoomList(final String query) {
@@ -183,6 +221,26 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController.text.trim(),
       _accessibleMode,
     );
+  }
+
+  void _handleEndNavigationPressed() {
+    FocusScope.of(context).unfocus();
+    _clearBothFields();
+    widget.onEndNavigation?.call();
+  }
+
+  void _clearBothFields() {
+    _isClearingFields = true;
+    _startController.clear();
+    _destinationController.clear();
+    _lastStartValue = _startController.text;
+    _lastDestinationValue = _destinationController.text;
+    _isClearingFields = false;
+
+    setState(() {
+      _filteredRoomList = [];
+      _activeField = FocusedField.neither;
+    });
   }
 
   void _clearController(final TextEditingController controller) {
@@ -317,7 +375,18 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
           ],
         ),
         if (_filteredRoomList.isNotEmpty) _buildResultsList(context, _filteredRoomList),
-        if (showStartNavigationButton) ...[
+        if (widget.isIndoorNavigationDisplayed) ...[
+          const SizedBox(height: _buttonHeight),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _handleEndNavigationPressed,
+              style: AppTheme.indoorNavigationButtonStyle,
+              icon: const Icon(Icons.stop_circle_outlined),
+              label: const Text("End Navigation"),
+            ),
+          ),
+        ] else if (showStartNavigationButton) ...[
           const SizedBox(height: _buttonHeight),
           Align(
             alignment: Alignment.centerRight,
