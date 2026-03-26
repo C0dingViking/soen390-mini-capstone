@@ -16,8 +16,27 @@ class RouteDetailsPanel extends StatefulWidget {
 class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   double _panelHeight = _minHeight;
   bool _isDragging = false;
+  final ScrollController _routeDetailsScrollController = ScrollController();
 
   static const double _minHeight = 120;
+
+  @override
+  void dispose() {
+    _routeDetailsScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottomOfRouteDetails() {
+    if (!_routeDetailsScrollController.hasClients) {
+      return;
+    }
+
+    _routeDetailsScrollController.animateTo(
+      _routeDetailsScrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   void _toggleExpanded() {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -207,6 +226,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final option = routeOptions[selectedMode];
 
     return SingleChildScrollView(
+      controller: _routeDetailsScrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,7 +450,29 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Route Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                "Route Details",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (indoorDestination != null)
+              ElevatedButton.icon(
+                key: const Key("route_details_reached_building_jump_button"),
+                onPressed: _scrollToBottomOfRouteDetails,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.concordiaButtonCyan.withValues(alpha: 0.15),
+                  foregroundColor: AppTheme.concordiaForeground,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                ),
+                icon: const Icon(Icons.arrow_downward_rounded, size: 18),
+                label: const Text("Reached building?"),
+              ),
+          ],
+        ),
         if (suggestedTransitDeparture != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
