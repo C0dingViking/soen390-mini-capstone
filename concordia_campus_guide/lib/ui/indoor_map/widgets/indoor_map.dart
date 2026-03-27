@@ -604,45 +604,70 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final labels = <String>{};
     final buildingIdUpper = widget.building.id.toUpperCase();
 
+    labels.addAll(_locationLabelsFromRoomNames(ivm, buildingIdUpper));
+    labels.addAll(_locationLabelsFromFloorplans(ivm, buildingIdUpper));
+
+    final sorted = labels.toList()..sort();
+    return sorted;
+  }
+
+  List<String> _locationLabelsFromRoomNames(final IndoorViewModel ivm, final String buildingIdUpper) {
+    final labels = <String>[];
     for (final roomLabel in (ivm.loadedRoomNames ?? const <String>[])) {
       final parts = roomLabel.trim().split(RegExp(r"\s+"));
-      if (parts.isEmpty) {
-        continue;
-      }
+      if (parts.isEmpty) continue;
 
       if (parts.first.toUpperCase() == buildingIdUpper) {
         labels.add(roomLabel.trim());
       }
     }
+    return labels;
+  }
 
+  List<String> _locationLabelsFromFloorplans(final IndoorViewModel ivm, final String buildingIdUpper) {
+    final labels = <String>[];
     final floorplans = ivm.loadedFloorplans;
-    if (floorplans != null) {
-      for (final floorplan in floorplans.values) {
-        for (final room in floorplan.rooms) {
-          labels.add("$buildingIdUpper ${room.name}");
-        }
+    if (floorplans == null) return labels;
 
-        for (final poi in floorplan.pois) {
-          if (poi.type == PoiType.buildingEntrance ||
-              poi.type == PoiType.elevator ||
-              poi.type == PoiType.stairs ||
-              poi.type == PoiType.stairsUp ||
-              poi.type == PoiType.stairsDown) {
-            labels.add("$buildingIdUpper ${poi.name}");
-          }
-        }
+    for (final floorplan in floorplans.values) {
+      labels.addAll(_roomLabels(floorplan, buildingIdUpper));
+      labels.addAll(_poiLabels(floorplan, buildingIdUpper));
+      labels.addAll(_transitionLabels(floorplan, buildingIdUpper));
+    }
+    return labels;
+  }
 
-        for (final transition in floorplan.transitions) {
-          final transitionName = _transitionToken(transition);
-          if (transitionName != null) {
-            labels.add("$buildingIdUpper $transitionName");
-          }
-        }
+  List<String> _roomLabels(final Floorplan floorplan, final String buildingIdUpper) {
+    return floorplan.rooms.map((final room) => "$buildingIdUpper ${room.name}").toList();
+  }
+
+  List<String> _poiLabels(final Floorplan floorplan, final String buildingIdUpper) {
+    final labels = <String>[];
+    for (final poi in floorplan.pois) {
+      if (_isQueryablePoi(poi)) {
+        labels.add("$buildingIdUpper ${poi.name}");
       }
     }
+    return labels;
+  }
 
-    final sorted = labels.toList()..sort();
-    return sorted;
+  bool _isQueryablePoi(final PointOfInterest poi) {
+    return poi.type == PoiType.buildingEntrance ||
+        poi.type == PoiType.elevator ||
+        poi.type == PoiType.stairs ||
+        poi.type == PoiType.stairsUp ||
+        poi.type == PoiType.stairsDown;
+  }
+
+  List<String> _transitionLabels(final Floorplan floorplan, final String buildingIdUpper) {
+    final labels = <String>[];
+    for (final transition in floorplan.transitions) {
+      final transitionName = _transitionToken(transition);
+      if (transitionName != null) {
+        labels.add("$buildingIdUpper $transitionName");
+      }
+    }
+    return labels;
   }
 
   String? _deriveOutdoorHandoffStartLabel(final IndoorViewModel ivm) {
