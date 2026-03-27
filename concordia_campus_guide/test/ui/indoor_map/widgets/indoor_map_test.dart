@@ -8,6 +8,7 @@ import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_google_maps_webservices/places.dart";
@@ -134,6 +135,109 @@ class TestIndoorViewModel extends IndoorViewModel {
       return;
     }
 
+    if (normalizedPath == "Y") {
+      availableFloors = ["1", "2"];
+      loadedFloorplans = {
+        "1": Floorplan(
+          buildingId: normalizedPath,
+          floorNumber: "1",
+          svgPath: "testfloor1.svg",
+          canvasWidth: 100,
+          canvasHeight: 100,
+          rooms: [
+            IndoorMapRoom(
+              name: "111",
+              doorLocation: const Point<double>(10, 10),
+              points: const [
+                Point<double>(0, 0),
+                Point<double>(100, 0),
+                Point<double>(100, 100),
+                Point<double>(0, 100),
+              ],
+            ),
+          ],
+          pois: const [
+            PointOfInterest(
+              name: "stairs-down-1",
+              type: PoiType.stairsDown,
+              location: Point<double>(20, 20),
+            ),
+            PointOfInterest(
+              name: "stairs-up-1",
+              type: PoiType.stairsUp,
+              location: Point<double>(30, 30),
+            ),
+          ],
+        ),
+        "2": Floorplan(
+          buildingId: normalizedPath,
+          floorNumber: "2",
+          svgPath: "testfloor2.svg",
+          canvasWidth: 100,
+          canvasHeight: 100,
+          rooms: [
+            IndoorMapRoom(
+              name: "210",
+              doorLocation: const Point<double>(40, 40),
+              points: const [
+                Point<double>(0, 0),
+                Point<double>(100, 0),
+                Point<double>(100, 100),
+                Point<double>(0, 100),
+              ],
+            ),
+          ],
+          pois: const [],
+        ),
+      };
+      selectedFloorplan = loadedFloorplans!["1"];
+      notifyListeners();
+      return;
+    }
+
+    if (normalizedPath == "Z") {
+      availableFloors = ["1"];
+      loadedFloorplans = {
+        "1": Floorplan(
+          buildingId: normalizedPath,
+          floorNumber: "1",
+          svgPath: "testfloor1.svg",
+          canvasWidth: 100,
+          canvasHeight: 100,
+          rooms: [
+            IndoorMapRoom(
+              name: "111",
+              doorLocation: const Point<double>(10, 10),
+              points: const [
+                Point<double>(0, 0),
+                Point<double>(100, 0),
+                Point<double>(100, 100),
+                Point<double>(0, 100),
+              ],
+            ),
+          ],
+          pois: const [],
+          transitions: const [
+            FloorTransition(
+              id: "invalidtoken",
+              location: Point<double>(50, 50),
+              type: TransitionType.stairs,
+              groupTag: "invalidtoken",
+            ),
+            FloorTransition(
+              id: "t-mainLobby",
+              location: Point<double>(60, 60),
+              type: TransitionType.stairs,
+              groupTag: "mainLobby",
+            ),
+          ],
+        ),
+      };
+      selectedFloorplan = loadedFloorplans!["1"];
+      notifyListeners();
+      return;
+    }
+
     availableFloors = ["1", "2"];
     loadedFloorplans = {
       "1": Floorplan(
@@ -210,6 +314,18 @@ class TestIndoorViewModel extends IndoorViewModel {
   Future<void> initializeRoomNames() async {
     loadedRoomNames = ["T 110", "T 111", "T 112", "T 210", "H 820"];
     notifyListeners();
+  }
+}
+
+class DelayedTestIndoorViewModel extends TestIndoorViewModel {
+  final Duration delay;
+
+  DelayedTestIndoorViewModel(this.delay);
+
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    await Future<void>.delayed(delay);
+    await super.initializeBuildingFloorplans(path);
   }
 }
 
@@ -295,6 +411,36 @@ void main() {
       expect(find.text("T buildingEntrance-1"), findsOneWidget);
     });
 
+    testWidgets("re-applies initial destination when destination field is empty after load", (
+      final tester,
+    ) async {
+      final delayedIvm = DelayedTestIndoorViewModel(const Duration(milliseconds: 40));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<IndoorViewModel>.value(
+            value: delayedIvm,
+            child: IndoorMapView(
+              building: makeTestBuilding(true),
+              initialDestinationRoomLabel: "T 111",
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final destinationField = find.byType(TextField).last;
+      await tester.enterText(destinationField, "");
+      await tester.pump();
+
+      await tester.pump(const Duration(milliseconds: 60));
+      await tester.pumpAndSettle();
+
+      final destinationTextField = tester.widgetList<TextField>(find.byType(TextField)).last;
+      expect(destinationTextField.controller?.text, "T 111");
+      expect(find.text("T buildingEntrance-1"), findsOneWidget);
+    });
+
     testWidgets("falls back to elevator on lowest floor when no building entrance exists", (
       final tester,
     ) async {
@@ -308,6 +454,59 @@ void main() {
 
       expect(find.text("X 111"), findsOneWidget);
       expect(find.text("X elevator-1"), findsOneWidget);
+    });
+
+    testWidgets("falls back to stairs on lowest floor when no entrance or elevator exists", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(
+        tester,
+        true,
+        building: makeTestBuildingWithId("Y"),
+        initialDestinationRoomLabel: "Y 111",
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("Y 111"), findsOneWidget);
+      expect(find.text("Y stairs-down-1"), findsOneWidget);
+    });
+
+    testWidgets("falls back to transition token when no entrance, elevator, or stairs exists", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(
+        tester,
+        true,
+        building: makeTestBuildingWithId("Z"),
+        initialDestinationRoomLabel: "Z 111",
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("Z 111"), findsOneWidget);
+      expect(find.text("Z mainLobby"), findsOneWidget);
+    });
+
+    testWidgets("queryable rooms include stairsUp/stairsDown", (final tester) async {
+      await pumpHomeScreen(tester, true, building: makeTestBuildingWithId("Y"));
+      await tester.pumpAndSettle();
+
+      final searchBarY = tester.widget<IndoorSearchBar>(find.byType(IndoorSearchBar));
+      expect(searchBarY.queryableRooms, contains("Y stairs-down-1"));
+      expect(searchBarY.queryableRooms, contains("Y stairs-up-1"));
+    });
+
+    testWidgets("queryable rooms include transition tokens and exclude invalid transitions", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true, building: makeTestBuildingWithId("Z"));
+      await tester.pumpAndSettle();
+
+      final searchBarZ = tester.widget<IndoorSearchBar>(find.byType(IndoorSearchBar));
+      expect(searchBarZ.queryableRooms, contains("Z mainLobby"));
+      expect(
+        searchBarZ.queryableRooms.where((final room) => room.contains("invalidtoken")),
+        isEmpty,
+      );
     });
 
     testWidgets("pops back to previous screen when load fails", (final tester) async {
@@ -510,6 +709,25 @@ void main() {
       expect(ivm.selectedFloorplan!.buildingId, "T");
       expect(ivm.selectedFloorplan!.floorNumber, "1");
       expect(find.text("1"), findsOneWidget);
+    });
+
+    testWidgets("Start Navigation accepts transition start labels parsed from floorplans", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true, building: makeTestBuildingWithId("Z"));
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "Z mainLobby");
+      await tester.enterText(destinationField, "Z 111");
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IndoorMapView), findsOneWidget);
+      expect(ivm.selectedFloorplan!.buildingId, "Z");
     });
   });
 

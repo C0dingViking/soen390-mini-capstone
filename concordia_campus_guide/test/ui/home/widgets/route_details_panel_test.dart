@@ -2,14 +2,18 @@ import "package:concordia_campus_guide/data/repositories/building_repository.dar
 import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
+import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
+import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_google_maps_webservices/places.dart" hide TransitMode;
@@ -101,24 +105,48 @@ class _TestHomeViewModel extends HomeViewModel {
   }
 }
 
+class _FakeIndoorViewModel extends IndoorViewModel {
+  _FakeIndoorViewModel() : super(floorplanInteractor: FloorplanInteractor()) {
+    final floorplan = Floorplan(
+      buildingId: "H",
+      floorNumber: "1",
+      svgPath: "",
+      canvasWidth: 100,
+      canvasHeight: 100,
+    );
+    selectedFloorplan = floorplan;
+    loadedFloorplans = {"1": floorplan};
+    availableFloors = ["1"];
+  }
+
+  @override
+  Future<void> initializeRoomNames() async {}
+
+  @override
+  Future<void> initializeBuildingFloorplans(final String buildingId) async {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group("RouteDetailsPanel", () {
     late _TestHomeViewModel vm;
+    late _FakeIndoorViewModel ivm;
 
     setUp(() {
       vm = _TestHomeViewModel();
+      ivm = _FakeIndoorViewModel();
     });
 
     Future<void> pumpPanel(final WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<HomeViewModel>.value(
-              value: vm,
-              child: const Stack(children: [RouteDetailsPanel()]),
-            ),
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<HomeViewModel>.value(value: vm),
+            ChangeNotifierProvider<IndoorViewModel>.value(value: ivm),
+          ],
+          child: MaterialApp(
+            home: Scaffold(body: const Stack(children: [RouteDetailsPanel()])),
           ),
         ),
       );
@@ -845,6 +873,41 @@ void main() {
         updatedScrollableState.position.pixels,
         closeTo(updatedScrollableState.position.maxScrollExtent, 1.0),
       );
+    });
+
+    testWidgets("switch indoor button pushes indoor map route", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to Hall Building",
+          distanceMeters: 120,
+          durationSeconds: 90,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.buildings = {"h": makeBuildingWithIndoorSupport()};
+      vm.selectedDestinationLabel = "H 110";
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 120,
+          durationSeconds: 90,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      final indoorSwitchButton = find.byKey(const Key("switch_to_indoor_navigation_button"));
+      await tester.ensureVisible(indoorSwitchButton);
+      await tester.tap(indoorSwitchButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IndoorMapView), findsOneWidget);
     });
   });
 }

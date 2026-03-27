@@ -807,6 +807,44 @@ void main() {
       expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
     });
 
+    test("building suggestions are ranked by match quality", () {
+      hvm.buildings = {
+        "H": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+        "BH": Building(
+          id: "BH",
+          googlePlacesId: null,
+          name: "Biology Hub",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.1, longitude: -73.1),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+      };
+
+      hvm.updateSearchQuery("h");
+
+      expect(hvm.searchResults, isNotEmpty);
+      expect(hvm.searchResults.first.type, SearchSuggestionType.building);
+    });
+
     test("destination search shows nearby place results and markers", () async {
       places.nearbyResults = [
         const PlaceSuggestion(
