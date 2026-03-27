@@ -235,7 +235,9 @@ class HomeViewModel extends ChangeNotifier {
 
     final buildingSuggestions = _buildingSuggestions(
       query,
-      includeRooms: _activeSearchField == SearchField.destination,
+      includeRooms:
+          _activeSearchField == SearchField.destination ||
+          _activeSearchField == SearchField.start,
     );
     searchResults = buildingSuggestions;
     nearbySearchResults = [];
