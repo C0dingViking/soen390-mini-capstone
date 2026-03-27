@@ -910,5 +910,59 @@ void main() {
       expect(find.byType(IndoorMapView), findsOneWidget);
     });
 
+    testWidgets("shows start origin indoor button and opens indoor map", (final tester) async {
+      final steps = [
+        RouteStep(
+          instruction: "Walk to MB Building",
+          distanceMeters: 500,
+          durationSeconds: 300,
+          travelMode: "WALKING",
+        ),
+      ];
+
+      vm.buildings = {
+        "h": makeBuildingWithIndoorSupport(),
+        "mb": Building(
+          id: "MB",
+          googlePlacesId: null,
+          name: "MB Building",
+          description: "Desc",
+          street: "1450 Guy",
+          postalCode: "H3H 0A1",
+          location: const Coordinate(latitude: 45.495, longitude: -73.579),
+          hours: OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: const [],
+          images: const [],
+          supportedIndoorFloors: const [1, 2],
+        ),
+      };
+      vm.selectedStartLabel = "H 110";
+      vm.selectedDestinationLabel = "MB 210";
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 500,
+          durationSeconds: 300,
+          steps: steps,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+      await tester.tap(find.byKey(const Key("route_details_handle")));
+      await tester.pumpAndSettle();
+
+      final entryButton = find.byKey(const Key("start_origin_indoor_navigation_button"));
+      expect(entryButton, findsOneWidget);
+
+      await tester.ensureVisible(entryButton);
+      await tester.tap(entryButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IndoorMapView), findsOneWidget);
+    });
+
   });
 }

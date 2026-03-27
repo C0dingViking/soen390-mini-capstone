@@ -1329,6 +1329,37 @@ class HomeViewModel extends ChangeNotifier {
     );
   }
 
+  ({Building building, String startRoomLabel, String? destinationRoomLabel})?
+  get originIndoorNavigationEntry {
+    final startLabel = selectedStartLabel;
+    if (startLabel == null || startLabel.trim().isEmpty) {
+      return null;
+    }
+
+    final parsedStart = _parseRoomLabel(startLabel);
+    if (parsedStart == null) {
+      return null;
+    }
+
+    final startBuilding = _findBuildingById(parsedStart.buildingId);
+    if (startBuilding == null || startBuilding.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    String? destinationRoomLabel;
+    final parsedDestination = _parseRoomLabel(selectedDestinationLabel ?? "");
+    if (parsedDestination != null) {
+      destinationRoomLabel =
+          "${parsedDestination.buildingId.toUpperCase()} ${parsedDestination.roomNumber}";
+    }
+
+    return (
+      building: startBuilding,
+      startRoomLabel: "${parsedStart.buildingId.toUpperCase()} ${parsedStart.roomNumber}",
+      destinationRoomLabel: destinationRoomLabel,
+    );
+  }
+
   Future<bool> startInterBuildingOutdoorNavigation({
     required final String startBuildingId,
     required final String destinationBuildingId,

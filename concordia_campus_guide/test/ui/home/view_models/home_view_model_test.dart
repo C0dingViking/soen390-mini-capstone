@@ -1053,6 +1053,34 @@ void main() {
       },
     );
 
+    test("originIndoorNavigationEntry returns start room metadata when start is a room", () {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [],
+        images: [],
+        supportedIndoorFloors: const [1, 2],
+        buildingFeatures: null,
+      );
+
+      hvm.buildings = {"h": building};
+      hvm.selectedStartLabel = "H 110";
+      hvm.selectedDestinationLabel = "MB 210";
+
+      final originEntry = hvm.originIndoorNavigationEntry;
+      expect(originEntry, isNotNull);
+      expect(originEntry!.building.id, equals("H"));
+      expect(originEntry.startRoomLabel, equals("H 110"));
+      expect(originEntry.destinationRoomLabel, equals("MB 210"));
+    });
+
     test("startInterBuildingOutdoorNavigation prepares outdoor route and destination handoff", () async {
       hvm.buildings = {
         "h": Building(
