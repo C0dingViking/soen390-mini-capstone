@@ -844,10 +844,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            "Indoor segment complete. Continue outdoors to ${plan.destinationBuildingId.toUpperCase()}.",
+            "Continue outdoors to ${plan.destinationBuildingId.toUpperCase()}.",
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -1083,22 +1083,23 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                   ),
                 ),
 
-                // Inter-floor segment navigation bar
-                if (ivm.isInterFloorRoute)
+                if (ivm.isInterFloorRoute || _pendingInterBuildingPlan != null)
                   Positioned(
-                    bottom: floorPickerSpacing + 64,
-                    left: floorPickerSpacing,
-                    right: floorPickerSpacing,
-                    child: SafeArea(child: Center(child: _buildSegmentNavigationBar(ivm))),
-                  ),
-
-                if (_pendingInterBuildingPlan != null)
-                  Positioned(
-                    bottom: floorPickerSpacing + 128,
+                    bottom: floorPickerSpacing + 8,
                     left: floorPickerSpacing,
                     right: floorPickerSpacing,
                     child: SafeArea(
-                      child: _buildInterBuildingHandoffBar(_pendingInterBuildingPlan!),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (ivm.isInterFloorRoute)
+                            Center(child: _buildSegmentNavigationBar(ivm)),
+                          if (ivm.isInterFloorRoute && _pendingInterBuildingPlan != null)
+                            const SizedBox(height: 8),
+                          if (_pendingInterBuildingPlan != null)
+                            _buildInterBuildingHandoffBar(_pendingInterBuildingPlan!),
+                        ],
+                      ),
                     ),
                   ),
               ],
