@@ -611,7 +611,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return sorted;
   }
 
-  List<String> _locationLabelsFromRoomNames(final IndoorViewModel ivm, final String buildingIdUpper) {
+  List<String> _locationLabelsFromRoomNames(
+    final IndoorViewModel ivm,
+    final String buildingIdUpper,
+  ) {
     final labels = <String>[];
     for (final roomLabel in (ivm.loadedRoomNames ?? const <String>[])) {
       final parts = roomLabel.trim().split(RegExp(r"\s+"));
@@ -624,7 +627,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return labels;
   }
 
-  List<String> _locationLabelsFromFloorplans(final IndoorViewModel ivm, final String buildingIdUpper) {
+  List<String> _locationLabelsFromFloorplans(
+    final IndoorViewModel ivm,
+    final String buildingIdUpper,
+  ) {
     final labels = <String>[];
     final floorplans = ivm.loadedFloorplans;
     if (floorplans == null) return labels;
