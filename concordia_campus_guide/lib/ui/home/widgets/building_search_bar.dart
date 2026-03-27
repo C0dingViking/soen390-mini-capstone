@@ -382,7 +382,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       },
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: _expanded ? "Choose destination" : "Search for a Destination",
+        hintText: _expanded ? "Choose destination" : "Enter your destination",
         prefixIcon: const Icon(Icons.place_outlined),
         suffixIcon: _buildDestinationSuffix(
           context,
