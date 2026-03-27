@@ -963,6 +963,5 @@ void main() {
 
       expect(find.byType(IndoorMapView), findsOneWidget);
     });
-
   });
 }

@@ -737,7 +737,6 @@ void main() {
       expect(find.byType(IndoorMapView), findsOneWidget);
       expect(ivm.selectedFloorplan!.buildingId, "Z");
     });
-
   });
 
   group("Same-floor navigation (lines 179-211)", () {

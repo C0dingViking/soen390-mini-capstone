@@ -1081,76 +1081,79 @@ void main() {
       expect(originEntry.destinationRoomLabel, equals("MB 210"));
     });
 
-    test("startInterBuildingOutdoorNavigation prepares outdoor route and destination handoff", () async {
-      hvm.buildings = {
-        "h": Building(
-          id: "H",
-          googlePlacesId: null,
-          name: "Hall Building",
-          description: "Desc",
-          street: "Street",
-          postalCode: "H3Z 2Y7",
-          location: const Coordinate(latitude: 45.0, longitude: -73.0),
-          hours: gmw.OpeningHoursDetail(),
-          campus: Campus.sgw,
-          outlinePoints: [],
-          images: [],
-          supportedIndoorFloors: const [1, 2],
-          buildingFeatures: null,
-        ),
-        "mb": Building(
-          id: "MB",
-          googlePlacesId: null,
-          name: "MB Building",
-          description: "Desc",
-          street: "Street",
-          postalCode: "H3Z 2Y7",
-          location: const Coordinate(latitude: 45.1, longitude: -73.1),
-          hours: gmw.OpeningHoursDetail(),
-          campus: Campus.sgw,
-          outlinePoints: [],
-          images: [],
-          supportedIndoorFloors: const [1, 2],
-          buildingFeatures: null,
-        ),
-      };
-      directions.options = [
-        RouteOption(
-          mode: RouteMode.walking,
-          distanceMeters: 1200,
-          durationSeconds: 900,
-          polyline: const [
-            Coordinate(latitude: 45.0, longitude: -73.0),
-            Coordinate(latitude: 45.1, longitude: -73.1),
-          ],
-        ),
-      ];
+    test(
+      "startInterBuildingOutdoorNavigation prepares outdoor route and destination handoff",
+      () async {
+        hvm.buildings = {
+          "h": Building(
+            id: "H",
+            googlePlacesId: null,
+            name: "Hall Building",
+            description: "Desc",
+            street: "Street",
+            postalCode: "H3Z 2Y7",
+            location: const Coordinate(latitude: 45.0, longitude: -73.0),
+            hours: gmw.OpeningHoursDetail(),
+            campus: Campus.sgw,
+            outlinePoints: [],
+            images: [],
+            supportedIndoorFloors: const [1, 2],
+            buildingFeatures: null,
+          ),
+          "mb": Building(
+            id: "MB",
+            googlePlacesId: null,
+            name: "MB Building",
+            description: "Desc",
+            street: "Street",
+            postalCode: "H3Z 2Y7",
+            location: const Coordinate(latitude: 45.1, longitude: -73.1),
+            hours: gmw.OpeningHoursDetail(),
+            campus: Campus.sgw,
+            outlinePoints: [],
+            images: [],
+            supportedIndoorFloors: const [1, 2],
+            buildingFeatures: null,
+          ),
+        };
+        directions.options = [
+          RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 1200,
+            durationSeconds: 900,
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ];
 
-      final started = await hvm.startInterBuildingOutdoorNavigation(
-        startBuildingId: "H",
-        destinationBuildingId: "MB",
-        startRoomLabel: "H buildingEntrance-1",
-        destinationRoomLabel: "MB 1.210",
-        destinationIndoorStartLabel: "MB buildingEntrance-1",
-        originIndoorStartRoomLabel: "H 110",
-        originIndoorDestinationRoomLabel: "H buildingEntrance-1",
-      );
+        final started = await hvm.startInterBuildingOutdoorNavigation(
+          startBuildingId: "H",
+          destinationBuildingId: "MB",
+          startRoomLabel: "H buildingEntrance-1",
+          destinationRoomLabel: "MB 1.210",
+          destinationIndoorStartLabel: "MB buildingEntrance-1",
+          originIndoorStartRoomLabel: "H 110",
+          originIndoorDestinationRoomLabel: "H buildingEntrance-1",
+        );
 
-      expect(started, isTrue);
-      expect(hvm.selectedStartLabel, equals("H buildingEntrance-1"));
-      expect(hvm.selectedDestinationLabel, equals("MB 1.210"));
-      expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+        expect(started, isTrue);
+        expect(hvm.selectedStartLabel, equals("H buildingEntrance-1"));
+        expect(hvm.selectedDestinationLabel, equals("MB 1.210"));
+        expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
 
-      final indoorTarget = hvm.indoorNavigationDestination;
-      expect(indoorTarget, isNotNull);
-      expect(indoorTarget!.startRoomLabel, equals("MB buildingEntrance-1"));
+        final indoorTarget = hvm.indoorNavigationDestination;
+        expect(indoorTarget, isNotNull);
+        expect(indoorTarget!.startRoomLabel, equals("MB buildingEntrance-1"));
 
-      final originResume = hvm.originIndoorNavigationResume;
-      expect(originResume, isNotNull);
-      expect(originResume!.building.id, equals("H"));
-      expect(originResume.startRoomLabel, equals("H 110"));
-      expect(originResume.destinationRoomLabel, equals("H buildingEntrance-1"));
-    });
+        final originResume = hvm.originIndoorNavigationResume;
+        expect(originResume, isNotNull);
+        expect(originResume!.building.id, equals("H"));
+        expect(originResume.startRoomLabel, equals("H 110"));
+        expect(originResume.destinationRoomLabel, equals("H buildingEntrance-1"));
+      },
+    );
 
     test("selectSearchSuggestion resolves place and loads routes", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);

@@ -462,11 +462,12 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       final floorplan = floorplans[floor];
       if (floorplan == null) continue;
 
-      final entrances = floorplan.pois
-          .where((final poi) => poi.type == PoiType.buildingEntrance)
-          .map((final poi) => poi.name)
-          .toList()
-        ..sort();
+      final entrances =
+          floorplan.pois
+              .where((final poi) => poi.type == PoiType.buildingEntrance)
+              .map((final poi) => poi.name)
+              .toList()
+            ..sort();
       if (entrances.isNotEmpty) {
         return "${floorplan.buildingId.toUpperCase()} ${entrances.first}";
       }
@@ -478,21 +479,23 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return null;
     }
 
-    final elevators = lowestFloorplan.pois
-        .where((final poi) => poi.type == PoiType.elevator)
-        .map((final poi) => poi.name)
-        .toList()
-      ..sort();
-    final stairs = lowestFloorplan.pois
-        .where(
-          (final poi) =>
-              poi.type == PoiType.stairs ||
-              poi.type == PoiType.stairsUp ||
-              poi.type == PoiType.stairsDown,
-        )
-        .map((final poi) => poi.name)
-        .toList()
-      ..sort();
+    final elevators =
+        lowestFloorplan.pois
+            .where((final poi) => poi.type == PoiType.elevator)
+            .map((final poi) => poi.name)
+            .toList()
+          ..sort();
+    final stairs =
+        lowestFloorplan.pois
+            .where(
+              (final poi) =>
+                  poi.type == PoiType.stairs ||
+                  poi.type == PoiType.stairsUp ||
+                  poi.type == PoiType.stairsDown,
+            )
+            .map((final poi) => poi.name)
+            .toList()
+          ..sort();
 
     final fallbackCandidates = [...elevators, ...stairs];
     if (fallbackCandidates.isNotEmpty) {
@@ -1092,8 +1095,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (ivm.isInterFloorRoute)
-                            Center(child: _buildSegmentNavigationBar(ivm)),
+                          if (ivm.isInterFloorRoute) Center(child: _buildSegmentNavigationBar(ivm)),
                           if (ivm.isInterFloorRoute && _pendingInterBuildingPlan != null)
                             const SizedBox(height: 8),
                           if (_pendingInterBuildingPlan != null)

@@ -236,8 +236,7 @@ class HomeViewModel extends ChangeNotifier {
     final buildingSuggestions = _buildingSuggestions(
       query,
       includeRooms:
-          _activeSearchField == SearchField.destination ||
-          _activeSearchField == SearchField.start,
+          _activeSearchField == SearchField.destination || _activeSearchField == SearchField.start,
     );
     searchResults = buildingSuggestions;
     nearbySearchResults = [];
@@ -1277,12 +1276,7 @@ class HomeViewModel extends ChangeNotifier {
     return 4;
   }
 
-  ({
-    Building building,
-    String destinationRoomLabel,
-    String roomNumber,
-    String? startRoomLabel,
-  })?
+  ({Building building, String destinationRoomLabel, String roomNumber, String? startRoomLabel})?
   get indoorNavigationDestination {
     final parsed = _parseRoomLabel(selectedDestinationLabel ?? "");
     if (parsed == null) return null;
@@ -1322,11 +1316,7 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    return (
-      building: building,
-      startRoomLabel: startLabel,
-      destinationRoomLabel: destinationLabel,
-    );
+    return (building: building, startRoomLabel: startLabel, destinationRoomLabel: destinationLabel);
   }
 
   ({Building building, String startRoomLabel, String? destinationRoomLabel})?
