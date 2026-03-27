@@ -457,7 +457,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         return ListTile(
           leading: isBuilding
               ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
-              : Icon(isRoom ? Icons.meeting_room_outlined : Icons.location_on_outlined),
+              : Icon(_getResultIconData(isRoom)),
           title: Text(suggestion.title),
           subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
           trailing: isBuilding && suggestion.building != null
@@ -479,5 +479,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         );
       },
     );
+  }
+
+  IconData _getResultIconData(final bool isRoom) {
+    return isRoom ? Icons.meeting_room_outlined : Icons.location_on_outlined;
   }
 }
