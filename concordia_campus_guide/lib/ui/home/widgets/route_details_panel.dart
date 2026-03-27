@@ -445,6 +445,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final suggestedTransitDeparture = selectedMode == RouteMode.transit
         ? _suggestedTransitDepartureTime(steps)
         : null;
+    final originIndoorResume = context.read<HomeViewModel>().originIndoorNavigationResume;
     final indoorDestination = context.read<HomeViewModel>().indoorNavigationDestination;
 
     return Column(
@@ -481,6 +482,17 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
             ),
           ),
+        if (originIndoorResume != null) ...[
+          const SizedBox(height: 8),
+          _buildOriginIndoorResumeButton(
+            building: originIndoorResume.building,
+            startRoomLabel: originIndoorResume.startRoomLabel,
+            destinationRoomLabel: originIndoorResume.destinationRoomLabel,
+            destinationBuildingId: indoorDestination?.building.id,
+            destinationEntryLabel: indoorDestination?.startRoomLabel,
+            interBuildingDestinationRoomLabel: indoorDestination?.destinationRoomLabel,
+          ),
+        ],
         const SizedBox(height: 8),
         ...steps.map((final step) => _buildStepItem(step)),
         if (indoorDestination != null) ...[
@@ -536,6 +548,58 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               },
               icon: const Icon(Icons.schema),
               label: const Text("Switch to Indoor Navigation"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOriginIndoorResumeButton({
+    required final Building building,
+    required final String startRoomLabel,
+    required final String destinationRoomLabel,
+    required final String? destinationBuildingId,
+    required final String? destinationEntryLabel,
+    required final String? interBuildingDestinationRoomLabel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Exited too early? Resume indoor navigation in ${building.name}.",
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: const Key("resume_origin_indoor_navigation_button"),
+              style: AppTheme.indoorNavigationButtonStyle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (final context) => IndoorMapView(
+                      building: building,
+                      initialStartRoomLabel: startRoomLabel,
+                      initialDestinationRoomLabel: destinationRoomLabel,
+                      interBuildingDestinationBuildingId: destinationBuildingId,
+                      interBuildingDestinationEntryLabel: destinationEntryLabel,
+                      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.replay),
+              label: const Text("Return to Origin Indoor Navigation"),
             ),
           ),
         ],

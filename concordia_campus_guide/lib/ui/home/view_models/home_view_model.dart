@@ -74,6 +74,8 @@ class HomeViewModel extends ChangeNotifier {
   int _routeRequestId = 0;
   double _currentMapZoom = 15;
   String? _indoorNavigationStartOverrideLabel;
+  String? _originIndoorResumeStartLabel;
+  String? _originIndoorResumeDestinationLabel;
 
   bool showNextClassFab = false;
   AcademicClass? upcomingClass;
@@ -307,6 +309,8 @@ class HomeViewModel extends ChangeNotifier {
     selectedStartLabel = null;
     selectedDestinationLabel = null;
     _indoorNavigationStartOverrideLabel = null;
+    _originIndoorResumeStartLabel = null;
+    _originIndoorResumeDestinationLabel = null;
     searchStartMarker = null;
     searchDestinationMarker = null;
     routeOptions = {};
@@ -557,6 +561,8 @@ class HomeViewModel extends ChangeNotifier {
     final Campus? campus,
   }) {
     _indoorNavigationStartOverrideLabel = null;
+    _originIndoorResumeStartLabel = null;
+    _originIndoorResumeDestinationLabel = null;
 
     if (campus != null) {
       selectedCampusIndex = _campusIndexFor(campus);
@@ -1296,12 +1302,39 @@ class HomeViewModel extends ChangeNotifier {
     );
   }
 
+  ({Building building, String startRoomLabel, String destinationRoomLabel})?
+  get originIndoorNavigationResume {
+    final startLabel = _originIndoorResumeStartLabel;
+    final destinationLabel = _originIndoorResumeDestinationLabel;
+    if (startLabel == null || destinationLabel == null) {
+      return null;
+    }
+
+    final parsedStart = _parseRoomLabel(startLabel);
+    if (parsedStart == null) {
+      return null;
+    }
+
+    final building = _findBuildingById(parsedStart.buildingId);
+    if (building == null || building.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    return (
+      building: building,
+      startRoomLabel: startLabel,
+      destinationRoomLabel: destinationLabel,
+    );
+  }
+
   Future<bool> startInterBuildingOutdoorNavigation({
     required final String startBuildingId,
     required final String destinationBuildingId,
     required final String startRoomLabel,
     required final String destinationRoomLabel,
     required final String destinationIndoorStartLabel,
+    required final String originIndoorStartRoomLabel,
+    required final String originIndoorDestinationRoomLabel,
   }) async {
     final startBuilding = _findBuildingById(startBuildingId);
     final destinationBuilding = _findBuildingById(destinationBuildingId);
@@ -1333,6 +1366,8 @@ class HomeViewModel extends ChangeNotifier {
     );
 
     _indoorNavigationStartOverrideLabel = destinationIndoorStartLabel;
+    _originIndoorResumeStartLabel = originIndoorStartRoomLabel;
+    _originIndoorResumeDestinationLabel = originIndoorDestinationRoomLabel;
     cameraTarget = startBuilding.location;
     isSearchBarExpanded = true;
 

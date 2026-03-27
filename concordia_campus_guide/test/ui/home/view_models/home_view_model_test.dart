@@ -1104,6 +1104,8 @@ void main() {
         startRoomLabel: "H buildingEntrance-1",
         destinationRoomLabel: "MB 1.210",
         destinationIndoorStartLabel: "MB buildingEntrance-1",
+        originIndoorStartRoomLabel: "H 110",
+        originIndoorDestinationRoomLabel: "H buildingEntrance-1",
       );
 
       expect(started, isTrue);
@@ -1114,6 +1116,12 @@ void main() {
       final indoorTarget = hvm.indoorNavigationDestination;
       expect(indoorTarget, isNotNull);
       expect(indoorTarget!.startRoomLabel, equals("MB buildingEntrance-1"));
+
+      final originResume = hvm.originIndoorNavigationResume;
+      expect(originResume, isNotNull);
+      expect(originResume!.building.id, equals("H"));
+      expect(originResume.startRoomLabel, equals("H 110"));
+      expect(originResume.destinationRoomLabel, equals("H buildingEntrance-1"));
     });
 
     test("selectSearchSuggestion resolves place and loads routes", () async {

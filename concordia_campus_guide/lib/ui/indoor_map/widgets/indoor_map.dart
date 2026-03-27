@@ -27,12 +27,18 @@ class IndoorMapView extends StatefulWidget {
   final Building building;
   final String? initialStartRoomLabel;
   final String? initialDestinationRoomLabel;
+  final String? interBuildingDestinationBuildingId;
+  final String? interBuildingDestinationEntryLabel;
+  final String? interBuildingDestinationRoomLabel;
 
   const IndoorMapView({
     super.key,
     required this.building,
     this.initialStartRoomLabel,
     this.initialDestinationRoomLabel,
+    this.interBuildingDestinationBuildingId,
+    this.interBuildingDestinationEntryLabel,
+    this.interBuildingDestinationRoomLabel,
   });
 
   @override
@@ -42,6 +48,7 @@ class IndoorMapView extends StatefulWidget {
 class _InterBuildingNavigationPlan {
   final String startBuildingId;
   final String destinationBuildingId;
+  final String originStartLabel;
   final String startExitLabel;
   final String destinationEntryLabel;
   final String destinationRoomLabel;
@@ -49,6 +56,7 @@ class _InterBuildingNavigationPlan {
   const _InterBuildingNavigationPlan({
     required this.startBuildingId,
     required this.destinationBuildingId,
+    required this.originStartLabel,
     required this.startExitLabel,
     required this.destinationEntryLabel,
     required this.destinationRoomLabel,
@@ -85,6 +93,29 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (initialDestination != null && initialDestination.isNotEmpty) {
       _destinationController.text = initialDestination;
       _destinationController.selection = TextSelection.collapsed(offset: initialDestination.length);
+    }
+
+    final destinationBuildingId = widget.interBuildingDestinationBuildingId?.trim();
+    final destinationEntryLabel = widget.interBuildingDestinationEntryLabel?.trim();
+    final destinationRoomLabel = widget.interBuildingDestinationRoomLabel?.trim();
+    if (destinationBuildingId != null &&
+        destinationBuildingId.isNotEmpty &&
+        destinationEntryLabel != null &&
+        destinationEntryLabel.isNotEmpty &&
+        destinationRoomLabel != null &&
+        destinationRoomLabel.isNotEmpty &&
+        initialStart != null &&
+        initialStart.isNotEmpty &&
+        initialDestination != null &&
+        initialDestination.isNotEmpty) {
+      _pendingInterBuildingPlan = _InterBuildingNavigationPlan(
+        startBuildingId: widget.building.id,
+        destinationBuildingId: destinationBuildingId,
+        originStartLabel: initialStart,
+        startExitLabel: initialDestination,
+        destinationEntryLabel: destinationEntryLabel,
+        destinationRoomLabel: destinationRoomLabel,
+      );
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -263,10 +294,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
-    setState(() {
-      _pendingInterBuildingPlan = null;
-    });
-
     final floorplans = await _ensureFloorplansLoadedForBuilding(parsedStartRoom.buildingId);
     if (floorplans == null || floorplans.isEmpty) {
       return;
@@ -304,9 +331,6 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   void _handleEndNavigation() {
     _viewModel.clearIndoorPath();
-    setState(() {
-      _pendingInterBuildingPlan = null;
-    });
   }
 
   Future<Map<String, Floorplan>?> _ensureFloorplansLoadedForBuilding(
@@ -404,6 +428,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       _pendingInterBuildingPlan = _InterBuildingNavigationPlan(
         startBuildingId: parsedStartRoom.buildingId,
         destinationBuildingId: parsedDestinationRoom.buildingId,
+        originStartLabel: "${parsedStartRoom.buildingId.toUpperCase()} ${parsedStartRoom.roomName}",
         startExitLabel: startExitLabel,
         destinationEntryLabel: destinationEntryLabel,
         destinationRoomLabel: destinationRoomLabel,
@@ -496,6 +521,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       startRoomLabel: plan.startExitLabel,
       destinationRoomLabel: plan.destinationRoomLabel,
       destinationIndoorStartLabel: plan.destinationEntryLabel,
+      originIndoorStartRoomLabel: plan.originStartLabel,
+      originIndoorDestinationRoomLabel: plan.startExitLabel,
     );
 
     if (!didStart || !mounted) {
