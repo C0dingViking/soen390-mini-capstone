@@ -475,6 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute<void>(
                             builder: (final context) => IndoorMapView(
                               building: indoorDestination.building,
+                              initialStartRoomLabel: indoorDestination.startRoomLabel,
                               initialDestinationRoomLabel: indoorDestination.destinationRoomLabel,
                             ),
                           ),

@@ -489,6 +489,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
             building: indoorDestination.building,
             destinationRoomLabel: indoorDestination.destinationRoomLabel,
             roomNumber: indoorDestination.roomNumber,
+            startRoomLabel: indoorDestination.startRoomLabel,
           ),
         ],
       ],
@@ -499,6 +500,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     required final Building building,
     required final String destinationRoomLabel,
     required final String roomNumber,
+    required final String? startRoomLabel,
   }) {
     return Container(
       width: double.infinity,
@@ -526,6 +528,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   MaterialPageRoute<void>(
                     builder: (final context) => IndoorMapView(
                       building: building,
+                      initialStartRoomLabel: startRoomLabel,
                       initialDestinationRoomLabel: destinationRoomLabel,
                     ),
                   ),

@@ -495,6 +495,14 @@ void main() {
       expect(searchBarY.queryableRooms, contains("Y stairs-up-1"));
     });
 
+    testWidgets("queryable rooms include other building rooms", (final tester) async {
+      await pumpHomeScreen(tester, true, building: makeTestBuildingWithId("T"));
+      await tester.pumpAndSettle();
+
+      final searchBar = tester.widget<IndoorSearchBar>(find.byType(IndoorSearchBar));
+      expect(searchBar.queryableRooms, contains("H 820"));
+    });
+
     testWidgets("queryable rooms include transition tokens and exclude invalid transitions", (
       final tester,
     ) async {
@@ -729,6 +737,7 @@ void main() {
       expect(find.byType(IndoorMapView), findsOneWidget);
       expect(ivm.selectedFloorplan!.buildingId, "Z");
     });
+
   });
 
   group("Same-floor navigation (lines 179-211)", () {
@@ -739,7 +748,7 @@ void main() {
       final destinationField = find.byType(TextField).last;
 
       await tester.enterText(startField, "T 110");
-      await tester.enterText(destinationField, "H 820");
+      await tester.enterText(destinationField, "X 999");
       await tester.pump();
       await tester.pump();
 

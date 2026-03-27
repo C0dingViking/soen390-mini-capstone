@@ -1,10 +1,12 @@
 import "dart:math";
 
+import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
@@ -23,20 +25,44 @@ String? resolveRoomNameFromTapPosition(
 
 class IndoorMapView extends StatefulWidget {
   final Building building;
+  final String? initialStartRoomLabel;
   final String? initialDestinationRoomLabel;
 
-  const IndoorMapView({super.key, required this.building, this.initialDestinationRoomLabel});
+  const IndoorMapView({
+    super.key,
+    required this.building,
+    this.initialStartRoomLabel,
+    this.initialDestinationRoomLabel,
+  });
 
   @override
   State<IndoorMapView> createState() => _IndoorMapViewState();
 }
 
+class _InterBuildingNavigationPlan {
+  final String startBuildingId;
+  final String destinationBuildingId;
+  final String startExitLabel;
+  final String destinationEntryLabel;
+  final String destinationRoomLabel;
+
+  const _InterBuildingNavigationPlan({
+    required this.startBuildingId,
+    required this.destinationBuildingId,
+    required this.startExitLabel,
+    required this.destinationEntryLabel,
+    required this.destinationRoomLabel,
+  });
+}
+
 class _IndoorMapViewState extends State<IndoorMapView> {
   final TransformationController _controller = TransformationController();
+  final FloorplanInteractor _floorplanInteractor = FloorplanInteractor();
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _destinationFocusNode = FocusNode();
   bool _didApplyOutdoorHandoffDefaults = false;
+  _InterBuildingNavigationPlan? _pendingInterBuildingPlan;
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
   final floorPickerSpacing = 16.0;
@@ -49,6 +75,12 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void initState() {
     super.initState();
+    final initialStart = widget.initialStartRoomLabel?.trim();
+    if (initialStart != null && initialStart.isNotEmpty) {
+      _startController.text = initialStart;
+      _startController.selection = TextSelection.collapsed(offset: initialStart.length);
+    }
+
     final initialDestination = widget.initialDestinationRoomLabel?.trim();
     if (initialDestination != null && initialDestination.isNotEmpty) {
       _destinationController.text = initialDestination;
@@ -231,12 +263,22 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final parsedStartRoom = _parseRoomLabel(startRoom);
     final parsedDestinationRoom = _parseRoomLabel(destinationRoom);
 
+    setState(() {
+      _pendingInterBuildingPlan = null;
+    });
+
     final floorplans = await _ensureFloorplansLoadedForBuilding(parsedStartRoom.buildingId);
     if (floorplans == null || floorplans.isEmpty) {
       return;
     }
 
-    if (!_validateSameBuilding(parsedStartRoom.buildingId, parsedDestinationRoom.buildingId)) {
+    if (!_isSameBuilding(parsedStartRoom.buildingId, parsedDestinationRoom.buildingId)) {
+      await _handleInterBuildingNavigation(
+        parsedStartRoom,
+        parsedDestinationRoom,
+        floorplans,
+        accessibleMode,
+      );
       return;
     }
 
@@ -262,6 +304,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   void _handleEndNavigation() {
     _viewModel.clearIndoorPath();
+    setState(() {
+      _pendingInterBuildingPlan = null;
+    });
   }
 
   Future<Map<String, Floorplan>?> _ensureFloorplansLoadedForBuilding(
@@ -287,17 +332,177 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     return floorplans;
   }
 
-  bool _validateSameBuilding(final String startBuildingId, final String destinationBuildingId) {
-    if (startBuildingId == destinationBuildingId) {
-      return true;
+  bool _isSameBuilding(final String startBuildingId, final String destinationBuildingId) {
+    return startBuildingId.trim().toLowerCase() == destinationBuildingId.trim().toLowerCase();
+  }
+
+  Future<void> _handleInterBuildingNavigation(
+    final ({String buildingId, String roomName}) parsedStartRoom,
+    final ({String buildingId, String roomName}) parsedDestinationRoom,
+    final Map<String, Floorplan> startBuildingFloorplans,
+    final bool accessibleMode,
+  ) async {
+    final startFloor = _findFloorForLocationName(parsedStartRoom.roomName, startBuildingFloorplans);
+    final startExitLabel = _deriveBuildingHandoffLabel(
+      startBuildingFloorplans,
+      preferredFloor: startFloor,
+      accessibleMode: accessibleMode,
+    );
+
+    if (startExitLabel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No valid exit point found in the starting building.")),
+      );
+      return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Indoor navigation currently supports routes within a single building."),
-      ),
+    final parsedExit = _parseRoomLabel(startExitLabel);
+    final exitFloor = _findFloorForLocationName(parsedExit.roomName, startBuildingFloorplans);
+
+    _viewModel.changeFloor(startFloor);
+    if (startFloor == exitFloor) {
+      await _handleSameFloorNavigation(parsedStartRoom, parsedExit, startFloor);
+    } else {
+      await _handleInterFloorNavigation(
+        parsedStartRoom,
+        parsedExit,
+        startFloor,
+        exitFloor,
+        startBuildingFloorplans,
+        accessibleMode,
+      );
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final destinationFloorplans = await _floorplanInteractor.loadFloorplans(
+      parsedDestinationRoom.buildingId.toLowerCase(),
     );
-    return false;
+    if (destinationFloorplans.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No floor plans available for the destination building.")),
+      );
+      return;
+    }
+
+    final destinationEntryLabel = _deriveBuildingHandoffLabel(
+      destinationFloorplans,
+      accessibleMode: accessibleMode,
+    );
+    if (destinationEntryLabel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No valid entry point found in the destination building.")),
+      );
+      return;
+    }
+
+    final destinationRoomLabel =
+        "${parsedDestinationRoom.buildingId.toUpperCase()} ${parsedDestinationRoom.roomName}";
+    setState(() {
+      _pendingInterBuildingPlan = _InterBuildingNavigationPlan(
+        startBuildingId: parsedStartRoom.buildingId,
+        destinationBuildingId: parsedDestinationRoom.buildingId,
+        startExitLabel: startExitLabel,
+        destinationEntryLabel: destinationEntryLabel,
+        destinationRoomLabel: destinationRoomLabel,
+      );
+    });
+  }
+
+  String? _deriveBuildingHandoffLabel(
+    final Map<String, Floorplan> floorplans, {
+    final String? preferredFloor,
+    final bool accessibleMode = false,
+  }) {
+    if (floorplans.isEmpty) {
+      return null;
+    }
+
+    final floors = _viewModel.sortFloorplanKeys(
+      floorplans.keys.map((final floor) => floor.toUpperCase()).toList(),
+    );
+    final orderedFloors = <String>[];
+    if (preferredFloor != null && floorplans.containsKey(preferredFloor)) {
+      orderedFloors.add(preferredFloor);
+    }
+    for (final floor in floors) {
+      if (!orderedFloors.contains(floor)) {
+        orderedFloors.add(floor);
+      }
+    }
+
+    for (final floor in orderedFloors) {
+      final floorplan = floorplans[floor];
+      if (floorplan == null) continue;
+
+      final entrances = floorplan.pois
+          .where((final poi) => poi.type == PoiType.buildingEntrance)
+          .map((final poi) => poi.name)
+          .toList()
+        ..sort();
+      if (entrances.isNotEmpty) {
+        return "${floorplan.buildingId.toUpperCase()} ${entrances.first}";
+      }
+    }
+
+    final lowestFloor = floors.first;
+    final lowestFloorplan = floorplans[lowestFloor];
+    if (lowestFloorplan == null) {
+      return null;
+    }
+
+    final elevators = lowestFloorplan.pois
+        .where((final poi) => poi.type == PoiType.elevator)
+        .map((final poi) => poi.name)
+        .toList()
+      ..sort();
+    final stairs = lowestFloorplan.pois
+        .where(
+          (final poi) =>
+              poi.type == PoiType.stairs ||
+              poi.type == PoiType.stairsUp ||
+              poi.type == PoiType.stairsDown,
+        )
+        .map((final poi) => poi.name)
+        .toList()
+      ..sort();
+
+    final fallbackCandidates = [...elevators, ...stairs];
+    if (fallbackCandidates.isNotEmpty) {
+      return "${lowestFloorplan.buildingId.toUpperCase()} ${fallbackCandidates.first}";
+    }
+
+    final transitionNames = lowestFloorplan.transitions.map(_transitionToken).whereType<String>();
+    final sortedTransitions = transitionNames.toList()..sort();
+    if (sortedTransitions.isNotEmpty) {
+      return "${lowestFloorplan.buildingId.toUpperCase()} ${sortedTransitions.first}";
+    }
+
+    return null;
+  }
+
+  Future<void> _continueWithOutdoorNavigation() async {
+    final plan = _pendingInterBuildingPlan;
+    if (plan == null) {
+      return;
+    }
+
+    final homeViewModel = context.read<HomeViewModel>();
+    final didStart = await homeViewModel.startInterBuildingOutdoorNavigation(
+      startBuildingId: plan.startBuildingId,
+      destinationBuildingId: plan.destinationBuildingId,
+      startRoomLabel: plan.startExitLabel,
+      destinationRoomLabel: plan.destinationRoomLabel,
+      destinationIndoorStartLabel: plan.destinationEntryLabel,
+    );
+
+    if (!didStart || !mounted) {
+      return;
+    }
+
+    Navigator.of(context).popUntil((final route) => route.isFirst);
   }
 
   Future<void> _handleSameFloorNavigation(
@@ -600,42 +805,61 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     );
   }
 
-  List<String> _queryableLocationsForBuilding(final IndoorViewModel ivm) {
-    final labels = <String>{};
-    final buildingIdUpper = widget.building.id.toUpperCase();
+  Widget _buildInterBuildingHandoffBar(final _InterBuildingNavigationPlan plan) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            "Indoor segment complete. Continue outdoors to ${plan.destinationBuildingId.toUpperCase()}.",
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            key: const Key("continue_outdoor_navigation_button"),
+            onPressed: _continueWithOutdoorNavigation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.concordiaForeground,
+            ),
+            icon: const Icon(Icons.directions_walk),
+            label: const Text("Continue Outdoors"),
+          ),
+        ],
+      ),
+    );
+  }
 
-    labels.addAll(_locationLabelsFromRoomNames(ivm, buildingIdUpper));
-    labels.addAll(_locationLabelsFromFloorplans(ivm, buildingIdUpper));
+  List<String> _queryableLocations(final IndoorViewModel ivm) {
+    final labels = <String>{};
+
+    labels.addAll(_locationLabelsFromRoomNames(ivm));
+    labels.addAll(_locationLabelsFromLoadedFloorplans(ivm));
 
     final sorted = labels.toList()..sort();
     return sorted;
   }
 
-  List<String> _locationLabelsFromRoomNames(
-    final IndoorViewModel ivm,
-    final String buildingIdUpper,
-  ) {
-    final labels = <String>[];
-    for (final roomLabel in (ivm.loadedRoomNames ?? const <String>[])) {
-      final parts = roomLabel.trim().split(RegExp(r"\s+"));
-      if (parts.isEmpty) continue;
-
-      if (parts.first.toUpperCase() == buildingIdUpper) {
-        labels.add(roomLabel.trim());
-      }
-    }
-    return labels;
+  List<String> _locationLabelsFromRoomNames(final IndoorViewModel ivm) {
+    return (ivm.loadedRoomNames ?? const <String>[])
+        .map((final roomLabel) => roomLabel.trim())
+        .where((final roomLabel) => roomLabel.isNotEmpty)
+        .toList();
   }
 
-  List<String> _locationLabelsFromFloorplans(
-    final IndoorViewModel ivm,
-    final String buildingIdUpper,
-  ) {
+  List<String> _locationLabelsFromLoadedFloorplans(final IndoorViewModel ivm) {
     final labels = <String>[];
     final floorplans = ivm.loadedFloorplans;
     if (floorplans == null) return labels;
 
     for (final floorplan in floorplans.values) {
+      final buildingIdUpper = floorplan.buildingId.toUpperCase();
       labels.addAll(_roomLabels(floorplan, buildingIdUpper));
       labels.addAll(_poiLabels(floorplan, buildingIdUpper));
       labels.addAll(_transitionLabels(floorplan, buildingIdUpper));
@@ -678,67 +902,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   String? _deriveOutdoorHandoffStartLabel(final IndoorViewModel ivm) {
     final floorplans = ivm.loadedFloorplans;
-    final availableFloors = ivm.availableFloors;
-    if (floorplans == null ||
-        floorplans.isEmpty ||
-        availableFloors == null ||
-        availableFloors.isEmpty) {
+    if (floorplans == null || floorplans.isEmpty) {
       return null;
     }
 
-    final orderedFloorplans = availableFloors
-        .where((final floor) => floorplans.containsKey(floor))
-        .map((final floor) => floorplans[floor]!)
-        .toList(growable: false);
-    if (orderedFloorplans.isEmpty) {
-      return null;
-    }
-
-    for (final floorplan in orderedFloorplans) {
-      final entrances = floorplan.pois
-          .where((final poi) => poi.type == PoiType.buildingEntrance)
-          .toList();
-      if (entrances.isEmpty) {
-        continue;
-      }
-
-      entrances.sort((final a, final b) => a.name.compareTo(b.name));
-      return "${floorplan.buildingId.toUpperCase()} ${entrances.first.name}";
-    }
-
-    final lowestFloorplan = orderedFloorplans.first;
-    final elevators =
-        lowestFloorplan.pois
-            .where((final poi) => poi.type == PoiType.elevator)
-            .map((final poi) => poi.name)
-            .toList()
-          ..sort();
-    if (elevators.isNotEmpty) {
-      return "${lowestFloorplan.buildingId.toUpperCase()} ${elevators.first}";
-    }
-
-    final stairs =
-        lowestFloorplan.pois
-            .where(
-              (final poi) =>
-                  poi.type == PoiType.stairs ||
-                  poi.type == PoiType.stairsUp ||
-                  poi.type == PoiType.stairsDown,
-            )
-            .map((final poi) => poi.name)
-            .toList()
-          ..sort();
-    if (stairs.isNotEmpty) {
-      return "${lowestFloorplan.buildingId.toUpperCase()} ${stairs.first}";
-    }
-
-    final transitionNames =
-        lowestFloorplan.transitions.map(_transitionToken).whereType<String>().toList()..sort();
-    if (transitionNames.isNotEmpty) {
-      return "${lowestFloorplan.buildingId.toUpperCase()} ${transitionNames.first}";
-    }
-
-    return null;
+    return _deriveBuildingHandoffLabel(floorplans);
   }
 
   void _applyOutdoorHandoffDefaultsIfNeeded(final IndoorViewModel ivm) {
@@ -755,6 +923,14 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (_destinationController.text.trim().isEmpty) {
       _destinationController.text = initialDestination;
       _destinationController.selection = TextSelection.collapsed(offset: initialDestination.length);
+    }
+
+    final initialStart = widget.initialStartRoomLabel?.trim();
+    if (initialStart != null && initialStart.isNotEmpty) {
+      _startController.text = initialStart;
+      _startController.selection = TextSelection.collapsed(offset: initialStart.length);
+      _didApplyOutdoorHandoffDefaults = true;
+      return;
     }
 
     if (ivm.loadedFloorplans == null || ivm.loadedFloorplans!.isEmpty) {
@@ -801,7 +977,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
           final selectedFloorplan = ivm.selectedFloorplan!;
           final svgPath = selectedFloorplan.svgPath;
           _applyOutdoorHandoffDefaultsIfNeeded(ivm);
-          final queryableLocations = _queryableLocationsForBuilding(ivm);
+          final queryableLocations = _queryableLocations(ivm);
 
           return Container(
             color: AppTheme.concordiaGold,
@@ -884,6 +1060,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     left: floorPickerSpacing,
                     right: floorPickerSpacing,
                     child: SafeArea(child: Center(child: _buildSegmentNavigationBar(ivm))),
+                  ),
+
+                if (_pendingInterBuildingPlan != null)
+                  Positioned(
+                    bottom: floorPickerSpacing + 128,
+                    left: floorPickerSpacing,
+                    right: floorPickerSpacing,
+                    child: SafeArea(
+                      child: _buildInterBuildingHandoffBar(_pendingInterBuildingPlan!),
+                    ),
                   ),
               ],
             ),

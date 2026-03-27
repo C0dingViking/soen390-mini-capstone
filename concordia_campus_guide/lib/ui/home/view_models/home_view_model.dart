@@ -73,6 +73,7 @@ class HomeViewModel extends ChangeNotifier {
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
   double _currentMapZoom = 15;
+  String? _indoorNavigationStartOverrideLabel;
 
   bool showNextClassFab = false;
   AcademicClass? upcomingClass;
@@ -305,6 +306,7 @@ class HomeViewModel extends ChangeNotifier {
     destinationCoordinate = null;
     selectedStartLabel = null;
     selectedDestinationLabel = null;
+    _indoorNavigationStartOverrideLabel = null;
     searchStartMarker = null;
     searchDestinationMarker = null;
     routeOptions = {};
@@ -554,6 +556,8 @@ class HomeViewModel extends ChangeNotifier {
     required final String label,
     final Campus? campus,
   }) {
+    _indoorNavigationStartOverrideLabel = null;
+
     if (campus != null) {
       selectedCampusIndex = _campusIndexFor(campus);
     }
@@ -1265,7 +1269,12 @@ class HomeViewModel extends ChangeNotifier {
     return 4;
   }
 
-  ({Building building, String destinationRoomLabel, String roomNumber})?
+  ({
+    Building building,
+    String destinationRoomLabel,
+    String roomNumber,
+    String? startRoomLabel,
+  })?
   get indoorNavigationDestination {
     final parsed = _parseRoomLabel(selectedDestinationLabel ?? "");
     if (parsed == null) return null;
@@ -1283,7 +1292,53 @@ class HomeViewModel extends ChangeNotifier {
       building: building,
       destinationRoomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
       roomNumber: parsed.roomNumber,
+      startRoomLabel: _indoorNavigationStartOverrideLabel,
     );
+  }
+
+  Future<bool> startInterBuildingOutdoorNavigation({
+    required final String startBuildingId,
+    required final String destinationBuildingId,
+    required final String startRoomLabel,
+    required final String destinationRoomLabel,
+    required final String destinationIndoorStartLabel,
+  }) async {
+    final startBuilding = _findBuildingById(startBuildingId);
+    final destinationBuilding = _findBuildingById(destinationBuildingId);
+
+    if (startBuilding == null || destinationBuilding == null) {
+      errorMessage = "Unable to prepare inter-building navigation.";
+      notifyListeners();
+      return false;
+    }
+
+    _routeRequestId++;
+    routeOptions = {};
+    routePolylines = {};
+    transitChangeCircles = {};
+    routeBounds = null;
+    routeErrorMessage = null;
+
+    _applySelection(
+      field: SearchField.start,
+      coordinate: startBuilding.location,
+      label: startRoomLabel,
+      campus: startBuilding.campus,
+    );
+    _applySelection(
+      field: SearchField.destination,
+      coordinate: destinationBuilding.location,
+      label: destinationRoomLabel,
+      campus: destinationBuilding.campus,
+    );
+
+    _indoorNavigationStartOverrideLabel = destinationIndoorStartLabel;
+    cameraTarget = startBuilding.location;
+    isSearchBarExpanded = true;
+
+    await _loadRoutesIfReady();
+    notifyListeners();
+    return true;
   }
 
   @override
