@@ -305,14 +305,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const double secondActionBottom = 85;
             const double actionBottomWithRoutes = 145;
             const double toggleRadius = 30;
-            const double togglePaddingVertical = 8;
-            const double togglePaddingHorizontal = 12;
-            const double toggleIconSize = 20;
-            const double toggleIconContainer = 40;
+            const double toggleVertical = 40;
+            const double toggleHorizontal = 160;
             const double labelFontSize = 16;
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
-            const double spacingSm = 8;
             final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
                 ? actionBottomWithRoutes
                 : actionBottom;
@@ -375,17 +372,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   bottom: actionBottomOffset,
                   child: Material(
                     color: Colors.transparent,
-                    child: InkWell(
+                    child: GestureDetector(
                       key: const Key("campus_toggle_button"),
-                      borderRadius: BorderRadius.circular(toggleRadius),
                       onTap: () => context.read<HomeViewModel>().toggleCampus(),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: togglePaddingVertical,
-                          horizontal: togglePaddingHorizontal,
-                        ),
+                        width: toggleHorizontal,
+                        height: toggleVertical,
                         decoration: BoxDecoration(
-                          color: _buttonColor,
+                          color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(toggleRadius),
                           boxShadow: const [
                             BoxShadow(
@@ -395,34 +389,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Stack(
                           children: [
-                            Container(
-                              width: toggleIconContainer,
-                              height: toggleIconContainer,
-                              decoration: BoxDecoration(
-                                color: _buttonColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  selected.icon,
-                                  color: Colors.white,
-                                  size: toggleIconSize,
+                            AnimatedAlign(
+                              duration: const Duration(milliseconds: 250),
+                              alignment: selected.name == "SGW"
+                                  ? Alignment.centerLeft
+                                  : Alignment.centerRight,
+                              child: Container(
+                                width: 80,
+                                margin: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: _buttonColor,
+                                  borderRadius: BorderRadius.circular(toggleRadius),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: spacingSm),
-                            Text(
-                              selected.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: labelFontSize,
-                              ),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      "SGW",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: selected.name == "SGW" ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      "LOY",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: selected.name == "LOY" ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: spacingSm),
                           ],
                         ),
                       ),
