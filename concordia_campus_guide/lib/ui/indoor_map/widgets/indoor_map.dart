@@ -529,6 +529,9 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       return;
     }
 
+    // End the current building's indoor leg before handing off to outdoor routing.
+    _viewModel.clearIndoorPath();
+
     Navigator.of(context).popUntil((final route) => route.isFirst);
   }
 
