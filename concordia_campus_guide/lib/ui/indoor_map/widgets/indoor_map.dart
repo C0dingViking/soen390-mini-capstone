@@ -404,6 +404,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationFloorplans = await _floorplanInteractor.loadFloorplans(
       parsedDestinationRoom.buildingId.toLowerCase(),
     );
+    if (!mounted) {
+      return;
+    }
+
     if (destinationFloorplans.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No floor plans available for the destination building.")),
