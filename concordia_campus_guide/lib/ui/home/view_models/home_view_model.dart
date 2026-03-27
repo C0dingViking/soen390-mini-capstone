@@ -893,43 +893,48 @@ class HomeViewModel extends ChangeNotifier {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return [];
 
-    final matches = buildings.values.where((final b) {
-      final name = b.name.toLowerCase();
-      final id = b.id.toLowerCase();
-      return name.contains(q) || id.contains(q);
-    }).toList();
+    final buildingSuggestions = _buildBuildingSuggestionsFromQuery(q);
 
-    matches.sort((final a, final b) {
-      final rankA = _matchRank(a, q);
-      final rankB = _matchRank(b, q);
-      if (rankA != rankB) return rankA.compareTo(rankB);
-      return a.name.compareTo(b.name);
-    });
+    if (!includeRooms || _campusRoomLabels.isEmpty) {
+      return buildingSuggestions.take(8).toList();
+    }
 
-    final buildingSuggestions = matches.map((final building) {
+    final roomSuggestions = _buildRoomSuggestionsFromQuery(q);
+    return [...buildingSuggestions.take(4), ...roomSuggestions].take(10).toList();
+  }
+
+  List<SearchSuggestion> _buildBuildingSuggestionsFromQuery(final String query) {
+    final matches = _matchAndSortBuildings(query);
+    return matches.map((final building) {
       final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
       return SearchSuggestion.building(
         building,
         subtitle: "$campusLabel - ${building.id.toUpperCase()}",
       );
     }).toList();
+  }
 
-    if (!includeRooms || _campusRoomLabels.isEmpty) {
-      return buildingSuggestions.take(8).toList();
-    }
+  List<Building> _matchAndSortBuildings(final String query) {
+    final matches = buildings.values.where((final b) {
+      final name = b.name.toLowerCase();
+      final id = b.id.toLowerCase();
+      return name.contains(query) || id.contains(query);
+    }).toList();
 
-    final roomMatches = _campusRoomLabels
-        .where((final roomLabel) => _roomMatchesQuery(roomLabel, q))
-        .toList();
-
-    roomMatches.sort((final a, final b) {
-      final rankA = _roomMatchRank(a, q);
-      final rankB = _roomMatchRank(b, q);
+    matches.sort((final a, final b) {
+      final rankA = _matchRank(a, query);
+      final rankB = _matchRank(b, query);
       if (rankA != rankB) return rankA.compareTo(rankB);
-      return a.compareTo(b);
+      return a.name.compareTo(b.name);
     });
 
+    return matches;
+  }
+
+  List<SearchSuggestion> _buildRoomSuggestionsFromQuery(final String query) {
+    final roomMatches = _matchAndSortRooms(query);
     final roomSuggestions = <SearchSuggestion>[];
+
     for (final roomLabel in roomMatches) {
       final parsed = _parseRoomLabel(roomLabel);
       if (parsed == null) continue;
@@ -937,19 +942,42 @@ class HomeViewModel extends ChangeNotifier {
       final building = _findBuildingById(parsed.buildingId);
       if (building == null) continue;
 
-      final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
-      roomSuggestions.add(
-        SearchSuggestion.room(
-          building: building,
-          roomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
-          subtitle: "$campusLabel - ${building.name}",
-        ),
-      );
+      _addRoomSuggestion(roomSuggestions, building, parsed);
 
       if (roomSuggestions.length >= 8) break;
     }
 
-    return [...buildingSuggestions.take(4), ...roomSuggestions].take(10).toList();
+    return roomSuggestions;
+  }
+
+  List<String> _matchAndSortRooms(final String query) {
+    final roomMatches = _campusRoomLabels
+        .where((final roomLabel) => _roomMatchesQuery(roomLabel, query))
+        .toList();
+
+    roomMatches.sort((final a, final b) {
+      final rankA = _roomMatchRank(a, query);
+      final rankB = _roomMatchRank(b, query);
+      if (rankA != rankB) return rankA.compareTo(rankB);
+      return a.compareTo(b);
+    });
+
+    return roomMatches;
+  }
+
+  void _addRoomSuggestion(
+    final List<SearchSuggestion> suggestions,
+    final Building building,
+    final ({String buildingId, String roomNumber}) parsed,
+  ) {
+    final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
+    suggestions.add(
+      SearchSuggestion.room(
+        building: building,
+        roomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
+        subtitle: "$campusLabel - ${building.name}",
+      ),
+    );
   }
 
   Future<void> _loadRoomManifestIfNeeded() async {
