@@ -5,15 +5,16 @@ import "package:concordia_campus_guide/utils/campus.dart";
 typedef ParsedRoomLabel = ({String buildingId, String roomNumber});
 
 class QueryHelper {
+  static const int _defaultBuildingOnlyLimit = 8;
+  static const int _defaultBuildingWhenRoomLimit = 4;
+  static const int _defaultRoomLimit = 8;
+  static const int _defaultTotalLimit = 10;
+
   static List<SearchSuggestion> buildSearchSuggestions({
     required final String query,
     required final Map<String, Building> buildings,
     required final List<String> campusRoomLabels,
     final bool includeRooms = false,
-    final int buildingOnlyLimit = 8,
-    final int buildingWhenRoomLimit = 4,
-    final int roomLimit = 8,
-    final int totalLimit = 10,
   }) {
     final normalizedQuery = query.trim().toLowerCase();
     if (normalizedQuery.isEmpty) return [];
@@ -21,20 +22,20 @@ class QueryHelper {
     final buildingSuggestions = _buildBuildingSuggestionsFromQuery(normalizedQuery, buildings);
 
     if (!includeRooms || campusRoomLabels.isEmpty) {
-      return buildingSuggestions.take(buildingOnlyLimit).toList();
+      return buildingSuggestions.take(_defaultBuildingOnlyLimit).toList();
     }
 
     final roomSuggestions = _buildRoomSuggestionsFromQuery(
       query: normalizedQuery,
       buildings: buildings,
       campusRoomLabels: campusRoomLabels,
-      roomLimit: roomLimit,
+      roomLimit: _defaultRoomLimit,
     );
 
     return [
-      ...buildingSuggestions.take(buildingWhenRoomLimit),
+      ...buildingSuggestions.take(_defaultBuildingWhenRoomLimit),
       ...roomSuggestions,
-    ].take(totalLimit).toList();
+    ].take(_defaultTotalLimit).toList();
   }
 
   static Building? findBuildingById(
