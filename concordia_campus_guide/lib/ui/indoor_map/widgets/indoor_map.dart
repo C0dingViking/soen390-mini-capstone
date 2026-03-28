@@ -985,133 +985,140 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   @override
   Widget build(final BuildContext context) {
-    return Scaffold(
-      appBar: const CampusAppBar(),
-      body: Consumer<IndoorViewModel>(
-        builder: (final context, final ivm, final child) {
-          if (ivm.isLoading || ivm.selectedFloorplan == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return Scaffold(appBar: const CampusAppBar(), body: _buildBody());
+  }
 
-          if (ivm.loadFailed || ivm.listLoadFailed) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
+  Widget _buildBody() {
+    return Consumer<IndoorViewModel>(
+      builder: (final context, final ivm, final child) {
+        if (ivm.isLoading || ivm.selectedFloorplan == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-              ivm.resetFloorplanLoadState();
+        if (ivm.loadFailed || ivm.listLoadFailed) {
+          return _buildLoadFailureView(ivm);
+        }
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Failed to load floor plans for this building. Please try again later.",
-                  ),
-                ),
-              );
-              Navigator.of(context).pop();
-            });
-            return const SizedBox.shrink();
-          }
+        return _buildIndoorMapContent(ivm);
+      },
+    );
+  }
 
-          final selectedFloorplan = ivm.selectedFloorplan!;
-          final svgPath = selectedFloorplan.svgPath;
-          _applyOutdoorHandoffDefaultsIfNeeded(ivm);
-          final queryableLocations = _queryableLocations(ivm);
+  Widget _buildLoadFailureView(final IndoorViewModel ivm) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-          return Container(
-            color: AppTheme.concordiaGold,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: LayoutBuilder(
-                    builder: (final context, final constraints) {
-                      final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
-                      return GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTapUp: (final details) =>
-                            _handleTapOnMap(details, viewportSize, selectedFloorplan),
-                        child: InteractiveViewer(
-                          transformationController: _controller,
-                          minScale: minMapZoom,
-                          maxScale: maxMapZoom,
-                          boundaryMargin: EdgeInsets.zero,
-                          clipBehavior: Clip.hardEdge,
-                          child: Stack(
-                            children: [
-                              SvgPicture.asset(svgPath, fit: BoxFit.contain),
-                              if (ivm.indoorPath != null)
-                                Positioned.fill(
-                                  child: _AnimatedIndoorPath(
-                                    floorplan: selectedFloorplan,
-                                    path: ivm.indoorPath!,
-                                  ),
-                                ),
-                            ],
+      ivm.resetFloorplanLoadState();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to load floor plans for this building. Please try again later."),
+        ),
+      );
+      Navigator.of(context).pop();
+    });
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildIndoorMapContent(final IndoorViewModel ivm) {
+    final selectedFloorplan = ivm.selectedFloorplan!;
+    final svgPath = selectedFloorplan.svgPath;
+    _applyOutdoorHandoffDefaultsIfNeeded(ivm);
+    final queryableLocations = _queryableLocations(ivm);
+
+    return Container(
+      color: AppTheme.concordiaGold,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (final context, final constraints) {
+                final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
+                return GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTapUp: (final details) =>
+                      _handleTapOnMap(details, viewportSize, selectedFloorplan),
+                  child: InteractiveViewer(
+                    transformationController: _controller,
+                    minScale: minMapZoom,
+                    maxScale: maxMapZoom,
+                    boundaryMargin: EdgeInsets.zero,
+                    clipBehavior: Clip.hardEdge,
+                    child: Stack(
+                      children: [
+                        SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                        if (ivm.indoorPath != null)
+                          Positioned.fill(
+                            child: _AnimatedIndoorPath(
+                              floorplan: selectedFloorplan,
+                              path: ivm.indoorPath!,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                Positioned(
-                  top: 0.0,
-                  child: SafeArea(
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        ivm.resetFloorplanLoadState();
-                        Navigator.of(context).pop();
-                      },
-                      constraints: const BoxConstraints(),
+                      ],
                     ),
                   ),
-                ),
-
-                Positioned(
-                  bottom: 0,
-                  top: 0,
-                  right: floorPickerSpacing,
-                  child: SafeArea(child: Center(child: _buildFloorPicker(context))),
-                ),
-
-                Positioned(
-                  top: searchBarSpacingTop,
-                  left: searchBarSpacingLeft,
-                  right: searchBarSpacingRight,
-                  child: SafeArea(
-                    child: IndoorSearchBar(
-                      startController: _startController,
-                      destinationController: _destinationController,
-                      destinationFocusNode: _destinationFocusNode,
-                      isIndoorNavigationDisplayed: ivm.indoorPath != null,
-                      onStartNavigation: _handleStartNavigation,
-                      onEndNavigation: _handleEndNavigation,
-                      queryableRooms: queryableLocations,
-                    ),
-                  ),
-                ),
-
-                if (ivm.isInterFloorRoute || _pendingInterBuildingPlan != null)
-                  Positioned(
-                    bottom: floorPickerSpacing + 8,
-                    left: floorPickerSpacing,
-                    right: floorPickerSpacing,
-                    child: SafeArea(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (ivm.isInterFloorRoute) Center(child: _buildSegmentNavigationBar(ivm)),
-                          if (ivm.isInterFloorRoute && _pendingInterBuildingPlan != null)
-                            const SizedBox(height: 8),
-                          if (_pendingInterBuildingPlan != null)
-                            _buildInterBuildingHandoffBar(_pendingInterBuildingPlan!),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+
+          Positioned(
+            top: 0.0,
+            child: SafeArea(
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  ivm.resetFloorplanLoadState();
+                  Navigator.of(context).pop();
+                },
+                constraints: const BoxConstraints(),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 0,
+            top: 0,
+            right: floorPickerSpacing,
+            child: SafeArea(child: Center(child: _buildFloorPicker(context))),
+          ),
+
+          Positioned(
+            top: searchBarSpacingTop,
+            left: searchBarSpacingLeft,
+            right: searchBarSpacingRight,
+            child: SafeArea(
+              child: IndoorSearchBar(
+                startController: _startController,
+                destinationController: _destinationController,
+                destinationFocusNode: _destinationFocusNode,
+                isIndoorNavigationDisplayed: ivm.indoorPath != null,
+                onStartNavigation: _handleStartNavigation,
+                onEndNavigation: _handleEndNavigation,
+                queryableRooms: queryableLocations,
+              ),
+            ),
+          ),
+
+          if (ivm.isInterFloorRoute || _pendingInterBuildingPlan != null)
+            Positioned(
+              bottom: floorPickerSpacing + 8,
+              left: floorPickerSpacing,
+              right: floorPickerSpacing,
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (ivm.isInterFloorRoute) Center(child: _buildSegmentNavigationBar(ivm)),
+                    if (ivm.isInterFloorRoute && _pendingInterBuildingPlan != null)
+                      const SizedBox(height: 8),
+                    if (_pendingInterBuildingPlan != null)
+                      _buildInterBuildingHandoffBar(_pendingInterBuildingPlan!),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
