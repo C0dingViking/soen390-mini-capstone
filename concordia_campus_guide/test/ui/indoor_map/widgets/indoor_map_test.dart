@@ -674,10 +674,7 @@ void main() {
       final tester,
     ) async {
       final homeVm = _TestHomeViewModel();
-      homeVm.seedBuildings({
-        "T": makeCampusBuilding("T"),
-        "H": makeCampusBuilding("H"),
-      });
+      homeVm.seedBuildings({"T": makeCampusBuilding("T"), "H": makeCampusBuilding("H")});
 
       ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
 

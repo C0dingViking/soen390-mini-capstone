@@ -2044,52 +2044,61 @@ void main() {
       expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
     });
 
-    test("setDestinationToUpcomingClassBuilding shows info when current location is unavailable", () async {
-      fakeGeolocator.serviceEnabled = false;
-      hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
-        DateTime(2026, 1, 5, 13, 0),
-        DateTime(2026, 1, 5, 14, 0),
-        Room("235", "2", Campus.sgw, "mb"),
-      );
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when current location is unavailable",
+      () async {
+        fakeGeolocator.serviceEnabled = false;
+        hvm.upcomingClass = AcademicClass(
+          "SOEN 390 LEC A",
+          DateTime(2026, 1, 5, 13, 0),
+          DateTime(2026, 1, 5, 14, 0),
+          Room("235", "2", Campus.sgw, "mb"),
+        );
 
-      await hvm.setDestinationToUpcomingClassBuilding();
+        await hvm.setDestinationToUpcomingClassBuilding();
 
-      expect(
-        hvm.generateInfoMessage,
-        equals("Unable to determine current location for navigation start."),
-      );
-    });
+        expect(
+          hvm.generateInfoMessage,
+          equals("Unable to determine current location for navigation start."),
+        );
+      },
+    );
 
-    test("setDestinationToUpcomingClassBuilding shows info when no upcoming class is selected", () async {
-      await hvm.setDestinationToUpcomingClassBuilding();
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when no upcoming class is selected",
+      () async {
+        await hvm.setDestinationToUpcomingClassBuilding();
 
-      expect(hvm.startCoordinate, isNotNull);
-      expect(hvm.generateInfoMessage, equals("No upcoming class selected."));
-    });
+        expect(hvm.startCoordinate, isNotNull);
+        expect(hvm.generateInfoMessage, equals("No upcoming class selected."));
+      },
+    );
 
-    test("setDestinationToUpcomingClassBuilding shows info when place suggestion cannot resolve", () async {
-      trackingPlacesInteractor.searchResults = const [
-        PlaceSuggestion(
-          placeId: "place-1",
-          description: "Concordia University EV Building, Montreal",
-          mainText: "Concordia University EV Building",
-          secondaryText: "Montreal, QC",
-        ),
-      ];
-      trackingPlacesInteractor.resolveResult = null;
-      hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
-        DateTime(2026, 1, 5, 13, 0),
-        DateTime(2026, 1, 5, 14, 0),
-        Room("235", "2", Campus.sgw, "ev"),
-      );
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when place suggestion cannot resolve",
+      () async {
+        trackingPlacesInteractor.searchResults = const [
+          PlaceSuggestion(
+            placeId: "place-1",
+            description: "Concordia University EV Building, Montreal",
+            mainText: "Concordia University EV Building",
+            secondaryText: "Montreal, QC",
+          ),
+        ];
+        trackingPlacesInteractor.resolveResult = null;
+        hvm.upcomingClass = AcademicClass(
+          "SOEN 390 LEC A",
+          DateTime(2026, 1, 5, 13, 0),
+          DateTime(2026, 1, 5, 14, 0),
+          Room("235", "2", Campus.sgw, "ev"),
+        );
 
-      await hvm.setDestinationToUpcomingClassBuilding();
+        await hvm.setDestinationToUpcomingClassBuilding();
 
-      expect(hvm.destinationCoordinate, isNull);
-      expect(hvm.generateInfoMessage, equals("Unable to find EV on the map."));
-    });
+        expect(hvm.destinationCoordinate, isNull);
+        expect(hvm.generateInfoMessage, equals("Unable to find EV on the map."));
+      },
+    );
 
     test("setDestinationToUpcomingClassBuilding falls back to first places suggestion", () async {
       trackingPlacesInteractor.searchResults = const [
