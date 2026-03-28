@@ -8,6 +8,7 @@ import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.da
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -304,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const double actionBottom = 25;
             const double secondActionBottom = 85;
             const double actionBottomWithRoutes = 145;
+            const double indoorSwitchBottomOffset = 205;
             const double toggleRadius = 30;
             const double toggleVertical = 40;
             const double toggleHorizontal = 160;
@@ -316,6 +318,17 @@ class _HomeScreenState extends State<HomeScreen> {
             final locationFabIcon = hvm.isLocationActionAvailable
                 ? Icons.my_location
                 : Icons.location_disabled;
+            final indoorDestination = hvm.indoorNavigationDestination;
+            final isInsideDestinationBuilding =
+                indoorDestination != null &&
+                hvm.currentBuilding != null &&
+                hvm.currentBuilding!.id.toLowerCase() ==
+                    indoorDestination.building.id.toLowerCase();
+            final canSwitchToIndoorNavigation =
+                indoorDestination != null &&
+                isInsideDestinationBuilding &&
+                hvm.routeOptions.isNotEmpty &&
+                !hvm.isLoadingRoutes;
 
             return Stack(
               children: [
@@ -450,6 +463,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: const Icon(Icons.school, color: Colors.white),
                       label: const Text(
                         "Next Class",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (canSwitchToIndoorNavigation)
+                  Positioned(
+                    left: actionInset,
+                    bottom: indoorSwitchBottomOffset,
+                    child: FloatingActionButton.extended(
+                      key: const Key("main_screen_switch_to_indoor_navigation_button"),
+                      heroTag: "main_screen_switch_to_indoor_navigation",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (final context) => IndoorMapView(
+                              building: indoorDestination.building,
+                              initialStartRoomLabel: indoorDestination.startRoomLabel,
+                              initialDestinationRoomLabel: indoorDestination.destinationRoomLabel,
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: _buttonColor,
+                      icon: const Icon(Icons.schema, color: Colors.white),
+                      label: const Text(
+                        "Switch Indoor",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: labelFontSize,

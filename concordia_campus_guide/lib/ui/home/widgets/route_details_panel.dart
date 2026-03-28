@@ -1,8 +1,42 @@
+import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
+
+class _OriginIndoorNavigationPayload {
+  final Building building;
+  final String startRoomLabel;
+  final String? destinationRoomLabel;
+  final String? destinationBuildingId;
+  final String? destinationEntryLabel;
+  final String? interBuildingDestinationRoomLabel;
+
+  const _OriginIndoorNavigationPayload({
+    required this.building,
+    required this.startRoomLabel,
+    required this.destinationRoomLabel,
+    required this.destinationBuildingId,
+    required this.destinationEntryLabel,
+    required this.interBuildingDestinationRoomLabel,
+  });
+}
+
+class _OriginIndoorActionStyle {
+  final String promptText;
+  final Key buttonKey;
+  final IconData buttonIcon;
+  final String buttonLabel;
+
+  const _OriginIndoorActionStyle({
+    required this.promptText,
+    required this.buttonKey,
+    required this.buttonIcon,
+    required this.buttonLabel,
+  });
+}
 
 class RouteDetailsPanel extends StatefulWidget {
   const RouteDetailsPanel({super.key});
@@ -14,8 +48,27 @@ class RouteDetailsPanel extends StatefulWidget {
 class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   double _panelHeight = _minHeight;
   bool _isDragging = false;
+  final ScrollController _routeDetailsScrollController = ScrollController();
 
   static const double _minHeight = 120;
+
+  @override
+  void dispose() {
+    _routeDetailsScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottomOfRouteDetails() {
+    if (!_routeDetailsScrollController.hasClients) {
+      return;
+    }
+
+    _routeDetailsScrollController.animateTo(
+      _routeDetailsScrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   void _toggleExpanded() {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -205,6 +258,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final option = routeOptions[selectedMode];
 
     return SingleChildScrollView(
+      controller: _routeDetailsScrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +273,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               option.steps.isNotEmpty &&
               (selectedMode == RouteMode.transit ||
                   selectedMode == RouteMode.walking ||
-                  selectedMode == RouteMode.bicycling)) ...[
+                  selectedMode == RouteMode.bicycling ||
+                  selectedMode == RouteMode.shuttle)) ...[
             const SizedBox(height: 16),
             _buildRouteSteps(option.steps, selectedMode),
           ],
@@ -468,10 +523,36 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final suggestedTransitDeparture = selectedMode == RouteMode.transit
         ? _suggestedTransitDepartureTime(steps)
         : null;
+    final originIndoorEntry = context.read<HomeViewModel>().originIndoorNavigationEntry;
+    final originIndoorResume = context.read<HomeViewModel>().originIndoorNavigationResume;
+    final indoorDestination = context.read<HomeViewModel>().indoorNavigationDestination;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Route Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                "Route Details",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (indoorDestination != null)
+              ElevatedButton.icon(
+                key: const Key("route_details_reached_building_jump_button"),
+                onPressed: _scrollToBottomOfRouteDetails,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.concordiaButtonCyan.withValues(alpha: 0.15),
+                  foregroundColor: AppTheme.concordiaForeground,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                ),
+                icon: const Icon(Icons.arrow_downward_rounded, size: 18),
+                label: const Text("Reached building?"),
+              ),
+          ],
+        ),
         if (suggestedTransitDeparture != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -480,10 +561,191 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
             ),
           ),
+        if (originIndoorEntry != null && originIndoorResume == null) ...[
+          const SizedBox(height: 8),
+          _buildOriginIndoorEntryButton(
+            building: originIndoorEntry.building,
+            startRoomLabel: originIndoorEntry.startRoomLabel,
+            destinationRoomLabel:
+                originIndoorEntry.destinationRoomLabel ?? indoorDestination?.destinationRoomLabel,
+            destinationBuildingId: indoorDestination?.building.id,
+            destinationEntryLabel: indoorDestination?.startRoomLabel,
+            interBuildingDestinationRoomLabel: indoorDestination?.destinationRoomLabel,
+          ),
+        ],
+        if (originIndoorResume != null) ...[
+          const SizedBox(height: 8),
+          _buildOriginIndoorResumeButton(
+            building: originIndoorResume.building,
+            startRoomLabel: originIndoorResume.startRoomLabel,
+            destinationRoomLabel: originIndoorResume.destinationRoomLabel,
+            destinationBuildingId: indoorDestination?.building.id,
+            destinationEntryLabel: indoorDestination?.startRoomLabel,
+            interBuildingDestinationRoomLabel: indoorDestination?.destinationRoomLabel,
+          ),
+        ],
         const SizedBox(height: 8),
         ...steps.map((final step) => _buildStepItem(step)),
+        if (indoorDestination != null) ...[
+          const SizedBox(height: 8),
+          _buildIndoorNavigationButton(
+            building: indoorDestination.building,
+            destinationRoomLabel: indoorDestination.destinationRoomLabel,
+            roomNumber: indoorDestination.roomNumber,
+            startRoomLabel: indoorDestination.startRoomLabel,
+          ),
+        ],
       ],
     );
+  }
+
+  Widget _buildIndoorNavigationButton({
+    required final Building building,
+    required final String destinationRoomLabel,
+    required final String roomNumber,
+    required final String? startRoomLabel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Reached ${building.name}? Continue indoors to room $roomNumber.",
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: const Key("switch_to_indoor_navigation_button"),
+              style: AppTheme.indoorNavigationButtonStyle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (final context) => IndoorMapView(
+                      building: building,
+                      initialStartRoomLabel: startRoomLabel,
+                      initialDestinationRoomLabel: destinationRoomLabel,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.schema),
+              label: const Text("Switch to Indoor Navigation"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOriginIndoorResumeButton({
+    required final Building building,
+    required final String startRoomLabel,
+    required final String destinationRoomLabel,
+    required final String? destinationBuildingId,
+    required final String? destinationEntryLabel,
+    required final String? interBuildingDestinationRoomLabel,
+  }) {
+    final payload = _OriginIndoorNavigationPayload(
+      building: building,
+      startRoomLabel: startRoomLabel,
+      destinationRoomLabel: destinationRoomLabel,
+      destinationBuildingId: destinationBuildingId,
+      destinationEntryLabel: destinationEntryLabel,
+      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
+    );
+
+    final actionStyle = _OriginIndoorActionStyle(
+      promptText: "Exited too early? Resume indoor navigation in ${building.name}.",
+      buttonKey: const Key("resume_origin_indoor_navigation_button"),
+      buttonIcon: Icons.replay,
+      buttonLabel: "Return to Origin Indoor Navigation",
+    );
+
+    return _buildOriginIndoorActionButton(payload: payload, actionStyle: actionStyle);
+  }
+
+  Widget _buildOriginIndoorActionButton({
+    required final _OriginIndoorNavigationPayload payload,
+    required final _OriginIndoorActionStyle actionStyle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            actionStyle.promptText,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: actionStyle.buttonKey,
+              style: AppTheme.indoorNavigationButtonStyle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (final context) => IndoorMapView(
+                      building: payload.building,
+                      initialStartRoomLabel: payload.startRoomLabel,
+                      initialDestinationRoomLabel: payload.destinationRoomLabel,
+                      interBuildingDestinationBuildingId: payload.destinationBuildingId,
+                      interBuildingDestinationEntryLabel: payload.destinationEntryLabel,
+                      interBuildingDestinationRoomLabel: payload.interBuildingDestinationRoomLabel,
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(actionStyle.buttonIcon),
+              label: Text(actionStyle.buttonLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOriginIndoorEntryButton({
+    required final Building building,
+    required final String startRoomLabel,
+    required final String? destinationRoomLabel,
+    required final String? destinationBuildingId,
+    required final String? destinationEntryLabel,
+    required final String? interBuildingDestinationRoomLabel,
+  }) {
+    final payload = _OriginIndoorNavigationPayload(
+      building: building,
+      startRoomLabel: startRoomLabel,
+      destinationRoomLabel: destinationRoomLabel,
+      destinationBuildingId: destinationBuildingId,
+      destinationEntryLabel: destinationEntryLabel,
+      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
+    );
+
+    final actionStyle = _OriginIndoorActionStyle(
+      promptText: "Start indoor navigation from ${building.name}?",
+      buttonKey: const Key("start_origin_indoor_navigation_button"),
+      buttonIcon: Icons.play_arrow_rounded,
+      buttonLabel: "Start Origin Indoor Navigation",
+    );
+
+    return _buildOriginIndoorActionButton(payload: payload, actionStyle: actionStyle);
   }
 
   Widget _buildStepItem(final RouteStep step) {
@@ -656,7 +918,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final isExpandableMode =
         selectedMode == RouteMode.transit ||
         selectedMode == RouteMode.walking ||
-        selectedMode == RouteMode.bicycling;
+        selectedMode == RouteMode.bicycling ||
+        selectedMode == RouteMode.shuttle;
     return _isCollapsed && hasSteps && isExpandableMode;
   }
 
