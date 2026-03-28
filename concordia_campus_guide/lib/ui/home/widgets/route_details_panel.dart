@@ -273,7 +273,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               option.steps.isNotEmpty &&
               (selectedMode == RouteMode.transit ||
                   selectedMode == RouteMode.walking ||
-                  selectedMode == RouteMode.bicycling)) ...[
+                  selectedMode == RouteMode.bicycling ||
+                  selectedMode == RouteMode.shuttle)) ...[
             const SizedBox(height: 16),
             _buildRouteSteps(option.steps, selectedMode),
           ],
@@ -872,7 +873,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final isExpandableMode =
         selectedMode == RouteMode.transit ||
         selectedMode == RouteMode.walking ||
-        selectedMode == RouteMode.bicycling;
+        selectedMode == RouteMode.bicycling ||
+        selectedMode == RouteMode.shuttle;
     return _isCollapsed && hasSteps && isExpandableMode;
   }
 
