@@ -576,6 +576,32 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     required final String? destinationEntryLabel,
     required final String? interBuildingDestinationRoomLabel,
   }) {
+    return _buildOriginIndoorActionButton(
+      building: building,
+      startRoomLabel: startRoomLabel,
+      destinationRoomLabel: destinationRoomLabel,
+      destinationBuildingId: destinationBuildingId,
+      destinationEntryLabel: destinationEntryLabel,
+      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
+      promptText: "Exited too early? Resume indoor navigation in ${building.name}.",
+      buttonKey: const Key("resume_origin_indoor_navigation_button"),
+      buttonIcon: Icons.replay,
+      buttonLabel: "Return to Origin Indoor Navigation",
+    );
+  }
+
+  Widget _buildOriginIndoorActionButton({
+    required final Building building,
+    required final String startRoomLabel,
+    required final String? destinationRoomLabel,
+    required final String? destinationBuildingId,
+    required final String? destinationEntryLabel,
+    required final String? interBuildingDestinationRoomLabel,
+    required final String promptText,
+    required final Key buttonKey,
+    required final IconData buttonIcon,
+    required final String buttonLabel,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -587,15 +613,12 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Exited too early? Resume indoor navigation in ${building.name}.",
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
+          Text(promptText, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              key: const Key("resume_origin_indoor_navigation_button"),
+              key: buttonKey,
               style: AppTheme.indoorNavigationButtonStyle,
               onPressed: () {
                 Navigator.of(context).push(
@@ -611,8 +634,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   ),
                 );
               },
-              icon: const Icon(Icons.replay),
-              label: const Text("Return to Origin Indoor Navigation"),
+              icon: Icon(buttonIcon),
+              label: Text(buttonLabel),
             ),
           ),
         ],
@@ -628,47 +651,17 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     required final String? destinationEntryLabel,
     required final String? interBuildingDestinationRoomLabel,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.concordiaButtonCyan.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Start indoor navigation from ${building.name}?",
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              key: const Key("start_origin_indoor_navigation_button"),
-              style: AppTheme.indoorNavigationButtonStyle,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (final context) => IndoorMapView(
-                      building: building,
-                      initialStartRoomLabel: startRoomLabel,
-                      initialDestinationRoomLabel: destinationRoomLabel,
-                      interBuildingDestinationBuildingId: destinationBuildingId,
-                      interBuildingDestinationEntryLabel: destinationEntryLabel,
-                      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text("Start Origin Indoor Navigation"),
-            ),
-          ),
-        ],
-      ),
+    return _buildOriginIndoorActionButton(
+      building: building,
+      startRoomLabel: startRoomLabel,
+      destinationRoomLabel: destinationRoomLabel,
+      destinationBuildingId: destinationBuildingId,
+      destinationEntryLabel: destinationEntryLabel,
+      interBuildingDestinationRoomLabel: interBuildingDestinationRoomLabel,
+      promptText: "Start indoor navigation from ${building.name}?",
+      buttonKey: const Key("start_origin_indoor_navigation_button"),
+      buttonIcon: Icons.play_arrow_rounded,
+      buttonLabel: "Start Origin Indoor Navigation",
     );
   }
 
