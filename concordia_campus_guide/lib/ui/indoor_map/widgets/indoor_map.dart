@@ -71,6 +71,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   final FocusNode _destinationFocusNode = FocusNode();
   bool _didApplyOutdoorHandoffDefaults = false;
   _InterBuildingNavigationPlan? _pendingInterBuildingPlan;
+  bool _autoStartTriggered = false;
   final minMapZoom = 1.0;
   final maxMapZoom = 4.0;
   final floorPickerSpacing = 16.0;
@@ -143,6 +144,29 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
   void _onViewModelChange() {
     if (!mounted) return;
+
+    final loadedFloorplans = _viewModel.loadedFloorplans;
+    final isReady = !_viewModel.isLoading &&
+        loadedFloorplans != null &&
+        loadedFloorplans.isNotEmpty &&
+        !_autoStartTriggered;
+
+    if (!isReady) {
+      return;
+    }
+
+    final startText = _startController.text.trim();
+    final destinationText = _destinationController.text.trim();
+
+    if (startText.isEmpty || destinationText.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _autoStartTriggered = true;
+    });
+
+    _handleStartNavigation(startText, destinationText, false);
   }
 
   ({String buildingId, String roomName}) _parseRoomLabel(final String roomLabel) {

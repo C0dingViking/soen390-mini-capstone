@@ -492,6 +492,7 @@ void main() {
     final WidgetTester tester,
     final bool supportsFloors, {
     final Building? building,
+    final String? initialStartRoomLabel,
     final String? initialDestinationRoomLabel,
   }) async {
     await tester.pumpWidget(
@@ -500,6 +501,7 @@ void main() {
           value: ivm,
           child: IndoorMapView(
             building: building ?? makeTestBuilding(supportsFloors),
+            initialStartRoomLabel: initialStartRoomLabel,
             initialDestinationRoomLabel: initialDestinationRoomLabel,
           ),
         ),
@@ -531,6 +533,32 @@ void main() {
 
       expect(find.text("T 111"), findsOneWidget);
       expect(find.text("T buildingEntrance-1"), findsOneWidget);
+    });
+
+    testWidgets(
+      "auto-starts navigation when both initial start and destination are provided",
+      (final tester) async {
+        await pumpHomeScreen(
+          tester,
+          true,
+          initialStartRoomLabel: "T 210",
+          initialDestinationRoomLabel: "T 110",
+        );
+        await tester.pumpAndSettle();
+
+        expect(ivm.selectedFloorplan!.floorNumber, "2");
+        expect(find.text("2"), findsOneWidget);
+      },
+    );
+
+    testWidgets("does not auto-start navigation when destination is missing", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true, initialStartRoomLabel: "T 110");
+      await tester.pumpAndSettle();
+
+      expect(ivm.indoorPath, isNull);
+      expect(find.text("Start Navigation"), findsNothing);
     });
 
     testWidgets("re-applies initial destination when destination field is empty after load", (
