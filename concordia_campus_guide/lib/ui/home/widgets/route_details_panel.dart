@@ -271,7 +271,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                 },
                 selected: viewModel.departureMode == DepartureMode.departAt,
                 label: Text(
-                  "Depart at${viewModel.selectedDepartureTime != null ? ": ${_formatDateTime(date: viewModel.selectedDepartureTime!, asPhrase: false)}" : ""}",
+                  "Depart at${viewModel.selectedDepartureTime != null ? ": ${_formatDateTime(date: viewModel.selectedDepartureTime!)}" : ""}",
                 ),
               ),
               FilterChip(
@@ -287,7 +287,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                 },
                 selected: viewModel.departureMode == DepartureMode.arriveBy,
                 label: Text(
-                  "Arrive by${viewModel.selectedArrivalTime != null ? ": ${_formatDateTime(date: viewModel.selectedArrivalTime!, asPhrase: false)}" : ""}",
+                  "Arrive by${viewModel.selectedArrivalTime != null ? ": ${_formatDateTime(date: viewModel.selectedArrivalTime!)}" : ""}",
                 ),
               ),
             ],
@@ -344,7 +344,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     return "$hour12:$minute $period";
   }
 
-  String _formatDateTime({required final DateTime date, required final bool asPhrase}) {
+  String _formatDateTime({required final DateTime date, final bool asPhrase = false}) {
     final now = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
 
@@ -476,7 +476,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              "Suggested departure: ${_formatDateTime(date: suggestedTransitDeparture, asPhrase: false)}",
+              "Suggested departure: ${_formatDateTime(date: suggestedTransitDeparture)}",
               style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
             ),
           ),
