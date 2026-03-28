@@ -549,7 +549,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final didStart = await homeViewModel.startInterBuildingOutdoorNavigation(
       startBuildingId: plan.startBuildingId,
       destinationBuildingId: plan.destinationBuildingId,
-      startRoomLabel: plan.startExitLabel,
+      startRoomLabel: plan.startBuildingId.toUpperCase(),
       destinationRoomLabel: plan.destinationRoomLabel,
       destinationIndoorStartLabel: plan.destinationEntryLabel,
       originIndoorStartRoomLabel: plan.originStartLabel,

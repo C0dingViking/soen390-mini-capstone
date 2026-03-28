@@ -731,7 +731,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 25));
 
       expect(ivm.indoorPath, isNull);
-      expect(homeVm.selectedStartLabel, "T buildingEntrance-1");
+      expect(homeVm.selectedStartLabel, "Building T");
       expect(homeVm.selectedDestinationLabel, "H 820");
     });
 

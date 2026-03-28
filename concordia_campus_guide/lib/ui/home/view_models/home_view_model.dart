@@ -1378,7 +1378,7 @@ class HomeViewModel extends ChangeNotifier {
     _applySelection(
       field: SearchField.start,
       coordinate: startBuilding.location,
-      label: startRoomLabel,
+      label: startBuilding.name,
       campus: startBuilding.campus,
     );
     _applySelection(

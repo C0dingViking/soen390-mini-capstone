@@ -1153,7 +1153,7 @@ void main() {
         final started = await hvm.startInterBuildingOutdoorNavigation(
           startBuildingId: "H",
           destinationBuildingId: "MB",
-          startRoomLabel: "H buildingEntrance-1",
+          startRoomLabel: "H",
           destinationRoomLabel: "MB 1.210",
           destinationIndoorStartLabel: "MB buildingEntrance-1",
           originIndoorStartRoomLabel: "H 110",
@@ -1161,7 +1161,7 @@ void main() {
         );
 
         expect(started, isTrue);
-        expect(hvm.selectedStartLabel, equals("H buildingEntrance-1"));
+        expect(hvm.selectedStartLabel, equals("Hall Building"));
         expect(hvm.selectedDestinationLabel, equals("MB 1.210"));
         expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
 
