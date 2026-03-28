@@ -1,11 +1,20 @@
 import "dart:math";
 import "dart:ui" show PointerDeviceKind;
 
+import "package:concordia_campus_guide/data/repositories/building_repository.dart";
+import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
+import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/directions_interactor.dart";
 import "package:concordia_campus_guide/domain/interactors/floorplan_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/map_data_interactor.dart";
+import "package:concordia_campus_guide/domain/interactors/places_interactor.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 import "package:concordia_campus_guide/domain/models/indoor_pathfinding.dart";
+import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
+import "package:concordia_campus_guide/domain/models/route_option.dart";
+import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
@@ -13,7 +22,66 @@ import "package:concordia_campus_guide/utils/campus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_google_maps_webservices/places.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:googleapis/calendar/v3.dart" as calendar;
 import "package:provider/provider.dart";
+
+class _FakePlacesInteractor extends PlacesInteractor {
+  @override
+  Future<List<PlaceSuggestion>> searchPlaces(final String query) async => [];
+
+  @override
+  Future<Coordinate?> resolvePlace(final String placeId) async => null;
+
+  @override
+  Future<Coordinate?> resolvePlaceSuggestion(final PlaceSuggestion suggestion) async => null;
+}
+
+class _FakeDirectionsInteractor extends DirectionsInteractor {
+  @override
+  Future<List<RouteOption>> getRouteOptions(
+    final Coordinate start,
+    final Coordinate destination, {
+    final DateTime? departureTime,
+    final DateTime? arrivalTime,
+  }) async {
+    return [];
+  }
+}
+
+class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
+  @override
+  Future<List<calendar.Event>> getUpcomingEvents({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+  }) async => [];
+
+  @override
+  Future<List<calendar.Event>> getEventsInRange({
+    required final DateTime startDate,
+    required final DateTime endDate,
+  }) async => [];
+}
+
+class _FakeCalendarInteractor extends CalendarInteractor {
+  _FakeCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+}
+
+class _TestHomeViewModel extends HomeViewModel {
+  _TestHomeViewModel()
+    : super(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (_) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+      );
+
+  void seedBuildings(final Map<String, Building> seededBuildings) {
+    buildings = seededBuildings;
+  }
+}
 
 class TestIndoorViewModel extends IndoorViewModel {
   bool initCalled = false;
@@ -238,6 +306,46 @@ class TestIndoorViewModel extends IndoorViewModel {
       return;
     }
 
+    if (normalizedPath == "W") {
+      availableFloors = ["1"];
+      loadedFloorplans = {
+        "1": Floorplan(
+          buildingId: normalizedPath,
+          floorNumber: "1",
+          svgPath: "testfloor1.svg",
+          canvasWidth: 100,
+          canvasHeight: 100,
+          rooms: [
+            IndoorMapRoom(
+              name: "111",
+              doorLocation: const Point<double>(10, 10),
+              points: const [
+                Point<double>(0, 0),
+                Point<double>(100, 0),
+                Point<double>(100, 100),
+                Point<double>(0, 100),
+              ],
+            ),
+          ],
+          pois: const [
+            PointOfInterest(
+              name: "washroom-1",
+              type: PoiType.washroomMale,
+              location: Point<double>(25, 25),
+            ),
+            PointOfInterest(
+              name: "elevator-1",
+              type: PoiType.elevator,
+              location: Point<double>(20, 20),
+            ),
+          ],
+        ),
+      };
+      selectedFloorplan = loadedFloorplans!["1"];
+      notifyListeners();
+      return;
+    }
+
     availableFloors = ["1", "2"];
     loadedFloorplans = {
       "1": Floorplan(
@@ -352,6 +460,20 @@ void main() {
     id: id,
     name: "Test Building",
     description: "A building used for testing",
+    campus: Campus.sgw,
+    hours: OpeningHoursDetail(openNow: true),
+    images: ["image.png"],
+    location: Coordinate(latitude: 45.497, longitude: -73.578),
+    outlinePoints: [],
+    postalCode: "H3G 1M8",
+    street: "123 Test St",
+    supportedIndoorFloors: const [1, 2],
+  );
+
+  Building makeCampusBuilding(final String id) => Building(
+    id: id,
+    name: "Building $id",
+    description: "Campus building for tests",
     campus: Campus.sgw,
     hours: OpeningHoursDetail(openNow: true),
     images: ["image.png"],
@@ -517,6 +639,77 @@ void main() {
       );
     });
 
+    testWidgets("queryable rooms exclude non-queryable POIs", (final tester) async {
+      await pumpHomeScreen(tester, true, building: makeTestBuildingWithId("W"));
+      await tester.pumpAndSettle();
+
+      final searchBarW = tester.widget<IndoorSearchBar>(find.byType(IndoorSearchBar));
+      expect(searchBarW.queryableRooms, contains("W elevator-1"));
+      expect(searchBarW.queryableRooms, isNot(contains("W washroom-1")));
+    });
+
+    testWidgets("shows handoff bar when inter-building plan is provided", (final tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<IndoorViewModel>.value(
+            value: ivm,
+            child: IndoorMapView(
+              building: makeTestBuilding(true),
+              initialStartRoomLabel: "T 110",
+              initialDestinationRoomLabel: "T buildingEntrance-1",
+              interBuildingDestinationBuildingId: "H",
+              interBuildingDestinationEntryLabel: "H buildingEntrance-1",
+              interBuildingDestinationRoomLabel: "H 820",
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text("Continue outdoors to H."), findsOneWidget);
+      expect(find.byKey(const Key("continue_outdoor_navigation_button")), findsOneWidget);
+    });
+
+    testWidgets("continue outdoors clears indoor path and updates home navigation labels", (
+      final tester,
+    ) async {
+      final homeVm = _TestHomeViewModel();
+      homeVm.seedBuildings({
+        "T": makeCampusBuilding("T"),
+        "H": makeCampusBuilding("H"),
+      });
+
+      ivm.setIndoorPath([const Point<double>(0, 0), const Point<double>(50, 50)]);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<HomeViewModel>.value(value: homeVm),
+            ChangeNotifierProvider<IndoorViewModel>.value(value: ivm),
+          ],
+          child: MaterialApp(
+            home: IndoorMapView(
+              building: makeTestBuilding(true),
+              initialStartRoomLabel: "T 110",
+              initialDestinationRoomLabel: "T buildingEntrance-1",
+              interBuildingDestinationBuildingId: "H",
+              interBuildingDestinationEntryLabel: "H buildingEntrance-1",
+              interBuildingDestinationRoomLabel: "H 820",
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key("continue_outdoor_navigation_button")));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 25));
+
+      expect(ivm.indoorPath, isNull);
+      expect(homeVm.selectedStartLabel, "T buildingEntrance-1");
+      expect(homeVm.selectedDestinationLabel, "H 820");
+    });
+
     testWidgets("pops back to previous screen when load fails", (final tester) async {
       ivm.loadFailed = true;
       await pumpHomeScreen(tester, false);
@@ -608,6 +801,61 @@ void main() {
       final roomName = resolveRoomNameFromTapPosition(
         const Offset(50, 25),
         const Size(100, 200),
+        floorplan,
+      );
+
+      expect(roomName, isNull);
+    });
+
+    test("returns null when viewport size is invalid", () {
+      final floorplan = Floorplan(
+        buildingId: "T",
+        floorNumber: "1",
+        svgPath: "",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(100, 0),
+              Point<double>(100, 100),
+              Point<double>(0, 100),
+            ],
+          ),
+        ],
+      );
+
+      final roomName = resolveRoomNameFromTapPosition(
+        const Offset(50, 50),
+        const Size(0, 0),
+        floorplan,
+      );
+
+      expect(roomName, isNull);
+    });
+
+    test("returns null when room polygon has fewer than three points", () {
+      final floorplan = Floorplan(
+        buildingId: "T",
+        floorNumber: "1",
+        svgPath: "",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(0, 0),
+            points: const [Point<double>(0, 0), Point<double>(100, 100)],
+          ),
+        ],
+      );
+
+      final roomName = resolveRoomNameFromTapPosition(
+        const Offset(50, 50),
+        const Size(100, 100),
         floorplan,
       );
 
@@ -740,6 +988,27 @@ void main() {
   });
 
   group("Same-floor navigation (lines 179-211)", () {
+    testWidgets("shows snackbar when floorplans are unavailable at navigation time", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      ivm.loadedFloorplans = {};
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pump();
+
+      expect(find.text("No floor plans available for current location."), findsOneWidget);
+    });
+
     testWidgets("hides Start Navigation when any typed location is invalid", (final tester) async {
       await pumpHomeScreen(tester, true);
 

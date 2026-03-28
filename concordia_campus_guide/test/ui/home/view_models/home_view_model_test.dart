@@ -173,6 +173,28 @@ class _ConfigurableDirectionsInteractor extends DirectionsInteractor {
   }
 }
 
+class _ConfigurableCalendarInteractor extends CalendarInteractor {
+  _ConfigurableCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+
+  List<AcademicClass> classesToReturn = [];
+  Object? errorToThrow;
+  int callCount = 0;
+
+  @override
+  Future<List<AcademicClass>> getUpcomingClasses({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+    final String buildingDataPath = "assets/maps/building_data.json",
+  }) async {
+    callCount++;
+    if (errorToThrow != null) {
+      throw errorToThrow!;
+    }
+    return classesToReturn;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group("Home View Model", () {
@@ -1155,6 +1177,68 @@ void main() {
       },
     );
 
+    test("startInterBuildingOutdoorNavigation returns false when building is missing", () async {
+      hvm.buildings = {
+        "h": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        ),
+      };
+
+      final started = await hvm.startInterBuildingOutdoorNavigation(
+        startBuildingId: "H",
+        destinationBuildingId: "MB",
+        startRoomLabel: "H buildingEntrance-1",
+        destinationRoomLabel: "MB 1.210",
+        destinationIndoorStartLabel: "MB buildingEntrance-1",
+        originIndoorStartRoomLabel: "H 110",
+        originIndoorDestinationRoomLabel: "H buildingEntrance-1",
+      );
+
+      expect(started, isFalse);
+      expect(hvm.errorMessage, equals("Unable to prepare inter-building navigation."));
+    });
+
+    test("originIndoorNavigationResume returns null for invalid start label", () {
+      hvm.buildings = {
+        "h": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        ),
+      };
+
+      hvm.selectedDestinationLabel = "H 110";
+      expect(hvm.originIndoorNavigationResume, isNull);
+
+      hvm.selectedStartLabel = "H 110";
+      expect(hvm.originIndoorNavigationEntry, isNotNull);
+
+      hvm.selectedStartLabel = "Hall Building";
+      expect(hvm.originIndoorNavigationEntry, isNull);
+    });
+
     test("selectSearchSuggestion resolves place and loads routes", () async {
       hvm.startCoordinate = const Coordinate(latitude: 45.0, longitude: -73.0);
       final place = const PlaceSuggestion(
@@ -1864,6 +1948,7 @@ void main() {
   group("HomeViewModel next class", () {
     late HomeViewModel hvm;
     late _TrackingPlacesInteractor trackingPlacesInteractor;
+    late _ConfigurableCalendarInteractor configurableCalendarInteractor;
     late GeolocatorPlatform previousPlatform;
     late _FakeGeolocator fakeGeolocator;
 
@@ -1877,6 +1962,7 @@ void main() {
         directionsInteractor: _FakeDirectionsInteractor(),
         calendarInteractor: _FakeCalendarInteractor(),
       );
+      configurableCalendarInteractor = _ConfigurableCalendarInteractor();
       previousPlatform = GeolocatorPlatform.instance;
       fakeGeolocator = _FakeGeolocator()
         ..lat = 45.4972
@@ -1956,6 +2042,53 @@ void main() {
       expect(hvm.startCoordinate, isNotNull);
       expect(hvm.destinationCoordinate, isNull);
       expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
+    });
+
+    test("setDestinationToUpcomingClassBuilding shows info when current location is unavailable", () async {
+      fakeGeolocator.serviceEnabled = false;
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(
+        hvm.generateInfoMessage,
+        equals("Unable to determine current location for navigation start."),
+      );
+    });
+
+    test("setDestinationToUpcomingClassBuilding shows info when no upcoming class is selected", () async {
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(hvm.startCoordinate, isNotNull);
+      expect(hvm.generateInfoMessage, equals("No upcoming class selected."));
+    });
+
+    test("setDestinationToUpcomingClassBuilding shows info when place suggestion cannot resolve", () async {
+      trackingPlacesInteractor.searchResults = const [
+        PlaceSuggestion(
+          placeId: "place-1",
+          description: "Concordia University EV Building, Montreal",
+          mainText: "Concordia University EV Building",
+          secondaryText: "Montreal, QC",
+        ),
+      ];
+      trackingPlacesInteractor.resolveResult = null;
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime(2026, 1, 5, 13, 0),
+        DateTime(2026, 1, 5, 14, 0),
+        Room("235", "2", Campus.sgw, "ev"),
+      );
+
+      await hvm.setDestinationToUpcomingClassBuilding();
+
+      expect(hvm.destinationCoordinate, isNull);
+      expect(hvm.generateInfoMessage, equals("Unable to find EV on the map."));
     });
 
     test("setDestinationToUpcomingClassBuilding falls back to first places suggestion", () async {
@@ -2045,6 +2178,73 @@ void main() {
       expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
       expect(hvm.selectedDestinationLabel, equals("Hingston Hall B"));
       expect(hvm.generateInfoMessage, isNull);
+    });
+
+    test("showNextClass uses cached future class and does not call calendar", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      hvmWithCalendar.upcomingClass = AcademicClass(
+        "SOEN 390 LEC A",
+        DateTime.now().add(const Duration(hours: 1)),
+        DateTime.now().add(const Duration(hours: 2)),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(hvmWithCalendar.showNextClassDialog, isTrue);
+      expect(configurableCalendarInteractor.callCount, 0);
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass sets info message when no classes are returned", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      configurableCalendarInteractor.classesToReturn = [];
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(hvmWithCalendar.generateInfoMessage, equals("No more classes today."));
+      expect(hvmWithCalendar.showNextClassDialog, isFalse);
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass handles calendar errors gracefully", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      configurableCalendarInteractor.errorToThrow = Exception("calendar offline");
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(
+        hvmWithCalendar.generateInfoMessage,
+        contains("Please use search to find your destination."),
+      );
+
+      hvmWithCalendar.dispose();
     });
   });
 }
