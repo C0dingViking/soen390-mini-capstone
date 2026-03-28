@@ -6,7 +6,6 @@ import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/domain/models/coordinate.dart";
