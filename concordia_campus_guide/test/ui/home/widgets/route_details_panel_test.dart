@@ -792,5 +792,109 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets("clicking 'now' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.departAt;
+      vm.selectedDepartureTime = DateTime.now().add(const Duration(days: 1));
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      final nowChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Now") == true,
+      );
+      expect(nowChip, findsOneWidget);
+      await tester.ensureVisible(nowChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(nowChip);
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.now);
+    });
+
+    testWidgets("clicking 'depart at' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.now;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      final departChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Depart at") == true,
+      );
+      expect(departChip, findsOneWidget);
+      await tester.ensureVisible(departChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(departChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.departAt);
+    });
+
+    testWidgets("clicking 'arrive by' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.now;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      // Tap the Arrive by chip
+      final arriveChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Arrive by") == true,
+      );
+      expect(arriveChip, findsOneWidget);
+      await tester.ensureVisible(arriveChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(arriveChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.arriveBy);
+    });
   });
 }
