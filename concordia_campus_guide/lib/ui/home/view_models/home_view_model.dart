@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:convert";
 import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
@@ -22,6 +21,7 @@ import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
 import "package:concordia_campus_guide/utils/query_helper.dart";
+import "package:concordia_campus_guide/utils/room_manifest_loader.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 
@@ -905,9 +905,7 @@ class HomeViewModel extends ChangeNotifier {
     _didAttemptRoomManifestLoad = true;
 
     try {
-      final roomManifestJson = await rootBundle.loadString("assets/floorplans/room_manifest.json");
-      final roomEntries = jsonDecode(roomManifestJson) as List<dynamic>;
-      _allRoomLabels = roomEntries.cast<String>();
+      _allRoomLabels = await RoomManifestLoader.loadRoomNames();
     } catch (e) {
       logger.w("HomeViewModel: failed to load room manifest", error: e);
       _allRoomLabels = [];
