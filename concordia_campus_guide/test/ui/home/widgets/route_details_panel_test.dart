@@ -278,7 +278,7 @@ void main() {
 
       await pumpPanel(tester);
 
-      expect(find.text("Arrive at 10:10 AM"), findsOneWidget);
+      expect(find.text("Arrive at 1/1, 10:10 AM"), findsOneWidget);
     });
 
     testWidgets("arrive-by summary uses selected arrival time when route arrival is missing", (
@@ -300,7 +300,7 @@ void main() {
 
       await pumpPanel(tester);
 
-      expect(find.text("Arrive at 9:30 AM"), findsOneWidget);
+      expect(find.text("Arrive at 1/1, 9:30 AM"), findsOneWidget);
     });
 
     testWidgets("arrive-by summary falls back to suggested departure plus duration", (
@@ -323,7 +323,7 @@ void main() {
 
       await pumpPanel(tester);
 
-      expect(find.text("Arrive at 9:25 AM"), findsOneWidget);
+      expect(find.text("Arrive at 1/1, 9:25 AM"), findsOneWidget);
     });
 
     testWidgets("shows time labels and suggested departure", (final tester) async {
@@ -342,9 +342,9 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      expect(find.text("Depart at 9:05 AM"), findsOneWidget);
-      expect(find.text("Arrive by 9:30 AM"), findsOneWidget);
-      expect(find.text("Leave at 9:15 AM to arrive on time"), findsOneWidget);
+      expect(find.text("Depart at: 1/1, 9:05 AM"), findsOneWidget);
+      expect(find.text("Arrive by: 1/1, 9:30 AM"), findsOneWidget);
+      expect(find.text("Leave at 1/1, 9:15 AM to arrive on time"), findsOneWidget);
     });
 
     testWidgets("transit arrive-by leave-at matches transit suggested departure", (
@@ -392,8 +392,8 @@ void main() {
 
       await pumpPanel(tester);
 
-      expect(find.text("Leave at 9:55 AM to arrive on time"), findsOneWidget);
-      expect(find.text("Leave at 9:10 AM to arrive on time"), findsNothing);
+      expect(find.text("Leave at 1/1, 9:55 AM to arrive on time"), findsOneWidget);
+      expect(find.text("Leave at 1/1, 9:10 AM to arrive on time"), findsNothing);
     });
 
     testWidgets("shows transit steps only when expanded", (final tester) async {
@@ -616,8 +616,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Route Details"), findsOneWidget);
-      expect(find.text("Suggested depart at 9:55 AM"), findsOneWidget);
+      expect(find.text("Suggested departure: 1/1, 9:55 AM"), findsOneWidget);
     });
+
     testWidgets("refresh button is visible in the handle", (final tester) async {
       vm.setRoutes({
         RouteMode.walking: makeOption(
@@ -756,6 +757,192 @@ void main() {
 
       final iconButton = tester.widget<IconButton>(refreshIconButtonFinder);
       expect(iconButton.onPressed, isNotNull);
+    });
+
+    testWidgets("arrival time 'tomorrow' text is properly displayed", (final tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 1));
+      final tomorrowTime = futureDate.copyWith(hour: 14, minute: 30);
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          arrivalTime: tomorrowTime,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(
+        find.byWidgetPredicate(
+          (final Widget widget) =>
+              widget is Text &&
+              widget.data != null &&
+              widget.data!.contains("Arrive tomorrow at 2:30 PM"),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets("arrival time 'today' text is properly displayed", (final tester) async {
+      final todaysDate = DateTime.now();
+      final testTime = todaysDate.copyWith(hour: 14, minute: 30);
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          arrivalTime: testTime,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(
+        find.byWidgetPredicate(
+          (final Widget widget) =>
+              widget is Text && widget.data != null && widget.data!.contains("Arrive at 2:30 PM"),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets("arrival time 'tomorrow' text is properly displayed", (final tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 1));
+      final tomorrowTime = futureDate.copyWith(hour: 14, minute: 30);
+
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+          arrivalTime: tomorrowTime,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      expect(
+        find.byWidgetPredicate(
+          (final Widget widget) =>
+              widget is Text &&
+              widget.data != null &&
+              widget.data!.contains("Arrive tomorrow at 2:30 PM"),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets("clicking 'now' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.departAt;
+      vm.selectedDepartureTime = DateTime.now().add(const Duration(days: 1));
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      final nowChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Now") == true,
+      );
+      expect(nowChip, findsOneWidget);
+      await tester.ensureVisible(nowChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(nowChip);
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.now);
+    });
+
+    testWidgets("clicking 'depart at' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.now;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      final departChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Depart at") == true,
+      );
+      expect(departChip, findsOneWidget);
+      await tester.ensureVisible(departChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(departChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.departAt);
+    });
+
+    testWidgets("clicking 'arrive by' chip sets the departure mode", (final tester) async {
+      vm.setRoutes({
+        RouteMode.walking: makeOption(
+          mode: RouteMode.walking,
+          distanceMeters: 1200,
+          durationSeconds: 600,
+        ),
+      });
+      vm.selectedRouteMode = RouteMode.walking;
+      vm.departureMode = DepartureMode.now;
+      vm.notifyListeners();
+
+      await pumpPanel(tester);
+
+      // Tap the Arrive by chip
+      final arriveChip = find.byWidgetPredicate(
+        (final widget) =>
+            widget is FilterChip &&
+            widget.label is Text &&
+            (widget.label as Text).data?.contains("Arrive by") == true,
+      );
+      expect(arriveChip, findsOneWidget);
+      await tester.ensureVisible(arriveChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(arriveChip);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
+
+      expect(vm.departureMode, DepartureMode.arriveBy);
     });
 
     testWidgets("shows indoor switch and reached-building jump buttons for room destination", (
