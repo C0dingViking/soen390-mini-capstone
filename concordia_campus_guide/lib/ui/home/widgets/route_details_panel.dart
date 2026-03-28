@@ -624,10 +624,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       buttonLabel: "Return to Origin Indoor Navigation",
     );
 
-    return _buildOriginIndoorActionButton(
-      payload: payload,
-      actionStyle: actionStyle,
-    );
+    return _buildOriginIndoorActionButton(payload: payload, actionStyle: actionStyle);
   }
 
   Widget _buildOriginIndoorActionButton({
@@ -664,8 +661,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                       initialDestinationRoomLabel: payload.destinationRoomLabel,
                       interBuildingDestinationBuildingId: payload.destinationBuildingId,
                       interBuildingDestinationEntryLabel: payload.destinationEntryLabel,
-                      interBuildingDestinationRoomLabel:
-                          payload.interBuildingDestinationRoomLabel,
+                      interBuildingDestinationRoomLabel: payload.interBuildingDestinationRoomLabel,
                     ),
                   ),
                 );
@@ -703,10 +699,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
       buttonLabel: "Start Origin Indoor Navigation",
     );
 
-    return _buildOriginIndoorActionButton(
-      payload: payload,
-      actionStyle: actionStyle,
-    );
+    return _buildOriginIndoorActionButton(payload: payload, actionStyle: actionStyle);
   }
 
   Widget _buildStepItem(final RouteStep step) {
