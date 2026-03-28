@@ -873,8 +873,8 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final isExpandableMode =
         selectedMode == RouteMode.transit ||
         selectedMode == RouteMode.walking ||
-      selectedMode == RouteMode.bicycling ||
-      selectedMode == RouteMode.shuttle;
+        selectedMode == RouteMode.bicycling ||
+        selectedMode == RouteMode.shuttle;
     return _isCollapsed && hasSteps && isExpandableMode;
   }
 
