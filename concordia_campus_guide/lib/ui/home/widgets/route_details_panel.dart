@@ -261,35 +261,33 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
               FilterChip(
                 onSelected: (_) async {
                   final now = DateTime.now();
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(viewModel.selectedDepartureTime ?? now),
+                  final date = await _showMergedDateTimePicker(
+                    initialDate: viewModel.selectedDepartureTime ?? now,
                   );
-                  if (time != null) {
-                    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-                    viewModel.setDepartureTime(dateTime);
+
+                  if (date != null) {
+                    viewModel.setDepartureTime(date);
                   }
                 },
                 selected: viewModel.departureMode == DepartureMode.departAt,
                 label: Text(
-                  'Depart at ${viewModel.selectedDepartureTime != null ? _formatTime(viewModel.selectedDepartureTime!) : ''}',
+                  "Depart at${viewModel.selectedDepartureTime != null ? ": ${_formatDateTime(date: viewModel.selectedDepartureTime!, asPhrase: false)}" : ""}",
                 ),
               ),
               FilterChip(
                 onSelected: (_) async {
                   final now = DateTime.now();
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(viewModel.selectedArrivalTime ?? now),
+                  final date = await _showMergedDateTimePicker(
+                    initialDate: viewModel.selectedArrivalTime ?? now,
                   );
-                  if (time != null) {
-                    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-                    viewModel.setArrivalTime(dateTime);
+
+                  if (date != null) {
+                    viewModel.setArrivalTime(date);
                   }
                 },
                 selected: viewModel.departureMode == DepartureMode.arriveBy,
                 label: Text(
-                  'Arrive by ${viewModel.selectedArrivalTime != null ? _formatTime(viewModel.selectedArrivalTime!) : ''}',
+                  "Arrive by${viewModel.selectedArrivalTime != null ? ": ${_formatDateTime(date: viewModel.selectedArrivalTime!, asPhrase: false)}" : ""}",
                 ),
               ),
             ],
@@ -298,7 +296,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                "Leave at ${_formatTime(leaveAtTime)} to arrive on time",
+                "Leave ${_formatDateTime(date: leaveAtTime, asPhrase: true)} to arrive on time",
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ),
@@ -307,11 +305,56 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     );
   }
 
+  Future<DateTime?> _showMergedDateTimePicker({required final DateTime initialDate}) async {
+    DateTime? selectedDate;
+    selectedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (selectedDate == null) return null;
+
+    if (!mounted) return null;
+
+    TimeOfDay? selectedTime;
+    selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initialDate),
+    );
+    if (selectedTime == null) return null;
+
+    return DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+  }
+
+  bool _isSameDate(final DateTime day1, final DateTime day2) {
+    return (day1.day == day2.day && day1.month == day2.month && day1.year == day2.year);
+  }
+
   String _formatTime(final DateTime time) {
     final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
     final minute = time.minute.toString().padLeft(2, "0");
     final period = time.hour < 12 ? "AM" : "PM";
     return "$hour12:$minute $period";
+  }
+
+  String _formatDateTime({required final DateTime date, required final bool asPhrase}) {
+    final now = DateTime.now();
+    final tomorrow = now.add(const Duration(days: 1));
+
+    if (_isSameDate(date, now)) {
+      return asPhrase ? "at ${_formatTime(date)}" : "Today, ${_formatTime(date)}";
+    } else if (_isSameDate(date, tomorrow)) {
+      return asPhrase ? "tomorrow at ${_formatTime(date)}" : "Tomorrow, ${_formatTime(date)}";
+    } else {
+      return "${asPhrase ? "at " : ""}${date.month}/${date.day}, ${_formatTime(date)}";
+    }
   }
 
   DateTime? _suggestedTransitDepartureTime(final List<RouteStep> steps) {
@@ -376,7 +419,9 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final viewModel = context.read<HomeViewModel>();
 
     final arrivalTime = _calculateArrivalTime(option, viewModel);
-    final arrivalTimeText = arrivalTime != null ? _formatTime(arrivalTime) : null;
+    final arrivalTimeText = arrivalTime != null
+        ? _formatDateTime(date: arrivalTime, asPhrase: true)
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -395,7 +440,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
                   Text(distance, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                 if (arrivalTimeText != null)
                   Text(
-                    "Arrive at $arrivalTimeText",
+                    "Arrive $arrivalTimeText",
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[700],
@@ -431,7 +476,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              "Suggested depart at ${_formatTime(suggestedTransitDeparture)}",
+              "Suggested departure: ${_formatDateTime(date: suggestedTransitDeparture, asPhrase: false)}",
               style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
             ),
           ),
