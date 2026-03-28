@@ -21,6 +21,7 @@ import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
+import "package:concordia_campus_guide/utils/query_helper.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 
@@ -233,8 +234,10 @@ class HomeViewModel extends ChangeNotifier {
     _searchQuery = query;
     _searchDebounce?.cancel();
 
-    final buildingSuggestions = _buildingSuggestions(
-      query,
+    final buildingSuggestions = QueryHelper.buildSearchSuggestions(
+      query: query,
+      buildings: buildings,
+      campusRoomLabels: _campusRoomLabels,
       includeRooms:
           _activeSearchField == SearchField.destination || _activeSearchField == SearchField.start,
     );
@@ -897,100 +900,6 @@ class HomeViewModel extends ChangeNotifier {
     return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
   }
 
-  List<SearchSuggestion> _buildingSuggestions(
-    final String query, {
-    final bool includeRooms = false,
-  }) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return [];
-
-    final buildingSuggestions = _buildBuildingSuggestionsFromQuery(q);
-
-    if (!includeRooms || _campusRoomLabels.isEmpty) {
-      return buildingSuggestions.take(8).toList();
-    }
-
-    final roomSuggestions = _buildRoomSuggestionsFromQuery(q);
-    return [...buildingSuggestions.take(4), ...roomSuggestions].take(10).toList();
-  }
-
-  List<SearchSuggestion> _buildBuildingSuggestionsFromQuery(final String query) {
-    final matches = _matchAndSortBuildings(query);
-    return matches.map((final building) {
-      final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
-      return SearchSuggestion.building(
-        building,
-        subtitle: "$campusLabel - ${building.id.toUpperCase()}",
-      );
-    }).toList();
-  }
-
-  List<Building> _matchAndSortBuildings(final String query) {
-    final matches = buildings.values.where((final b) {
-      final name = b.name.toLowerCase();
-      final id = b.id.toLowerCase();
-      return name.contains(query) || id.contains(query);
-    }).toList();
-
-    matches.sort((final a, final b) {
-      final rankA = _matchRank(a, query);
-      final rankB = _matchRank(b, query);
-      if (rankA != rankB) return rankA.compareTo(rankB);
-      return a.name.compareTo(b.name);
-    });
-
-    return matches;
-  }
-
-  List<SearchSuggestion> _buildRoomSuggestionsFromQuery(final String query) {
-    final roomMatches = _matchAndSortRooms(query);
-    final roomSuggestions = <SearchSuggestion>[];
-
-    for (final roomLabel in roomMatches) {
-      final parsed = _parseRoomLabel(roomLabel);
-      if (parsed == null) continue;
-
-      final building = _findBuildingById(parsed.buildingId);
-      if (building == null) continue;
-
-      _addRoomSuggestion(roomSuggestions, building, parsed);
-
-      if (roomSuggestions.length >= 8) break;
-    }
-
-    return roomSuggestions;
-  }
-
-  List<String> _matchAndSortRooms(final String query) {
-    final roomMatches = _campusRoomLabels
-        .where((final roomLabel) => _roomMatchesQuery(roomLabel, query))
-        .toList();
-
-    roomMatches.sort((final a, final b) {
-      final rankA = _roomMatchRank(a, query);
-      final rankB = _roomMatchRank(b, query);
-      if (rankA != rankB) return rankA.compareTo(rankB);
-      return a.compareTo(b);
-    });
-
-    return roomMatches;
-  }
-
-  void _addRoomSuggestion(
-    final List<SearchSuggestion> suggestions,
-    final Building building,
-    final ({String buildingId, String roomNumber}) parsed,
-  ) {
-    final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
-    suggestions.add(
-      SearchSuggestion.room(
-        building: building,
-        roomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
-        subtitle: "$campusLabel - ${building.name}",
-      ),
-    );
-  }
-
   Future<void> _loadRoomManifestIfNeeded() async {
     if (_didAttemptRoomManifestLoad) return;
     _didAttemptRoomManifestLoad = true;
@@ -1011,56 +920,9 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    _campusRoomLabels = _allRoomLabels.where(_isCampusRoomLabel).toList(growable: false);
-  }
-
-  bool _isCampusRoomLabel(final String roomLabel) {
-    final parsed = _parseRoomLabel(roomLabel);
-    if (parsed == null) return false;
-
-    final building = _findBuildingById(parsed.buildingId);
-    if (building == null || building.supportedIndoorFloors.isEmpty) {
-      return false;
-    }
-
-    return building.campus == Campus.sgw || building.campus == Campus.loyola;
-  }
-
-  ({String buildingId, String roomNumber})? _parseRoomLabel(final String rawLabel) {
-    final trimmed = rawLabel.trim();
-    if (trimmed.isEmpty) return null;
-
-    final parts = trimmed.split(RegExp(r"\s+"));
-    if (parts.length < 2) return null;
-
-    final buildingId = parts.first.trim();
-    final roomNumber = trimmed.substring(parts.first.length).trim();
-    if (buildingId.isEmpty || roomNumber.isEmpty) return null;
-
-    return (buildingId: buildingId, roomNumber: roomNumber);
-  }
-
-  bool _roomMatchesQuery(final String roomLabel, final String query) {
-    final normalizedQuery = _normalizeSearchToken(query);
-    final normalizedLabel = _normalizeSearchToken(roomLabel);
-    return roomLabel.toLowerCase().contains(query) ||
-        (normalizedQuery.isNotEmpty && normalizedLabel.contains(normalizedQuery));
-  }
-
-  int _roomMatchRank(final String roomLabel, final String query) {
-    final normalizedQuery = _normalizeSearchToken(query);
-    final normalizedLabel = _normalizeSearchToken(roomLabel);
-    final roomLower = roomLabel.toLowerCase();
-
-    if (roomLower.startsWith(query)) return 0;
-    if (roomLower.contains(query)) return 1;
-    if (normalizedQuery.isNotEmpty && normalizedLabel.startsWith(normalizedQuery)) return 2;
-    if (normalizedQuery.isNotEmpty && normalizedLabel.contains(normalizedQuery)) return 3;
-    return 4;
-  }
-
-  String _normalizeSearchToken(final String value) {
-    return value.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "");
+    _campusRoomLabels = _allRoomLabels
+        .where((final roomLabel) => QueryHelper.isCampusRoomLabel(roomLabel, buildings))
+        .toList(growable: false);
   }
 
   Future<List<PlaceSuggestion>> _searchNearbyPlaces(final String query) async {
@@ -1266,22 +1128,12 @@ class HomeViewModel extends ChangeNotifier {
     }).toSet();
   }
 
-  int _matchRank(final Building building, final String query) {
-    final name = building.name.toLowerCase();
-    final id = building.id.toLowerCase();
-    if (name.startsWith(query)) return 0;
-    if (name.contains(query)) return 1;
-    if (id.startsWith(query)) return 2;
-    if (id.contains(query)) return 3;
-    return 4;
-  }
-
   ({Building building, String destinationRoomLabel, String roomNumber, String? startRoomLabel})?
   get indoorNavigationDestination {
-    final parsed = _parseRoomLabel(selectedDestinationLabel ?? "");
+    final parsed = QueryHelper.parseRoomLabel(selectedDestinationLabel ?? "");
     if (parsed == null) return null;
 
-    final building = _findBuildingById(parsed.buildingId);
+    final building = QueryHelper.findBuildingById(parsed.buildingId, buildings);
     if (building == null || building.supportedIndoorFloors.isEmpty) {
       return null;
     }
@@ -1306,12 +1158,12 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final parsedStart = _parseRoomLabel(startLabel);
+    final parsedStart = QueryHelper.parseRoomLabel(startLabel);
     if (parsedStart == null) {
       return null;
     }
 
-    final building = _findBuildingById(parsedStart.buildingId);
+    final building = QueryHelper.findBuildingById(parsedStart.buildingId, buildings);
     if (building == null || building.supportedIndoorFloors.isEmpty) {
       return null;
     }
@@ -1326,18 +1178,18 @@ class HomeViewModel extends ChangeNotifier {
       return null;
     }
 
-    final parsedStart = _parseRoomLabel(startLabel);
+    final parsedStart = QueryHelper.parseRoomLabel(startLabel);
     if (parsedStart == null) {
       return null;
     }
 
-    final startBuilding = _findBuildingById(parsedStart.buildingId);
+    final startBuilding = QueryHelper.findBuildingById(parsedStart.buildingId, buildings);
     if (startBuilding == null || startBuilding.supportedIndoorFloors.isEmpty) {
       return null;
     }
 
     String? destinationRoomLabel;
-    final parsedDestination = _parseRoomLabel(selectedDestinationLabel ?? "");
+    final parsedDestination = QueryHelper.parseRoomLabel(selectedDestinationLabel ?? "");
     if (parsedDestination != null) {
       destinationRoomLabel =
           "${parsedDestination.buildingId.toUpperCase()} ${parsedDestination.roomNumber}";
@@ -1359,8 +1211,8 @@ class HomeViewModel extends ChangeNotifier {
     required final String originIndoorStartRoomLabel,
     required final String originIndoorDestinationRoomLabel,
   }) async {
-    final startBuilding = _findBuildingById(startBuildingId);
-    final destinationBuilding = _findBuildingById(destinationBuildingId);
+    final startBuilding = QueryHelper.findBuildingById(startBuildingId, buildings);
+    final destinationBuilding = QueryHelper.findBuildingById(destinationBuildingId, buildings);
 
     if (startBuilding == null || destinationBuilding == null) {
       errorMessage = "Unable to prepare inter-building navigation.";
@@ -1429,23 +1281,6 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Building? _findBuildingById(final String buildingId) {
-    final normalized = buildingId.trim().toLowerCase();
-    if (normalized.isEmpty) return null;
-
-    final directMatch =
-        buildings[buildingId] ?? buildings[normalized] ?? buildings[normalized.toUpperCase()];
-    if (directMatch != null) return directMatch;
-
-    for (final building in buildings.values) {
-      if (building.id.toLowerCase() == normalized) {
-        return building;
-      }
-    }
-
-    return null;
-  }
-
   Future<void> setDestinationToUpcomingClassBuilding() async {
     setSearchBarExpanded(true);
     await setStartToCurrentLocation();
@@ -1463,7 +1298,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final buildingId = upcoming.room.buildingId;
-    final building = _findBuildingById(buildingId);
+    final building = QueryHelper.findBuildingById(buildingId, buildings);
     if (building != null) {
       _applySelection(
         field: SearchField.destination,
