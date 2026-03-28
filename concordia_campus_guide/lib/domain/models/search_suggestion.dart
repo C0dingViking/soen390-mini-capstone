@@ -1,7 +1,7 @@
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 
-enum SearchSuggestionType { building, place }
+enum SearchSuggestionType { building, place, room }
 
 class SearchSuggestion {
   final SearchSuggestionType type;
@@ -9,6 +9,7 @@ class SearchSuggestion {
   final String? subtitle;
   final Building? building;
   final PlaceSuggestion? place;
+  final String? roomLabel;
 
   const SearchSuggestion._({
     required this.type,
@@ -16,6 +17,7 @@ class SearchSuggestion {
     this.subtitle,
     this.building,
     this.place,
+    this.roomLabel,
   });
 
   factory SearchSuggestion.building(final Building building, {final String? subtitle}) {
@@ -33,6 +35,20 @@ class SearchSuggestion {
       title: place.mainText.isNotEmpty ? place.mainText : place.description,
       subtitle: _buildPlaceSubtitle(place),
       place: place,
+    );
+  }
+
+  factory SearchSuggestion.room({
+    required final Building building,
+    required final String roomLabel,
+    final String? subtitle,
+  }) {
+    return SearchSuggestion._(
+      type: SearchSuggestionType.room,
+      title: roomLabel,
+      subtitle: subtitle,
+      building: building,
+      roomLabel: roomLabel,
     );
   }
 
