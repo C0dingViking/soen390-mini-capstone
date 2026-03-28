@@ -535,25 +535,22 @@ void main() {
       expect(find.text("T buildingEntrance-1"), findsOneWidget);
     });
 
-    testWidgets(
-      "auto-starts navigation when both initial start and destination are provided",
-      (final tester) async {
-        await pumpHomeScreen(
-          tester,
-          true,
-          initialStartRoomLabel: "T 210",
-          initialDestinationRoomLabel: "T 110",
-        );
-        await tester.pumpAndSettle();
-
-        expect(ivm.selectedFloorplan!.floorNumber, "2");
-        expect(find.text("2"), findsOneWidget);
-      },
-    );
-
-    testWidgets("does not auto-start navigation when destination is missing", (
+    testWidgets("auto-starts navigation when both initial start and destination are provided", (
       final tester,
     ) async {
+      await pumpHomeScreen(
+        tester,
+        true,
+        initialStartRoomLabel: "T 210",
+        initialDestinationRoomLabel: "T 110",
+      );
+      await tester.pumpAndSettle();
+
+      expect(ivm.selectedFloorplan!.floorNumber, "2");
+      expect(find.text("2"), findsOneWidget);
+    });
+
+    testWidgets("does not auto-start navigation when destination is missing", (final tester) async {
       await pumpHomeScreen(tester, true, initialStartRoomLabel: "T 110");
       await tester.pumpAndSettle();
 

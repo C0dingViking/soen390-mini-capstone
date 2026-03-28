@@ -146,7 +146,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     if (!mounted) return;
 
     final loadedFloorplans = _viewModel.loadedFloorplans;
-    final isReady = !_viewModel.isLoading &&
+    final isReady =
+        !_viewModel.isLoading &&
         loadedFloorplans != null &&
         loadedFloorplans.isNotEmpty &&
         !_autoStartTriggered;
