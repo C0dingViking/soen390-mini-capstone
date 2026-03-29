@@ -53,7 +53,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   final ScrollController _routeDetailsScrollController = ScrollController();
 
   static const double _minHeight = 120;
-  
+
   @override
   void dispose() {
     _routeDetailsScrollController.dispose();
@@ -114,7 +114,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     final routeOptions = context.select((final HomeViewModel vm) => vm.routeOptions);
     final selectedMode = context.select((final HomeViewModel vm) => vm.selectedRouteMode);
     final routeError = context.select((final HomeViewModel vm) => vm.routeErrorMessage);
-    
+
     if (isShowingPanel && !_wasShowingRoutes) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;

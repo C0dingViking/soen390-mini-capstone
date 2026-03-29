@@ -313,10 +313,10 @@ class _HomeScreenState extends State<HomeScreen> {
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
             final double actionBottomOffset =
-              ((hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
-                  ? actionBottomWithRoutes
-                  : actionBottom) +
-              bottomInset;
+                ((hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+                    ? actionBottomWithRoutes
+                    : actionBottom) +
+                bottomInset;
             final locationFabIcon = hvm.isLocationActionAvailable
                 ? Icons.my_location
                 : Icons.location_disabled;
