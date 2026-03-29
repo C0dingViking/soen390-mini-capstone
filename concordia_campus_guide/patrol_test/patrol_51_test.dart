@@ -29,7 +29,10 @@ void main() {
     await $.enterText(searchField, "Sushi");
     await $.pumpAndSettle();
 
-    await $.pump(const Duration(seconds: 5));
+    await $.tester.testTextInput.receiveAction(TextInputAction.search);
+    await $.pumpAndSettle();
+
+    await $.pump(const Duration(seconds: 50));
 
     $.log("TEST COMPLETE");
     await $.pump(const Duration(seconds: 5));
