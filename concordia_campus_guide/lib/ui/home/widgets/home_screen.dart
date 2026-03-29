@@ -286,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final hasNavigation = context.select(
       (final HomeViewModel vm) => vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
     );
-
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return PopScope(
       canPop: !hasNavigation,
       onPopInvokedWithResult: (final didPop, final result) {
@@ -312,9 +312,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const double labelFontSize = 16;
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
-            final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
-                ? actionBottomWithRoutes
-                : actionBottom;
+            final double actionBottomOffset =
+              ((hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+                  ? actionBottomWithRoutes
+                  : actionBottom) +
+              bottomInset;
             final locationFabIcon = hvm.isLocationActionAvailable
                 ? Icons.my_location
                 : Icons.location_disabled;
@@ -454,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (hvm.showNextClassFab)
                   Positioned(
                     left: actionInset,
-                    bottom: secondActionBottom,
+                    bottom: secondActionBottom + bottomInset,
                     child: FloatingActionButton.extended(
                       key: const Key("next_class"),
                       heroTag: "next_class",
@@ -474,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (canSwitchToIndoorNavigation)
                   Positioned(
                     left: actionInset,
-                    bottom: indoorSwitchBottomOffset,
+                    bottom: indoorSwitchBottomOffset + bottomInset,
                     child: FloatingActionButton.extended(
                       key: const Key("main_screen_switch_to_indoor_navigation_button"),
                       heroTag: "main_screen_switch_to_indoor_navigation",
