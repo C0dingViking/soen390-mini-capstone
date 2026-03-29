@@ -25,7 +25,7 @@ void main() {
     await $.tester.tap(searchField);
     await $.pumpAndSettle();
 
-    $.log("STEP 5: Typing 'Sushi' to search for shushi places around");
+    $.log("STEP 5: Typing 'Sushi' to search for sushi places around");
     await $.enterText(searchField, "Sushi");
     await $.pumpAndSettle();
 
