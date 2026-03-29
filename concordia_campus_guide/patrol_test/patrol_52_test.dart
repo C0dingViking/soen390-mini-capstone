@@ -37,9 +37,6 @@ void main() {
     await $.tester.tap(sushiPlace);
     await $.pumpAndSettle();
 
-    await $.tester.testTextInput.receiveAction(TextInputAction.search);
-    await $.pumpAndSettle();
-
     $.log("Waiting for keyboard to hide...");
     await $.pump(const Duration(seconds: 300));
 
