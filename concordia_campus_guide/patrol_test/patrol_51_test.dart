@@ -32,7 +32,9 @@ void main() {
     await $.tester.testTextInput.receiveAction(TextInputAction.search);
     await $.pumpAndSettle();
 
-    await $.pump(const Duration(seconds: 50));
+    await $.pump(const Duration(seconds: 3));
+
+    
 
     $.log("TEST COMPLETE");
     await $.pump(const Duration(seconds: 5));
