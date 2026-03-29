@@ -19,11 +19,11 @@ void main() {
     await $.pumpAndSettle();
     await $.pump(const Duration(seconds: 6));
 
-    //$.log("STEP 4: Tapping the search bar...");
-    //final searchField = find.widgetWithText(TextField, "Search for a place or address");
-    //expect(searchField, findsOneWidget);
-    //await $.tester.tap(searchField);
-    //await $.pumpAndSettle();
+    $.log("STEP 4: Tapping the search bar...");
+    final searchField = find.widgetWithText(TextField, "Enter your destination");
+    expect(searchField, findsOneWidget);
+    await $.tester.tap(searchField);
+    await $.pumpAndSettle();
 
     $.log("TEST COMPLETE");
     await $.pump(const Duration(seconds: 5));
