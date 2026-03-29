@@ -29,11 +29,17 @@ void main() {
     await $.enterText(searchField, "Sushi");
     await $.pumpAndSettle();
 
+    //Katsuya Montréal
+    $.log("STEP 6: Selecting 'Katsuya Montréal'...");
+    final sushiPlace = find.text("Katsuya Montréal");
+    await $.tester.tap(sushiPlace);
+    await $.pumpAndSettle();
+
     await $.tester.testTextInput.receiveAction(TextInputAction.search);
     await $.pumpAndSettle();
 
     $.log("Waiting for keyboard to hide...");
-    await $.pump(const Duration(seconds: 3));
+    await $.pump(const Duration(seconds: 300));
 
     $.log("STEP 6: Opening nearby-limit menu...");
     await $.tap(find.byIcon(Icons.tune));
