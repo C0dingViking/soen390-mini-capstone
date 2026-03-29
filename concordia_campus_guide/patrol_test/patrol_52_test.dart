@@ -40,6 +40,17 @@ void main() {
     $.log("Waiting for keyboard to hide...");
     await $.pump(const Duration(seconds: 3));
 
+    $.log("STEP 7: Expanding Route Details Panel...");
+    final handle = find.byKey(const Key("route_details_handle"));
+    expect(handle, findsOneWidget);
+    await $.tester.tap(handle);
+    await $.pumpAndSettle();
+    await $.pump(const Duration(seconds: 2));
+
+    await $.tester.tap(handle);
+    await $.pumpAndSettle();
+    await $.pump(const Duration(seconds: 1));
+
     $.log("TEST COMPLETE");
     await $.pump(const Duration(seconds: 5));
   });
