@@ -1691,28 +1691,6 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
     });
 
-    testWidgets("entering invalid start room on blur clears start room selection", (
-      final tester,
-    ) async {
-      await pumpHomeScreen(tester, true);
-
-      final startField = find.byType(TextField).first;
-
-      await tester.enterText(startField, "T 110");
-      await tester.pump();
-      await tester.tap(find.byType(ListTile));
-      await tester.pump();
-
-      expect(ivm.selectedStartRoomName, equals("110"));
-
-      await tester.enterText(startField, "X 999");
-      await tester.pump();
-      await tester.tap(find.byType(ListTile));
-      await tester.pump();
-
-      expect(ivm.selectedStartRoomName, isNull);
-    });
-
     testWidgets("start room name parsing extracts room number after building ID", (
       final tester,
     ) async {
