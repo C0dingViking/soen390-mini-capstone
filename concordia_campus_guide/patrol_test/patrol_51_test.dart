@@ -5,6 +5,7 @@ import "package:patrol/patrol.dart";
 
 void main() {
   patrolTest("[US-5.1] Show the nearest outdoor points of interest", (final $) async {
+
     $.log("STEP 1: Launching the app...");
     app.main();
     await $.pumpAndSettle();
@@ -38,7 +39,6 @@ void main() {
     $.log("STEP 6: Opening nearby-limit menu...");
     await $.tap(find.byIcon(Icons.tune));
     await $.pumpAndSettle();
-
     await $.pump(const Duration(seconds: 3));
 
     $.log("STEP 7: Selecting 'Show Nearest 10 Locations'...");
