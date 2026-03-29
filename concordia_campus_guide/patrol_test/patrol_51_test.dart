@@ -32,6 +32,9 @@ void main() {
     await $.tester.testTextInput.receiveAction(TextInputAction.search);
     await $.pumpAndSettle();
 
+    $.log("Waiting for keyboard to hide...");
+    await $.pump(const Duration(seconds: 3));
+
     $.log("STEP 6: Opening nearby-limit menu...");
     await $.tap(find.byIcon(Icons.tune));
     await $.pumpAndSettle();
