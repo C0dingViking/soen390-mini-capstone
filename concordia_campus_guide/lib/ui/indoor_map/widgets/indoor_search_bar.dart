@@ -7,6 +7,7 @@ class IndoorSearchBar extends StatefulWidget {
   final TextEditingController? startController;
   final TextEditingController? destinationController;
   final FocusNode? destinationFocusNode;
+  final FocusNode? startFocusNode;
   final bool isIndoorNavigationDisplayed;
   final void Function(String startRoom, String destinationRoom, bool accessibleMode)?
   onStartNavigation;
@@ -17,6 +18,7 @@ class IndoorSearchBar extends StatefulWidget {
     this.startController,
     this.destinationController,
     this.destinationFocusNode,
+    this.startFocusNode,
     this.isIndoorNavigationDisplayed = false,
     this.onStartNavigation,
     this.onEndNavigation,
@@ -39,6 +41,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
   late bool _ownsStartController;
   late bool _ownsDestinationController;
   late bool _ownsDestinationFocus;
+  late bool _ownsStartFocus;
   late FocusNode _startFocus;
   late FocusNode _destinationFocus;
   late FocusedField _activeField;
@@ -67,7 +70,8 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     _destinationController = widget.destinationController ?? TextEditingController();
     _ownsStartController = widget.startController == null;
     _ownsDestinationController = widget.destinationController == null;
-    _startFocus = FocusNode();
+    _startFocus = widget.startFocusNode ?? FocusNode();
+    _ownsStartFocus = widget.startFocusNode == null;
     _destinationFocus = widget.destinationFocusNode ?? FocusNode();
     _ownsDestinationFocus = widget.destinationFocusNode == null;
     _activeField = FocusedField.neither;
@@ -263,7 +267,9 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       _destinationController.dispose();
     }
 
-    _startFocus.dispose();
+    if (_ownsStartFocus) {
+      _startFocus.dispose();
+    }
 
     if (_ownsDestinationFocus) {
       _destinationFocus.dispose();

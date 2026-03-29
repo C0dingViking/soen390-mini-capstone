@@ -180,6 +180,8 @@ void main() {
   testWidgets("externally owned controllers are not disposed by widget", (final tester) async {
     final startController = TextEditingController();
     final destinationController = TextEditingController();
+    final startFocus = FocusNode();
+    final destinationFocus = FocusNode();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -187,6 +189,8 @@ void main() {
           body: IndoorSearchBar(
             startController: startController,
             destinationController: destinationController,
+            startFocusNode: startFocus,
+            destinationFocusNode: destinationFocus,
             queryableRooms: [],
           ),
         ),
@@ -197,9 +201,13 @@ void main() {
 
     expect(() => startController.text = "Still usable", returnsNormally);
     expect(() => destinationController.text = "Still usable", returnsNormally);
+    expect(() => startFocus.requestFocus(), returnsNormally);
+    expect(() => destinationFocus.requestFocus(), returnsNormally);
 
     startController.dispose();
     destinationController.dispose();
+    startFocus.dispose();
+    destinationFocus.dispose();
   });
 
   testWidgets("typing filters rooms and shows matching suggestions", (final tester) async {

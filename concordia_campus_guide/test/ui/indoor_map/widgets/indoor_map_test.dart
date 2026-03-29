@@ -1589,4 +1589,309 @@ void main() {
       expect(customPaintCountAfter, lessThanOrEqualTo(customPaintCountBefore));
     });
   });
+
+  group("Room highlighting for start and end room selection (RoomHighlightPainter)", () {
+    testWidgets("clearing start field immediately clears start room highlight", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+
+      await tester.enterText(startField, "");
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+    });
+
+    testWidgets("clearing destination field immediately clears end room highlight", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(destinationField, "T 110");
+      await tester.pump();
+
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, equals("110"));
+
+      await tester.enterText(destinationField, "");
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, isNull);
+    });
+
+    testWidgets("entering valid 'BUILDING ROOM' format for start selects start room on blur", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+    });
+
+    testWidgets("entering valid 'BUILDING ROOM' format for destination selects end room on blur", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(destinationField, "T 210");
+      await tester.pump();
+
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, equals("210"));
+    });
+
+    testWidgets("both start and end rooms can be selected simultaneously and highlighted", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+      expect(ivm.selectedEndRoomName, equals("111"));
+
+      expect(find.byType(CustomPaint), findsWidgets);
+    });
+
+    testWidgets("entering invalid start room on blur clears start room selection", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+
+      await tester.enterText(startField, "X 999");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+    });
+
+    testWidgets("start room name parsing extracts room number after building ID", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "H 820");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("820"));
+    });
+
+    testWidgets("end room name parsing extracts room number after building ID", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(destinationField, "H 820");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, equals("820"));
+    });
+
+    testWidgets("empty start field on blur does not select any start room", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.tap(startField);
+      await tester.pump();
+      await tester.tap(find.byType(Scaffold));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+    });
+
+    testWidgets("whitespace-only start text clears selection on blur", (final tester) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(Scaffold));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+
+      await tester.enterText(startField, "   ");
+      await tester.pump();
+      await tester.tap(find.byType(Scaffold));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+    });
+
+    testWidgets("start room becomes unavailable after floor change clears selection", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(Scaffold));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+
+      ivm.resetFloorplanLoadState();
+      ivm.loadedRoomNames = [];
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+    });
+
+    testWidgets("end room becomes unavailable after floor change clears selection", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(destinationField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(Scaffold));
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, equals("110"));
+
+      ivm.resetFloorplanLoadState();
+      ivm.loadedRoomNames = [];
+      await tester.pump();
+
+      expect(ivm.selectedEndRoomName, isNull);
+    });
+
+    testWidgets("room highlight painter is shown when only start room is selected", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+      expect(ivm.selectedEndRoomName, isNull);
+    });
+
+    testWidgets("room highlight painter is shown when only end room is selected", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+      expect(ivm.selectedEndRoomName, equals("111"));
+    });
+
+    testWidgets("room highlight painter is absent when no rooms are selected", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      expect(ivm.selectedStartRoomName, isNull);
+      expect(ivm.selectedEndRoomName, isNull);
+
+      final startField = find.byType(TextField).first;
+      await tester.enterText(startField, "");
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+      expect(ivm.selectedEndRoomName, isNull);
+    });
+
+    testWidgets("clearing start room while end room is selected keeps highlight painter", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, equals("110"));
+      expect(ivm.selectedEndRoomName, equals("111"));
+
+      await tester.enterText(startField, "");
+      await tester.pump();
+
+      expect(ivm.selectedStartRoomName, isNull);
+      expect(ivm.selectedEndRoomName, equals("111"));
+    });
+  });
 }

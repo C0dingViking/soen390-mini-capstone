@@ -10,6 +10,7 @@ import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart"
 import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_model.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_highlight_painter.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
@@ -69,6 +70,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _destinationFocusNode = FocusNode();
+  final FocusNode _startFocusNode = FocusNode();
   bool _didApplyOutdoorHandoffDefaults = false;
   _InterBuildingNavigationPlan? _pendingInterBuildingPlan;
   bool _autoStartTriggered = false;
@@ -124,6 +126,67 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       context.read<IndoorViewModel>().initializeRoomNames();
       context.read<IndoorViewModel>().initializeBuildingFloorplans(widget.building.id);
     });
+    _destinationFocusNode.addListener(_onDestinationFocusChanged);
+    _destinationController.addListener(_onDestinationTextChanged);
+    _startController.addListener(_onStartTextChanged);
+    _startFocusNode.addListener(_onStartFocusChanged);
+  }
+
+  void _onDestinationTextChanged() {
+    if (_destinationController.text.isEmpty) {
+      _viewModel.clearSelectedEndRoom();
+    }
+  }
+
+  void _onStartTextChanged() {
+    if (_startController.text.isEmpty) {
+      _viewModel.clearSelectedStartRoom();
+    }
+  }
+
+  void _onStartFocusChanged() {
+    if (!_startFocusNode.hasFocus) {
+      _validateAndSetRoom(
+        _startController.text,
+        _viewModel.selectStartRoom,
+        _viewModel.clearSelectedStartRoom,
+      );
+    }
+  }
+
+  void _onDestinationFocusChanged() {
+    if (!_destinationFocusNode.hasFocus) {
+      _validateAndSetRoom(
+        _destinationController.text,
+        _viewModel.selectEndRoom,
+        _viewModel.clearSelectedEndRoom,
+      );
+    }
+  }
+
+  void _validateAndSetRoom(
+    final String input,
+    final void Function(String) onValid,
+    final void Function() onInvalid,
+  ) {
+    final text = input.trim();
+    if (text.isEmpty) {
+      onInvalid();
+      return;
+    }
+
+    if (_viewModel.loadedRoomNames?.contains(text) ?? false) {
+      final parts = text.split(RegExp(r"\s+"));
+      if (parts.length < 2) {
+        onInvalid();
+        return;
+      }
+
+      final roomNumber = text.substring(parts[0].length).trim();
+      onValid(roomNumber);
+    } else {
+      onInvalid();
+    }
   }
 
   @override
@@ -136,9 +199,14 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChange);
+    _destinationFocusNode.removeListener(_onDestinationFocusChanged);
+    _destinationController.removeListener(_onDestinationTextChanged);
+    _startController.removeListener(_onStartTextChanged);
+    _startFocusNode.removeListener(_onStartFocusChanged);
     _startController.dispose();
     _destinationController.dispose();
     _destinationFocusNode.dispose();
+    _startFocusNode.dispose();
     super.dispose();
   }
 
@@ -741,6 +809,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     _destinationController.text = destinationLabel;
     _destinationController.selection = TextSelection.collapsed(offset: destinationLabel.length);
     _destinationFocusNode.requestFocus();
+    _viewModel.selectEndRoom(roomName);
   }
 
   static Offset? _scenePointToSvgPoint(
@@ -1072,6 +1141,16 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     child: Stack(
                       children: [
                         SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                        if (ivm.selectedStartRoomName != null || ivm.selectedEndRoomName != null)
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: RoomHighlightPainter(
+                                floorplan: selectedFloorplan,
+                                selectedStartName: ivm.selectedStartRoomName,
+                                selectedEndName: ivm.selectedEndRoomName,
+                              ),
+                            ),
+                          ),
                         if (ivm.indoorPath != null)
                           Positioned.fill(
                             child: _AnimatedIndoorPath(
@@ -1117,6 +1196,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                 startController: _startController,
                 destinationController: _destinationController,
                 destinationFocusNode: _destinationFocusNode,
+                startFocusNode: _startFocusNode,
                 isIndoorNavigationDisplayed: ivm.indoorPath != null,
                 onStartNavigation: _handleStartNavigation,
                 onEndNavigation: _handleEndNavigation,
