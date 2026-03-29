@@ -32,9 +32,15 @@ void main() {
     await $.tester.testTextInput.receiveAction(TextInputAction.search);
     await $.pumpAndSettle();
 
+    $.log("STEP 6: Opening nearby-limit menu...");
+    await $.tap(find.byIcon(Icons.tune));
+    await $.pumpAndSettle();
+
     await $.pump(const Duration(seconds: 3));
 
-    
+    $.log("STEP 7: Selecting 'Show Nearest 10 Locations'...");
+    await $.tap(find.text("Show Nearest 10 Locations"));
+    await $.pumpAndSettle();
 
     $.log("TEST COMPLETE");
     await $.pump(const Duration(seconds: 5));
