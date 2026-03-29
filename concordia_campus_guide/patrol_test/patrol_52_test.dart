@@ -31,7 +31,6 @@ void main() {
 
     await $.pump(const Duration(seconds: 2));
 
-    //Katsuya Montréal
     $.log("STEP 6: Selecting 'Katsuya Montréal'...");
     final sushiPlace = find.text("Katsuya Montréal");
     await $.tester.tap(sushiPlace);
