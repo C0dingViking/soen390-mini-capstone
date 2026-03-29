@@ -10,8 +10,8 @@ class RoomHighlightPainter extends CustomPainter {
 
   static const Color startBorderColor = Color.fromARGB(80, 33, 150, 243);
   static const Color startHighlightColor = Color.fromARGB(180, 33, 150, 243);
-  static const Color endBorderColor = Color.fromARGB(80, 120, 150, 243);
-  static const Color endHighlightColor = Color.fromARGB(180, 120, 150, 243);
+  static const Color endBorderColor = Color.fromARGB(80, 5, 125, 120);
+  static const Color endHighlightColor = Color.fromARGB(180, 5, 125, 120);
   static const double borderWidth = 3.0;
 
   const RoomHighlightPainter({
