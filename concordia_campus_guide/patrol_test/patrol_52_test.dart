@@ -4,7 +4,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:patrol/patrol.dart";
 
 void main() {
-  patrolTest("[US-5.1] Show the nearest outdoor points of interest", (final $) async {
+  patrolTest("[US-5.2] Show directions to a selected outdoor point of interest", (final $) async {
 
     $.log("STEP 1: Launching the app...");
     app.main();
