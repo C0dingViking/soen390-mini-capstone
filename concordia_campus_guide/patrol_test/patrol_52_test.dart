@@ -29,6 +29,8 @@ void main() {
     await $.enterText(searchField, "Sushi");
     await $.pumpAndSettle();
 
+    await $.pump(const Duration(seconds: 2));
+
     //Katsuya Montréal
     $.log("STEP 6: Selecting 'Katsuya Montréal'...");
     final sushiPlace = find.text("Katsuya Montréal");
