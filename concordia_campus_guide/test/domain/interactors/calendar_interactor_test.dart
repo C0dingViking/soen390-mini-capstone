@@ -258,5 +258,44 @@ void main() {
         throwsA(isA<InvalidLocationFormatException>()),
       );
     });
+
+    test("getUserCalendarOptions maps calendar list entries", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      when(mockRepo.getUserCalendars()).thenAnswer(
+        (_) async => [
+          CalendarListEntry()
+            ..summary = "Primary"
+            ..id = "primary-id",
+          CalendarListEntry()
+            ..summary = "Work"
+            ..id = "work-id",
+        ],
+      );
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      final options = await interactor.getUserCalendarOptions();
+
+      expect(options, hasLength(2));
+      expect(options[0].title, equals("Primary"));
+      expect(options[0].id, equals("primary-id"));
+      expect(options[1].title, equals("Work"));
+      expect(options[1].id, equals("work-id"));
+    });
+
+    test("getUserCalendarOptions uses fallback title and id when missing", () async {
+      final mockRepo = MockGoogleCalendarRepository();
+
+      when(mockRepo.getUserCalendars()).thenAnswer((_) async => [CalendarListEntry()]);
+
+      final interactor = CalendarInteractor(calendarRepo: mockRepo);
+
+      final options = await interactor.getUserCalendarOptions();
+
+      expect(options, hasLength(1));
+      expect(options.first.title, equals("Unnamed Calendar"));
+      expect(options.first.id, equals("primary"));
+    });
   });
 }

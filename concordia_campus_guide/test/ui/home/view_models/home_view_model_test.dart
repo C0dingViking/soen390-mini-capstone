@@ -13,6 +13,7 @@ import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
@@ -182,8 +183,10 @@ class _ConfigurableCalendarInteractor extends CalendarInteractor {
   _ConfigurableCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
 
   List<AcademicClass> classesToReturn = [];
+  List<CalendarOption> calendarOptionsToReturn = [];
   Object? errorToThrow;
   int callCount = 0;
+  int optionsCallCount = 0;
 
   @override
   Future<List<AcademicClass>> getUpcomingClasses({
@@ -198,6 +201,12 @@ class _ConfigurableCalendarInteractor extends CalendarInteractor {
       throw errorToThrow!;
     }
     return classesToReturn;
+  }
+
+  @override
+  Future<List<CalendarOption>> getUserCalendarOptions() async {
+    optionsCallCount++;
+    return calendarOptionsToReturn;
   }
 }
 
@@ -2017,7 +2026,7 @@ void main() {
       );
       hvm.buildings = {"MB": building};
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "mb"),
@@ -2036,7 +2045,7 @@ void main() {
 
     test("setDestinationToUpcomingClassBuilding shows info when building is missing", () async {
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "x"),
@@ -2055,7 +2064,7 @@ void main() {
       () async {
         fakeGeolocator.serviceEnabled = false;
         hvm.upcomingClass = AcademicClass(
-          "SOEN 390 LEC A",
+          "SOEN 390 LEC",
           DateTime(2026, 1, 5, 13, 0),
           DateTime(2026, 1, 5, 14, 0),
           Room("235", "2", Campus.sgw, "mb"),
@@ -2093,7 +2102,7 @@ void main() {
         ];
         trackingPlacesInteractor.resolveResult = null;
         hvm.upcomingClass = AcademicClass(
-          "SOEN 390 LEC A",
+          "SOEN 390 LEC",
           DateTime(2026, 1, 5, 13, 0),
           DateTime(2026, 1, 5, 14, 0),
           Room("235", "2", Campus.sgw, "ev"),
@@ -2120,7 +2129,7 @@ void main() {
         longitude: -73.5779,
       );
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "ev"),
@@ -2152,7 +2161,7 @@ void main() {
         longitude: -73.6407,
       );
       hvm.upcomingClass = AcademicClass(
-        "BIOL 201 LAB A",
+        "BIOL 201 LAB",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 15, 0),
         Room("S110", "S1", Campus.loyola, buildingName),
@@ -2181,7 +2190,7 @@ void main() {
         longitude: -73.6401,
       );
       hvm.upcomingClass = AcademicClass(
-        "CHEM 205 LEC A",
+        "CHEM 205 LEC",
         DateTime(2026, 1, 5, 10, 0),
         DateTime(2026, 1, 5, 11, 15),
         Room("130", "1", Campus.loyola, buildingName),
@@ -2206,7 +2215,7 @@ void main() {
       );
 
       hvmWithCalendar.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime.now().add(const Duration(hours: 1)),
         DateTime.now().add(const Duration(hours: 2)),
         Room("235", "2", Campus.sgw, "mb"),
@@ -2283,6 +2292,52 @@ void main() {
       expect(hvmWithCalendar.showNextClassDialog, isFalse);
 
       hvmWithCalendar.dispose();
+    });
+
+    test("loadCalendarTitles stores calendar options from interactor", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      configurableCalendarInteractor.calendarOptionsToReturn = [
+        CalendarOption(title: "Work", id: "cal-1"),
+        CalendarOption(title: "Work", id: "cal-2"),
+      ];
+
+      await hvmWithCalendar.loadCalendarTitles();
+
+      expect(configurableCalendarInteractor.optionsCallCount, 1);
+      expect(hvmWithCalendar.getCalendarTitles, hasLength(2));
+      expect(hvmWithCalendar.getCalendarTitles[0].title, equals("Work"));
+      expect(hvmWithCalendar.getCalendarTitles[0].id, equals("cal-1"));
+      expect(hvmWithCalendar.getCalendarTitles[1].title, equals("Work"));
+      expect(hvmWithCalendar.getCalendarTitles[1].id, equals("cal-2"));
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("clearUpcomingClass clears both class and dialog state", () async {
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC",
+        DateTime.now().add(const Duration(hours: 1)),
+        DateTime.now().add(const Duration(hours: 2)),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+      await hvm.showNextClass();
+      hvm.showNextClassFab = true;
+
+      expect(hvm.showNextClassDialog, isTrue);
+
+      hvm.clearUpcomingClass();
+
+      expect(hvm.upcomingClass, isNull);
+      expect(hvm.showNextClassDialog, isFalse);
+      expect(hvm.showNextClassFab, isTrue);
     });
   });
 }
