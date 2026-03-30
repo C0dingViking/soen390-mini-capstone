@@ -8,6 +8,7 @@ import "package:concordia_campus_guide/utils/dialog_helper.dart";
 
 class CoordinatesController {
   final Completer<GoogleMapController> _controller = Completer();
+  static const String _locationErrorTitle = "Location Error";
 
   Future<GoogleMapController> get mapController => _controller.future;
 
@@ -62,17 +63,17 @@ class CoordinatesController {
       if (!context.mounted) return;
       final msg = e.toString();
       if (msg.contains("disabled")) {
-        await showErrorPopup(context, "Enable location services", title: "Location Error");
+        await showErrorPopup(context, "Enable location services", title: _locationErrorTitle);
       } else if (msg.contains("deniedForever")) {
         await showErrorPopup(
           context,
           "Enable location permissions in settings",
-          title: "Location Error",
+          title: _locationErrorTitle,
         );
       } else if (msg.contains("denied")) {
         // user denied once; silently return
       } else {
-        await showErrorPopup(context, "Location error: $e", title: "Location Error");
+        await showErrorPopup(context, "Location error: $e", title: _locationErrorTitle);
       }
     }
   }

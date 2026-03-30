@@ -68,6 +68,7 @@ class _InterBuildingNavigationPlan {
 }
 
 class _IndoorMapViewState extends State<IndoorMapView> {
+  static const String _navigationErrorTitle = "Navigation Error";
   final TransformationController _controller = TransformationController();
   late final FloorplanInteractor _floorplanInteractor;
   final TextEditingController _startController = TextEditingController();
@@ -448,7 +449,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "No floor plans available for current location.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return null;
     }
@@ -478,7 +479,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "No valid exit point found in the starting building.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -516,7 +517,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "No floor plans available for the destination building.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -530,7 +531,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "No valid entry point found in the destination building.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -662,7 +663,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "Failed to change floor. Please try again.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -680,7 +681,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "Unable to locate one or both locations on this floor.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -694,7 +695,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "No indoor route found between the selected rooms.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
     } catch (_) {
       _viewModel.clearIndoorPath();
@@ -702,7 +703,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "Failed to compute indoor route. Please try again.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
     }
   }
@@ -722,7 +723,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "Floor plan data is missing for one of the floors.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -738,7 +739,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       await showErrorPopup(
         context,
         "Unable to locate one or both locations.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
       return;
     }
@@ -756,14 +757,14 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     } on StateError catch (e) {
       _viewModel.clearIndoorPath();
       if (!mounted) return;
-      await showErrorPopup(context, e.message, title: "Navigation Error");
+      await showErrorPopup(context, e.message, title: _navigationErrorTitle);
     } catch (_) {
       _viewModel.clearIndoorPath();
       if (!mounted) return;
       await showErrorPopup(
         context,
         "Failed to compute inter-floor route. Please try again.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       );
     }
   }
@@ -1141,7 +1142,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       showErrorPopup(
         context,
         "Failed to load floor plans for this building. Please try again later.",
-        title: "Navigation Error",
+        title: _navigationErrorTitle,
       ).then((_) {
         if (!mounted) return;
         Navigator.of(context).pop();
