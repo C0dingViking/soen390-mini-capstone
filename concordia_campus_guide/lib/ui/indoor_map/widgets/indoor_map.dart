@@ -11,6 +11,7 @@ import "package:concordia_campus_guide/ui/indoor_map/view_models/indoor_view_mod
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_path_painter.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_search_bar.dart";
 import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_highlight_painter.dart";
+import "package:concordia_campus_guide/utils/dialog_helper.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
@@ -440,8 +441,10 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
     final floorplans = _viewModel.loadedFloorplans;
     if (floorplans == null || floorplans.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No floor plans available for current location.")),
+      await showErrorPopup(
+        context,
+        "No floor plans available for current location.",
+        title: "Navigation Error",
       );
       return null;
     }
@@ -467,8 +470,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     );
 
     if (startExitLabel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No valid exit point found in the starting building.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "No valid exit point found in the starting building.",
+        title: "Navigation Error",
       );
       return;
     }
@@ -502,8 +508,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     if (destinationFloorplans.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No floor plans available for the destination building.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "No floor plans available for the destination building.",
+        title: "Navigation Error",
       );
       return;
     }
@@ -513,8 +522,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       accessibleMode: accessibleMode,
     );
     if (destinationEntryLabel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No valid entry point found in the destination building.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "No valid entry point found in the destination building.",
+        title: "Navigation Error",
       );
       return;
     }
@@ -642,9 +654,12 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   ) async {
     final changedFloor = _viewModel.changeFloor(startFloor);
     if (!changedFloor) {
-      ScaffoldMessenger.of(
+      if (!mounted) return;
+      await showErrorPopup(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to change floor. Please try again.")));
+        "Failed to change floor. Please try again.",
+        title: "Navigation Error",
+      );
       return;
     }
 
@@ -657,8 +672,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final destinationRoomModel = _resolveLocationOnFloor(parsedDestinationRoom.roomName, floorplan);
 
     if (startRoomModel == null || destinationRoomModel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to locate one or both locations on this floor.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "Unable to locate one or both locations on this floor.",
+        title: "Navigation Error",
       );
       return;
     }
@@ -668,15 +686,19 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       _viewModel.setIndoorPath(path);
     } on StateError catch (_) {
       _viewModel.clearIndoorPath();
-      // TODO: add a clearer error popup
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No indoor route found between the selected rooms.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "No indoor route found between the selected rooms.",
+        title: "Navigation Error",
       );
     } catch (_) {
       _viewModel.clearIndoorPath();
-      // TODO: add a clearer error popup
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to compute indoor route. Please try again.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "Failed to compute indoor route. Please try again.",
+        title: "Navigation Error",
       );
     }
   }
@@ -692,9 +714,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     final startFloorplan = floorplans[startFloor];
     final destFloorplan = floorplans[destinationFloor];
     if (startFloorplan == null || destFloorplan == null) {
-      // TODO: add a clearer error popup
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Floor plan data is missing for one of the floors.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "Floor plan data is missing for one of the floors.",
+        title: "Navigation Error",
       );
       return;
     }
@@ -706,10 +730,12 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     );
 
     if (startRoomModel == null || destinationRoomModel == null) {
-      // TODO: add a clearer error popup
-      ScaffoldMessenger.of(
+      if (!mounted) return;
+      await showErrorPopup(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Unable to locate one or both locations.")));
+        "Unable to locate one or both locations.",
+        title: "Navigation Error",
+      );
       return;
     }
 
@@ -725,12 +751,15 @@ class _IndoorMapViewState extends State<IndoorMapView> {
       _viewModel.setInterFloorPath(segments);
     } on StateError catch (e) {
       _viewModel.clearIndoorPath();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (!mounted) return;
+      await showErrorPopup(context, e.message, title: "Navigation Error");
     } catch (_) {
       _viewModel.clearIndoorPath();
-      // TODO: add a clearer error popup
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to compute inter-floor route. Please try again.")),
+      if (!mounted) return;
+      await showErrorPopup(
+        context,
+        "Failed to compute inter-floor route. Please try again.",
+        title: "Navigation Error",
       );
     }
   }
@@ -1104,12 +1133,15 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 
       ivm.resetFloorplanLoadState();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Failed to load floor plans for this building. Please try again later."),
-        ),
-      );
-      Navigator.of(context).pop();
+      if (!mounted) return;
+      showErrorPopup(
+        context,
+        "Failed to load floor plans for this building. Please try again later.",
+        title: "Navigation Error",
+      ).then((_) {
+        if (!mounted) return;
+        Navigator.of(context).pop();
+      });
     });
     return const SizedBox.shrink();
   }

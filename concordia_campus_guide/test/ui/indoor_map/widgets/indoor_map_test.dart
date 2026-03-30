@@ -723,7 +723,9 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.byKey(const Key("continue_outdoor_navigation_button")));
+      final continueButton = find.byKey(const Key("continue_outdoor_navigation_button"));
+      final buttonWidget = tester.widget<ElevatedButton>(continueButton);
+      buttonWidget.onPressed?.call();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 25));
 
@@ -734,8 +736,28 @@ void main() {
 
     testWidgets("pops back to previous screen when load fails", (final tester) async {
       ivm.loadFailed = true;
-      await pumpHomeScreen(tester, false);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<IndoorViewModel>.value(
+          value: ivm,
+          child: MaterialApp(
+            initialRoute: "/indoor",
+            routes: {
+              "/": (final context) => const Scaffold(body: Text("Previous Screen")),
+              "/indoor": (final context) => IndoorMapView(building: makeTestBuilding(false)),
+            },
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
+
+      expect(
+        find.text("Failed to load floor plans for this building. Please try again later."),
+        findsOneWidget,
+      );
+      await tester.tap(find.text("Dismiss"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Previous Screen"), findsOneWidget);
       expect(find.byType(IndoorMapView), findsNothing);
     });
 
@@ -1010,7 +1032,7 @@ void main() {
   });
 
   group("Same-floor navigation (lines 179-211)", () {
-    testWidgets("shows snackbar when floorplans are unavailable at navigation time", (
+    testWidgets("shows popup when floorplans are unavailable at navigation time", (
       final tester,
     ) async {
       await pumpHomeScreen(tester, true);
@@ -1741,14 +1763,14 @@ void main() {
 
       await tester.enterText(startField, "T 110");
       await tester.pump();
-      await tester.tap(find.byType(Scaffold));
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump();
 
       expect(ivm.selectedStartRoomName, equals("110"));
 
       await tester.enterText(startField, "   ");
       await tester.pump();
-      await tester.tap(find.byType(Scaffold));
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump();
 
       expect(ivm.selectedStartRoomName, isNull);
