@@ -22,7 +22,7 @@ void main() {
       await $.pump(const Duration(seconds: 6));
 
       $.log("STEP 4: Tapping the destination field...");
-      final startField = find.widgetWithText(TextField, "Search for a place or address");
+      final startField = find.widgetWithText(TextField, "Enter your destination");
       expect(startField, findsOneWidget);
       await $.tester.tap(startField);
       await $.pumpAndSettle();
