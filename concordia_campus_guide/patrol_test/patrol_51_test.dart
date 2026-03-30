@@ -5,7 +5,6 @@ import "package:patrol/patrol.dart";
 
 void main() {
   patrolTest("[US-5.1] Show the nearest outdoor points of interest", (final $) async {
-
     $.log("STEP 1: Launching the app...");
     app.main();
     await $.pumpAndSettle();
