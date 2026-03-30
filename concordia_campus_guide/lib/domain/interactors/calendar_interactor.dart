@@ -91,12 +91,6 @@ class CalendarInteractor {
     }
   }
 
-  Future<List<String>> getUserCalendarTitles() async {
-    return (await _calendarRepo.getUserCalendars())
-        .map((final calendar) => calendar.summary ?? "Unnamed Calendar")
-        .toList();
-  }
-
   Future<List<CalendarOption>> getUserCalendarOptions() async {
     return (await _calendarRepo.getUserCalendars())
         .map(

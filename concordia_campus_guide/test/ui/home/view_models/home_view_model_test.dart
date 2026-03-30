@@ -97,13 +97,18 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
     final int maxResults = 10,
     final DateTime? timeMin,
     final DateTime? timeMax,
+    final String calendarId = "primary",
   }) async => [];
 
   @override
   Future<List<calendar.Event>> getEventsInRange({
     required final DateTime startDate,
     required final DateTime endDate,
+    final String calendarId = "primary",
   }) async => [];
+
+  @override
+  Future<List<calendar.CalendarListEntry>> getUserCalendars() async => [];
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
@@ -186,6 +191,7 @@ class _ConfigurableCalendarInteractor extends CalendarInteractor {
     final DateTime? timeMin,
     final DateTime? timeMax,
     final String buildingDataPath = "assets/maps/building_data.json",
+    final String calendarId = "primary",
   }) async {
     callCount++;
     if (errorToThrow != null) {
@@ -2224,6 +2230,7 @@ void main() {
         calendarInteractor: configurableCalendarInteractor,
       );
 
+      hvmWithCalendar.selectedCalendarId = "primary";
       configurableCalendarInteractor.classesToReturn = [];
 
       await hvmWithCalendar.showNextClass();
@@ -2244,6 +2251,7 @@ void main() {
         calendarInteractor: configurableCalendarInteractor,
       );
 
+      hvmWithCalendar.selectedCalendarId = "primary";
       configurableCalendarInteractor.errorToThrow = Exception("calendar offline");
 
       await hvmWithCalendar.showNextClass();
@@ -2252,6 +2260,27 @@ void main() {
         hvmWithCalendar.generateInfoMessage,
         contains("Please use search to find your destination."),
       );
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass requires selecting a calendar first", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(
+        hvmWithCalendar.generateInfoMessage,
+        equals("No calendar selected. Please select a calendar to view upcoming classes."),
+      );
+      expect(hvmWithCalendar.showNextClassDialog, isFalse);
 
       hvmWithCalendar.dispose();
     });
