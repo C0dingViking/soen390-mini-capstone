@@ -1,6 +1,7 @@
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/core/ui/campus_app_bar.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
+import "package:concordia_campus_guide/ui/home/widgets/calendar_picker.dart";
 import "package:google_fonts/google_fonts.dart";
 
 import "package:flutter/material.dart";
@@ -62,14 +63,15 @@ class HamburgerMenu extends StatelessWidget {
               onTap: () async {
                 if (!context.mounted) return;
 
-                context.read<HomeViewModel>().toggleNextClassFabVisibility(true);
-                // To clear cache and force calendar refresh
-                context.read<HomeViewModel>().clearUpcomingClass();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Google Calendar imported successfully!")),
-                );
+                await context.read<HomeViewModel>().loadCalendarTitles();
+                if (!context.mounted) return;
 
                 Navigator.of(context).pop();
+
+                showDialog<void>(
+                  context: context,
+                  builder: (final context) => const CalendarPicker(),
+                );
               },
             ),
           ListTile(

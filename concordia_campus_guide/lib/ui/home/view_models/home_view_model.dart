@@ -3,6 +3,7 @@ import "dart:ui" as ui;
 
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
@@ -80,6 +81,9 @@ class HomeViewModel extends ChangeNotifier {
   bool showNextClassFab = false;
   AcademicClass? upcomingClass;
   bool _showNextClassDialog = false;
+  String? selectedCalendarId;
+  List<CalendarOption> _calendarTitles = [];
+  List<CalendarOption> get getCalendarTitles => _calendarTitles;
 
   bool get showNextClassDialog => _showNextClassDialog;
 
@@ -1342,6 +1346,13 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    if (selectedCalendarId == null) {
+      generateInfoMessage =
+          "No calendar selected. Please select a calendar to view upcoming classes.";
+      notifyListeners();
+      return;
+    }
+
     try {
       // Acceptance Criteria: Only show classes that are upcoming today
       final now = DateTime.now();
@@ -1350,6 +1361,7 @@ class HomeViewModel extends ChangeNotifier {
         timeMin: now,
         timeMax: endOfDay,
         maxResults: 100,
+        calendarId: selectedCalendarId!,
       );
 
       if (classes.isEmpty) {
@@ -1372,6 +1384,11 @@ class HomeViewModel extends ChangeNotifier {
   void clearUpcomingClass() {
     upcomingClass = null;
     _showNextClassDialog = false;
+    notifyListeners();
+  }
+
+  Future<void> loadCalendarTitles() async {
+    _calendarTitles = await calendarInteractor.getUserCalendarOptions();
     notifyListeners();
   }
 }
