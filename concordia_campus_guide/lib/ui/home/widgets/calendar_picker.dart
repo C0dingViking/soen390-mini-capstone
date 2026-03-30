@@ -70,7 +70,7 @@ class _CalendarPickerState extends State<CalendarPicker> {
                 }
               },
               style: ButtonStyle(
-                backgroundColor: WidgetStatePropertyAll(AppTheme.concordiaMaroon),
+                backgroundColor: const WidgetStatePropertyAll(AppTheme.concordiaMaroon),
                 shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                 ),
