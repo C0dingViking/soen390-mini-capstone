@@ -32,6 +32,7 @@ class IndoorMapView extends StatefulWidget {
   final String? interBuildingDestinationBuildingId;
   final String? interBuildingDestinationEntryLabel;
   final String? interBuildingDestinationRoomLabel;
+  final FloorplanInteractor? floorplanInteractor;
 
   const IndoorMapView({
     super.key,
@@ -41,6 +42,7 @@ class IndoorMapView extends StatefulWidget {
     this.interBuildingDestinationBuildingId,
     this.interBuildingDestinationEntryLabel,
     this.interBuildingDestinationRoomLabel,
+    this.floorplanInteractor,
   });
 
   @override
@@ -67,7 +69,7 @@ class _InterBuildingNavigationPlan {
 
 class _IndoorMapViewState extends State<IndoorMapView> {
   final TransformationController _controller = TransformationController();
-  final FloorplanInteractor _floorplanInteractor = FloorplanInteractor();
+  late final FloorplanInteractor _floorplanInteractor;
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final FocusNode _destinationFocusNode = FocusNode();
@@ -87,6 +89,8 @@ class _IndoorMapViewState extends State<IndoorMapView> {
   @override
   void initState() {
     super.initState();
+    _floorplanInteractor = widget.floorplanInteractor ?? FloorplanInteractor();
+
     final initialStart = widget.initialStartRoomLabel?.trim();
     if (initialStart != null && initialStart.isNotEmpty) {
       _startController.text = initialStart;

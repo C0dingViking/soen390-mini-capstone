@@ -1,5 +1,6 @@
 import "dart:math";
 import "dart:ui" show PointerDeviceKind;
+import "dart:collection";
 
 import "package:concordia_campus_guide/data/repositories/building_repository.dart";
 import "package:concordia_campus_guide/data/repositories/google_calendar.dart";
@@ -437,6 +438,591 @@ class DelayedTestIndoorViewModel extends TestIndoorViewModel {
   }
 }
 
+class ThrowingInterFloorPathIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1", "2"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 300,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(20, 25),
+            points: const [
+              Point<double>(10, 15),
+              Point<double>(30, 15),
+              Point<double>(30, 35),
+              Point<double>(10, 35),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(300, 0),
+              Point<double>(300, 50),
+              Point<double>(0, 50),
+            ],
+          ),
+        ],
+        transitions: const [
+          FloorTransition(
+            id: "t1-stairs-1",
+            location: Point<double>(280, 25),
+            type: TransitionType.stairs,
+            groupTag: "stairs-1",
+          ),
+        ],
+      ),
+      "2": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "2",
+        svgPath: "testfloor2.svg",
+        canvasWidth: 300,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "210",
+            doorLocation: const Point<double>(20, 25),
+            points: const [
+              Point<double>(10, 15),
+              Point<double>(30, 15),
+              Point<double>(30, 35),
+              Point<double>(10, 35),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(300, 0),
+              Point<double>(300, 50),
+              Point<double>(0, 50),
+            ],
+          ),
+        ],
+        transitions: const [
+          FloorTransition(
+            id: "t2-stairs-1",
+            location: Point<double>(280, 25),
+            type: TransitionType.stairs,
+            groupTag: "stairs-1",
+          ),
+        ],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+
+  @override
+  void setInterFloorPath(final List<IndoorFloorPathSegment> segments) {
+    throw Exception("forced setInterFloorPath failure");
+  }
+}
+
+class UnresolvableInterFloorLocationIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1", "2"];
+    loadedRoomNames = ["$normalizedPath 11", "$normalizedPath 21"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [],
+        transitions: const [],
+      ),
+      "2": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "2",
+        svgPath: "testfloor2.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "210",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [],
+        transitions: const [],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+}
+
+class _MissingLookupFloorplanMap extends MapBase<String, Floorplan> {
+  final Map<String, Floorplan> _backing;
+  final String missingKey;
+
+  _MissingLookupFloorplanMap({
+    required final Map<String, Floorplan> backing,
+    required this.missingKey,
+  }) : _backing = backing;
+
+  @override
+  Floorplan? operator [](final Object? key) {
+    if (key == missingKey) {
+      return null;
+    }
+    return _backing[key];
+  }
+
+  @override
+  void operator []=(final String key, final Floorplan value) {
+    _backing[key] = value;
+  }
+
+  @override
+  void clear() {
+    _backing.clear();
+  }
+
+  @override
+  Iterable<String> get keys => _backing.keys;
+
+  @override
+  Floorplan? remove(final Object? key) {
+    return _backing.remove(key);
+  }
+
+  @override
+  Iterable<Floorplan> get values => _backing.values;
+
+  @override
+  Iterable<MapEntry<String, Floorplan>> get entries => _backing.entries;
+}
+
+class MissingInterFloorplanLookupIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    final floor1 = Floorplan(
+      buildingId: normalizedPath,
+      floorNumber: "1",
+      svgPath: "testfloor1.svg",
+      canvasWidth: 100,
+      canvasHeight: 100,
+      rooms: [
+        IndoorMapRoom(
+          name: "110",
+          doorLocation: const Point<double>(10, 10),
+          points: const [
+            Point<double>(0, 0),
+            Point<double>(20, 0),
+            Point<double>(20, 20),
+            Point<double>(0, 20),
+          ],
+        ),
+      ],
+    );
+    final floor2 = Floorplan(
+      buildingId: normalizedPath,
+      floorNumber: "2",
+      svgPath: "testfloor2.svg",
+      canvasWidth: 100,
+      canvasHeight: 100,
+      rooms: [
+        IndoorMapRoom(
+          name: "210",
+          doorLocation: const Point<double>(10, 10),
+          points: const [
+            Point<double>(0, 0),
+            Point<double>(20, 0),
+            Point<double>(20, 20),
+            Point<double>(0, 20),
+          ],
+        ),
+      ],
+    );
+
+    loadedBuildingId = normalizedPath;
+    availableFloors = ["1", "2"];
+    loadedRoomNames = ["$normalizedPath 110", "$normalizedPath 210"];
+    loadedFloorplans = _MissingLookupFloorplanMap(
+      backing: {"1": floor1, "2": floor2},
+      missingKey: "2",
+    );
+    selectedFloorplan = floor1;
+    notifyListeners();
+  }
+}
+
+class NoValidStartExitIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1", "2"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [],
+        transitions: const [],
+      ),
+      "2": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "2",
+        svgPath: "testfloor2.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "210",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [],
+        transitions: const [],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+}
+
+class DestinationFloorplansMissingIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1", "2"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 120,
+        canvasHeight: 120,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(20, 20),
+            points: const [
+              Point<double>(10, 10),
+              Point<double>(30, 10),
+              Point<double>(30, 30),
+              Point<double>(10, 30),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(120, 0),
+              Point<double>(120, 120),
+              Point<double>(0, 120),
+            ],
+          ),
+        ],
+        pois: const [
+          PointOfInterest(
+            name: "buildingEntrance-1",
+            type: PoiType.buildingEntrance,
+            location: Point<double>(90, 90),
+          ),
+        ],
+      ),
+      "2": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "2",
+        svgPath: "testfloor2.svg",
+        canvasWidth: 120,
+        canvasHeight: 120,
+        rooms: [
+          IndoorMapRoom(
+            name: "210",
+            doorLocation: const Point<double>(20, 20),
+            points: const [
+              Point<double>(10, 10),
+              Point<double>(30, 10),
+              Point<double>(30, 30),
+              Point<double>(10, 30),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(120, 0),
+              Point<double>(120, 120),
+              Point<double>(0, 120),
+            ],
+          ),
+        ],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+
+  @override
+  Future<void> initializeRoomNames() async {
+    loadedRoomNames = ["T 110", "T 210", "Q 100"];
+    notifyListeners();
+  }
+}
+
+class ThrowingSameFloorSetPathIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 120,
+        canvasHeight: 120,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(20, 20),
+            points: const [
+              Point<double>(10, 10),
+              Point<double>(30, 10),
+              Point<double>(30, 30),
+              Point<double>(10, 30),
+            ],
+          ),
+          IndoorMapRoom(
+            name: "111",
+            doorLocation: const Point<double>(100, 100),
+            points: const [
+              Point<double>(90, 90),
+              Point<double>(110, 90),
+              Point<double>(110, 110),
+              Point<double>(90, 110),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(120, 0),
+              Point<double>(120, 120),
+              Point<double>(0, 120),
+            ],
+          ),
+        ],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+
+  @override
+  void setIndoorPath(final List<Point<double>> path) {
+    throw Exception("forced same-floor setIndoorPath failure");
+  }
+}
+
+class UnresolvableSameFloorLocationIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1"];
+    loadedRoomNames = ["$normalizedPath 110", "$normalizedPath 11"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [],
+        transitions: const [],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+}
+
+class FailingChangeFloorIndoorViewModel extends TestIndoorViewModel {
+  @override
+  bool changeFloor(final String floorNumber) {
+    return false;
+  }
+}
+
+class DestinationNoEntryFloorplanInteractor extends FloorplanInteractor {
+  @override
+  Future<Map<String, Floorplan>> loadFloorplans(final String directoryId) async {
+    if (directoryId.toLowerCase() != "n") {
+      return {};
+    }
+
+    return {
+      "1": Floorplan(
+        buildingId: "N",
+        floorNumber: "1",
+        svgPath: "n-floor-1.svg",
+        canvasWidth: 100,
+        canvasHeight: 100,
+        rooms: [
+          IndoorMapRoom(
+            name: "100",
+            doorLocation: const Point<double>(10, 10),
+            points: const [
+              Point<double>(0, 0),
+              Point<double>(20, 0),
+              Point<double>(20, 20),
+              Point<double>(0, 20),
+            ],
+          ),
+        ],
+        pois: const [
+          PointOfInterest(
+            name: "washroom-1",
+            type: PoiType.washroomMale,
+            location: Point<double>(50, 50),
+          ),
+        ],
+        transitions: const [],
+      ),
+    };
+  }
+}
+
+class DestinationNoEntryIndoorViewModel extends TestIndoorViewModel {
+  @override
+  Future<void> initializeBuildingFloorplans(final String path) async {
+    final normalizedPath = path.toUpperCase();
+
+    availableFloors = ["1"];
+    loadedFloorplans = {
+      "1": Floorplan(
+        buildingId: normalizedPath,
+        floorNumber: "1",
+        svgPath: "testfloor1.svg",
+        canvasWidth: 120,
+        canvasHeight: 120,
+        rooms: [
+          IndoorMapRoom(
+            name: "110",
+            doorLocation: const Point<double>(20, 20),
+            points: const [
+              Point<double>(10, 10),
+              Point<double>(30, 10),
+              Point<double>(30, 30),
+              Point<double>(10, 30),
+            ],
+          ),
+        ],
+        corridors: const [
+          Corridor(
+            bounds: [
+              Point<double>(0, 0),
+              Point<double>(120, 0),
+              Point<double>(120, 120),
+              Point<double>(0, 120),
+            ],
+          ),
+        ],
+        pois: const [
+          PointOfInterest(
+            name: "buildingEntrance-1",
+            type: PoiType.buildingEntrance,
+            location: Point<double>(90, 90),
+          ),
+        ],
+      ),
+    };
+
+    selectedFloorplan = loadedFloorplans!["1"];
+    notifyListeners();
+  }
+
+  @override
+  Future<void> initializeRoomNames() async {
+    loadedRoomNames = ["T 110", "N 100"];
+    notifyListeners();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -732,6 +1318,95 @@ void main() {
       expect(ivm.indoorPath, isNull);
       expect(homeVm.selectedStartLabel, "Building T");
       expect(homeVm.selectedDestinationLabel, "H 820");
+    });
+
+    testWidgets("shows error popup when inter-building start has no valid exit point", (
+      final tester,
+    ) async {
+      ivm = NoValidStartExitIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "H 820");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("No valid exit point found in the starting building."),
+        findsAtLeastNWidgets(1),
+      );
+    });
+
+    testWidgets("shows error popup when destination building has no floor plans", (
+      final tester,
+    ) async {
+      ivm = DestinationFloorplansMissingIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "Q 100");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("No floor plans available for the destination building."),
+        findsAtLeastNWidgets(1),
+      );
+    });
+
+    testWidgets("shows error popup when destination building has no valid entry point", (
+      final tester,
+    ) async {
+      final destinationInteractor = DestinationNoEntryFloorplanInteractor();
+      ivm = DestinationNoEntryIndoorViewModel();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<IndoorViewModel>.value(
+            value: ivm,
+            child: IndoorMapView(
+              building: makeTestBuilding(true),
+              floorplanInteractor: destinationInteractor,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "N 100");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("No valid entry point found in the destination building."),
+        findsAtLeastNWidgets(1),
+      );
     });
 
     testWidgets("pops back to previous screen when load fails", (final tester) async {
@@ -1032,6 +1707,25 @@ void main() {
   });
 
   group("Same-floor navigation (lines 179-211)", () {
+    testWidgets("shows popup when changing to same-floor start fails", (final tester) async {
+      ivm = FailingChangeFloorIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(find.text("Failed to change floor. Please try again."), findsAtLeastNWidgets(1));
+    });
+
     testWidgets("shows popup when floorplans are unavailable at navigation time", (
       final tester,
     ) async {
@@ -1106,6 +1800,54 @@ void main() {
       // The view is still intact regardless of pathfinding outcome
       expect(find.byType(IndoorMapView), findsOneWidget);
     });
+
+    testWidgets("shows location error popup when same-floor locations cannot be resolved", (
+      final tester,
+    ) async {
+      ivm = UnresolvableSameFloorLocationIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "T 11");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("Unable to locate one or both locations on this floor."),
+        findsAtLeastNWidgets(1),
+      );
+    });
+
+    testWidgets("shows generic error popup when same-floor route computation fails unexpectedly", (
+      final tester,
+    ) async {
+      ivm = ThrowingSameFloorSetPathIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "T 111");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("Failed to compute indoor route. Please try again."),
+        findsAtLeastNWidgets(1),
+      );
+    });
   });
 
   group("Segment navigation bar (lines 367-453)", () {
@@ -1137,6 +1879,75 @@ void main() {
       await tester.pump();
 
       expect(find.byType(IndoorMapView), findsOneWidget);
+    });
+
+    testWidgets("shows location error popup when inter-floor locations cannot be resolved", (
+      final tester,
+    ) async {
+      ivm = UnresolvableInterFloorLocationIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 11");
+      await tester.enterText(destinationField, "T 21");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(find.text("Unable to locate one or both locations."), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets("shows floorplan missing popup when one inter-floor floorplan lookup fails", (
+      final tester,
+    ) async {
+      ivm = MissingInterFloorplanLookupIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 110");
+      await tester.enterText(destinationField, "T 210");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("Floor plan data is missing for one of the floors."),
+        findsAtLeastNWidgets(1),
+      );
+    });
+
+    testWidgets("shows generic error popup when inter-floor route computation flow fails", (
+      final tester,
+    ) async {
+      ivm = ThrowingInterFloorPathIndoorViewModel();
+      await pumpHomeScreen(tester, true);
+
+      final startField = find.byType(TextField).first;
+      final destinationField = find.byType(TextField).last;
+
+      await tester.enterText(startField, "T 210");
+      await tester.enterText(destinationField, "T 110");
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text("Start Navigation"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Navigation Error"), findsAtLeastNWidgets(1));
+      expect(
+        find.text("Failed to compute inter-floor route. Please try again."),
+        findsAtLeastNWidgets(1),
+      );
     });
 
     testWidgets("segment nav bar displays step count when inter-floor route is active", (
