@@ -433,12 +433,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      expect(find.text("Route Details"), findsNothing);
-      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
-
       expect(find.text("Route Details"), findsOneWidget);
       expect(find.text("Downtown Express"), findsOneWidget);
       expect(find.text("Board at Stop A"), findsOneWidget);
@@ -475,12 +469,6 @@ void main() {
 
       await pumpPanel(tester);
 
-      expect(find.text("Route Details"), findsNothing);
-      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
-
       expect(find.text("Route Details"), findsOneWidget);
       expect(find.text("Head east on Sherbrooke St"), findsOneWidget);
       expect(find.text("250 m • 3 min"), findsOneWidget);
@@ -516,12 +504,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-
-      expect(find.text("Route Details"), findsNothing);
-      expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       expect(find.text("Route Details"), findsOneWidget);
       expect(find.text("Bike north on Mackay St"), findsOneWidget);
@@ -561,10 +543,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-
-      // Expand the panel to see route details
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       // Verify all transit details including vehicle arrival time
       expect(find.text("Express Line A"), findsOneWidget);
@@ -611,9 +589,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       expect(find.text("Route Details"), findsOneWidget);
       expect(find.text("Suggested departure: 1/1, 9:55 AM"), findsOneWidget);
@@ -971,8 +946,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key("route_details_reached_building_jump_button")), findsOneWidget);
       expect(find.text("Reached building?"), findsOneWidget);
@@ -1003,8 +976,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key("route_details_reached_building_jump_button")), findsNothing);
       expect(find.byKey(const Key("switch_to_indoor_navigation_button")), findsNothing);
@@ -1037,8 +1008,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       final detailsScrollable = find.descendant(
         of: find.byType(SingleChildScrollView),
@@ -1086,8 +1055,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       final indoorSwitchButton = find.byKey(const Key("switch_to_indoor_navigation_button"));
       await tester.ensureVisible(indoorSwitchButton);
@@ -1138,8 +1105,6 @@ void main() {
       vm.notifyListeners();
 
       await pumpPanel(tester);
-      await tester.tap(find.byKey(const Key("route_details_handle")));
-      await tester.pumpAndSettle();
 
       final entryButton = find.byKey(const Key("start_origin_indoor_navigation_button"));
       expect(entryButton, findsOneWidget);

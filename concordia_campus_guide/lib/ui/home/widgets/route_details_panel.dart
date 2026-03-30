@@ -48,6 +48,8 @@ class RouteDetailsPanel extends StatefulWidget {
 class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   double _panelHeight = _minHeight;
   bool _isDragging = false;
+  bool _wasShowingRoutes = false;
+
   final ScrollController _routeDetailsScrollController = ScrollController();
 
   static const double _minHeight = 120;
@@ -108,9 +110,22 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
   Widget build(final BuildContext context) {
     final hasRoutes = context.select((final HomeViewModel vm) => vm.routeOptions.isNotEmpty);
     final isLoadingRoutes = context.select((final HomeViewModel vm) => vm.isLoadingRoutes);
+    final isShowingPanel = hasRoutes || isLoadingRoutes;
     final routeOptions = context.select((final HomeViewModel vm) => vm.routeOptions);
     final selectedMode = context.select((final HomeViewModel vm) => vm.selectedRouteMode);
     final routeError = context.select((final HomeViewModel vm) => vm.routeErrorMessage);
+
+    if (isShowingPanel && !_wasShowingRoutes) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final screenHeight = MediaQuery.of(context).size.height;
+        setState(() {
+          _panelHeight = screenHeight * 0.75;
+        });
+      });
+    }
+
+    _wasShowingRoutes = isShowingPanel;
 
     if (!hasRoutes && !isLoadingRoutes) {
       return const SizedBox.shrink();
@@ -124,7 +139,7 @@ class _RouteDetailsPanelState extends State<RouteDetailsPanel> {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: MediaQuery.of(context).padding.bottom,
       child: GestureDetector(
         onVerticalDragStart: (_) {
           setState(() {
