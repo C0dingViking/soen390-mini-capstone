@@ -105,7 +105,8 @@ class QueryHelper {
     final matches = buildings.where((final building) {
       final name = building.name.toLowerCase();
       final id = building.id.toLowerCase();
-      return name.contains(query) || id.contains(query);
+
+      return name.contains(query) || id.contains(query) || _matchesAcronym(query, name);
     }).toList();
 
     matches.sort((final a, final b) {
@@ -195,5 +196,22 @@ class QueryHelper {
 
   static String _normalizeSearchToken(final String value) {
     return value.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "");
+  }
+
+  static bool _matchesAcronym(final String query, final String name) {
+    final acronym = name
+        .split(RegExp(r"\s+"))
+        .where(
+          (final part) =>
+              part.isNotEmpty &&
+              part.toLowerCase() != "the" &&
+              part.toLowerCase() != "of" &&
+              part.toLowerCase() != "and",
+        )
+        .map((final part) => part[0])
+        .join()
+        .toLowerCase();
+
+    return acronym.contains(query);
   }
 }
