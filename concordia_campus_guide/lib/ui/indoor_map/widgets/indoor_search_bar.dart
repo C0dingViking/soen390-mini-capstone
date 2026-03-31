@@ -397,6 +397,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               style: AppTheme.indoorNavigationButtonStyle,
               icon: const Icon(Icons.stop_circle_outlined),
               label: const Text("End Navigation"),
+              key: const Key("end_navigation_button"),
             ),
           ),
         ] else if (showStartNavigationButton) ...[

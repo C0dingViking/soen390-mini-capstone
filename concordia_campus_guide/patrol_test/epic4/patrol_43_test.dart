@@ -37,15 +37,10 @@ void main() {
       $.log("STEP 5: Opening Floor Plans...");
       await $(#floor_plans_button).tap();
       await $.pumpAndSettle();
-      await $.pump(const Duration(seconds: 5));
+      await $.pump(const Duration(seconds: 3));
 
-      $.log("STEP 6: Selecting Accessibility-Aware Route and Starting the Navigation...");
-      await $.pumpAndSettle();
-      final accessibilityToggle = find.byKey(const Key("accessibility_mode_toggle"));
-      await $.tester.tap(accessibilityToggle);
-      await $.pumpAndSettle();
 
-      $.log("STEP 7: Selecting Start and Destination Rooms...");
+      $.log("STEP 6: Selecting Start and Destination Rooms...");
       final indoorSearchCard = find.byKey(const Key("indoor_search_card"));
       expect(indoorSearchCard, findsOneWidget, reason: "Indoor search card should be visible");
       $.log("Indoor search card is visible");
@@ -67,20 +62,57 @@ void main() {
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 2));
 
-      final startNavigationButton = find.byKey(const Key("start_navigation_button"));
+      var startNavigationButton = find.byKey(const Key("start_navigation_button"));
       expect(startNavigationButton, findsOneWidget);
       await $.tester.tap(startNavigationButton);
-      await $.pump(const Duration(seconds: 5));
+      await $.pump(const Duration(seconds: 3));
 
-      $.log("STEP 8: Verifying that the Indoor Path is Displayed on the Map...");
-      final indoorPathPainter = find.byKey(const Key("indoor_path_painter"));
+      $.log("STEP 7: Verifying that the Indoor Path is Displayed on the Map...");
+      final indoorNormalPathPainter = find.byKey(const Key("indoor_path_painter"));
       expect(
-        indoorPathPainter,
+        indoorNormalPathPainter,
         findsOneWidget,
         reason: "Indoor path should be displayed on the map",
       );
-      $.log("Indoor path is displayed on the map");
-      await $.pump(const Duration(seconds: 5));
+
+      $.log("STEP 8: End Navigation...");
+      final endNavigationButton = find.byKey(const Key("end_navigation_button"));
+      expect(endNavigationButton, findsOneWidget);
+      await $.tester.tap(endNavigationButton);
+      await $.pumpAndSettle();
+
+      $.log("STEP 9: Selecting Accessibility-Aware Route and Starting the Navigation...");
+      final accessibilityToggle = find.byKey(const Key("accessibility_mode_toggle"));
+      await $.tester.tap(accessibilityToggle);
+      await $.pumpAndSettle();
+
+      $.log("STEP 10: Selecting Start and Destination Rooms......");
+      await $.tester.tap(startSearchField);
+      await $.pumpAndSettle();
+
+      await $.enterText(startSearchField, "VL 204");
+      await $.pumpAndSettle();
+
+      await $.tester.tap(destinationSearchField);
+      await $.pumpAndSettle();
+
+      await $.enterText(destinationSearchField, "VL 104-1");
+      await $.pumpAndSettle();
+      await $.pump(const Duration(seconds: 2));
+
+      startNavigationButton = find.byKey(const Key("start_navigation_button"));
+      expect(startNavigationButton, findsOneWidget);
+      await $.tester.tap(startNavigationButton);
+      await $.pump(const Duration(seconds: 3));
+
+      $.log("STEP 11: Verifying that the Indoor Path is Displayed on the Map...");
+      final indoorAccessibilityPathPainter = find.byKey(const Key("indoor_path_painter"));
+      expect(
+        indoorAccessibilityPathPainter,
+        findsOneWidget,
+        reason: "Indoor path should be displayed on the map",
+      );
+      await $.pump(const Duration(seconds: 3));
     },
   );
 }
