@@ -8,6 +8,7 @@ import "package:concordia_campus_guide/ui/home/widgets/building_detail_screen.da
 import "package:concordia_campus_guide/ui/home/widgets/map_wrapper.dart";
 import "package:concordia_campus_guide/ui/home/widgets/building_search_bar.dart";
 import "package:concordia_campus_guide/ui/home/widgets/route_details_panel.dart";
+import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
@@ -98,6 +99,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onBuildingTapped(final PolygonId polygonId) {
     // Extract building ID from polygon ID (format: "buildingId-poly")
     final buildingId = polygonId.value.replaceAll("-poly", "");
+    _navigateToBuilding(buildingId);
+  }
+
+  void _onBuildingMarkerTapped(final MarkerId markerId) {
+    final buildingId = markerId.value.replaceAll("-marker", "");
+    _navigateToBuilding(buildingId);
+  }
+
+  void _navigateToBuilding(final String buildingId) {
     final building = _viewModel.buildings[buildingId];
 
     if (building != null) {
@@ -276,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final hasNavigation = context.select(
       (final HomeViewModel vm) => vm.routeOptions.isNotEmpty || vm.isLoadingRoutes,
     );
-
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return PopScope(
       canPop: !hasNavigation,
       onPopInvokedWithResult: (final didPop, final result) {
@@ -295,21 +305,32 @@ class _HomeScreenState extends State<HomeScreen> {
             const double actionBottom = 25;
             const double secondActionBottom = 85;
             const double actionBottomWithRoutes = 145;
+            const double indoorSwitchBottomOffset = 205;
             const double toggleRadius = 30;
-            const double togglePaddingVertical = 8;
-            const double togglePaddingHorizontal = 12;
-            const double toggleIconSize = 20;
-            const double toggleIconContainer = 40;
+            const double toggleVertical = 40;
+            const double toggleHorizontal = 160;
             const double labelFontSize = 16;
             const double shadowBlurRadius = 6;
             const double shadowOffsetY = 2;
-            const double spacingSm = 8;
-            final double actionBottomOffset = (hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
-                ? actionBottomWithRoutes
-                : actionBottom;
+            final double actionBottomOffset =
+                ((hvm.routeOptions.isNotEmpty || hvm.isLoadingRoutes)
+                    ? actionBottomWithRoutes
+                    : actionBottom) +
+                bottomInset;
             final locationFabIcon = hvm.isLocationActionAvailable
                 ? Icons.my_location
                 : Icons.location_disabled;
+            final indoorDestination = hvm.indoorNavigationDestination;
+            final isInsideDestinationBuilding =
+                indoorDestination != null &&
+                hvm.currentBuilding != null &&
+                hvm.currentBuilding!.id.toLowerCase() ==
+                    indoorDestination.building.id.toLowerCase();
+            final canSwitchToIndoorNavigation =
+                indoorDestination != null &&
+                isInsideDestinationBuilding &&
+                hvm.routeOptions.isNotEmpty &&
+                !hvm.isLoadingRoutes;
 
             return Stack(
               children: [
@@ -326,6 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   polylines: hvm.routePolylines,
                   circles: hvm.transitChangeCircles,
                   onPolygonTap: _onBuildingTapped,
+                  onMarkerTap: _onBuildingMarkerTapped,
                 ),
                 const Positioned(
                   left: searchBarInset,
@@ -365,17 +387,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   bottom: actionBottomOffset,
                   child: Material(
                     color: Colors.transparent,
-                    child: InkWell(
+                    child: GestureDetector(
                       key: const Key("campus_toggle_button"),
-                      borderRadius: BorderRadius.circular(toggleRadius),
                       onTap: () => context.read<HomeViewModel>().toggleCampus(),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: togglePaddingVertical,
-                          horizontal: togglePaddingHorizontal,
-                        ),
+                        width: toggleHorizontal,
+                        height: toggleVertical,
                         decoration: BoxDecoration(
-                          color: _buttonColor,
+                          color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(toggleRadius),
                           boxShadow: const [
                             BoxShadow(
@@ -385,34 +404,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Stack(
                           children: [
-                            Container(
-                              width: toggleIconContainer,
-                              height: toggleIconContainer,
-                              decoration: BoxDecoration(
-                                color: _buttonColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  selected.icon,
-                                  color: Colors.white,
-                                  size: toggleIconSize,
+                            AnimatedAlign(
+                              duration: const Duration(milliseconds: 250),
+                              alignment: selected.name == "SGW"
+                                  ? Alignment.centerLeft
+                                  : Alignment.centerRight,
+                              child: Container(
+                                width: 80,
+                                margin: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: _buttonColor,
+                                  borderRadius: BorderRadius.circular(toggleRadius),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: spacingSm),
-                            Text(
-                              selected.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: labelFontSize,
-                              ),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      "SGW",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: selected.name == "SGW" ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      "LOY",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: selected.name == "LOY" ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: spacingSm),
                           ],
                         ),
                       ),
@@ -422,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (hvm.showNextClassFab)
                   Positioned(
                     left: actionInset,
-                    bottom: secondActionBottom,
+                    bottom: secondActionBottom + bottomInset,
                     child: FloatingActionButton.extended(
                       key: const Key("next_class"),
                       heroTag: "next_class",
@@ -431,6 +465,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: const Icon(Icons.school, color: Colors.white),
                       label: const Text(
                         "Next Class",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: labelFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (canSwitchToIndoorNavigation)
+                  Positioned(
+                    left: actionInset,
+                    bottom: indoorSwitchBottomOffset + bottomInset,
+                    child: FloatingActionButton.extended(
+                      key: const Key("main_screen_switch_to_indoor_navigation_button"),
+                      heroTag: "main_screen_switch_to_indoor_navigation",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (final context) => IndoorMapView(
+                              building: indoorDestination.building,
+                              initialStartRoomLabel: indoorDestination.startRoomLabel,
+                              initialDestinationRoomLabel: indoorDestination.destinationRoomLabel,
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: _buttonColor,
+                      icon: const Icon(Icons.schema, color: Colors.white),
+                      label: const Text(
+                        "Switch Indoor",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: labelFontSize,

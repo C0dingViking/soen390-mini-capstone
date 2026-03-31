@@ -67,6 +67,26 @@ void main() {
       expect(ivm.loadFailed, false);
       expect(ivm.isLoading, false);
     });
+
+    test("clearSelectedRooms resets selected room names", () {
+      ivm.selectedStartRoomName = "T 1";
+      ivm.selectedEndRoomName = "T 2";
+
+      ivm.clearSelectedStartRoom();
+      ivm.clearSelectedEndRoom();
+      expect(ivm.selectedStartRoomName, null);
+      expect(ivm.selectedEndRoomName, null);
+    });
+
+    test("selectStartRoom sets selected room", () {
+      ivm.selectStartRoom("T 1");
+      expect(ivm.selectedStartRoomName, "T 1");
+    });
+
+    test("selectEndRoom sets selected room", () {
+      ivm.selectEndRoom("T 2");
+      expect(ivm.selectedEndRoomName, "T 2");
+    });
   });
 
   group("initializeBuildingFloorplans", () {

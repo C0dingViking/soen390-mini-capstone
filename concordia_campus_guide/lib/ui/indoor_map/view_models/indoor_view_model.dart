@@ -16,6 +16,8 @@ class IndoorViewModel extends ChangeNotifier {
   Map<String, Floorplan>? loadedFloorplans;
   List<String>? availableFloors;
   Floorplan? selectedFloorplan;
+  String? selectedStartRoomName;
+  String? selectedEndRoomName;
 
   /// The path displayed on the currently selected floor.
 
@@ -129,6 +131,8 @@ class IndoorViewModel extends ChangeNotifier {
     loadFailed = false;
     isLoading = false;
     indoorPath = null;
+    selectedStartRoomName = null;
+    selectedEndRoomName = null;
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
     notifyListeners();
@@ -230,6 +234,26 @@ class IndoorViewModel extends ChangeNotifier {
     indoorPath = null;
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
+    notifyListeners();
+  }
+
+  void selectStartRoom(final String roomName) {
+    selectedStartRoomName = roomName;
+    notifyListeners();
+  }
+
+  void selectEndRoom(final String roomName) {
+    selectedEndRoomName = roomName;
+    notifyListeners();
+  }
+
+  void clearSelectedStartRoom() {
+    selectedStartRoomName = null;
+    notifyListeners();
+  }
+
+  void clearSelectedEndRoom() {
+    selectedEndRoomName = null;
     notifyListeners();
   }
 }
