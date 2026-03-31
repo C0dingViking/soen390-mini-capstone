@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
             placesInteractor: PlacesInteractor(),
             directionsInteractor: DirectionsInteractor(),
             calendarInteractor: CalendarInteractor(),
+            enableLaunchNetworkWarning: true,
           ),
         ),
         ChangeNotifierProvider(

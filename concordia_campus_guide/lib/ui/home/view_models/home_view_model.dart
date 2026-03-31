@@ -1,6 +1,8 @@
 import "dart:async";
+import "dart:io";
 import "dart:ui" as ui;
 
+import "package:connectivity_plus/connectivity_plus.dart";
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "dart:math" as math;
@@ -30,11 +32,17 @@ enum DepartureMode { now, departAt, arriveBy }
 
 class HomeViewModel extends ChangeNotifier {
   static const String buildingDataAssetPath = "assets/maps/building_data.json";
+  static const String launchOfflineWarningMessage =
+      "No internet connection detected. Some features may not work until you connect to Wi-Fi or mobile data.";
 
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
   final CalendarInteractor calendarInteractor;
+  final bool _enableLaunchNetworkWarning;
+  final Future<bool> Function() _hasInternetConnection;
+  final Connectivity _connectivity;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
   bool _showLoginSuccessMessage = false;
 
@@ -45,7 +53,12 @@ class HomeViewModel extends ChangeNotifier {
     required this.placesInteractor,
     required this.directionsInteractor,
     required this.calendarInteractor,
-  });
+    final bool enableLaunchNetworkWarning = false,
+    final Future<bool> Function()? hasInternetConnection,
+    final Connectivity? connectivity,
+  }) : _enableLaunchNetworkWarning = enableLaunchNetworkWarning,
+       _hasInternetConnection = hasInternetConnection ?? _defaultHasInternetConnection,
+       _connectivity = connectivity ?? Connectivity();
 
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
@@ -131,6 +144,9 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
+    await _showLaunchOfflineWarningIfNeeded();
+    _startConnectivityListener();
+
     final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(
       path,
       _buildingOutlineColor,
@@ -158,6 +174,55 @@ class HomeViewModel extends ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _showLaunchOfflineWarningIfNeeded() async {
+    if (!_enableLaunchNetworkWarning) {
+      return;
+    }
+
+    final hasConnection = await _hasInternetConnection();
+    if (hasConnection) {
+      return;
+    }
+
+    errorMessage = launchOfflineWarningMessage;
+    notifyListeners();
+  }
+
+  void _startConnectivityListener() {
+    if (!_enableLaunchNetworkWarning) {
+      return;
+    }
+
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((final result) async {
+      final isOnline = result != ConnectivityResult.none;
+      if (isOnline) {
+        // Only clear if the error was the network offline message
+        if (errorMessage == launchOfflineWarningMessage) {
+          errorMessage = null;
+          notifyListeners();
+        }
+      } else {
+        // Show offline warning immediately when connection is lost
+        if (errorMessage != launchOfflineWarningMessage) {
+          errorMessage = launchOfflineWarningMessage;
+          notifyListeners();
+        }
+      }
+    });
+  }
+
+  static Future<bool> _defaultHasInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup(
+        "example.com",
+      ).timeout(const Duration(seconds: 2));
+      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> goToCurrentLocation() async {
@@ -1252,6 +1317,7 @@ class HomeViewModel extends ChangeNotifier {
   void dispose() {
     _searchDebounce?.cancel();
     _locationSubscription?.cancel();
+    _connectivitySubscription?.cancel();
     LocationService.instance.dispose();
     super.dispose();
   }
