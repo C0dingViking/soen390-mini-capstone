@@ -30,7 +30,8 @@ void main() {
       await $.pumpAndSettle();
 
       $.log("STEP 4.1: Hiding keyboard...");
-      await $.platform.android.pressBack(); //needed for to hide the keyboard on Android, otherwise UI layout issues occur when trying to tap the start field
+      await $.platform.android
+          .pressBack(); //needed for to hide the keyboard on Android, otherwise UI layout issues occur when trying to tap the start field
       await $.pumpAndSettle();
 
       $.log("STEP 5: Entering 'VL 101' as destination...");
@@ -93,8 +94,7 @@ void main() {
 
       await $.pump(const Duration(seconds: 3));
 
-      final size = $.tester.binding.window.physicalSize /
-             $.tester.binding.window.devicePixelRatio;
+      final size = $.tester.view.physicalSize / $.tester.view.devicePixelRatio;
 
       final start = Offset(size.width / 2, size.height * 0.75);
       final offset = Offset(0, -600);
@@ -102,7 +102,9 @@ void main() {
       await $.tester.dragFrom(start, offset);
       await $.pumpAndSettle();
 
-      final switchToIndoorNavigationBtn = find.byKey(const Key("switch_to_indoor_navigation_button"));
+      final switchToIndoorNavigationBtn = find.byKey(
+        const Key("switch_to_indoor_navigation_button"),
+      );
       await $.tester.tap(switchToIndoorNavigationBtn);
       await $.pump(const Duration(seconds: 3));
 
@@ -112,7 +114,6 @@ void main() {
         findsOneWidget,
         reason: "Indoor path should be displayed on the map",
       );
-
     },
   );
 }

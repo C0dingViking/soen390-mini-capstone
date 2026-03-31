@@ -71,7 +71,7 @@ void main() {
       expect(startNavigationButton, findsOneWidget);
       await $.tester.tap(startNavigationButton);
       await $.pump(const Duration(seconds: 5));
-      
+
       $.log("STEP 8: Verifying that the Indoor Path is Displayed on the Map...");
       final indoorPathPainter = find.byKey(const Key("indoor_path_painter"));
       expect(
