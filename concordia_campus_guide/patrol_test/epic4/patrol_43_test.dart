@@ -37,8 +37,15 @@ void main() {
       $.log("STEP 5: Opening Floor Plans...");
       await $(#floor_plans_button).tap();
       await $.pumpAndSettle();
+      await $.pump(const Duration(seconds: 5));
 
-      $.log("STEP 6: Selecting Start and Destination Rooms...");
+      $.log("STEP 6: Selecting Accessibility-Aware Route and Starting the Navigation...");
+      await $.pumpAndSettle();
+      final accessibilityToggle = find.byKey(const Key("accessibility_mode_toggle"));
+      await $.tester.tap(accessibilityToggle);
+      await $.pumpAndSettle();
+
+      $.log("STEP 7: Selecting Start and Destination Rooms...");
       final indoorSearchCard = find.byKey(const Key("indoor_search_card"));
       expect(indoorSearchCard, findsOneWidget, reason: "Indoor search card should be visible");
       $.log("Indoor search card is visible");
@@ -47,6 +54,7 @@ void main() {
       final destinationSearchField = find.byKey(Key("indoor_destination_search_field"));
 
       await $.tester.tap(startSearchField);
+      await $.platform.android.pressBack();
       await $.pumpAndSettle();
 
       await $.enterText(startSearchField, "VL 204");
@@ -55,17 +63,15 @@ void main() {
       await $.tester.tap(destinationSearchField);
       await $.pumpAndSettle();
 
-      await $.enterText(destinationSearchField, "VL 104");
+      await $.enterText(destinationSearchField, "VL 104-1");
       await $.pumpAndSettle();
+      await $.pump(const Duration(seconds: 2));
 
-      $.log("STEP 7: Selecting Accessibility-Aware Route and Starting the Navigation...");
-      final accessibilityToggle = find.byKey(const Key("accessibility_mode_toggle"));
-      await $.tester.tap(accessibilityToggle);
-      await $.pumpAndSettle();
-
-      $(#start_navigation_button).tap();
+      final startNavigationButton = find.byKey(const Key("start_navigation_button"));
+      expect(startNavigationButton, findsOneWidget);
+      await $.tester.tap(startNavigationButton);
       await $.pump(const Duration(seconds: 5));
-
+      
       $.log("STEP 8: Verifying that the Indoor Path is Displayed on the Map...");
       final indoorPathPainter = find.byKey(const Key("indoor_path_painter"));
       expect(

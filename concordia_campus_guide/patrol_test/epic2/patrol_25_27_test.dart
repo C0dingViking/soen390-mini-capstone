@@ -20,11 +20,7 @@ void main() {
     await $.pump(const Duration(seconds: 6));
 
     $.log("STEP 4: Tapping the search bar...");
-<<<<<<< HEAD:concordia_campus_guide/patrol_test/epic2/patrol_25_27_test.dart
     final searchField = find.byKey(const Key("destination_search_field"));
-=======
-    final searchField = find.widgetWithText(TextField, "Enter your destination");
->>>>>>> 6712ec98540acaa2f6ee2f4335aed8f80b9dbab0:concordia_campus_guide/patrol_test/patrol_25_27_test.dart
     expect(searchField, findsOneWidget);
     await $.tester.tap(searchField);
     await $.pumpAndSettle();

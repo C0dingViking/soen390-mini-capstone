@@ -424,11 +424,11 @@ class _ModeToggleIcon extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ModeToggleIcon({
+    super.key,
     required this.icon,
     required this.isSelected,
     required this.tooltip,
     required this.onTap,
-    required final Key key,
   });
 
   @override
@@ -442,7 +442,6 @@ class _ModeToggleIcon extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: InkWell(
-        key: key,
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Container(

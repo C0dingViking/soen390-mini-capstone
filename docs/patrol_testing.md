@@ -35,11 +35,19 @@ From `concordia_campus_guide`:
 patrol test
 ```
 
-For specific tests:
+For a specific test:
 
 ```bash
 patrol test -t patrol_test/your_test.dart
 ```
+
+For a specific epic:
+
+```bash
+patrol test -t patrol_test/epicX
+```
+
+> where X is replaced with the appropriate number
 
 For a specific device, execute `patrol devices` to find the device id then use:
 
