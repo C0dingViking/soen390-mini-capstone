@@ -184,7 +184,7 @@ class HomeViewModel extends ChangeNotifier {
       if (_looksLikeLocationUnavailable(e)) {
         _setLocationActionAvailable(false);
       }
-      errorMessage = "Error: $e";
+      errorMessage = "$e";
       notifyListeners();
     }
   }
@@ -441,7 +441,7 @@ class HomeViewModel extends ChangeNotifier {
         _setLocationActionAvailable(false);
       }
       isResolvingStartLocation = false;
-      errorMessage = "Error: $e";
+      errorMessage = "$e";
       notifyListeners();
     }
   }

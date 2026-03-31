@@ -73,7 +73,7 @@ class CoordinatesController {
       } else if (msg.contains("denied")) {
         // user denied once; silently return
       } else {
-        await showErrorPopup(context, "Location error: $e", title: _locationErrorTitle);
+        await showErrorPopup(context, "$e", title: _locationErrorTitle);
       }
     }
   }

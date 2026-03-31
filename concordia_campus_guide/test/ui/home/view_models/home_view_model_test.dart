@@ -293,9 +293,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals(
-          "Error: Location services disabled. Enter locations manually or enable location services.",
-        ),
+        equals("Location services disabled. Enter locations manually or enable location services."),
       );
       expect(hvm.myLocationEnabled, isFalse);
       expect(hvm.cameraTarget, isNull);
@@ -309,7 +307,7 @@ void main() {
       expect(
         hvm.errorMessage,
         equals(
-          "Error: Location permission denied. Enter locations manually or enable location permissions.",
+          "Location permission denied. Enter locations manually or enable location permissions.",
         ),
       );
     });
@@ -320,7 +318,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals("Error: Location permission deniedForever. Please enable it in settings."),
+        equals("Location permission deniedForever. Please enable it in settings."),
       );
     });
 
