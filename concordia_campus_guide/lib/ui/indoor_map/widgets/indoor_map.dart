@@ -1312,6 +1312,7 @@ class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
   @override
   Widget build(final BuildContext context) {
     return CustomPaint(
+      key: const Key("indoor_path_painter"),
       painter: IndoorPathPainter(
         floorplan: widget.floorplan,
         path: widget.path,

@@ -370,6 +370,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     required final bool isSearchingPlaces,
   }) {
     return TextField(
+      key: const Key("destination_search_field"),
       controller: _destinationController,
       focusNode: _destinationFocusNode,
       onChanged: (final value) => _handleQueryChanged(value, SearchField.destination),
@@ -462,6 +463,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
           subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
           trailing: isBuilding && suggestion.building != null
               ? IconButton(
+                  key: Key("building_info_${suggestion.title}"),
                   icon: const Icon(Icons.info_outline),
                   onPressed: () {
                     Navigator.push(

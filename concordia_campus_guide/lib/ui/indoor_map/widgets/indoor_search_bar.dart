@@ -299,6 +299,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
     required final FocusNode focusNode,
     required final String hintText,
     required final Widget prefixIcon,
+    required final Key key,
     final TextInputAction? textInputAction,
   }) {
     final showClearButton = controller.text.isNotEmpty;
@@ -307,6 +308,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
       controller: controller,
       focusNode: focusNode,
       textInputAction: textInputAction,
+      key: key,
       decoration: AppTheme.indoorSearchFieldDecoration.copyWith(
         hintText: hintText,
         prefixIcon: prefixIcon,
@@ -344,6 +346,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
                 icon: Icons.directions_walk,
                 isSelected: !_accessibleMode,
                 tooltip: "Normal walking route",
+                key: const Key("normal_mode_toggle"),
                 onTap: () {
                   setState(() => _accessibleMode = false);
                 },
@@ -353,6 +356,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
                 icon: Icons.accessible_forward,
                 isSelected: _accessibleMode,
                 tooltip: "Accessible route (avoid stairs)",
+                key: const Key("accessibility_mode_toggle"),
                 onTap: () {
                   setState(() => _accessibleMode = true);
                 },
@@ -363,11 +367,13 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
         SearchInputCard(
           elevation: _cardElevation,
           radius: _cardRadius,
+          key: const Key("indoor_search_card"),
           children: [
             _buildSearchField(
               controller: _startController,
               focusNode: _startFocus,
               hintText: "Current location",
+              key: const Key("indoor_start_search_field"),
               prefixIcon: const Icon(Icons.trip_origin),
             ),
             const Divider(height: 1),
@@ -376,6 +382,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               focusNode: _destinationFocus,
               textInputAction: TextInputAction.search,
               hintText: "Choose destination",
+              key: const Key("indoor_destination_search_field"),
               prefixIcon: const Icon(Icons.place_outlined),
             ),
           ],
@@ -390,6 +397,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               style: AppTheme.indoorNavigationButtonStyle,
               icon: const Icon(Icons.stop_circle_outlined),
               label: const Text("End Navigation"),
+              key: const Key("end_navigation_button"),
             ),
           ),
         ] else if (showStartNavigationButton) ...[
@@ -401,6 +409,7 @@ class _IndoorSearchBarState extends State<IndoorSearchBar> {
               style: AppTheme.indoorNavigationButtonStyle,
               icon: const Icon(Icons.navigation),
               label: const Text("Start Navigation"),
+              key: const Key("start_navigation_button"),
             ),
           ),
         ],
@@ -416,6 +425,7 @@ class _ModeToggleIcon extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ModeToggleIcon({
+    super.key,
     required this.icon,
     required this.isSelected,
     required this.tooltip,
