@@ -39,7 +39,6 @@ void main() {
       await $.pumpAndSettle();
       await $.pump(const Duration(seconds: 3));
 
-
       $.log("STEP 6: Selecting Start and Destination Rooms...");
       final indoorSearchCard = find.byKey(const Key("indoor_search_card"));
       expect(indoorSearchCard, findsOneWidget, reason: "Indoor search card should be visible");
