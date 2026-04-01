@@ -293,9 +293,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals(
-          "Error: Location services disabled. Enter locations manually or enable location services.",
-        ),
+        equals("Location services disabled. Enter locations manually or enable location services."),
       );
       expect(hvm.myLocationEnabled, isFalse);
       expect(hvm.cameraTarget, isNull);
@@ -309,7 +307,7 @@ void main() {
       expect(
         hvm.errorMessage,
         equals(
-          "Error: Location permission denied. Enter locations manually or enable location permissions.",
+          "Location permission denied. Enter locations manually or enable location permissions.",
         ),
       );
     });
@@ -320,7 +318,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals("Error: Location permission deniedForever. Please enable it in settings."),
+        equals("Location permission deniedForever. Please enable it in settings."),
       );
     });
 
@@ -343,6 +341,55 @@ void main() {
       fakeGeolocator.throwOnGet = true;
       await hvm.goToCurrentLocation();
       expect(hvm.errorMessage, contains("boom"));
+    });
+
+    test("initializeBuildingsData shows launch warning when offline", () async {
+      final repo = BuildingRepository(
+        buildingLoader: (final path) async {
+          return File(path).readAsString();
+        },
+      );
+      final vm = HomeViewModel(
+        mapInteractor: MapDataInteractor(buildingRepo: repo),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+        enableLaunchNetworkWarning: true,
+        hasInternetConnection: () async => false,
+      );
+
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+
+      expect(vm.errorMessage, HomeViewModel.launchOfflineWarningMessage);
+      vm.dispose();
+      LocationService.resetForTesting();
+    });
+
+    test("initializeBuildingsData checks network every time when offline", () async {
+      var checkCount = 0;
+      final repo = BuildingRepository(
+        buildingLoader: (final path) async {
+          return File(path).readAsString();
+        },
+      );
+      final vm = HomeViewModel(
+        mapInteractor: MapDataInteractor(buildingRepo: repo),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+        enableLaunchNetworkWarning: true,
+        hasInternetConnection: () async {
+          checkCount++;
+          return false;
+        },
+      );
+
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+
+      expect(checkCount, 2);
+      vm.dispose();
+      LocationService.resetForTesting();
     });
 
     group("Building detection with location stream", () {

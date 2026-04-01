@@ -12,6 +12,7 @@ import "package:concordia_campus_guide/ui/indoor_map/widgets/indoor_map.dart";
 import "package:flutter/material.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
+import "package:concordia_campus_guide/utils/dialog_helper.dart";
 import "package:provider/provider.dart";
 import "package:google_fonts/google_fonts.dart";
 
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onViewModelChange() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      showErrorPopup(context, _viewModel.errorMessage!, title: "Error");
       _viewModel.consumeErrorMessage();
     }
     if (_viewModel.generateInfoMessage != null) {

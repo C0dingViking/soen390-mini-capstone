@@ -448,6 +448,6 @@ void main() {
 
     await tester.pump();
 
-    expect(find.text("Location error: Exception: boom"), findsOneWidget);
+    expect(find.text("Exception: boom"), findsOneWidget);
   });
 }

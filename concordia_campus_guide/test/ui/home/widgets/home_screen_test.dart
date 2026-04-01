@@ -223,7 +223,7 @@ void main() {
       expect(find.text("LOY"), findsOneWidget);
     });
 
-    testWidgets("shows SnackBar when view model has errorMessage", (final tester) async {
+    testWidgets("shows popup when view model has errorMessage", (final tester) async {
       await pumpHomeScreen(tester);
       vm.errorMessage = "test-error";
       vm.notifyListeners();
@@ -231,7 +231,7 @@ void main() {
       expect(find.text("test-error"), findsOneWidget);
     });
 
-    testWidgets("shows SnackBar when view model has infoMessage and auto clears it", (
+    testWidgets("shows popup when view model has infoMessage and auto clears it", (
       final tester,
     ) async {
       await pumpHomeScreen(tester);

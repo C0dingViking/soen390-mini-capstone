@@ -4,9 +4,11 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "../domain/models/coordinate.dart";
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
+import "package:concordia_campus_guide/utils/dialog_helper.dart";
 
 class CoordinatesController {
   final Completer<GoogleMapController> _controller = Completer();
+  static const String _locationErrorTitle = "Location Error";
 
   Future<GoogleMapController> get mapController => _controller.future;
 
@@ -54,22 +56,24 @@ class CoordinatesController {
   }
 
   Future<void> goToCurrentLocation(final BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     try {
       final coord = await LocationService.instance.getCurrentPosition();
       await goToCoordinate(coord);
     } catch (e) {
+      if (!context.mounted) return;
       final msg = e.toString();
       if (msg.contains("disabled")) {
-        messenger.showSnackBar(const SnackBar(content: Text("Enable location services")));
+        await showErrorPopup(context, "Enable location services", title: _locationErrorTitle);
       } else if (msg.contains("deniedForever")) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text("Enable location permissions in settings")),
+        await showErrorPopup(
+          context,
+          "Enable location permissions in settings",
+          title: _locationErrorTitle,
         );
       } else if (msg.contains("denied")) {
         // user denied once; silently return
       } else {
-        messenger.showSnackBar(SnackBar(content: Text("Location error: $e")));
+        await showErrorPopup(context, "$e", title: _locationErrorTitle);
       }
     }
   }
