@@ -1024,8 +1024,8 @@ class HomeViewModel extends ChangeNotifier {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final centerX = imageWidth / 2;
-    final pinTipY = imageHeight - 4;
+    const double centerX = imageWidth / 2;
+    const double pinTipY = imageHeight - 4;
     final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
 
     final displayLabel = _truncateMarkerLabel(label);
