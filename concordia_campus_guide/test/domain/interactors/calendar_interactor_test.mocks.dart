@@ -37,12 +37,14 @@ class MockGoogleCalendarRepository extends _i1.Mock implements _i2.GoogleCalenda
     int? maxResults = 10,
     DateTime? timeMin,
     DateTime? timeMax,
+    String? calendarId = 'primary',
   }) =>
       (super.noSuchMethod(
             Invocation.method(#getUpcomingEvents, [], {
               #maxResults: maxResults,
               #timeMin: timeMin,
               #timeMax: timeMax,
+              #calendarId: calendarId,
             }),
             returnValue: _i3.Future<List<_i4.Event>>.value(<_i4.Event>[]),
           )
@@ -52,10 +54,23 @@ class MockGoogleCalendarRepository extends _i1.Mock implements _i2.GoogleCalenda
   _i3.Future<List<_i4.Event>> getEventsInRange({
     required DateTime? startDate,
     required DateTime? endDate,
+    String? calendarId = 'primary',
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#getEventsInRange, [], {#startDate: startDate, #endDate: endDate}),
+            Invocation.method(#getEventsInRange, [], {
+              #startDate: startDate,
+              #endDate: endDate,
+              #calendarId: calendarId,
+            }),
             returnValue: _i3.Future<List<_i4.Event>>.value(<_i4.Event>[]),
           )
           as _i3.Future<List<_i4.Event>>);
+
+  @override
+  _i3.Future<List<_i4.CalendarListEntry>> getUserCalendars() =>
+      (super.noSuchMethod(
+            Invocation.method(#getUserCalendars, []),
+            returnValue: _i3.Future<List<_i4.CalendarListEntry>>.value(<_i4.CalendarListEntry>[]),
+          )
+          as _i3.Future<List<_i4.CalendarListEntry>>);
 }

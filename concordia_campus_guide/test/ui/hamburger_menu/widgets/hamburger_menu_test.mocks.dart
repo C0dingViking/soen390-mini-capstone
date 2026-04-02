@@ -10,20 +10,21 @@ import 'package:concordia_campus_guide/domain/interactors/calendar_interactor.da
 import 'package:concordia_campus_guide/domain/interactors/directions_interactor.dart' as _i6;
 import 'package:concordia_campus_guide/domain/interactors/map_data_interactor.dart' as _i4;
 import 'package:concordia_campus_guide/domain/interactors/places_interactor.dart' as _i5;
-import 'package:concordia_campus_guide/domain/models/academic_class.dart' as _i20;
+import 'package:concordia_campus_guide/domain/models/academic_class.dart' as _i21;
 import 'package:concordia_campus_guide/domain/models/building.dart' as _i14;
-import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i19;
-import 'package:concordia_campus_guide/domain/models/place_suggestion.dart' as _i18;
+import 'package:concordia_campus_guide/domain/models/calendar_option.dart' as _i17;
+import 'package:concordia_campus_guide/domain/models/coordinate.dart' as _i20;
+import 'package:concordia_campus_guide/domain/models/place_suggestion.dart' as _i19;
 import 'package:concordia_campus_guide/domain/models/route_option.dart' as _i16;
-import 'package:concordia_campus_guide/domain/models/search_suggestion.dart' as _i17;
+import 'package:concordia_campus_guide/domain/models/search_suggestion.dart' as _i18;
 import 'package:concordia_campus_guide/ui/auth/view_models/login_view_model.dart' as _i11;
 import 'package:concordia_campus_guide/ui/home/view_models/home_view_model.dart' as _i13;
 import 'package:firebase_auth/firebase_auth.dart' as _i3;
 import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart' as _i2;
 import 'package:firebase_core/firebase_core.dart' as _i8;
 import 'package:google_maps_flutter/google_maps_flutter.dart' as _i15;
-import 'package:google_sign_in/google_sign_in.dart' as _i21;
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart' as _i22;
+import 'package:google_sign_in/google_sign_in.dart' as _i22;
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart' as _i23;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i9;
 
@@ -567,6 +568,14 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#showNextClassFab), returnValue: false) as bool);
 
   @override
+  List<_i17.CalendarOption> get getCalendarTitles =>
+      (super.noSuchMethod(
+            Invocation.getter(#getCalendarTitles),
+            returnValue: <_i17.CalendarOption>[],
+          )
+          as List<_i17.CalendarOption>);
+
+  @override
   bool get showNextClassDialog =>
       (super.noSuchMethod(Invocation.getter(#showNextClassDialog), returnValue: false) as bool);
 
@@ -576,17 +585,17 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
           as _i13.DepartureMode);
 
   @override
-  List<_i17.SearchSuggestion> get searchResults =>
-      (super.noSuchMethod(Invocation.getter(#searchResults), returnValue: <_i17.SearchSuggestion>[])
-          as List<_i17.SearchSuggestion>);
+  List<_i18.SearchSuggestion> get searchResults =>
+      (super.noSuchMethod(Invocation.getter(#searchResults), returnValue: <_i18.SearchSuggestion>[])
+          as List<_i18.SearchSuggestion>);
 
   @override
-  List<_i18.PlaceSuggestion> get nearbySearchResults =>
+  List<_i19.PlaceSuggestion> get nearbySearchResults =>
       (super.noSuchMethod(
             Invocation.getter(#nearbySearchResults),
-            returnValue: <_i18.PlaceSuggestion>[],
+            returnValue: <_i19.PlaceSuggestion>[],
           )
-          as List<_i18.PlaceSuggestion>);
+          as List<_i19.PlaceSuggestion>);
 
   @override
   int get nearbySearchResultLimit =>
@@ -597,6 +606,11 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#myLocationEnabled), returnValue: false) as bool);
 
   @override
+  bool get isLocationActionAvailable =>
+      (super.noSuchMethod(Invocation.getter(#isLocationActionAvailable), returnValue: false)
+          as bool);
+
+  @override
   bool get isSearchBarExpanded =>
       (super.noSuchMethod(Invocation.getter(#isSearchBarExpanded), returnValue: false) as bool);
 
@@ -605,9 +619,9 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
       (super.noSuchMethod(Invocation.getter(#unfocusSearchBarSignal), returnValue: 0) as int);
 
   @override
-  List<_i19.Coordinate> get campuses =>
-      (super.noSuchMethod(Invocation.getter(#campuses), returnValue: <_i19.Coordinate>[])
-          as List<_i19.Coordinate>);
+  List<_i20.Coordinate> get campuses =>
+      (super.noSuchMethod(Invocation.getter(#campuses), returnValue: <_i20.Coordinate>[])
+          as List<_i20.Coordinate>);
 
   @override
   int get selectedCampusIndex =>
@@ -691,13 +705,13 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
-  set startCoordinate(_i19.Coordinate? value) => super.noSuchMethod(
+  set startCoordinate(_i20.Coordinate? value) => super.noSuchMethod(
     Invocation.setter(#startCoordinate, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set destinationCoordinate(_i19.Coordinate? value) => super.noSuchMethod(
+  set destinationCoordinate(_i20.Coordinate? value) => super.noSuchMethod(
     Invocation.setter(#destinationCoordinate, value),
     returnValueForMissingStub: null,
   );
@@ -755,8 +769,14 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
-  set upcomingClass(_i20.AcademicClass? value) =>
+  set upcomingClass(_i21.AcademicClass? value) =>
       super.noSuchMethod(Invocation.setter(#upcomingClass, value), returnValueForMissingStub: null);
+
+  @override
+  set selectedCalendarId(String? value) => super.noSuchMethod(
+    Invocation.setter(#selectedCalendarId, value),
+    returnValueForMissingStub: null,
+  );
 
   @override
   set departureMode(_i13.DepartureMode? value) =>
@@ -781,11 +801,11 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
-  set searchResults(List<_i17.SearchSuggestion>? value) =>
+  set searchResults(List<_i18.SearchSuggestion>? value) =>
       super.noSuchMethod(Invocation.setter(#searchResults, value), returnValueForMissingStub: null);
 
   @override
-  set nearbySearchResults(List<_i18.PlaceSuggestion>? value) => super.noSuchMethod(
+  set nearbySearchResults(List<_i19.PlaceSuggestion>? value) => super.noSuchMethod(
     Invocation.setter(#nearbySearchResults, value),
     returnValueForMissingStub: null,
   );
@@ -803,6 +823,12 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
+  set isLocationActionAvailable(bool? value) => super.noSuchMethod(
+    Invocation.setter(#isLocationActionAvailable, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   set isSearchBarExpanded(bool? value) => super.noSuchMethod(
     Invocation.setter(#isSearchBarExpanded, value),
     returnValueForMissingStub: null,
@@ -815,7 +841,7 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
-  set cameraTarget(_i19.Coordinate? value) =>
+  set cameraTarget(_i20.Coordinate? value) =>
       super.noSuchMethod(Invocation.setter(#cameraTarget, value), returnValueForMissingStub: null);
 
   @override
@@ -911,8 +937,14 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   );
 
   @override
+  void consumeErrorMessage() => super.noSuchMethod(
+    Invocation.method(#consumeErrorMessage, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   _i10.Future<void> selectSearchSuggestion(
-    _i17.SearchSuggestion? suggestion,
+    _i18.SearchSuggestion? suggestion,
     _i13.SearchField? field,
   ) =>
       (super.noSuchMethod(
@@ -926,6 +958,15 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
   _i10.Future<void> setStartToCurrentLocation() =>
       (super.noSuchMethod(
             Invocation.method(#setStartToCurrentLocation, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> refreshLocationActionAvailability() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshLocationActionAvailability, []),
             returnValue: _i10.Future<void>.value(),
             returnValueForMissingStub: _i10.Future<void>.value(),
           )
@@ -975,6 +1016,30 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
     Invocation.method(#onMapCameraMove, [position]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  _i10.Future<bool> startInterBuildingOutdoorNavigation({
+    required String? startBuildingId,
+    required String? destinationBuildingId,
+    required String? startRoomLabel,
+    required String? destinationRoomLabel,
+    required String? destinationIndoorStartLabel,
+    required String? originIndoorStartRoomLabel,
+    required String? originIndoorDestinationRoomLabel,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#startInterBuildingOutdoorNavigation, [], {
+              #startBuildingId: startBuildingId,
+              #destinationBuildingId: destinationBuildingId,
+              #startRoomLabel: startRoomLabel,
+              #destinationRoomLabel: destinationRoomLabel,
+              #destinationIndoorStartLabel: destinationIndoorStartLabel,
+              #originIndoorStartRoomLabel: originIndoorStartRoomLabel,
+              #originIndoorDestinationRoomLabel: originIndoorDestinationRoomLabel,
+            }),
+            returnValue: _i10.Future<bool>.value(false),
+          )
+          as _i10.Future<bool>);
 
   @override
   void dispose() =>
@@ -1027,6 +1092,15 @@ class MockHomeViewModel extends _i1.Mock implements _i13.HomeViewModel {
     Invocation.method(#clearUpcomingClass, []),
     returnValueForMissingStub: null,
   );
+
+  @override
+  _i10.Future<void> loadCalendarTitles() =>
+      (super.noSuchMethod(
+            Invocation.method(#loadCalendarTitles, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   void addListener(_i12.VoidCallback? listener) => super.noSuchMethod(
@@ -1455,15 +1529,15 @@ class MockFirebaseAuth extends _i1.Mock implements _i3.FirebaseAuth {
 /// A class which mocks [GoogleSignIn].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGoogleSignIn extends _i1.Mock implements _i21.GoogleSignIn {
+class MockGoogleSignIn extends _i1.Mock implements _i22.GoogleSignIn {
   MockGoogleSignIn() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i22.SignInOption get signInOption =>
-      (super.noSuchMethod(Invocation.getter(#signInOption), returnValue: _i22.SignInOption.standard)
-          as _i22.SignInOption);
+  _i23.SignInOption get signInOption =>
+      (super.noSuchMethod(Invocation.getter(#signInOption), returnValue: _i23.SignInOption.standard)
+          as _i23.SignInOption);
 
   @override
   List<String> get scopes =>
@@ -1475,15 +1549,15 @@ class MockGoogleSignIn extends _i1.Mock implements _i21.GoogleSignIn {
           as bool);
 
   @override
-  _i10.Stream<_i21.GoogleSignInAccount?> get onCurrentUserChanged =>
+  _i10.Stream<_i22.GoogleSignInAccount?> get onCurrentUserChanged =>
       (super.noSuchMethod(
             Invocation.getter(#onCurrentUserChanged),
-            returnValue: _i10.Stream<_i21.GoogleSignInAccount?>.empty(),
+            returnValue: _i10.Stream<_i22.GoogleSignInAccount?>.empty(),
           )
-          as _i10.Stream<_i21.GoogleSignInAccount?>);
+          as _i10.Stream<_i22.GoogleSignInAccount?>);
 
   @override
-  _i10.Future<_i21.GoogleSignInAccount?> signInSilently({
+  _i10.Future<_i22.GoogleSignInAccount?> signInSilently({
     bool? suppressErrors = true,
     bool? reAuthenticate = false,
   }) =>
@@ -1492,9 +1566,9 @@ class MockGoogleSignIn extends _i1.Mock implements _i21.GoogleSignIn {
               #suppressErrors: suppressErrors,
               #reAuthenticate: reAuthenticate,
             }),
-            returnValue: _i10.Future<_i21.GoogleSignInAccount?>.value(),
+            returnValue: _i10.Future<_i22.GoogleSignInAccount?>.value(),
           )
-          as _i10.Future<_i21.GoogleSignInAccount?>);
+          as _i10.Future<_i22.GoogleSignInAccount?>);
 
   @override
   _i10.Future<bool> isSignedIn() =>
@@ -1505,28 +1579,28 @@ class MockGoogleSignIn extends _i1.Mock implements _i21.GoogleSignIn {
           as _i10.Future<bool>);
 
   @override
-  _i10.Future<_i21.GoogleSignInAccount?> signIn() =>
+  _i10.Future<_i22.GoogleSignInAccount?> signIn() =>
       (super.noSuchMethod(
             Invocation.method(#signIn, []),
-            returnValue: _i10.Future<_i21.GoogleSignInAccount?>.value(),
+            returnValue: _i10.Future<_i22.GoogleSignInAccount?>.value(),
           )
-          as _i10.Future<_i21.GoogleSignInAccount?>);
+          as _i10.Future<_i22.GoogleSignInAccount?>);
 
   @override
-  _i10.Future<_i21.GoogleSignInAccount?> signOut() =>
+  _i10.Future<_i22.GoogleSignInAccount?> signOut() =>
       (super.noSuchMethod(
             Invocation.method(#signOut, []),
-            returnValue: _i10.Future<_i21.GoogleSignInAccount?>.value(),
+            returnValue: _i10.Future<_i22.GoogleSignInAccount?>.value(),
           )
-          as _i10.Future<_i21.GoogleSignInAccount?>);
+          as _i10.Future<_i22.GoogleSignInAccount?>);
 
   @override
-  _i10.Future<_i21.GoogleSignInAccount?> disconnect() =>
+  _i10.Future<_i22.GoogleSignInAccount?> disconnect() =>
       (super.noSuchMethod(
             Invocation.method(#disconnect, []),
-            returnValue: _i10.Future<_i21.GoogleSignInAccount?>.value(),
+            returnValue: _i10.Future<_i22.GoogleSignInAccount?>.value(),
           )
-          as _i10.Future<_i21.GoogleSignInAccount?>);
+          as _i10.Future<_i22.GoogleSignInAccount?>);
 
   @override
   _i10.Future<bool> requestScopes(List<String>? scopes) =>

@@ -6,6 +6,7 @@ import "package:concordia_campus_guide/domain/models/academic_class.dart";
 import "package:concordia_campus_guide/domain/models/building.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/utils/pattern_extensions.dart";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 
 class CalendarInteractor {
   final GoogleCalendarRepository _calendarRepo;
@@ -19,11 +20,13 @@ class CalendarInteractor {
     final DateTime? timeMin,
     final DateTime? timeMax,
     final String buildingDataPath = "assets/maps/building_data.json",
+    final String calendarId = "primary",
   }) async {
     final events = await _calendarRepo.getUpcomingEvents(
       maxResults: maxResults,
       timeMin: timeMin,
       timeMax: timeMax,
+      calendarId: calendarId,
     );
 
     final academicClasses = <AcademicClass>[];
@@ -86,5 +89,16 @@ class CalendarInteractor {
       // Since we don't officially support every building, we handle unsupported buildings by treating their name as ID
       return eventLocationBuildingName;
     }
+  }
+
+  Future<List<CalendarOption>> getUserCalendarOptions() async {
+    return (await _calendarRepo.getUserCalendars())
+        .map(
+          (final calendar) => CalendarOption(
+            title: calendar.summary ?? "Unnamed Calendar",
+            id: calendar.id ?? "primary",
+          ),
+        )
+        .toList();
   }
 }

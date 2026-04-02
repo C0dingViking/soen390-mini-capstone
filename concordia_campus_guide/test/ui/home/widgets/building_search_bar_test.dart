@@ -51,13 +51,18 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
     final int maxResults = 10,
     final DateTime? timeMin,
     final DateTime? timeMax,
+    final String calendarId = "primary",
   }) async => [];
 
   @override
   Future<List<calendar.Event>> getEventsInRange({
     required final DateTime startDate,
     required final DateTime endDate,
+    final String calendarId = "primary",
   }) async => [];
+
+  @override
+  Future<List<calendar.CalendarListEntry>> getUserCalendars() async => [];
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
