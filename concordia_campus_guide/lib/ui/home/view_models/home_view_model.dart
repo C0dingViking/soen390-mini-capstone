@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:io";
 import "dart:ui" as ui;
 
 import "package:connectivity_plus/connectivity_plus.dart";
@@ -220,10 +219,10 @@ class HomeViewModel extends ChangeNotifier {
 
   static Future<bool> _defaultHasInternetConnection() async {
     try {
-      final result = await InternetAddress.lookup(
-        "example.com",
-      ).timeout(const Duration(seconds: 2));
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+      final connectivity = Connectivity();
+      final result = await connectivity.checkConnectivity();
+      // If connected to WiFi or mobile, assume internet is available
+      return result != ConnectivityResult.none;
     } catch (_) {
       return false;
     }
