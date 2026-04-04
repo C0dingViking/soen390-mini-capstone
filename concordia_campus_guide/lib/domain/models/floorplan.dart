@@ -204,7 +204,10 @@ class Floorplan {
   ) {
     final roomRegex = RegExp(r"^room-(?:.*?-)?([A-Za-z0-9.-]+)$");
     final List<IndoorMapRoom> rooms = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...roomLayer.findAllElements("rect"),
@@ -224,11 +227,7 @@ class Floorplan {
       }
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
-      final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return label == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
+      final doorElement = _findConnectorOrThrow(connectors, expected, "room $roomNumber");
       final doorLocation = parsePointFromSvgCircle(doorElement);
 
       rooms.add(IndoorMapRoom(name: roomNumber, doorLocation: doorLocation, points: points));
@@ -245,7 +244,10 @@ class Floorplan {
   ) {
     final poiRegex = RegExp(r"^([A-Za-z]+)-([0-9]+)$");
     final List<PointOfInterest> pois = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...poiLayer.findAllElements("rect"),
@@ -267,11 +269,7 @@ class Floorplan {
       }
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
-      final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return label == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
+      final doorElement = _findConnectorOrThrow(connectors, expected, "poi $poiName-$instanceNum");
       final doorLocation = parsePointFromSvgCircle(doorElement);
 
       pois.add(
@@ -312,7 +310,10 @@ class Floorplan {
       r"^(stairs|stairsUp|stairsDown|elevator|escalatorUp|escalatorDown)-([0-9]+)$",
     );
     final List<FloorTransition> transitions = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...poiLayer.findAllElements("rect"),
@@ -333,17 +334,17 @@ class Floorplan {
 
       // Resolve the door/connector location for this transition.
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum";
-      final doorElement = connectors.firstWhere((final element) {
-        final connLabel = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return connLabel == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
-      final location = parsePointFromSvgCircle(doorElement);
+      final doorElement = _findConnectorOrThrow(
+        connectors,
+        expected,
+        "transition $typeName-$instanceNum",
+      );
+      final doorLocation = parsePointFromSvgCircle(doorElement);
 
       transitions.add(
         FloorTransition(
           id: "${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum",
-          location: location,
+          location: doorLocation,
           type: transitionType,
           groupTag: canonicalGroup,
         ),
@@ -351,5 +352,22 @@ class Floorplan {
     }
 
     return transitions;
+  }
+
+  XmlElement _findConnectorOrThrow(
+    final List<XmlElement> connectors,
+    final String expectedLabel,
+    final String entityDescription,
+  ) {
+    try {
+      return connectors.firstWhere((final element) {
+        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
+        return label == expectedLabel;
+      });
+    } on StateError {
+      throw StateError(
+        "Missing connector '$expectedLabel' for $entityDescription on floor $floorNumber in building $buildingId.",
+      );
+    }
   }
 }

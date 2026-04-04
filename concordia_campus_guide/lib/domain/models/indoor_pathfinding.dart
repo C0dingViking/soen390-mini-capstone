@@ -3,6 +3,10 @@ import "dart:math";
 
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 
+/// Makes boundary-following routes more expensive than interior routes,
+/// encouraging paths to pass through corridor midpoints/centroids.
+const double _boundaryEdgePenaltyFactor = 6.0;
+
 class _IndoorGraphNode {
   final Point<double> position;
   final List<_IndoorGraphEdge> edges = <_IndoorGraphEdge>[];
@@ -55,8 +59,9 @@ class _IndoorGraph {
 
     _connectCorridorEdges(nodes, corridorVertexNodeIds);
     _snapNearbyVertices(nodes);
-    _addCorridorInteriorPoints(corridors, corridorAllNodeIds, getOrCreateNodeId);
+    _addCorridorInteriorPoints(nodes, corridors, corridorAllNodeIds, getOrCreateNodeId);
     _addGlobalVisibilityEdges(nodes, corridorAllNodeIds, corridors);
+    _connectDisconnectedComponents(nodes);
 
     return _IndoorGraph(
       nodes: nodes,
@@ -146,6 +151,15 @@ class _IndoorGraph {
     final int containingCorridorIndex,
   ) {
     if (containingCorridorIndex >= 0) {
+      final corridorVertexIds = Set<int>.from(corridorVertexNodeIds[containingCorridorIndex]);
+      final interiorNodeIds = corridorAllNodeIds[containingCorridorIndex]
+          .where((final nodeId) => !corridorVertexIds.contains(nodeId))
+          .toList(growable: false);
+
+      if (interiorNodeIds.isNotEmpty) {
+        return interiorNodeIds;
+      }
+
       return corridorAllNodeIds[containingCorridorIndex];
     }
 
@@ -619,11 +633,97 @@ void _connectCorridorEdges(
 
       final pa = nodes[a].position;
       final pb = nodes[b].position;
-      final weight = _euclideanDistanceBtwnPoints(pa, pb);
+      final weight = _euclideanDistanceBtwnPoints(pa, pb) * _boundaryEdgePenaltyFactor;
 
       nodes[a].edges.add(_IndoorGraphEdge(b, weight));
       nodes[b].edges.add(_IndoorGraphEdge(a, weight));
     }
+  }
+}
+
+/// Adds midpoints and centroids as interior nodes for each corridor.
+void _addCorridorInteriorPoints(
+  final List<_IndoorGraphNode> nodes,
+  final List<Corridor> corridors,
+  final List<List<int>> corridorAllNodeIds,
+  final int Function(Point<double>) getOrCreateNodeId,
+) {
+  for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
+    final polygons = corridors[corridorIndex].bounds;
+    if (polygons.length < 3) {
+      continue;
+    }
+
+    final allNodeIds = corridorAllNodeIds[corridorIndex];
+    final midpointNodeIds = <int>[];
+
+    for (var i = 0; i < polygons.length; i++) {
+      final a = polygons[i];
+      final b = polygons[(i + 1) % polygons.length];
+      final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
+      final midPointId = getOrCreateNodeId(midpoint);
+      allNodeIds.add(midPointId);
+      midpointNodeIds.add(midPointId);
+    }
+
+    var sumX = 0.0;
+    var sumY = 0.0;
+    for (final polygon in polygons) {
+      sumX += polygon.x;
+      sumY += polygon.y;
+    }
+    final centroid = Point<double>(sumX / polygons.length, sumY / polygons.length);
+    final centroidId = getOrCreateNodeId(centroid);
+    allNodeIds.add(centroidId);
+
+    _connectInteriorNodesForCorridor(
+      nodes: nodes,
+      polygons: polygons,
+      midpointNodeIds: midpointNodeIds,
+      centroidNodeId: centroidId,
+      getOrCreateNodeId: getOrCreateNodeId,
+    );
+  }
+}
+
+void _connectInteriorNodesForCorridor({
+  required final List<Point<double>> polygons,
+  required final List<int> midpointNodeIds,
+  required final int centroidNodeId,
+  required final int Function(Point<double>) getOrCreateNodeId,
+  required final List<_IndoorGraphNode> nodes,
+}) {
+  if (midpointNodeIds.isEmpty) {
+    return;
+  }
+
+  final centroid = nodes[centroidNodeId].position;
+
+  for (var i = 0; i < midpointNodeIds.length; i++) {
+    final currentMidpointId = midpointNodeIds[i];
+    final nextMidpointId = midpointNodeIds[(i + 1) % midpointNodeIds.length];
+
+    final currentPoint = nodes[currentMidpointId].position;
+    final nextPoint = nodes[nextMidpointId].position;
+    final nextWeight = _euclideanDistanceBtwnPoints(currentPoint, nextPoint) * 0.5;
+    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(nextMidpointId, nextWeight));
+    nodes[nextMidpointId].edges.add(_IndoorGraphEdge(currentMidpointId, nextWeight));
+
+    final a = polygons[i];
+    final b = polygons[(i + 1) % polygons.length];
+    final vertexAId = getOrCreateNodeId(a);
+    final vertexBId = getOrCreateNodeId(b);
+
+    final weightToVertexA = _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexAId].position) * 0.5;
+    final weightToVertexB = _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexBId].position) * 0.5;
+    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexAId, weightToVertexA));
+    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexBId, weightToVertexB));
+    nodes[vertexAId].edges.add(_IndoorGraphEdge(currentMidpointId, weightToVertexA));
+    nodes[vertexBId].edges.add(_IndoorGraphEdge(currentMidpointId, weightToVertexB));
+
+    final centroidWeight = _euclideanDistanceBtwnPoints(currentPoint, centroid);
+    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(centroidNodeId, centroidWeight));
+    nodes[centroidNodeId].edges.add(_IndoorGraphEdge(currentMidpointId, centroidWeight));
   }
 }
 
@@ -643,44 +743,10 @@ void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
         continue;
       }
 
-      final weight = sqrt(distanceSquared);
+      final weight = sqrt(distanceSquared) * _boundaryEdgePenaltyFactor;
       nodes[i].edges.add(_IndoorGraphEdge(j, weight));
       nodes[j].edges.add(_IndoorGraphEdge(i, weight));
     }
-  }
-}
-
-/// Adds midpoints and centroids as interior nodes for each corridor.
-void _addCorridorInteriorPoints(
-  final List<Corridor> corridors,
-  final List<List<int>> corridorAllNodeIds,
-  final int Function(Point<double>) getOrCreateNodeId,
-) {
-  for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
-    final polygons = corridors[corridorIndex].bounds;
-    if (polygons.length < 3) {
-      continue;
-    }
-
-    final allNodeIds = corridorAllNodeIds[corridorIndex];
-
-    for (var i = 0; i < polygons.length; i++) {
-      final a = polygons[i];
-      final b = polygons[(i + 1) % polygons.length];
-      final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
-      final midPointId = getOrCreateNodeId(midpoint);
-      allNodeIds.add(midPointId);
-    }
-
-    var sumX = 0.0;
-    var sumY = 0.0;
-    for (final polygon in polygons) {
-      sumX += polygon.x;
-      sumY += polygon.y;
-    }
-    final centroid = Point<double>(sumX / polygons.length, sumY / polygons.length);
-    final centroidId = getOrCreateNodeId(centroid);
-    allNodeIds.add(centroidId);
   }
 }
 
@@ -752,6 +818,95 @@ bool _segmentInsideAnyCorridor(
   }
 
   return true;
+}
+
+void _connectDisconnectedComponents(final List<_IndoorGraphNode> nodes) {
+  if (nodes.length < 2) {
+    return;
+  }
+
+  final components = _computeConnectedComponents(nodes);
+  if (components.length < 2) {
+    return;
+  }
+
+  final Set<int> connectedNodeIds = Set<int>.from(components.first);
+
+  for (var componentIndex = 1; componentIndex < components.length; componentIndex++) {
+    final component = components[componentIndex];
+    final bridge = _findClosestNodesBetweenSets(nodes, connectedNodeIds, component);
+    if (bridge == null) {
+      continue;
+    }
+
+    final weight = _euclideanDistanceBtwnPoints(nodes[bridge.first].position, nodes[bridge.second].position);
+    nodes[bridge.first].edges.add(_IndoorGraphEdge(bridge.second, weight));
+    nodes[bridge.second].edges.add(_IndoorGraphEdge(bridge.first, weight));
+    connectedNodeIds.addAll(component);
+  }
+}
+
+List<Set<int>> _computeConnectedComponents(final List<_IndoorGraphNode> nodes) {
+  final visited = List<bool>.filled(nodes.length, false);
+  final components = <Set<int>>[];
+
+  for (var i = 0; i < nodes.length; i++) {
+    if (visited[i]) {
+      continue;
+    }
+
+    final component = <int>{};
+    final queue = <int>[i];
+    visited[i] = true;
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      component.add(current);
+
+      for (final edge in nodes[current].edges) {
+        if (visited[edge.to]) {
+          continue;
+        }
+        visited[edge.to] = true;
+        queue.add(edge.to);
+      }
+    }
+
+    components.add(component);
+  }
+
+  return components;
+}
+
+({int first, int second})? _findClosestNodesBetweenSets(
+  final List<_IndoorGraphNode> nodes,
+  final Set<int> firstSet,
+  final Set<int> secondSet,
+) {
+  double bestDistanceSquared = double.infinity;
+  int? bestFirst;
+  int? bestSecond;
+
+  for (final firstId in firstSet) {
+    final firstPoint = nodes[firstId].position;
+    for (final secondId in secondSet) {
+      final secondPoint = nodes[secondId].position;
+      final dx = firstPoint.x - secondPoint.x;
+      final dy = firstPoint.y - secondPoint.y;
+      final distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared < bestDistanceSquared) {
+        bestDistanceSquared = distanceSquared;
+        bestFirst = firstId;
+        bestSecond = secondId;
+      }
+    }
+  }
+
+  if (bestFirst == null || bestSecond == null) {
+    return null;
+  }
+
+  return (first: bestFirst, second: bestSecond);
 }
 
 /// Even–odd point-in-polygon test.
