@@ -374,10 +374,7 @@ class Floorplan {
     return transitions;
   }
 
-  XmlElement? _findConnector(
-    final List<XmlElement> connectors,
-    final String expectedLabel,
-  ) {
+  XmlElement? _findConnector(final List<XmlElement> connectors, final String expectedLabel) {
     for (final element in connectors) {
       final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
       if (label == expectedLabel) {
