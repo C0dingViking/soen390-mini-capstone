@@ -1175,27 +1175,32 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                     maxScale: maxMapZoom,
                     boundaryMargin: EdgeInsets.zero,
                     clipBehavior: Clip.hardEdge,
-                    child: Stack(
-                      children: [
-                        SvgPicture.asset(svgPath, fit: BoxFit.contain),
-                        if (ivm.selectedStartRoomName != null || ivm.selectedEndRoomName != null)
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: RoomHighlightPainter(
-                                floorplan: selectedFloorplan,
-                                selectedStartName: ivm.selectedStartRoomName,
-                                selectedEndName: ivm.selectedEndRoomName,
+                    child: SizedBox(
+                      width: viewportSize.width,
+                      height: viewportSize.height,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          SvgPicture.asset(svgPath, fit: BoxFit.contain),
+                          if (ivm.selectedStartRoomName != null || ivm.selectedEndRoomName != null)
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: RoomHighlightPainter(
+                                  floorplan: selectedFloorplan,
+                                  selectedStartName: ivm.selectedStartRoomName,
+                                  selectedEndName: ivm.selectedEndRoomName,
+                                ),
                               ),
                             ),
-                          ),
-                        if (ivm.indoorPath != null)
-                          Positioned.fill(
-                            child: _AnimatedIndoorPath(
-                              floorplan: selectedFloorplan,
-                              path: ivm.indoorPath!,
+                          if (ivm.indoorPath != null)
+                            Positioned.fill(
+                              child: _AnimatedIndoorPath(
+                                floorplan: selectedFloorplan,
+                                path: ivm.indoorPath!,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
