@@ -3,8 +3,6 @@ import "dart:math";
 
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 
-/// Makes boundary-following routes more expensive than interior routes,
-/// encouraging paths to pass through corridor midpoints/centroids.
 const double _boundaryEdgePenaltyFactor = 6.0;
 
 class _IndoorGraphNode {
