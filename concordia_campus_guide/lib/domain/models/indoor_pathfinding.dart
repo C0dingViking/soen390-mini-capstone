@@ -714,8 +714,10 @@ void _connectInteriorNodesForCorridor({
     final vertexAId = getOrCreateNodeId(a);
     final vertexBId = getOrCreateNodeId(b);
 
-    final weightToVertexA = _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexAId].position) * 0.5;
-    final weightToVertexB = _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexBId].position) * 0.5;
+    final weightToVertexA =
+        _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexAId].position) * 0.5;
+    final weightToVertexB =
+        _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexBId].position) * 0.5;
     nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexAId, weightToVertexA));
     nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexBId, weightToVertexB));
     nodes[vertexAId].edges.add(_IndoorGraphEdge(currentMidpointId, weightToVertexA));
@@ -839,7 +841,10 @@ void _connectDisconnectedComponents(final List<_IndoorGraphNode> nodes) {
       continue;
     }
 
-    final weight = _euclideanDistanceBtwnPoints(nodes[bridge.first].position, nodes[bridge.second].position);
+    final weight = _euclideanDistanceBtwnPoints(
+      nodes[bridge.first].position,
+      nodes[bridge.second].position,
+    );
     nodes[bridge.first].edges.add(_IndoorGraphEdge(bridge.second, weight));
     nodes[bridge.second].edges.add(_IndoorGraphEdge(bridge.first, weight));
     connectedNodeIds.addAll(component);
