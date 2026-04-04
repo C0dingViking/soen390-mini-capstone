@@ -4,6 +4,7 @@ import "dart:math";
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 
 const double _boundaryEdgePenaltyFactor = 6.0;
+const double _maxComponentBridgeDistance = 20.0;
 
 class _IndoorGraphNode {
   final Point<double> position;
@@ -831,6 +832,7 @@ void _connectDisconnectedComponents(final List<_IndoorGraphNode> nodes) {
   }
 
   final Set<int> connectedNodeIds = Set<int>.from(components.first);
+  const maxBridgeDistanceSquared = _maxComponentBridgeDistance * _maxComponentBridgeDistance;
 
   for (var componentIndex = 1; componentIndex < components.length; componentIndex++) {
     final component = components[componentIndex];
@@ -839,10 +841,17 @@ void _connectDisconnectedComponents(final List<_IndoorGraphNode> nodes) {
       continue;
     }
 
-    final weight = _euclideanDistanceBtwnPoints(
-      nodes[bridge.first].position,
-      nodes[bridge.second].position,
-    );
+    final firstPoint = nodes[bridge.first].position;
+    final secondPoint = nodes[bridge.second].position;
+    final dx = firstPoint.x - secondPoint.x;
+    final dy = firstPoint.y - secondPoint.y;
+    final distanceSquared = dx * dx + dy * dy;
+
+    if (distanceSquared > maxBridgeDistanceSquared) {
+      continue;
+    }
+
+    final weight = _euclideanDistanceBtwnPoints(firstPoint, secondPoint);
     nodes[bridge.first].edges.add(_IndoorGraphEdge(bridge.second, weight));
     nodes[bridge.second].edges.add(_IndoorGraphEdge(bridge.first, weight));
     connectedNodeIds.addAll(component);
