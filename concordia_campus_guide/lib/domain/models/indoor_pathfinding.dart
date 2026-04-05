@@ -40,74 +40,61 @@ class _GridPathResult {
 }
 
 extension FloorplanPathfinding on Floorplan {
-  List<Point<double>> shortestPathBetweenRooms(
-    final IndoorMapRoom startRoom,
-    final IndoorMapRoom endRoom,
-  ) {
+  _GridPathResult _computeIndoorGridPathOrThrow({
+    required final Point<double> startPoint,
+    required final Point<double> endPoint,
+    required final String emptyCorridorsErrorDetails,
+    required final String noPathDescription,
+    required final String noPathErrorDetails,
+  }) {
     if (corridors.isEmpty) {
       const description = "No indoor corridors available for pathfinding.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
-      );
+      developer.log(description, name: "IndoorPathfinding", error: emptyCorridorsErrorDetails);
       throw StateError(description);
     }
 
     final gridResult = _computeIndoorShortestPathOnWalkableGrid(
       corridors: corridors,
-      startPoint: startRoom.doorLocation,
-      endPoint: endRoom.doorLocation,
+      startPoint: startPoint,
+      endPoint: endPoint,
     );
 
     if (gridResult.path.isEmpty) {
-      final description =
-          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
-      );
-      throw StateError(description);
+      developer.log(noPathDescription, name: "IndoorPathfinding", error: noPathErrorDetails);
+      throw StateError(noPathDescription);
     }
 
-    return gridResult.path;
+    return gridResult;
+  }
+
+  _GridPathResult _shortestPathBetweenRoomsGridResult(
+    final IndoorMapRoom startRoom,
+    final IndoorMapRoom endRoom,
+  ) {
+    return _computeIndoorGridPathOrThrow(
+      startPoint: startRoom.doorLocation,
+      endPoint: endRoom.doorLocation,
+      emptyCorridorsErrorDetails:
+          "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
+      noPathDescription:
+          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.",
+      noPathErrorDetails:
+          "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
+    );
+  }
+
+  List<Point<double>> shortestPathBetweenRooms(
+    final IndoorMapRoom startRoom,
+    final IndoorMapRoom endRoom,
+  ) {
+    return _shortestPathBetweenRoomsGridResult(startRoom, endRoom).path;
   }
 
   IndoorShortestPathDebugResult shortestPathBetweenRoomsWithDebug(
     final IndoorMapRoom startRoom,
     final IndoorMapRoom endRoom,
   ) {
-    if (corridors.isEmpty) {
-      const description = "No indoor corridors available for pathfinding.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
-      );
-      throw StateError(description);
-    }
-
-    final gridResult = _computeIndoorShortestPathOnWalkableGrid(
-      corridors: corridors,
-      startPoint: startRoom.doorLocation,
-      endPoint: endRoom.doorLocation,
-    );
-
-    if (gridResult.path.isEmpty) {
-      final description =
-          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
-      );
-      throw StateError(description);
-    }
+    final gridResult = _shortestPathBetweenRoomsGridResult(startRoom, endRoom);
 
     return IndoorShortestPathDebugResult(
       path: gridResult.path,
@@ -120,34 +107,16 @@ extension FloorplanPathfinding on Floorplan {
     final Point<double> startPoint,
     final FloorTransition transition,
   ) {
-    if (corridors.isEmpty) {
-      const description = "No indoor corridors available for pathfinding.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
-      );
-      throw StateError(description);
-    }
-
-    final gridResult = _computeIndoorShortestPathOnWalkableGrid(
-      corridors: corridors,
+    final gridResult = _computeIndoorGridPathOrThrow(
       startPoint: startPoint,
       endPoint: transition.location,
+      emptyCorridorsErrorDetails:
+          "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
+      noPathDescription:
+          "No indoor path found to transition ${transition.id} on floor $floorNumber.",
+      noPathErrorDetails:
+          "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
     );
-
-    if (gridResult.path.isEmpty) {
-      final description =
-          "No indoor path found to transition ${transition.id} on floor $floorNumber.";
-      developer.log(
-        description,
-        name: "IndoorPathfinding",
-        error:
-            "building=$buildingId floor=$floorNumber transition=${transition.id} startPoint=$startPoint",
-      );
-      throw StateError(description);
-    }
 
     return gridResult.path;
   }
