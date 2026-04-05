@@ -50,14 +50,16 @@ class MapWrapper extends StatelessWidget {
         : polygons;
 
     final Set<Marker> tappableMarkers = onMarkerTap != null
-        ? markers
-              .map(
-                (final marker) => marker.copyWith(
-                  onTapParam: () => onMarkerTap!(marker.markerId),
-                  consumeTapEventsParam: true,
-                ),
-              )
-              .toSet()
+        ? markers.map((final marker) {
+            if (marker.onTap != null) {
+              return marker;
+            }
+
+            return marker.copyWith(
+              onTapParam: () => onMarkerTap!(marker.markerId),
+              consumeTapEventsParam: true,
+            );
+          }).toSet()
         : markers;
 
     return GoogleMap(
