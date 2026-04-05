@@ -474,31 +474,35 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
   Point<double> cellCenter(final int row, final int col) =>
       Point<double>(originX + (col + 0.5) * cellSize, originY + (row + 0.5) * cellSize);
 
-  final walkable = List<List<bool>>.generate(
-    rows,
-    (_) => List<bool>.filled(cols, false),
-    growable: false,
-  );
+  // final walkable = List<List<bool>>.generate(
+  //   rows,
+  //   (_) => List<bool>.filled(cols, false),
+  //   growable: false,
+  // );
 
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      walkable[r][c] = _pointInsideAnyCorridorOrBoundary(cellCenter(r, c), validCorridors);
-    }
-  }
+  // for (var r = 0; r < rows; r++) {
+  //   for (var c = 0; c < cols; c++) {
+  //     walkable[r][c] = _pointInsideAnyCorridorOrBoundary(cellCenter(r, c), validCorridors);
+  //   }
+  // }
 
-  final clearance = List<List<double>>.generate(
-    rows,
-    (_) => List<double>.filled(cols, 0),
-    growable: false,
-  );
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      if (!walkable[r][c]) {
-        continue;
-      }
-      clearance[r][c] = _distanceToNearestCorridorBoundary(cellCenter(r, c), validCorridors);
-    }
-  }
+  final walkable = _buildWalkable(rows, cols, cellCenter, validCorridors);
+
+  // final clearance = List<List<double>>.generate(
+  //   rows,
+  //   (_) => List<double>.filled(cols, 0),
+  //   growable: false,
+  // );
+  // for (var r = 0; r < rows; r++) {
+  //   for (var c = 0; c < cols; c++) {
+  //     if (!walkable[r][c]) {
+  //       continue;
+  //     }
+  //     clearance[r][c] = _distanceToNearestCorridorBoundary(cellCenter(r, c), validCorridors);
+  //   }
+  // }
+
+  final clearance = _buildClearance(rows, cols, walkable, cellCenter, validCorridors);
 
   (int row, int col)? nearestWalkableCell(final Point<double> p) {
     final approxCol = ((p.x - originX) / cellSize).floor();
@@ -671,6 +675,51 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
   }
 
   return _GridPathResult(path: finalPath, traversed: traversed);
+}
+
+List<List<bool>> _buildWalkable(
+  final int rows,
+  final int cols,
+  final Point<double> Function(int, int) cellCenter,
+  final List<Corridor> validCorridors,
+) {
+  final walkable = List<List<bool>>.generate(
+    rows,
+    (_) => List<bool>.filled(cols, false),
+    growable: false,
+  );
+
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      walkable[r][c] = _pointInsideAnyCorridorOrBoundary(cellCenter(r, c), validCorridors);
+    }
+  }
+
+  return walkable;
+}
+
+List<List<double>> _buildClearance(
+  final int rows,
+  final int cols,
+  final List<List<bool>> walkable,
+  final Point<double> Function(int, int) cellCenter,
+  final List<Corridor> validCorridors,
+) {
+  final clearance = List<List<double>>.generate(
+    rows,
+    (_) => List<double>.filled(cols, 0),
+    growable: false,
+  );
+
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (!walkable[r][c]) continue;
+
+      clearance[r][c] = _distanceToNearestCorridorBoundary(cellCenter(r, c), validCorridors);
+    }
+  }
+
+  return clearance;
 }
 
 bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
