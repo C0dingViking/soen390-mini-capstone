@@ -509,101 +509,22 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
 
   final startId = id(startCell.$1, startCell.$2);
   final endId = id(endCell.$1, endCell.$2);
-  final total = rows * cols;
 
-  final g = List<double>.filled(total, double.infinity);
-  final f = List<double>.filled(total, double.infinity);
-  final prev = List<int?>.filled(total, null);
-  final open = <int>[];
-  final openSet = List<bool>.filled(total, false);
-  final closed = List<bool>.filled(total, false);
-  final traversed = <Point<double>>[];
+  final result = _runAStar(
+    rows: rows,
+    cols: cols,
+    walkable: walkable,
+    clearance: clearance,
+    startId: startId,
+    endId: endId,
+    cellSize: cellSize,
+    decode: decode,
+    id: id,
+    cellCenter: cellCenter,
+  );
 
-  double heuristic(final int nodeId) {
-    final (r, c) = decode(nodeId);
-    final (er, ec) = decode(endId);
-    final dr = (r - er).abs().toDouble();
-    final dc = (c - ec).abs().toDouble();
-    return sqrt(dr * dr + dc * dc) * cellSize;
-  }
-
-  g[startId] = 0;
-  f[startId] = heuristic(startId);
-  open.add(startId);
-  openSet[startId] = true;
-
-  const neighborOffsets = <(int dr, int dc, double scale)>[
-    (-1, 0, 1.0),
-    (1, 0, 1.0),
-    (0, -1, 1.0),
-    (0, 1, 1.0),
-    (-1, -1, 1.41421356237),
-    (-1, 1, 1.41421356237),
-    (1, -1, 1.41421356237),
-    (1, 1, 1.41421356237),
-  ];
-
-  while (open.isNotEmpty) {
-    var bestIndex = 0;
-    var bestF = f[open[0]];
-    for (var i = 1; i < open.length; i++) {
-      final cand = open[i];
-      if (f[cand] < bestF) {
-        bestF = f[cand];
-        bestIndex = i;
-      }
-    }
-
-    final current = open.removeAt(bestIndex);
-    openSet[current] = false;
-    if (closed[current]) {
-      continue;
-    }
-    closed[current] = true;
-
-    final (cr, cc) = decode(current);
-    traversed.add(cellCenter(cr, cc));
-
-    if (current == endId) {
-      break;
-    }
-
-    for (final (dr, dc, scale) in neighborOffsets) {
-      final nr = cr + dr;
-      final nc = cc + dc;
-      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
-        continue;
-      }
-      if (!walkable[nr][nc]) {
-        continue;
-      }
-
-      final neighbor = id(nr, nc);
-      if (closed[neighbor]) {
-        continue;
-      }
-
-      final edgeBase = cellSize * scale;
-      final edgeClearance = min(clearance[cr][cc], clearance[nr][nc]);
-      final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
-      final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
-
-      final tentative = g[current] + stepCost;
-      if (tentative < g[neighbor]) {
-        g[neighbor] = tentative;
-        prev[neighbor] = current;
-        f[neighbor] = tentative + heuristic(neighbor);
-
-        if (!openSet[neighbor]) {
-          open.add(neighbor);
-          openSet[neighbor] = true;
-        }
-      }
-    }
-  }
-
-  if (startId != endId && prev[endId] == null) {
-    return _GridPathResult(path: const <Point<double>>[], traversed: traversed);
+  if (startId != endId && result.prev[endId] == null) {
+    return _GridPathResult(path: const <Point<double>>[], traversed: result.traversed);
   }
 
   final reverseIds = <int>[];
@@ -613,7 +534,7 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
     if (cursor == startId) {
       break;
     }
-    cursor = prev[cursor];
+    cursor = result.prev[cursor];
   }
   final ids = reverseIds.reversed.toList(growable: false);
   final coarsePath = ids
@@ -632,7 +553,7 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
     finalPath.add(endPoint);
   }
 
-  return _GridPathResult(path: finalPath, traversed: traversed);
+  return _GridPathResult(path: finalPath, traversed: result.traversed);
 }
 
 List<List<bool>> _buildWalkable(
@@ -727,6 +648,114 @@ List<List<double>> _buildClearance(
   return (bestRow, bestCol);
 }
 
+_AStarResult _runAStar({
+  required final int rows,
+  required final int cols,
+  required final List<List<bool>> walkable,
+  required final List<List<double>> clearance,
+  required final int startId,
+  required final int endId,
+  required final double cellSize,
+  required final (int, int) Function(int) decode,
+  required final int Function(int, int) id,
+  required final Point<double> Function(int, int) cellCenter,
+}) {
+  final total = rows * cols;
+
+  final g = List<double>.filled(total, double.infinity);
+  final f = List<double>.filled(total, double.infinity);
+  final prev = List<int?>.filled(total, null);
+  final open = <int>[];
+  final openSet = List<bool>.filled(total, false);
+  final closed = List<bool>.filled(total, false);
+  final traversed = <Point<double>>[];
+
+  double heuristic(final int nodeId) {
+    final (r, c) = decode(nodeId);
+    final (er, ec) = decode(endId);
+    final dr = (r - er).abs().toDouble();
+    final dc = (c - ec).abs().toDouble();
+    return sqrt(dr * dr + dc * dc) * cellSize;
+  }
+
+  g[startId] = 0;
+  f[startId] = heuristic(startId);
+  open.add(startId);
+  openSet[startId] = true;
+
+  const neighborOffsets = <(int dr, int dc, double scale)>[
+    (-1, 0, 1.0),
+    (1, 0, 1.0),
+    (0, -1, 1.0),
+    (0, 1, 1.0),
+    (-1, -1, 1.41421356237),
+    (-1, 1, 1.41421356237),
+    (1, -1, 1.41421356237),
+    (1, 1, 1.41421356237),
+  ];
+
+  while (open.isNotEmpty) {
+    var bestIndex = 0;
+    var bestF = f[open[0]];
+    for (var i = 1; i < open.length; i++) {
+      final cand = open[i];
+      if (f[cand] < bestF) {
+        bestF = f[cand];
+        bestIndex = i;
+      }
+    }
+
+    final current = open.removeAt(bestIndex);
+    openSet[current] = false;
+    if (closed[current]) {
+      continue;
+    }
+    closed[current] = true;
+
+    final (cr, cc) = decode(current);
+    traversed.add(cellCenter(cr, cc));
+
+    if (current == endId) {
+      break;
+    }
+
+    for (final (dr, dc, scale) in neighborOffsets) {
+      final nr = cr + dr;
+      final nc = cc + dc;
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
+        continue;
+      }
+      if (!walkable[nr][nc]) {
+        continue;
+      }
+
+      final neighbor = id(nr, nc);
+      if (closed[neighbor]) {
+        continue;
+      }
+
+      final edgeBase = cellSize * scale;
+      final edgeClearance = min(clearance[cr][cc], clearance[nr][nc]);
+      final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
+      final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
+
+      final tentative = g[current] + stepCost;
+      if (tentative < g[neighbor]) {
+        g[neighbor] = tentative;
+        prev[neighbor] = current;
+        f[neighbor] = tentative + heuristic(neighbor);
+
+        if (!openSet[neighbor]) {
+          open.add(neighbor);
+          openSet[neighbor] = true;
+        }
+      }
+    }
+  }
+
+  return _AStarResult(prev: prev, traversed: traversed);
+}
+
 bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
   for (final corridor in corridors) {
     if (_pointInPolygon(p, corridor.bounds) || _pointOnPolygonBoundary(p, corridor.bounds)) {
@@ -815,4 +844,11 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   }
 
   return inside;
+}
+
+class _AStarResult {
+  final List<int?> prev;
+  final List<Point<double>> traversed;
+
+  const _AStarResult({required this.prev, required this.traversed});
 }
