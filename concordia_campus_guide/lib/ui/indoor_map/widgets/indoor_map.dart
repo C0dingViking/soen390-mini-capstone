@@ -689,16 +689,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     try {
-      if (_showDebugNavigation) {
-        final result = floorplan.shortestPathBetweenRoomsWithDebug(
-          startRoomModel,
-          destinationRoomModel,
-        );
-        _viewModel.setIndoorPath(result.path, traversedNodes: result.traversedNodes);
-      } else {
-        final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
-        _viewModel.setIndoorPath(path);
-      }
+      await _computeAndSetIndoorPath(
+        floorplan: floorplan,
+        startRoomModel: startRoomModel,
+        destinationRoomModel: destinationRoomModel,
+      );
     } on StateError catch (_) {
       _viewModel.clearIndoorPath();
       if (!mounted) return;
@@ -715,6 +710,23 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         "Failed to compute indoor route. Please try again.",
         title: _navigationErrorTitle,
       );
+    }
+  }
+
+  Future<void> _computeAndSetIndoorPath({
+    required final Floorplan floorplan,
+    required final IndoorMapRoom startRoomModel,
+    required final IndoorMapRoom destinationRoomModel,
+  }) async {
+    if (_showDebugNavigation) {
+      final result = floorplan.shortestPathBetweenRoomsWithDebug(
+        startRoomModel,
+        destinationRoomModel,
+      );
+      _viewModel.setIndoorPath(result.path, traversedNodes: result.traversedNodes);
+    } else {
+      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
+      _viewModel.setIndoorPath(path);
     }
   }
 
