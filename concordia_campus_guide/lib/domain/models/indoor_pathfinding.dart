@@ -468,6 +468,7 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
   const cellSize = 8.0;
   final originX = bounds.minX - cellSize;
   final originY = bounds.minY - cellSize;
+  final origins = Point<double>(originX, originY);
   final cols = max(3, ((bounds.maxX - bounds.minX) / cellSize).ceil() + 3);
   final rows = max(3, ((bounds.maxY - bounds.minY) / cellSize).ceil() + 3);
 
@@ -484,8 +485,7 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
     cols,
     walkable,
     cellCenter,
-    originX,
-    originY,
+    origins,
     cellSize,
   );
 
@@ -495,8 +495,7 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
     cols,
     walkable,
     cellCenter,
-    originX,
-    originY,
+    origins,
     cellSize,
   );
 
@@ -510,18 +509,16 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
   final startId = id(startCell.$1, startCell.$2);
   final endId = id(endCell.$1, endCell.$2);
 
-  final result = _runAStar(
+  final grid = _AStarGrid(
     rows: rows,
     cols: cols,
     walkable: walkable,
     clearance: clearance,
-    startId: startId,
-    endId: endId,
     cellSize: cellSize,
-    decode: decode,
-    id: id,
-    cellCenter: cellCenter,
   );
+  final helpers = _AStarHelpers(decode: decode, id: id, cellCenter: cellCenter);
+
+  final result = _runAStar(grid: grid, startId: startId, endId: endId, helpers: helpers);
 
   if (startId != endId && result.prev[endId] == null) {
     return _GridPathResult(path: const <Point<double>>[], traversed: result.traversed);
@@ -591,12 +588,11 @@ List<List<double>> _buildClearance(
   final int cols,
   final List<List<bool>> walkable,
   final Point<double> Function(int, int) cellCenter,
-  final double originX,
-  final double originY,
+  final Point<double> origin,
   final double cellSize,
 ) {
-  final approxCol = ((p.x - originX) / cellSize).floor();
-  final approxRow = ((p.y - originY) / cellSize).floor();
+  final approxCol = ((p.x - origin.x) / cellSize).floor();
+  final approxRow = ((p.y - origin.y) / cellSize).floor();
 
   if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
     if (walkable[approxRow][approxCol]) {
@@ -633,18 +629,12 @@ List<List<double>> _buildClearance(
 }
 
 _AStarResult _runAStar({
-  required final int rows,
-  required final int cols,
-  required final List<List<bool>> walkable,
-  required final List<List<double>> clearance,
+  required final _AStarGrid grid,
   required final int startId,
   required final int endId,
-  required final double cellSize,
-  required final (int, int) Function(int) decode,
-  required final int Function(int, int) id,
-  required final Point<double> Function(int, int) cellCenter,
+  required final _AStarHelpers helpers,
 }) {
-  final total = rows * cols;
+  final total = grid.rows * grid.cols;
 
   final g = List<double>.filled(total, double.infinity);
   final f = List<double>.filled(total, double.infinity);
@@ -655,11 +645,11 @@ _AStarResult _runAStar({
   final traversed = <Point<double>>[];
 
   double heuristic(final int nodeId) {
-    final (r, c) = decode(nodeId);
-    final (er, ec) = decode(endId);
+    final (r, c) = helpers.decode(nodeId);
+    final (er, ec) = helpers.decode(endId);
     final dr = (r - er).abs().toDouble();
     final dc = (c - ec).abs().toDouble();
-    return sqrt(dr * dr + dc * dc) * cellSize;
+    return sqrt(dr * dr + dc * dc) * grid.cellSize;
   }
 
   g[startId] = 0;
@@ -696,8 +686,8 @@ _AStarResult _runAStar({
     }
     closed[current] = true;
 
-    final (cr, cc) = decode(current);
-    traversed.add(cellCenter(cr, cc));
+    final (cr, cc) = helpers.decode(current);
+    traversed.add(helpers.cellCenter(cr, cc));
 
     if (current == endId) {
       break;
@@ -706,20 +696,20 @@ _AStarResult _runAStar({
     for (final (dr, dc, scale) in neighborOffsets) {
       final nr = cr + dr;
       final nc = cc + dc;
-      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
+      if (nr < 0 || nr >= grid.rows || nc < 0 || nc >= grid.cols) {
         continue;
       }
-      if (!walkable[nr][nc]) {
+      if (!grid.walkable[nr][nc]) {
         continue;
       }
 
-      final neighbor = id(nr, nc);
+      final neighbor = helpers.id(nr, nc);
       if (closed[neighbor]) {
         continue;
       }
 
-      final edgeBase = cellSize * scale;
-      final edgeClearance = min(clearance[cr][cc], clearance[nr][nc]);
+      final edgeBase = grid.cellSize * scale;
+      final edgeClearance = min(grid.clearance[cr][cc], grid.clearance[nr][nc]);
       final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
       final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
 
@@ -858,4 +848,28 @@ class _AStarResult {
   final List<Point<double>> traversed;
 
   const _AStarResult({required this.prev, required this.traversed});
+}
+
+class _AStarGrid {
+  final int rows;
+  final int cols;
+  final List<List<bool>> walkable;
+  final List<List<double>> clearance;
+  final double cellSize;
+
+  const _AStarGrid({
+    required this.rows,
+    required this.cols,
+    required this.walkable,
+    required this.clearance,
+    required this.cellSize,
+  });
+}
+
+class _AStarHelpers {
+  final (int, int) Function(int) decode;
+  final int Function(int, int) id;
+  final Point<double> Function(int, int) cellCenter;
+
+  const _AStarHelpers({required this.decode, required this.id, required this.cellCenter});
 }
