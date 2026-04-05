@@ -527,24 +527,8 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
     return _GridPathResult(path: const <Point<double>>[], traversed: result.traversed);
   }
 
-  final reverseIds = <int>[];
-  int? cursor = endId;
-  while (cursor != null) {
-    reverseIds.add(cursor);
-    if (cursor == startId) {
-      break;
-    }
-    cursor = result.prev[cursor];
-  }
-  final ids = reverseIds.reversed.toList(growable: false);
-  final coarsePath = ids
-      .map((final nodeId) {
-        final (r, c) = decode(nodeId);
-        return cellCenter(r, c);
-      })
-      .toList(growable: false);
+  final smoothed = _reconstructPath(startId, endId, result.prev, cellCenter, cols);
 
-  final smoothed = coarsePath;
   final finalPath = <Point<double>>[startPoint];
   for (var i = 1; i < smoothed.length - 1; i++) {
     finalPath.add(smoothed[i]);
@@ -754,6 +738,29 @@ _AStarResult _runAStar({
   }
 
   return _AStarResult(prev: prev, traversed: traversed);
+}
+
+List<Point<double>> _reconstructPath(
+  final int startId,
+  final int endId,
+  final List<int?> prev,
+  final Point<double> Function(int, int) cellCenter,
+  final int cols,
+) {
+  final reverse = <int>[];
+  int? cursor = endId;
+
+  while (cursor != null) {
+    reverse.add(cursor);
+    if (cursor == startId) break;
+    cursor = prev[cursor];
+  }
+
+  return reverse.reversed.map((final id) {
+    final r = id ~/ cols;
+    final c = id % cols;
+    return cellCenter(r, c);
+  }).toList();
 }
 
 bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
