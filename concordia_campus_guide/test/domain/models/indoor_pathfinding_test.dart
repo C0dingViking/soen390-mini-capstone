@@ -171,33 +171,24 @@ void main() {
       expect(path.last, roomB.doorLocation);
     });
 
-    test(
-      "door exactly at a graph node (bestDistance == 0) does not add duplicate edge (line 122)",
-      () {
-        // When the door is exactly at a corridor vertex, bestDistance == 0
-        // so the guard `bestDistance > 0` on line 122 prevents adding a
-        // zero-weight self-edge. The door node becomes the vertex itself
-        // via getOrCreateNodeId deduplication during graph construction,
-        // but addDoorNode creates a NEW node at the same position.
-        // With bestDistance == 0, no edge is added — the door node is isolated.
-        // We verify this edge case doesn't crash and raises the expected error.
-        final corridor = rectCorridor(0, 0, 200, 50);
-        // Place roomA door exactly at a corridor vertex
-        final roomA = makeRoom("A", const Point<double>(0, 0));
-        // Place roomB inside the corridor
-        final roomB = makeRoom("B", const Point<double>(100, 25));
+    test("door exactly at a corridor corner finds valid path via grid pathfinding", () {
+      final corridor = rectCorridor(0, 0, 200, 50);
+      // Place roomA door exactly at a corridor vertex
+      final roomA = makeRoom("A", const Point<double>(0, 0));
+      // Place roomB inside the corridor
+      final roomB = makeRoom("B", const Point<double>(100, 25));
 
-        final floorplan = makeFloorplan(
-          floorNumber: "1",
-          corridors: [corridor],
-          rooms: [roomA, roomB],
-        );
+      final floorplan = makeFloorplan(
+        floorNumber: "1",
+        corridors: [corridor],
+        rooms: [roomA, roomB],
+      );
 
-        // Door at (0,0) matches a vertex exactly → bestDistance == 0 → no edge
-        // → door node is isolated → Dijkstra returns empty → StateError
-        expect(() => floorplan.shortestPathBetweenRooms(roomA, roomB), throwsA(isA<StateError>()));
-      },
-    );
+      final path = floorplan.shortestPathBetweenRooms(roomA, roomB);
+      expect(path, isNotEmpty);
+      expect(path.first, roomA.doorLocation);
+      expect(path.last, roomB.doorLocation);
+    });
 
     test("empty corridors list throws StateError (lines 156-164)", () {
       final roomA = makeRoom("A", const Point<double>(10, 10));

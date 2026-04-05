@@ -12,6 +12,7 @@ class IndoorPathPainter extends CustomPainter {
   final double strokeWidth;
   final double dashLength;
   final double gapLength;
+  final List<Point<double>>? debugTraversalNodes;
 
   final Color startColor;
   final double startRadius;
@@ -25,6 +26,7 @@ class IndoorPathPainter extends CustomPainter {
     required this.floorplan,
     required this.path,
     this.pathColor = AppTheme.concordiaIndoorPath,
+    this.debugTraversalNodes,
     this.strokeWidth = 2.0,
     this.dashLength = 12.0,
     this.gapLength = 10.0,
@@ -57,10 +59,33 @@ class IndoorPathPainter extends CustomPainter {
 
     final rect = _destinationRect(size);
     final offsets = path.map((final p) => _svgToCanvas(p, rect)).toList(growable: false);
+    final traversalOffsets = (debugTraversalNodes ?? [])
+        .map((final p) => _svgToCanvas(p, rect))
+        .toList(growable: false);
 
     _drawDashedPath(canvas, offsets);
+    _drawTraversalNodes(canvas, traversalOffsets);
     _drawStartIndicator(canvas, offsets.first);
     _drawDestinationPin(canvas, offsets.last);
+  }
+
+  void _drawTraversalNodes(final Canvas canvas, final List<Offset> traversalOffsets) {
+    if (traversalOffsets.isEmpty) {
+      return;
+    }
+
+    final halo = Paint()
+      ..color = Colors.deepOrange.withValues(alpha: .26)
+      ..style = PaintingStyle.fill;
+
+    final dot = Paint()
+      ..color = Colors.deepOrange
+      ..style = PaintingStyle.fill;
+
+    for (final p in traversalOffsets) {
+      canvas.drawCircle(p, 4.0, halo);
+      canvas.drawCircle(p, 2.0, dot);
+    }
   }
 
   void _drawDashedPath(final Canvas canvas, final List<Offset> offsets) {
@@ -198,6 +223,7 @@ class IndoorPathPainter extends CustomPainter {
     return old.floorplan != floorplan ||
         old.path != path ||
         old.pathColor != pathColor ||
+        old.debugTraversalNodes != debugTraversalNodes ||
         old.strokeWidth != strokeWidth ||
         old.dashLength != dashLength ||
         old.gapLength != gapLength ||

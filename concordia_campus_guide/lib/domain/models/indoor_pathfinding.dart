@@ -3,205 +3,8 @@ import "dart:math";
 
 import "package:concordia_campus_guide/domain/models/floorplan.dart";
 
-const double _boundaryEdgePenaltyFactor = 6.0;
-const double _maxComponentBridgeDistance = 20.0;
-
-class _IndoorGraphNode {
-  final Point<double> position;
-  final List<_IndoorGraphEdge> edges = <_IndoorGraphEdge>[];
-
-  _IndoorGraphNode(this.position);
-}
-
-class _IndoorGraphEdge {
-  final int to;
-  final double weight;
-
-  const _IndoorGraphEdge(this.to, this.weight);
-}
-
-class _IndoorGraph {
-  final List<_IndoorGraphNode> nodes;
-  final List<List<int>> corridorVertexNodeIds;
-  final List<List<int>> corridorAllNodeIds;
-
-  _IndoorGraph({
-    required this.nodes,
-    required this.corridorVertexNodeIds,
-    required this.corridorAllNodeIds,
-  });
-
-  // Builds a navigation graph from corridor polygons.
-  factory _IndoorGraph.fromCorridors(final List<Corridor> corridors) {
-    final List<_IndoorGraphNode> nodes = <_IndoorGraphNode>[];
-    final Map<String, int> coordinateToNodeId = <String, int>{};
-    final List<List<int>> corridorAllNodeIds = <List<int>>[];
-
-    int getOrCreateNodeId(final Point<double> p) {
-      final key = "${p.x.toStringAsFixed(3)}:${p.y.toStringAsFixed(3)}";
-      final existing = coordinateToNodeId[key];
-      if (existing != null) {
-        return existing;
-      }
-
-      final id = nodes.length;
-      nodes.add(_IndoorGraphNode(p));
-      coordinateToNodeId[key] = id;
-      return id;
-    }
-
-    final corridorVertexNodeIds = _createCorridorVertexNodes(
-      corridors,
-      getOrCreateNodeId,
-      corridorAllNodeIds,
-    );
-
-    _connectCorridorEdges(nodes, corridorVertexNodeIds);
-    _snapNearbyVertices(nodes);
-    _addCorridorInteriorPoints(nodes, corridors, corridorAllNodeIds, getOrCreateNodeId);
-    _addGlobalVisibilityEdges(nodes, corridorAllNodeIds, corridors);
-    _connectDisconnectedComponents(nodes);
-
-    return _IndoorGraph(
-      nodes: nodes,
-      corridorVertexNodeIds: corridorVertexNodeIds,
-      corridorAllNodeIds: corridorAllNodeIds,
-    );
-  }
-
-  int addDoorNodeToCorridorGraph(final Point<double> door, final List<Corridor> corridors) {
-    final doorNodeId = nodes.length;
-    nodes.add(_IndoorGraphNode(door));
-
-    final containingCorridorIndex = _findContainingOrNearestCorridorIndex(door, corridors);
-
-    final candidateVertexIds = _candidateVertexIdsForDoor(doorNodeId, containingCorridorIndex);
-
-    final bestConnection = _findBestDoorConnection(door, candidateVertexIds);
-
-    if (bestConnection != null && bestConnection.distance > 0) {
-      nodes[doorNodeId].edges.add(
-        _IndoorGraphEdge(bestConnection.vertexId, bestConnection.distance),
-      );
-      nodes[bestConnection.vertexId].edges.add(
-        _IndoorGraphEdge(doorNodeId, bestConnection.distance),
-      );
-    }
-
-    return doorNodeId;
-  }
-
-  int _findContainingOrNearestCorridorIndex(
-    final Point<double> door,
-    final List<Corridor> corridors,
-  ) {
-    final containingCorridorIndex = _findContainingCorridorIndex(door, corridors);
-
-    if (containingCorridorIndex >= 0 || corridors.isEmpty) {
-      return containingCorridorIndex;
-    }
-
-    const double snapThreshold = 20.0;
-
-    final nearest = _findNearestCorridorIndex(door, corridors);
-    if (nearest == null) {
-      return -1;
-    }
-
-    return nearest.distance <= snapThreshold ? nearest.index : -1;
-  }
-
-  int _findContainingCorridorIndex(final Point<double> door, final List<Corridor> corridors) {
-    for (var i = 0; i < corridors.length; i++) {
-      if (_pointInPolygon(door, corridors[i].bounds)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  _NearestCorridorResult? _findNearestCorridorIndex(
-    final Point<double> door,
-    final List<Corridor> corridors,
-  ) {
-    double bestCorridorDistance = double.infinity;
-    int? bestCorridorIndex;
-
-    for (var i = 0; i < corridors.length; i++) {
-      final corridor = corridors[i];
-      for (final point in corridor.bounds) {
-        final d = _euclideanDistanceBtwnPoints(door, point);
-        if (d < bestCorridorDistance) {
-          bestCorridorDistance = d;
-          bestCorridorIndex = i;
-        }
-      }
-    }
-
-    if (bestCorridorIndex == null) {
-      return null;
-    }
-
-    return _NearestCorridorResult(index: bestCorridorIndex, distance: bestCorridorDistance);
-  }
-
-  Iterable<int> _candidateVertexIdsForDoor(
-    final int doorNodeId,
-    final int containingCorridorIndex,
-  ) {
-    if (containingCorridorIndex >= 0) {
-      final corridorVertexIds = Set<int>.from(corridorVertexNodeIds[containingCorridorIndex]);
-      final interiorNodeIds = corridorAllNodeIds[containingCorridorIndex]
-          .where((final nodeId) => !corridorVertexIds.contains(nodeId))
-          .toList(growable: false);
-
-      if (interiorNodeIds.isNotEmpty) {
-        return interiorNodeIds;
-      }
-
-      return corridorAllNodeIds[containingCorridorIndex];
-    }
-
-    return Iterable<int>.generate(doorNodeId);
-  }
-
-  _BestDoorConnection? _findBestDoorConnection(
-    final Point<double> door,
-    final Iterable<int> candidateVertexIds,
-  ) {
-    double bestDistance = double.infinity;
-    int? bestVertexId;
-
-    for (final vertexId in candidateVertexIds) {
-      final vertexPoint = nodes[vertexId].position;
-      final distanceBtwnDoorAndVertexPoint = _euclideanDistanceBtwnPoints(door, vertexPoint);
-      if (distanceBtwnDoorAndVertexPoint < bestDistance) {
-        bestDistance = distanceBtwnDoorAndVertexPoint;
-        bestVertexId = vertexId;
-      }
-    }
-
-    if (bestVertexId == null) {
-      return null;
-    }
-
-    return _BestDoorConnection(vertexId: bestVertexId, distance: bestDistance);
-  }
-}
-
-class _NearestCorridorResult {
-  final int index;
-  final double distance;
-
-  const _NearestCorridorResult({required this.index, required this.distance});
-}
-
-class _BestDoorConnection {
-  final int vertexId;
-  final double distance;
-
-  const _BestDoorConnection({required this.vertexId, required this.distance});
-}
+const double _centerBiasStrength = 8.0;
+const double _minClearanceForCenterBias = 1.0;
 
 // Single-floor path segment used in multi-floor routes
 
@@ -222,6 +25,20 @@ class IndoorFloorPathSegment {
   });
 }
 
+class IndoorShortestPathDebugResult {
+  final List<Point<double>> path;
+  final List<Point<double>> traversedNodes;
+
+  const IndoorShortestPathDebugResult({required this.path, required this.traversedNodes});
+}
+
+class _GridPathResult {
+  final List<Point<double>> path;
+  final List<Point<double>> traversed;
+
+  const _GridPathResult({required this.path, required this.traversed});
+}
+
 extension FloorplanPathfinding on Floorplan {
   List<Point<double>> shortestPathBetweenRooms(
     final IndoorMapRoom startRoom,
@@ -238,14 +55,13 @@ extension FloorplanPathfinding on Floorplan {
       throw StateError(description);
     }
 
-    final graph = _IndoorGraph.fromCorridors(corridors);
+    final gridResult = _computeIndoorShortestPathOnWalkableGrid(
+      corridors: corridors,
+      startPoint: startRoom.doorLocation,
+      endPoint: endRoom.doorLocation,
+    );
 
-    final startId = graph.addDoorNodeToCorridorGraph(startRoom.doorLocation, corridors);
-    final endId = graph.addDoorNodeToCorridorGraph(endRoom.doorLocation, corridors);
-
-    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
-
-    if (pathNodeIds.isEmpty) {
+    if (gridResult.path.isEmpty) {
       final description =
           "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
       developer.log(
@@ -257,7 +73,46 @@ extension FloorplanPathfinding on Floorplan {
       throw StateError(description);
     }
 
-    return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
+    return gridResult.path;
+  }
+
+  IndoorShortestPathDebugResult shortestPathBetweenRoomsWithDebug(
+    final IndoorMapRoom startRoom,
+    final IndoorMapRoom endRoom,
+  ) {
+    if (corridors.isEmpty) {
+      const description = "No indoor corridors available for pathfinding.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name}",
+      );
+      throw StateError(description);
+    }
+
+    final gridResult = _computeIndoorShortestPathOnWalkableGrid(
+      corridors: corridors,
+      startPoint: startRoom.doorLocation,
+      endPoint: endRoom.doorLocation,
+    );
+
+    if (gridResult.path.isEmpty) {
+      final description =
+          "No indoor path found between rooms ${startRoom.name} and ${endRoom.name}.";
+      developer.log(
+        description,
+        name: "IndoorPathfinding",
+        error:
+            "building=$buildingId floor=$floorNumber start=${startRoom.name} end=${endRoom.name} startDoor=${startRoom.doorLocation} endDoor=${endRoom.doorLocation} corridors=${corridors.length}",
+      );
+      throw StateError(description);
+    }
+
+    return IndoorShortestPathDebugResult(
+      path: gridResult.path,
+      traversedNodes: gridResult.traversed,
+    );
   }
 
   /// Computes the path from a room's door to a specific transition point on this floor.
@@ -276,14 +131,13 @@ extension FloorplanPathfinding on Floorplan {
       throw StateError(description);
     }
 
-    final graph = _IndoorGraph.fromCorridors(corridors);
+    final gridResult = _computeIndoorShortestPathOnWalkableGrid(
+      corridors: corridors,
+      startPoint: startPoint,
+      endPoint: transition.location,
+    );
 
-    final startId = graph.addDoorNodeToCorridorGraph(startPoint, corridors);
-    final endId = graph.addDoorNodeToCorridorGraph(transition.location, corridors);
-
-    final pathNodeIds = _computeIndoorShortestPathWithDijkstra(graph, startId, endId);
-
-    if (pathNodeIds.isEmpty) {
+    if (gridResult.path.isEmpty) {
       final description =
           "No indoor path found to transition ${transition.id} on floor $floorNumber.";
       developer.log(
@@ -295,7 +149,7 @@ extension FloorplanPathfinding on Floorplan {
       throw StateError(description);
     }
 
-    return pathNodeIds.map((final id) => graph.nodes[id].position).toList(growable: false);
+    return gridResult.path;
   }
 }
 
@@ -584,341 +438,336 @@ double _pathLength(final List<Point<double>> path) {
   return total;
 }
 
-// Graph construction helpers
-
 double _euclideanDistanceBtwnPoints(final Point<double> a, final Point<double> b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return sqrt(dx * dx + dy * dy);
 }
 
-/// Creates graph nodes for corridor polygon vertices and returns their IDs per corridor.
-List<List<int>> _createCorridorVertexNodes(
-  final List<Corridor> corridors,
-  final int Function(Point<double>) getOrCreateNodeId,
-  final List<List<int>> corridorAllNodeIds,
-) {
-  final List<List<int>> corridorVertexNodeIds = <List<int>>[];
+double _distanceToNearestCorridorBoundary(final Point<double> p, final List<Corridor> corridors) {
+  var minDistance = double.infinity;
 
   for (final corridor in corridors) {
-    final vertexIds = <int>[];
-    for (final point in corridor.bounds) {
-      vertexIds.add(getOrCreateNodeId(point));
-    }
-    corridorVertexNodeIds.add(vertexIds);
-    corridorAllNodeIds.add(List<int>.from(vertexIds));
-  }
-
-  return corridorVertexNodeIds;
-}
-
-/// Connects consecutive corridor vertices along each corridor boundary.
-void _connectCorridorEdges(
-  final List<_IndoorGraphNode> nodes,
-  final List<List<int>> corridorVertexNodeIds,
-) {
-  for (final vertexIds in corridorVertexNodeIds) {
-    if (vertexIds.length < 2) {
+    final polygon = corridor.bounds;
+    if (polygon.length < 2) {
       continue;
     }
 
-    for (var i = 0; i < vertexIds.length; i++) {
-      final int a = vertexIds[i];
-      final int b = vertexIds[(i + 1) % vertexIds.length];
-
-      if (a == b) {
-        continue;
+    for (var i = 0; i < polygon.length; i++) {
+      final a = polygon[i];
+      final b = polygon[(i + 1) % polygon.length];
+      final distance = _distancePointToSegment(p, a, b);
+      if (distance < minDistance) {
+        minDistance = distance;
       }
-
-      final pa = nodes[a].position;
-      final pb = nodes[b].position;
-      final weight = _euclideanDistanceBtwnPoints(pa, pb) * _boundaryEdgePenaltyFactor;
-
-      nodes[a].edges.add(_IndoorGraphEdge(b, weight));
-      nodes[b].edges.add(_IndoorGraphEdge(a, weight));
     }
   }
+
+  return minDistance.isFinite ? minDistance : 0;
 }
 
-/// Adds midpoints and centroids as interior nodes for each corridor.
-void _addCorridorInteriorPoints(
-  final List<_IndoorGraphNode> nodes,
-  final List<Corridor> corridors,
-  final List<List<int>> corridorAllNodeIds,
-  final int Function(Point<double>) getOrCreateNodeId,
-) {
-  for (var corridorIndex = 0; corridorIndex < corridors.length; corridorIndex++) {
-    final polygons = corridors[corridorIndex].bounds;
-    if (polygons.length < 3) {
-      continue;
-    }
-
-    final allNodeIds = corridorAllNodeIds[corridorIndex];
-    final midpointNodeIds = <int>[];
-
-    for (var i = 0; i < polygons.length; i++) {
-      final a = polygons[i];
-      final b = polygons[(i + 1) % polygons.length];
-      final midpoint = Point<double>((a.x + b.x) / 2, (a.y + b.y) / 2);
-      final midPointId = getOrCreateNodeId(midpoint);
-      allNodeIds.add(midPointId);
-      midpointNodeIds.add(midPointId);
-    }
-
-    var sumX = 0.0;
-    var sumY = 0.0;
-    for (final polygon in polygons) {
-      sumX += polygon.x;
-      sumY += polygon.y;
-    }
-    final centroid = Point<double>(sumX / polygons.length, sumY / polygons.length);
-    final centroidId = getOrCreateNodeId(centroid);
-    allNodeIds.add(centroidId);
-
-    _connectInteriorNodesForCorridor(
-      nodes: nodes,
-      polygons: polygons,
-      midpointNodeIds: midpointNodeIds,
-      centroidNodeId: centroidId,
-      getOrCreateNodeId: getOrCreateNodeId,
-    );
-  }
-}
-
-void _connectInteriorNodesForCorridor({
-  required final List<Point<double>> polygons,
-  required final List<int> midpointNodeIds,
-  required final int centroidNodeId,
-  required final int Function(Point<double>) getOrCreateNodeId,
-  required final List<_IndoorGraphNode> nodes,
-}) {
-  if (midpointNodeIds.isEmpty) {
-    return;
-  }
-
-  final centroid = nodes[centroidNodeId].position;
-
-  for (var i = 0; i < midpointNodeIds.length; i++) {
-    final currentMidpointId = midpointNodeIds[i];
-    final nextMidpointId = midpointNodeIds[(i + 1) % midpointNodeIds.length];
-
-    final currentPoint = nodes[currentMidpointId].position;
-    final nextPoint = nodes[nextMidpointId].position;
-    final nextWeight = _euclideanDistanceBtwnPoints(currentPoint, nextPoint) * 0.5;
-    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(nextMidpointId, nextWeight));
-    nodes[nextMidpointId].edges.add(_IndoorGraphEdge(currentMidpointId, nextWeight));
-
-    final a = polygons[i];
-    final b = polygons[(i + 1) % polygons.length];
-    final vertexAId = getOrCreateNodeId(a);
-    final vertexBId = getOrCreateNodeId(b);
-
-    final weightToVertexA =
-        _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexAId].position) * 0.5;
-    final weightToVertexB =
-        _euclideanDistanceBtwnPoints(currentPoint, nodes[vertexBId].position) * 0.5;
-    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexAId, weightToVertexA));
-    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(vertexBId, weightToVertexB));
-    nodes[vertexAId].edges.add(_IndoorGraphEdge(currentMidpointId, weightToVertexA));
-    nodes[vertexBId].edges.add(_IndoorGraphEdge(currentMidpointId, weightToVertexB));
-
-    final centroidWeight = _euclideanDistanceBtwnPoints(currentPoint, centroid);
-    nodes[currentMidpointId].edges.add(_IndoorGraphEdge(centroidNodeId, centroidWeight));
-    nodes[centroidNodeId].edges.add(_IndoorGraphEdge(currentMidpointId, centroidWeight));
-  }
-}
-
-/// Connects nearby corridor vertices to bridge small gaps.
-void _snapNearbyVertices(final List<_IndoorGraphNode> nodes) {
-  const double vertexSnapThreshold = 5.0;
-  const double vertexSnapThresholdSquared = vertexSnapThreshold * vertexSnapThreshold;
-
-  for (var i = 0; i < nodes.length; i++) {
-    final pi = nodes[i].position;
-    for (var j = i + 1; j < nodes.length; j++) {
-      final pj = nodes[j].position;
-      final dx = pi.x - pj.x;
-      final dy = pi.y - pj.y;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared > vertexSnapThresholdSquared) {
-        continue;
-      }
-
-      final weight = sqrt(distanceSquared) * _boundaryEdgePenaltyFactor;
-      nodes[i].edges.add(_IndoorGraphEdge(j, weight));
-      nodes[j].edges.add(_IndoorGraphEdge(i, weight));
-    }
-  }
-}
-
-/// Adds global visibility edges over the union of all corridors.
-void _addGlobalVisibilityEdges(
-  final List<_IndoorGraphNode> nodes,
-  final List<List<int>> corridorAllNodeIds,
-  final List<Corridor> corridors,
-) {
-  final Set<int> unionNodeIds = <int>{};
-  for (final corridorNodes in corridorAllNodeIds) {
-    unionNodeIds.addAll(corridorNodes);
-  }
-
-  final List<int> allVisibilityNodeIds = unionNodeIds.toList(growable: false);
-
-  const double maxVisibilityEdgeLength = 200.0;
-  const double maxVisibilityEdgeLengthSquared = maxVisibilityEdgeLength * maxVisibilityEdgeLength;
-
-  for (var i = 0; i < allVisibilityNodeIds.length; i++) {
-    final idA = allVisibilityNodeIds[i];
-    final pa = nodes[idA].position;
-
-    for (var j = i + 1; j < allVisibilityNodeIds.length; j++) {
-      final idB = allVisibilityNodeIds[j];
-      final pb = nodes[idB].position;
-
-      final dx = pa.x - pb.x;
-      final dy = pa.y - pb.y;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared > maxVisibilityEdgeLengthSquared) {
-        continue;
-      }
-
-      if (!_segmentInsideAnyCorridor(pa, pb, corridors)) {
-        continue;
-      }
-
-      final weight = sqrt(distanceSquared);
-      nodes[idA].edges.add(_IndoorGraphEdge(idB, weight));
-      nodes[idB].edges.add(_IndoorGraphEdge(idA, weight));
-    }
-  }
-}
-
-/// Checks whether segment AB lies entirely inside the union of all corridors.
-bool _segmentInsideAnyCorridor(
+double _distancePointToSegment(
+  final Point<double> p,
   final Point<double> a,
   final Point<double> b,
-  final List<Corridor> corridors,
 ) {
-  const int samples = 4;
+  final dx = b.x - a.x;
+  final dy = b.y - a.y;
+  final lenSq = dx * dx + dy * dy;
 
-  for (var i = 1; i <= samples; i++) {
-    final t = i / (samples + 1);
-    final samplePoint = Point<double>(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  if (lenSq == 0) {
+    return _euclideanDistanceBtwnPoints(p, a);
+  }
 
-    var insideAny = false;
-    for (final corridor in corridors) {
-      if (_pointInPolygon(samplePoint, corridor.bounds)) {
-        insideAny = true;
-        break;
+  final t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+  final clampedT = t.clamp(0.0, 1.0);
+  final projection = Point<double>(a.x + dx * clampedT, a.y + dy * clampedT);
+  return _euclideanDistanceBtwnPoints(p, projection);
+}
+
+_GridPathResult _computeIndoorShortestPathOnWalkableGrid({
+  required final List<Corridor> corridors,
+  required final Point<double> startPoint,
+  required final Point<double> endPoint,
+}) {
+  final validCorridors = corridors.where((final c) => c.bounds.length >= 3).toList(growable: false);
+  if (validCorridors.isEmpty) {
+    return const _GridPathResult(path: <Point<double>>[], traversed: <Point<double>>[]);
+  }
+
+  final bounds = _computeCorridorBounds(validCorridors);
+  const cellSize = 8.0;
+  final originX = bounds.minX - cellSize;
+  final originY = bounds.minY - cellSize;
+  final cols = max(3, ((bounds.maxX - bounds.minX) / cellSize).ceil() + 3);
+  final rows = max(3, ((bounds.maxY - bounds.minY) / cellSize).ceil() + 3);
+
+  Point<double> cellCenter(final int row, final int col) =>
+      Point<double>(originX + (col + 0.5) * cellSize, originY + (row + 0.5) * cellSize);
+
+  final walkable = List<List<bool>>.generate(
+    rows,
+    (_) => List<bool>.filled(cols, false),
+    growable: false,
+  );
+
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      walkable[r][c] = _pointInsideAnyCorridorOrBoundary(cellCenter(r, c), validCorridors);
+    }
+  }
+
+  final clearance = List<List<double>>.generate(
+    rows,
+    (_) => List<double>.filled(cols, 0),
+    growable: false,
+  );
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (!walkable[r][c]) {
+        continue;
+      }
+      clearance[r][c] = _distanceToNearestCorridorBoundary(cellCenter(r, c), validCorridors);
+    }
+  }
+
+  (int row, int col)? nearestWalkableCell(final Point<double> p) {
+    final approxCol = ((p.x - originX) / cellSize).floor();
+    final approxRow = ((p.y - originY) / cellSize).floor();
+
+    if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
+      if (walkable[approxRow][approxCol]) {
+        return (approxRow, approxCol);
       }
     }
 
-    if (!insideAny) {
-      return false;
+    double best = double.infinity;
+    int? bestRow;
+    int? bestCol;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        if (!walkable[r][c]) {
+          continue;
+        }
+        final pCenter = cellCenter(r, c);
+        final dx = pCenter.x - p.x;
+        final dy = pCenter.y - p.y;
+        final d2 = dx * dx + dy * dy;
+        if (d2 < best) {
+          best = d2;
+          bestRow = r;
+          bestCol = c;
+        }
+      }
     }
+
+    if (bestRow == null || bestCol == null) {
+      return null;
+    }
+    return (bestRow, bestCol);
+  }
+
+  final startCell = nearestWalkableCell(startPoint);
+  final endCell = nearestWalkableCell(endPoint);
+  if (startCell == null || endCell == null) {
+    return const _GridPathResult(path: <Point<double>>[], traversed: <Point<double>>[]);
+  }
+
+  int id(final int row, final int col) => row * cols + col;
+  (int row, int col) decode(final int nodeId) => (nodeId ~/ cols, nodeId % cols);
+
+  final startId = id(startCell.$1, startCell.$2);
+  final endId = id(endCell.$1, endCell.$2);
+  final total = rows * cols;
+
+  final g = List<double>.filled(total, double.infinity);
+  final f = List<double>.filled(total, double.infinity);
+  final prev = List<int?>.filled(total, null);
+  final open = <int>[];
+  final openSet = List<bool>.filled(total, false);
+  final closed = List<bool>.filled(total, false);
+  final traversed = <Point<double>>[];
+
+  double heuristic(final int nodeId) {
+    final (r, c) = decode(nodeId);
+    final (er, ec) = decode(endId);
+    final dr = (r - er).abs().toDouble();
+    final dc = (c - ec).abs().toDouble();
+    return sqrt(dr * dr + dc * dc) * cellSize;
+  }
+
+  g[startId] = 0;
+  f[startId] = heuristic(startId);
+  open.add(startId);
+  openSet[startId] = true;
+
+  const neighborOffsets = <(int dr, int dc, double scale)>[
+    (-1, 0, 1.0),
+    (1, 0, 1.0),
+    (0, -1, 1.0),
+    (0, 1, 1.0),
+    (-1, -1, 1.41421356237),
+    (-1, 1, 1.41421356237),
+    (1, -1, 1.41421356237),
+    (1, 1, 1.41421356237),
+  ];
+
+  while (open.isNotEmpty) {
+    var bestIndex = 0;
+    var bestF = f[open[0]];
+    for (var i = 1; i < open.length; i++) {
+      final cand = open[i];
+      if (f[cand] < bestF) {
+        bestF = f[cand];
+        bestIndex = i;
+      }
+    }
+
+    final current = open.removeAt(bestIndex);
+    openSet[current] = false;
+    if (closed[current]) {
+      continue;
+    }
+    closed[current] = true;
+
+    final (cr, cc) = decode(current);
+    traversed.add(cellCenter(cr, cc));
+
+    if (current == endId) {
+      break;
+    }
+
+    for (final (dr, dc, scale) in neighborOffsets) {
+      final nr = cr + dr;
+      final nc = cc + dc;
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
+        continue;
+      }
+      if (!walkable[nr][nc]) {
+        continue;
+      }
+
+      final neighbor = id(nr, nc);
+      if (closed[neighbor]) {
+        continue;
+      }
+
+      final edgeBase = cellSize * scale;
+      final edgeClearance = min(clearance[cr][cc], clearance[nr][nc]);
+      final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
+      final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
+
+      final tentative = g[current] + stepCost;
+      if (tentative < g[neighbor]) {
+        g[neighbor] = tentative;
+        prev[neighbor] = current;
+        f[neighbor] = tentative + heuristic(neighbor);
+
+        if (!openSet[neighbor]) {
+          open.add(neighbor);
+          openSet[neighbor] = true;
+        }
+      }
+    }
+  }
+
+  if (startId != endId && prev[endId] == null) {
+    return _GridPathResult(path: const <Point<double>>[], traversed: traversed);
+  }
+
+  final reverseIds = <int>[];
+  int? cursor = endId;
+  while (cursor != null) {
+    reverseIds.add(cursor);
+    if (cursor == startId) {
+      break;
+    }
+    cursor = prev[cursor];
+  }
+  final ids = reverseIds.reversed.toList(growable: false);
+  final coarsePath = ids
+      .map((final nodeId) {
+        final (r, c) = decode(nodeId);
+        return cellCenter(r, c);
+      })
+      .toList(growable: false);
+
+  final smoothed = coarsePath;
+  final finalPath = <Point<double>>[startPoint];
+  for (var i = 1; i < smoothed.length - 1; i++) {
+    finalPath.add(smoothed[i]);
+  }
+  if (startPoint != endPoint) {
+    finalPath.add(endPoint);
+  }
+
+  return _GridPathResult(path: finalPath, traversed: traversed);
+}
+
+bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
+  for (final corridor in corridors) {
+    if (_pointInPolygon(p, corridor.bounds) || _pointOnPolygonBoundary(p, corridor.bounds)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+({double minX, double minY, double maxX, double maxY}) _computeCorridorBounds(
+  final List<Corridor> corridors,
+) {
+  var minX = double.infinity;
+  var minY = double.infinity;
+  var maxX = -double.infinity;
+  var maxY = -double.infinity;
+
+  for (final corridor in corridors) {
+    for (final p in corridor.bounds) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+  }
+
+  return (minX: minX, minY: minY, maxX: maxX, maxY: maxY);
+}
+
+bool _pointOnPolygonBoundary(final Point<double> point, final List<Point<double>> polygon) {
+  if (polygon.length < 2) {
+    return false;
+  }
+
+  for (var i = 0; i < polygon.length; i++) {
+    final a = polygon[i];
+    final b = polygon[(i + 1) % polygon.length];
+    if (_pointOnSegment(point, a, b)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool _pointOnSegment(final Point<double> p, final Point<double> a, final Point<double> b) {
+  const epsilon = 1e-6;
+
+  final cross = (p.y - a.y) * (b.x - a.x) - (p.x - a.x) * (b.y - a.y);
+  if (cross.abs() > epsilon) {
+    return false;
+  }
+
+  final dot = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  if (dot < -epsilon) {
+    return false;
+  }
+
+  final lenSq = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+  if (dot - lenSq > epsilon) {
+    return false;
   }
 
   return true;
-}
-
-void _connectDisconnectedComponents(final List<_IndoorGraphNode> nodes) {
-  if (nodes.length < 2) {
-    return;
-  }
-
-  final components = _computeConnectedComponents(nodes);
-  if (components.length < 2) {
-    return;
-  }
-
-  final Set<int> connectedNodeIds = Set<int>.from(components.first);
-  const maxBridgeDistanceSquared = _maxComponentBridgeDistance * _maxComponentBridgeDistance;
-
-  for (var componentIndex = 1; componentIndex < components.length; componentIndex++) {
-    final component = components[componentIndex];
-    final bridge = _findClosestNodesBetweenSets(nodes, connectedNodeIds, component);
-    if (bridge == null) {
-      continue;
-    }
-
-    final firstPoint = nodes[bridge.first].position;
-    final secondPoint = nodes[bridge.second].position;
-    final dx = firstPoint.x - secondPoint.x;
-    final dy = firstPoint.y - secondPoint.y;
-    final distanceSquared = dx * dx + dy * dy;
-
-    if (distanceSquared > maxBridgeDistanceSquared) {
-      continue;
-    }
-
-    final weight = _euclideanDistanceBtwnPoints(firstPoint, secondPoint);
-    nodes[bridge.first].edges.add(_IndoorGraphEdge(bridge.second, weight));
-    nodes[bridge.second].edges.add(_IndoorGraphEdge(bridge.first, weight));
-    connectedNodeIds.addAll(component);
-  }
-}
-
-List<Set<int>> _computeConnectedComponents(final List<_IndoorGraphNode> nodes) {
-  final visited = List<bool>.filled(nodes.length, false);
-  final components = <Set<int>>[];
-
-  for (var i = 0; i < nodes.length; i++) {
-    if (visited[i]) {
-      continue;
-    }
-
-    final component = <int>{};
-    final queue = <int>[i];
-    visited[i] = true;
-
-    while (queue.isNotEmpty) {
-      final current = queue.removeLast();
-      component.add(current);
-
-      for (final edge in nodes[current].edges) {
-        if (visited[edge.to]) {
-          continue;
-        }
-        visited[edge.to] = true;
-        queue.add(edge.to);
-      }
-    }
-
-    components.add(component);
-  }
-
-  return components;
-}
-
-({int first, int second})? _findClosestNodesBetweenSets(
-  final List<_IndoorGraphNode> nodes,
-  final Set<int> firstSet,
-  final Set<int> secondSet,
-) {
-  double bestDistanceSquared = double.infinity;
-  int? bestFirst;
-  int? bestSecond;
-
-  for (final firstId in firstSet) {
-    final firstPoint = nodes[firstId].position;
-    for (final secondId in secondSet) {
-      final secondPoint = nodes[secondId].position;
-      final dx = firstPoint.x - secondPoint.x;
-      final dy = firstPoint.y - secondPoint.y;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared < bestDistanceSquared) {
-        bestDistanceSquared = distanceSquared;
-        bestFirst = firstId;
-        bestSecond = secondId;
-      }
-    }
-  }
-
-  if (bestFirst == null || bestSecond == null) {
-    return null;
-  }
-
-  return (first: bestFirst, second: bestSecond);
 }
 
 /// Even–odd point-in-polygon test.
@@ -943,97 +792,4 @@ bool _pointInPolygon(final Point<double> point, final List<Point<double>> polygo
   }
 
   return inside;
-}
-
-List<int> _computeIndoorShortestPathWithDijkstra(
-  final _IndoorGraph graph,
-  final int startId,
-  final int endId,
-) {
-  final nodeCount = graph.nodes.length;
-  if (startId < 0 || startId >= nodeCount || endId < 0 || endId >= nodeCount) {
-    return <int>[];
-  }
-
-  final distances = List<double>.filled(nodeCount, double.infinity);
-  final previous = List<int?>.filled(nodeCount, null);
-  final visited = List<bool>.filled(nodeCount, false);
-
-  distances[startId] = 0;
-
-  _runDijkstra(graph, startId, endId, distances, previous, visited);
-
-  if (distances[endId] == double.infinity) {
-    return <int>[];
-  }
-
-  return _reconstructPath(endId, previous);
-}
-
-void _runDijkstra(
-  final _IndoorGraph graph,
-  final int startId,
-  final int endId,
-  final List<double> distances,
-  final List<int?> previous,
-  final List<bool> visited,
-) {
-  final nodeCount = graph.nodes.length;
-
-  for (var iteration = 0; iteration < nodeCount; iteration++) {
-    final u = _selectNextNode(nodeCount, distances, visited);
-
-    if (u == -1 || u == endId) {
-      break;
-    }
-
-    visited[u] = true;
-
-    _relaxNeighbors(graph, u, distances, previous, visited);
-  }
-}
-
-int _selectNextNode(final int nodeCount, final List<double> distances, final List<bool> visited) {
-  var u = -1;
-  var bestDistance = double.infinity;
-
-  for (var i = 0; i < nodeCount; i++) {
-    if (!visited[i] && distances[i] < bestDistance) {
-      bestDistance = distances[i];
-      u = i;
-    }
-  }
-
-  return u;
-}
-
-void _relaxNeighbors(
-  final _IndoorGraph graph,
-  final int u,
-  final List<double> distances,
-  final List<int?> previous,
-  final List<bool> visited,
-) {
-  for (final edge in graph.nodes[u].edges) {
-    if (visited[edge.to]) {
-      continue;
-    }
-
-    final alt = distances[u] + edge.weight;
-    if (alt < distances[edge.to]) {
-      distances[edge.to] = alt;
-      previous[edge.to] = u;
-    }
-  }
-}
-
-List<int> _reconstructPath(final int endId, final List<int?> previous) {
-  final path = <int>[];
-  int? current = endId;
-  while (current != null) {
-    path.add(current);
-    current = previous[current];
-  }
-
-  return path.reversed.toList(growable: false);
 }
