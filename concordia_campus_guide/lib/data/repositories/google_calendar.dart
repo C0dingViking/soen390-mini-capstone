@@ -36,13 +36,14 @@ class GoogleCalendarRepository {
     final int maxResults = 10,
     final DateTime? timeMin,
     final DateTime? timeMax,
+    final String calendarId = "primary",
   }) async {
     final api = await _getCalendarApi();
     if (api == null) return [];
 
     final now = timeMin ?? DateTime.now();
     final events = await api.events.list(
-      "primary",
+      calendarId,
       timeMin: now.toUtc(),
       timeMax: timeMax?.toUtc(),
       maxResults: maxResults,
@@ -56,8 +57,22 @@ class GoogleCalendarRepository {
   Future<List<calendar.Event>> getEventsInRange({
     required final DateTime startDate,
     required final DateTime endDate,
+    final String calendarId = "primary",
   }) async {
-    return getUpcomingEvents(timeMin: startDate, timeMax: endDate, maxResults: 100);
+    return getUpcomingEvents(
+      timeMin: startDate,
+      timeMax: endDate,
+      maxResults: 100,
+      calendarId: calendarId,
+    );
+  }
+
+  Future<List<calendar.CalendarListEntry>> getUserCalendars() async {
+    final api = await _getCalendarApi();
+    if (api == null) return [];
+
+    final calendarList = await api.calendarList.list();
+    return calendarList.items ?? [];
   }
 }
 

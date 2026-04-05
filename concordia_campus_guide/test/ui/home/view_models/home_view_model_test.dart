@@ -13,6 +13,7 @@ import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/search_suggestion.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 import "package:concordia_campus_guide/domain/models/room.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
@@ -97,13 +98,18 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
     final int maxResults = 10,
     final DateTime? timeMin,
     final DateTime? timeMax,
+    final String calendarId = "primary",
   }) async => [];
 
   @override
   Future<List<calendar.Event>> getEventsInRange({
     required final DateTime startDate,
     required final DateTime endDate,
+    final String calendarId = "primary",
   }) async => [];
+
+  @override
+  Future<List<calendar.CalendarListEntry>> getUserCalendars() async => [];
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
@@ -170,6 +176,37 @@ class _ConfigurableDirectionsInteractor extends DirectionsInteractor {
     lastDepartureTime = departureTime;
     lastArrivalTime = arrivalTime;
     return options;
+  }
+}
+
+class _ConfigurableCalendarInteractor extends CalendarInteractor {
+  _ConfigurableCalendarInteractor() : super(calendarRepo: _FakeGoogleCalendarRepository());
+
+  List<AcademicClass> classesToReturn = [];
+  List<CalendarOption> calendarOptionsToReturn = [];
+  Object? errorToThrow;
+  int callCount = 0;
+  int optionsCallCount = 0;
+
+  @override
+  Future<List<AcademicClass>> getUpcomingClasses({
+    final int maxResults = 10,
+    final DateTime? timeMin,
+    final DateTime? timeMax,
+    final String buildingDataPath = "assets/maps/building_data.json",
+    final String calendarId = "primary",
+  }) async {
+    callCount++;
+    if (errorToThrow != null) {
+      throw errorToThrow!;
+    }
+    return classesToReturn;
+  }
+
+  @override
+  Future<List<CalendarOption>> getUserCalendarOptions() async {
+    optionsCallCount++;
+    return calendarOptionsToReturn;
   }
 }
 
@@ -271,9 +308,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals(
-          "Error: Location services disabled. Enter locations manually or enable location services.",
-        ),
+        equals("Location services disabled. Enter locations manually or enable location services."),
       );
       expect(hvm.myLocationEnabled, isFalse);
       expect(hvm.cameraTarget, isNull);
@@ -287,7 +322,7 @@ void main() {
       expect(
         hvm.errorMessage,
         equals(
-          "Error: Location permission denied. Enter locations manually or enable location permissions.",
+          "Location permission denied. Enter locations manually or enable location permissions.",
         ),
       );
     });
@@ -298,7 +333,7 @@ void main() {
       await hvm.goToCurrentLocation();
       expect(
         hvm.errorMessage,
-        equals("Error: Location permission deniedForever. Please enable it in settings."),
+        equals("Location permission deniedForever. Please enable it in settings."),
       );
     });
 
@@ -321,6 +356,55 @@ void main() {
       fakeGeolocator.throwOnGet = true;
       await hvm.goToCurrentLocation();
       expect(hvm.errorMessage, contains("boom"));
+    });
+
+    test("initializeBuildingsData shows launch warning when offline", () async {
+      final repo = BuildingRepository(
+        buildingLoader: (final path) async {
+          return File(path).readAsString();
+        },
+      );
+      final vm = HomeViewModel(
+        mapInteractor: MapDataInteractor(buildingRepo: repo),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+        enableLaunchNetworkWarning: true,
+        hasInternetConnection: () async => false,
+      );
+
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+
+      expect(vm.errorMessage, HomeViewModel.launchOfflineWarningMessage);
+      vm.dispose();
+      LocationService.resetForTesting();
+    });
+
+    test("initializeBuildingsData checks network every time when offline", () async {
+      var checkCount = 0;
+      final repo = BuildingRepository(
+        buildingLoader: (final path) async {
+          return File(path).readAsString();
+        },
+      );
+      final vm = HomeViewModel(
+        mapInteractor: MapDataInteractor(buildingRepo: repo),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: _FakeCalendarInteractor(),
+        enableLaunchNetworkWarning: true,
+        hasInternetConnection: () async {
+          checkCount++;
+          return false;
+        },
+      );
+
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+      await vm.initializeBuildingsData("test/assets/building_testdata.json");
+
+      expect(checkCount, 2);
+      vm.dispose();
+      LocationService.resetForTesting();
     });
 
     group("Building detection with location stream", () {
@@ -807,6 +891,44 @@ void main() {
       expect(hvm.searchResults.where((final s) => s.type == SearchSuggestionType.place).length, 1);
     });
 
+    test("building suggestions are ranked by match quality", () {
+      hvm.buildings = {
+        "H": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+        "BH": Building(
+          id: "BH",
+          googlePlacesId: null,
+          name: "Biology Hub",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.1, longitude: -73.1),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          buildingFeatures: null,
+        ),
+      };
+
+      hvm.updateSearchQuery("h");
+
+      expect(hvm.searchResults, isNotEmpty);
+      expect(hvm.searchResults.first.type, SearchSuggestionType.building);
+    });
+
     test("destination search shows nearby place results and markers", () async {
       places.nearbyResults = [
         const PlaceSuggestion(
@@ -947,6 +1069,236 @@ void main() {
       expect(hvm.selectedStartLabel, equals("Hall Building"));
       expect(hvm.searchStartMarker?.markerId.value, equals("search-start"));
       expect(hvm.selectedCampusIndex, 1);
+    });
+
+    test("selectSearchSuggestion applies room selection using destination building", () async {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [],
+        images: [],
+        supportedIndoorFloors: const [1, 2],
+        buildingFeatures: null,
+      );
+
+      final suggestion = SearchSuggestion.room(
+        building: building,
+        roomLabel: "H 110",
+        subtitle: "SGW - Hall Building",
+      );
+
+      hvm.searchResults = [suggestion];
+      await hvm.selectSearchSuggestion(suggestion, SearchField.destination);
+
+      expect(hvm.destinationCoordinate, equals(const Coordinate(latitude: 45.0, longitude: -73.0)));
+      expect(hvm.selectedDestinationLabel, equals("H 110"));
+      expect(hvm.cameraTarget, equals(const Coordinate(latitude: 45.0, longitude: -73.0)));
+      expect(hvm.searchDestinationMarker?.markerId.value, equals("search-destination"));
+      expect(hvm.searchResults, isEmpty);
+    });
+
+    test(
+      "indoorNavigationDestination returns room metadata only for supported room destinations",
+      () {
+        final building = Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        );
+        hvm.buildings = {"h": building};
+
+        hvm.selectedDestinationLabel = "H 110";
+        final indoorTarget = hvm.indoorNavigationDestination;
+        expect(indoorTarget, isNotNull);
+        expect(indoorTarget!.building.id, equals("H"));
+        expect(indoorTarget.destinationRoomLabel, equals("H 110"));
+        expect(indoorTarget.roomNumber, equals("110"));
+        expect(indoorTarget.startRoomLabel, isNull);
+
+        hvm.selectedDestinationLabel = "Hall Building";
+        expect(hvm.indoorNavigationDestination, isNull);
+      },
+    );
+
+    test("originIndoorNavigationEntry returns start room metadata when start is a room", () {
+      final building = Building(
+        id: "H",
+        googlePlacesId: null,
+        name: "Hall Building",
+        description: "Desc",
+        street: "Street",
+        postalCode: "H3Z 2Y7",
+        location: const Coordinate(latitude: 45.0, longitude: -73.0),
+        hours: gmw.OpeningHoursDetail(),
+        campus: Campus.sgw,
+        outlinePoints: [],
+        images: [],
+        supportedIndoorFloors: const [1, 2],
+        buildingFeatures: null,
+      );
+
+      hvm.buildings = {"h": building};
+      hvm.selectedStartLabel = "H 110";
+      hvm.selectedDestinationLabel = "MB 210";
+
+      final originEntry = hvm.originIndoorNavigationEntry;
+      expect(originEntry, isNotNull);
+      expect(originEntry!.building.id, equals("H"));
+      expect(originEntry.startRoomLabel, equals("H 110"));
+      expect(originEntry.destinationRoomLabel, equals("MB 210"));
+    });
+
+    test(
+      "startInterBuildingOutdoorNavigation prepares outdoor route and destination handoff",
+      () async {
+        hvm.buildings = {
+          "h": Building(
+            id: "H",
+            googlePlacesId: null,
+            name: "Hall Building",
+            description: "Desc",
+            street: "Street",
+            postalCode: "H3Z 2Y7",
+            location: const Coordinate(latitude: 45.0, longitude: -73.0),
+            hours: gmw.OpeningHoursDetail(),
+            campus: Campus.sgw,
+            outlinePoints: [],
+            images: [],
+            supportedIndoorFloors: const [1, 2],
+            buildingFeatures: null,
+          ),
+          "mb": Building(
+            id: "MB",
+            googlePlacesId: null,
+            name: "MB Building",
+            description: "Desc",
+            street: "Street",
+            postalCode: "H3Z 2Y7",
+            location: const Coordinate(latitude: 45.1, longitude: -73.1),
+            hours: gmw.OpeningHoursDetail(),
+            campus: Campus.sgw,
+            outlinePoints: [],
+            images: [],
+            supportedIndoorFloors: const [1, 2],
+            buildingFeatures: null,
+          ),
+        };
+        directions.options = [
+          RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 1200,
+            durationSeconds: 900,
+            polyline: const [
+              Coordinate(latitude: 45.0, longitude: -73.0),
+              Coordinate(latitude: 45.1, longitude: -73.1),
+            ],
+          ),
+        ];
+
+        final started = await hvm.startInterBuildingOutdoorNavigation(
+          startBuildingId: "H",
+          destinationBuildingId: "MB",
+          startRoomLabel: "H",
+          destinationRoomLabel: "MB 1.210",
+          destinationIndoorStartLabel: "MB buildingEntrance-1",
+          originIndoorStartRoomLabel: "H 110",
+          originIndoorDestinationRoomLabel: "H buildingEntrance-1",
+        );
+
+        expect(started, isTrue);
+        expect(hvm.selectedStartLabel, equals("Hall Building"));
+        expect(hvm.selectedDestinationLabel, equals("MB 1.210"));
+        expect(hvm.routeOptions.containsKey(RouteMode.walking), isTrue);
+
+        final indoorTarget = hvm.indoorNavigationDestination;
+        expect(indoorTarget, isNotNull);
+        expect(indoorTarget!.startRoomLabel, equals("MB buildingEntrance-1"));
+
+        final originResume = hvm.originIndoorNavigationResume;
+        expect(originResume, isNotNull);
+        expect(originResume!.building.id, equals("H"));
+        expect(originResume.startRoomLabel, equals("H 110"));
+        expect(originResume.destinationRoomLabel, equals("H buildingEntrance-1"));
+      },
+    );
+
+    test("startInterBuildingOutdoorNavigation returns false when building is missing", () async {
+      hvm.buildings = {
+        "h": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        ),
+      };
+
+      final started = await hvm.startInterBuildingOutdoorNavigation(
+        startBuildingId: "H",
+        destinationBuildingId: "MB",
+        startRoomLabel: "H buildingEntrance-1",
+        destinationRoomLabel: "MB 1.210",
+        destinationIndoorStartLabel: "MB buildingEntrance-1",
+        originIndoorStartRoomLabel: "H 110",
+        originIndoorDestinationRoomLabel: "H buildingEntrance-1",
+      );
+
+      expect(started, isFalse);
+      expect(hvm.errorMessage, equals("Unable to prepare inter-building navigation."));
+    });
+
+    test("originIndoorNavigationResume returns null for invalid start label", () {
+      hvm.buildings = {
+        "h": Building(
+          id: "H",
+          googlePlacesId: null,
+          name: "Hall Building",
+          description: "Desc",
+          street: "Street",
+          postalCode: "H3Z 2Y7",
+          location: const Coordinate(latitude: 45.0, longitude: -73.0),
+          hours: gmw.OpeningHoursDetail(),
+          campus: Campus.sgw,
+          outlinePoints: [],
+          images: [],
+          supportedIndoorFloors: const [1, 2],
+          buildingFeatures: null,
+        ),
+      };
+
+      hvm.selectedDestinationLabel = "H 110";
+      expect(hvm.originIndoorNavigationResume, isNull);
+
+      hvm.selectedStartLabel = "H 110";
+      expect(hvm.originIndoorNavigationEntry, isNotNull);
+
+      hvm.selectedStartLabel = "Hall Building";
+      expect(hvm.originIndoorNavigationEntry, isNull);
     });
 
     test("selectSearchSuggestion resolves place and loads routes", () async {
@@ -1658,6 +2010,7 @@ void main() {
   group("HomeViewModel next class", () {
     late HomeViewModel hvm;
     late _TrackingPlacesInteractor trackingPlacesInteractor;
+    late _ConfigurableCalendarInteractor configurableCalendarInteractor;
     late GeolocatorPlatform previousPlatform;
     late _FakeGeolocator fakeGeolocator;
 
@@ -1671,6 +2024,7 @@ void main() {
         directionsInteractor: _FakeDirectionsInteractor(),
         calendarInteractor: _FakeCalendarInteractor(),
       );
+      configurableCalendarInteractor = _ConfigurableCalendarInteractor();
       previousPlatform = GeolocatorPlatform.instance;
       fakeGeolocator = _FakeGeolocator()
         ..lat = 45.4972
@@ -1719,7 +2073,7 @@ void main() {
       );
       hvm.buildings = {"MB": building};
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "mb"),
@@ -1738,7 +2092,7 @@ void main() {
 
     test("setDestinationToUpcomingClassBuilding shows info when building is missing", () async {
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "x"),
@@ -1751,6 +2105,62 @@ void main() {
       expect(hvm.destinationCoordinate, isNull);
       expect(hvm.generateInfoMessage, equals("Unable to find X on the map."));
     });
+
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when current location is unavailable",
+      () async {
+        fakeGeolocator.serviceEnabled = false;
+        hvm.upcomingClass = AcademicClass(
+          "SOEN 390 LEC",
+          DateTime(2026, 1, 5, 13, 0),
+          DateTime(2026, 1, 5, 14, 0),
+          Room("235", "2", Campus.sgw, "mb"),
+        );
+
+        await hvm.setDestinationToUpcomingClassBuilding();
+
+        expect(
+          hvm.generateInfoMessage,
+          equals("Unable to determine current location for navigation start."),
+        );
+      },
+    );
+
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when no upcoming class is selected",
+      () async {
+        await hvm.setDestinationToUpcomingClassBuilding();
+
+        expect(hvm.startCoordinate, isNotNull);
+        expect(hvm.generateInfoMessage, equals("No upcoming class selected."));
+      },
+    );
+
+    test(
+      "setDestinationToUpcomingClassBuilding shows info when place suggestion cannot resolve",
+      () async {
+        trackingPlacesInteractor.searchResults = const [
+          PlaceSuggestion(
+            placeId: "place-1",
+            description: "Concordia University EV Building, Montreal",
+            mainText: "Concordia University EV Building",
+            secondaryText: "Montreal, QC",
+          ),
+        ];
+        trackingPlacesInteractor.resolveResult = null;
+        hvm.upcomingClass = AcademicClass(
+          "SOEN 390 LEC",
+          DateTime(2026, 1, 5, 13, 0),
+          DateTime(2026, 1, 5, 14, 0),
+          Room("235", "2", Campus.sgw, "ev"),
+        );
+
+        await hvm.setDestinationToUpcomingClassBuilding();
+
+        expect(hvm.destinationCoordinate, isNull);
+        expect(hvm.generateInfoMessage, equals("Unable to find EV on the map."));
+      },
+    );
 
     test("setDestinationToUpcomingClassBuilding falls back to first places suggestion", () async {
       trackingPlacesInteractor.searchResults = const [
@@ -1766,7 +2176,7 @@ void main() {
         longitude: -73.5779,
       );
       hvm.upcomingClass = AcademicClass(
-        "SOEN 390 LEC A",
+        "SOEN 390 LEC",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 14, 0),
         Room("235", "2", Campus.sgw, "ev"),
@@ -1798,7 +2208,7 @@ void main() {
         longitude: -73.6407,
       );
       hvm.upcomingClass = AcademicClass(
-        "BIOL 201 LAB A",
+        "BIOL 201 LAB",
         DateTime(2026, 1, 5, 13, 0),
         DateTime(2026, 1, 5, 15, 0),
         Room("S110", "S1", Campus.loyola, buildingName),
@@ -1827,7 +2237,7 @@ void main() {
         longitude: -73.6401,
       );
       hvm.upcomingClass = AcademicClass(
-        "CHEM 205 LEC A",
+        "CHEM 205 LEC",
         DateTime(2026, 1, 5, 10, 0),
         DateTime(2026, 1, 5, 11, 15),
         Room("130", "1", Campus.loyola, buildingName),
@@ -1839,6 +2249,142 @@ void main() {
       expect(hvm.destinationCoordinate, equals(trackingPlacesInteractor.resolveResult));
       expect(hvm.selectedDestinationLabel, equals("Hingston Hall B"));
       expect(hvm.generateInfoMessage, isNull);
+    });
+
+    test("showNextClass uses cached future class and does not call calendar", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      hvmWithCalendar.upcomingClass = AcademicClass(
+        "SOEN 390 LEC",
+        DateTime.now().add(const Duration(hours: 1)),
+        DateTime.now().add(const Duration(hours: 2)),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(hvmWithCalendar.showNextClassDialog, isTrue);
+      expect(configurableCalendarInteractor.callCount, 0);
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass sets info message when no classes are returned", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      hvmWithCalendar.selectedCalendarId = "primary";
+      configurableCalendarInteractor.classesToReturn = [];
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(hvmWithCalendar.generateInfoMessage, equals("No more classes today."));
+      expect(hvmWithCalendar.showNextClassDialog, isFalse);
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass handles calendar errors gracefully", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      hvmWithCalendar.selectedCalendarId = "primary";
+      configurableCalendarInteractor.errorToThrow = Exception("calendar offline");
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(
+        hvmWithCalendar.generateInfoMessage,
+        contains("Please use search to find your destination."),
+      );
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("showNextClass requires selecting a calendar first", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      await hvmWithCalendar.showNextClass();
+
+      expect(
+        hvmWithCalendar.generateInfoMessage,
+        equals("No calendar selected. Please select a calendar to view upcoming classes."),
+      );
+      expect(hvmWithCalendar.showNextClassDialog, isFalse);
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("loadCalendarTitles stores calendar options from interactor", () async {
+      final hvmWithCalendar = HomeViewModel(
+        mapInteractor: MapDataInteractor(
+          buildingRepo: BuildingRepository(buildingLoader: (final path) async => "{}"),
+        ),
+        placesInteractor: _FakePlacesInteractor(),
+        directionsInteractor: _FakeDirectionsInteractor(),
+        calendarInteractor: configurableCalendarInteractor,
+      );
+
+      configurableCalendarInteractor.calendarOptionsToReturn = [
+        CalendarOption(title: "Work", id: "cal-1"),
+        CalendarOption(title: "Work", id: "cal-2"),
+      ];
+
+      await hvmWithCalendar.loadCalendarTitles();
+
+      expect(configurableCalendarInteractor.optionsCallCount, 1);
+      expect(hvmWithCalendar.getCalendarTitles, hasLength(2));
+      expect(hvmWithCalendar.getCalendarTitles[0].title, equals("Work"));
+      expect(hvmWithCalendar.getCalendarTitles[0].id, equals("cal-1"));
+      expect(hvmWithCalendar.getCalendarTitles[1].title, equals("Work"));
+      expect(hvmWithCalendar.getCalendarTitles[1].id, equals("cal-2"));
+
+      hvmWithCalendar.dispose();
+    });
+
+    test("clearUpcomingClass clears both class and dialog state", () async {
+      hvm.upcomingClass = AcademicClass(
+        "SOEN 390 LEC",
+        DateTime.now().add(const Duration(hours: 1)),
+        DateTime.now().add(const Duration(hours: 2)),
+        Room("235", "2", Campus.sgw, "mb"),
+      );
+      await hvm.showNextClass();
+      hvm.showNextClassFab = true;
+
+      expect(hvm.showNextClassDialog, isTrue);
+
+      hvm.clearUpcomingClass();
+
+      expect(hvm.upcomingClass, isNull);
+      expect(hvm.showNextClassDialog, isFalse);
+      expect(hvm.showNextClassFab, isTrue);
     });
   });
 }

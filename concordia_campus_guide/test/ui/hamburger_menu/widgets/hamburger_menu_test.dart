@@ -1,4 +1,5 @@
 import "dart:async";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 import "package:concordia_campus_guide/ui/auth/widgets/login_screen.dart";
 import "package:concordia_campus_guide/ui/home/view_models/home_view_model.dart";
 import "package:firebase_core/firebase_core.dart";
@@ -157,43 +158,6 @@ void main() {
       );
     });
 
-    testWidgets("tapping Import Google Calendar calls CalendarInteractor", (final tester) async {
-      await mockNetworkImages(() async {
-        final mockLoginViewModel = MockLoginViewModel();
-        final mockHomeViewModel = MockHomeViewModel();
-        final mockUser = MockUser();
-
-        when(mockLoginViewModel.isSignedIn).thenReturn(true);
-        when(mockLoginViewModel.currentUser).thenReturn(mockUser);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: MultiProvider(
-              providers: [
-                ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
-                ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
-              ],
-              child: const Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
-            ),
-          ),
-        );
-
-        await tester.pumpAndSettle();
-        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
-        scaffoldState.openDrawer();
-        await tester.pumpAndSettle();
-
-        final calendarTile = find.widgetWithText(ListTile, "Import Google Calendar");
-        expect(calendarTile, findsOneWidget);
-
-        // We can just tap; we don't need to fully fetch real classes for coverage
-        await tester.tap(calendarTile);
-        await tester.pumpAndSettle();
-
-        verify(mockHomeViewModel.toggleNextClassFabVisibility(true)).called(1);
-      });
-    });
-
     testWidgets("tapping Logout hides Next Class FAB", (final tester) async {
       await mockNetworkImages(() async {
         final mockLoginViewModel = MockLoginViewModel();
@@ -227,6 +191,45 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(mockHomeViewModel.toggleNextClassFabVisibility(false)).called(1);
+      });
+    });
+
+    testWidgets("tapping Import Google Calendar loads calendars", (final tester) async {
+      await mockNetworkImages(() async {
+        final mockLoginViewModel = MockLoginViewModel();
+        final mockHomeViewModel = MockHomeViewModel();
+        final mockUser = MockUser();
+
+        when(mockLoginViewModel.isSignedIn).thenReturn(true);
+        when(mockLoginViewModel.currentUser).thenReturn(mockUser);
+        when(mockHomeViewModel.loadCalendarTitles()).thenAnswer((_) => Future<void>.value());
+        when(mockHomeViewModel.selectedCalendarId).thenReturn(null);
+        when(
+          mockHomeViewModel.getCalendarTitles,
+        ).thenReturn([CalendarOption(title: "Primary Calendar", id: "primary")]);
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<LoginViewModel>.value(value: mockLoginViewModel),
+              ChangeNotifierProvider<HomeViewModel>.value(value: mockHomeViewModel),
+            ],
+            child: const MaterialApp(
+              home: Scaffold(drawer: HamburgerMenu(), body: SizedBox()),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        final ScaffoldState scaffoldState = tester.firstState(find.byType(Scaffold));
+        scaffoldState.openDrawer();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(ListTile, "Import Google Calendar"));
+        await tester.pumpAndSettle();
+
+        verify(mockHomeViewModel.loadCalendarTitles()).called(1);
+        expect(find.text("Select a Calendar"), findsOneWidget);
       });
     });
   });

@@ -370,6 +370,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
     required final bool isSearchingPlaces,
   }) {
     return TextField(
+      key: const Key("destination_search_field"),
       controller: _destinationController,
       focusNode: _destinationFocusNode,
       onChanged: (final value) => _handleQueryChanged(value, SearchField.destination),
@@ -382,7 +383,7 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       },
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: _expanded ? "Choose destination" : "Search for a Destination",
+        hintText: _expanded ? "Choose destination" : "Enter your destination",
         prefixIcon: const Icon(Icons.place_outlined),
         suffixIcon: _buildDestinationSuffix(
           context,
@@ -453,14 +454,16 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
       itemBuilder: (final context, final index) {
         final suggestion = results[index];
         final isBuilding = suggestion.type == SearchSuggestionType.building;
+        final isRoom = suggestion.type == SearchSuggestionType.room;
         return ListTile(
           leading: isBuilding
               ? SvgPicture.asset("assets/images/app_logo.svg", height: 24, width: 24)
-              : const Icon(Icons.location_on_outlined),
+              : Icon(_getResultIconData(isRoom)),
           title: Text(suggestion.title),
           subtitle: suggestion.subtitle != null ? Text(suggestion.subtitle!) : null,
           trailing: isBuilding && suggestion.building != null
               ? IconButton(
+                  key: Key("building_info_${suggestion.title}"),
                   icon: const Icon(Icons.info_outline),
                   onPressed: () {
                     Navigator.push(
@@ -478,5 +481,9 @@ class _BuildingSearchBarState extends State<BuildingSearchBar> {
         );
       },
     );
+  }
+
+  IconData _getResultIconData(final bool isRoom) {
+    return isRoom ? Icons.meeting_room_outlined : Icons.location_on_outlined;
   }
 }

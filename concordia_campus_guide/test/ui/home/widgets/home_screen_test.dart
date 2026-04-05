@@ -50,13 +50,18 @@ class _FakeGoogleCalendarRepository implements GoogleCalendarRepository {
     final int maxResults = 10,
     final DateTime? timeMin,
     final DateTime? timeMax,
+    final String calendarId = "primary",
   }) async => [];
 
   @override
   Future<List<calendar.Event>> getEventsInRange({
     required final DateTime startDate,
     required final DateTime endDate,
+    final String calendarId = "primary",
   }) async => [];
+
+  @override
+  Future<List<calendar.CalendarListEntry>> getUserCalendars() async => [];
 }
 
 class _FakeCalendarInteractor extends CalendarInteractor {
@@ -99,6 +104,7 @@ class TestHomeViewModel extends HomeViewModel {
         campus: Campus.loyola,
         outlinePoints: [],
         images: [],
+        supportedIndoorFloors: const [1, 2],
         buildingFeatures: [BuildingFeature.elevator],
       ),
       "MB": Building(
@@ -222,7 +228,7 @@ void main() {
       expect(find.text("LOY"), findsOneWidget);
     });
 
-    testWidgets("shows SnackBar when view model has errorMessage", (final tester) async {
+    testWidgets("shows popup when view model has errorMessage", (final tester) async {
       await pumpHomeScreen(tester);
       vm.errorMessage = "test-error";
       vm.notifyListeners();
@@ -230,7 +236,7 @@ void main() {
       expect(find.text("test-error"), findsOneWidget);
     });
 
-    testWidgets("shows SnackBar when view model has infoMessage and auto clears it", (
+    testWidgets("shows popup when view model has infoMessage and auto clears it", (
       final tester,
     ) async {
       await pumpHomeScreen(tester);
@@ -396,6 +402,91 @@ void main() {
       expect(vm.routeOptions, isEmpty);
       expect(vm.isSearchBarExpanded, isFalse);
     });
+
+    testWidgets("shows main-screen indoor switch button for room destination inside building", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.selectedDestinationLabel = "H 110";
+      vm.currentBuilding = vm.buildings["H"];
+      vm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 600,
+          durationSeconds: 480,
+          polyline: [],
+        ),
+      };
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")),
+        findsOneWidget,
+      );
+      expect(find.text("Switch Indoor"), findsOneWidget);
+    });
+
+    testWidgets("hides main-screen indoor switch button for non-room destination", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.selectedDestinationLabel = "Hall Building";
+      vm.currentBuilding = vm.buildings["H"];
+      vm.routeOptions = {
+        RouteMode.walking: const RouteOption(
+          mode: RouteMode.walking,
+          distanceMeters: 600,
+          durationSeconds: 480,
+          polyline: [],
+        ),
+      };
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")), findsNothing);
+    });
+
+    testWidgets(
+      "hides main-screen indoor switch button when user is outside destination building",
+      (final tester) async {
+        await pumpHomeScreen(tester);
+
+        vm.selectedDestinationLabel = "H 110";
+        vm.currentBuilding = vm.buildings["MB"];
+        vm.routeOptions = {
+          RouteMode.walking: const RouteOption(
+            mode: RouteMode.walking,
+            distanceMeters: 600,
+            durationSeconds: 480,
+            polyline: [],
+          ),
+        };
+        vm.notifyListeners();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets("hides main-screen indoor switch button without active route", (
+      final tester,
+    ) async {
+      await pumpHomeScreen(tester);
+
+      vm.selectedDestinationLabel = "H 110";
+      vm.currentBuilding = vm.buildings["H"];
+      vm.routeOptions = {};
+      vm.notifyListeners();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key("main_screen_switch_to_indoor_navigation_button")), findsNothing);
+    });
   });
 
   group("Building Navigation Tests", () {
@@ -529,6 +620,19 @@ void main() {
         expect(buildingId, equals(testCase["expected"]));
         expect(building, isNotNull);
       }
+    });
+
+    testWidgets("building marker tap lookup finds correct building", (final tester) async {
+      await pumpHomeScreen(tester);
+
+      const markerId = MarkerId("H-marker");
+      final buildingId = markerId.value.replaceAll("-marker", "");
+      final building = vm.buildings[buildingId];
+
+      expect(buildingId, equals("H"));
+      expect(building, isNotNull);
+      expect(building?.id, equals("H"));
+      expect(building?.name, equals("Science Hall"));
     });
   });
 }

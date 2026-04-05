@@ -1,8 +1,10 @@
 import "dart:async";
 import "dart:ui" as ui;
 
+import "package:connectivity_plus/connectivity_plus.dart";
 import "package:concordia_campus_guide/domain/interactors/calendar_interactor.dart";
 import "package:concordia_campus_guide/domain/models/academic_class.dart";
+import "package:concordia_campus_guide/domain/models/calendar_option.dart";
 import "dart:math" as math;
 import "package:concordia_campus_guide/utils/coordinate_extensions.dart";
 import "package:flutter/material.dart";
@@ -19,6 +21,8 @@ import "package:concordia_campus_guide/domain/models/route_option.dart";
 import "package:concordia_campus_guide/domain/models/place_suggestion.dart";
 import "package:concordia_campus_guide/ui/core/themes/app_theme.dart";
 import "package:concordia_campus_guide/utils/app_logger.dart";
+import "package:concordia_campus_guide/utils/query_helper.dart";
+import "package:concordia_campus_guide/utils/room_manifest_loader.dart";
 import "package:concordia_campus_guide/data/services/location_service.dart";
 import "package:concordia_campus_guide/utils/campus.dart";
 
@@ -28,11 +32,17 @@ enum DepartureMode { now, departAt, arriveBy }
 
 class HomeViewModel extends ChangeNotifier {
   static const String buildingDataAssetPath = "assets/maps/building_data.json";
+  static const String launchOfflineWarningMessage =
+      "No internet connection detected. Some features may not work until you connect to Wi-Fi or mobile data.";
 
   final MapDataInteractor mapInteractor;
   final PlacesInteractor placesInteractor;
   final DirectionsInteractor directionsInteractor;
   final CalendarInteractor calendarInteractor;
+  final bool _enableLaunchNetworkWarning;
+  final Future<bool> Function() _hasInternetConnection;
+  final Connectivity _connectivity;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   Color _buildingOutlineColor = AppTheme.concordiaMaroon;
   bool _showLoginSuccessMessage = false;
 
@@ -43,7 +53,12 @@ class HomeViewModel extends ChangeNotifier {
     required this.placesInteractor,
     required this.directionsInteractor,
     required this.calendarInteractor,
-  });
+    final bool enableLaunchNetworkWarning = false,
+    final Future<bool> Function()? hasInternetConnection,
+    final Connectivity? connectivity,
+  }) : _enableLaunchNetworkWarning = enableLaunchNetworkWarning,
+       _hasInternetConnection = hasInternetConnection ?? _defaultHasInternetConnection,
+       _connectivity = connectivity ?? Connectivity();
 
   Map<String, Building> buildings = {};
   Set<Polygon> buildingOutlines = {};
@@ -71,10 +86,16 @@ class HomeViewModel extends ChangeNotifier {
   Set<Circle> transitChangeCircles = {};
   int _routeRequestId = 0;
   double _currentMapZoom = 15;
+  String? _indoorNavigationStartOverrideLabel;
+  String? _originIndoorResumeStartLabel;
+  String? _originIndoorResumeDestinationLabel;
 
   bool showNextClassFab = false;
   AcademicClass? upcomingClass;
   bool _showNextClassDialog = false;
+  String? selectedCalendarId;
+  List<CalendarOption> _calendarTitles = [];
+  List<CalendarOption> get getCalendarTitles => _calendarTitles;
 
   bool get showNextClassDialog => _showNextClassDialog;
 
@@ -86,6 +107,9 @@ class HomeViewModel extends ChangeNotifier {
   List<SearchSuggestion> searchResults = [];
   List<PlaceSuggestion> nearbySearchResults = [];
   final Map<String, BitmapDescriptor> _nearbyMarkerIcons = {};
+  List<String> _allRoomLabels = [];
+  List<String> _campusRoomLabels = [];
+  bool _didAttemptRoomManifestLoad = false;
   String _searchQuery = "";
   Timer? _searchDebounce;
   SearchField _activeSearchField = SearchField.destination;
@@ -123,6 +147,9 @@ class HomeViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
+    await _showLaunchOfflineWarningIfNeeded();
+    _startConnectivityListener();
+
     final BuildingMapDataDTO payload = await mapInteractor.loadBuildingsWithMapElements(
       path,
       _buildingOutlineColor,
@@ -132,6 +159,8 @@ class HomeViewModel extends ChangeNotifier {
       buildings = payload.buildings;
       buildingOutlines = payload.buildingOutlines;
       buildingMarkers = payload.buildingMarkers;
+      await _loadRoomManifestIfNeeded();
+      _rebuildCampusRoomLabels();
       await refreshLocationActionAvailability();
       _locationSubscription?.cancel();
       _locationSubscription = LocationService.instance.positionStream.listen(_handleLocationUpdate);
@@ -148,6 +177,55 @@ class HomeViewModel extends ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _showLaunchOfflineWarningIfNeeded() async {
+    if (!_enableLaunchNetworkWarning) {
+      return;
+    }
+
+    final hasConnection = await _hasInternetConnection();
+    if (hasConnection) {
+      return;
+    }
+
+    errorMessage = launchOfflineWarningMessage;
+    notifyListeners();
+  }
+
+  void _startConnectivityListener() {
+    if (!_enableLaunchNetworkWarning) {
+      return;
+    }
+
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((final result) async {
+      final isOnline = result != ConnectivityResult.none;
+      if (isOnline) {
+        // Only clear if the error was the network offline message
+        if (errorMessage == launchOfflineWarningMessage) {
+          errorMessage = null;
+          notifyListeners();
+        }
+      } else {
+        // Show offline warning immediately when connection is lost
+        if (errorMessage != launchOfflineWarningMessage) {
+          errorMessage = launchOfflineWarningMessage;
+          notifyListeners();
+        }
+      }
+    });
+  }
+
+  static Future<bool> _defaultHasInternetConnection() async {
+    try {
+      final connectivity = Connectivity();
+      final result = await connectivity.checkConnectivity();
+      // If connected to WiFi or mobile, assume internet is available
+      return result != ConnectivityResult.none;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> goToCurrentLocation() async {
@@ -174,7 +252,7 @@ class HomeViewModel extends ChangeNotifier {
       if (_looksLikeLocationUnavailable(e)) {
         _setLocationActionAvailable(false);
       }
-      errorMessage = "Error: $e";
+      errorMessage = "$e";
       notifyListeners();
     }
   }
@@ -223,7 +301,13 @@ class HomeViewModel extends ChangeNotifier {
     _searchQuery = query;
     _searchDebounce?.cancel();
 
-    final buildingSuggestions = _buildingSuggestions(query);
+    final buildingSuggestions = QueryHelper.buildSearchSuggestions(
+      query: query,
+      buildings: buildings,
+      campusRoomLabels: _campusRoomLabels,
+      includeRooms:
+          _activeSearchField == SearchField.destination || _activeSearchField == SearchField.start,
+    );
     searchResults = buildingSuggestions;
     nearbySearchResults = [];
     isSearchingPlaces = false;
@@ -295,6 +379,9 @@ class HomeViewModel extends ChangeNotifier {
     destinationCoordinate = null;
     selectedStartLabel = null;
     selectedDestinationLabel = null;
+    _indoorNavigationStartOverrideLabel = null;
+    _originIndoorResumeStartLabel = null;
+    _originIndoorResumeDestinationLabel = null;
     searchStartMarker = null;
     searchDestinationMarker = null;
     routeOptions = {};
@@ -334,6 +421,26 @@ class HomeViewModel extends ChangeNotifier {
     final SearchSuggestion suggestion,
     final SearchField field,
   ) async {
+    if (suggestion.type == SearchSuggestionType.room) {
+      final building = suggestion.building;
+      final roomLabel = suggestion.roomLabel;
+      if (building == null || roomLabel == null) return;
+
+      _applySelection(
+        field: field,
+        coordinate: building.location,
+        label: roomLabel,
+        campus: building.campus,
+      );
+      cameraTarget = building.location;
+      isSearchBarExpanded = true;
+      clearSearchResults();
+      requestUnfocusSearchBar();
+      await _loadRoutesIfReady();
+      notifyListeners();
+      return;
+    }
+
     if (suggestion.type == SearchSuggestionType.building) {
       final building = suggestion.building;
       if (building == null) return;
@@ -402,7 +509,7 @@ class HomeViewModel extends ChangeNotifier {
         _setLocationActionAvailable(false);
       }
       isResolvingStartLocation = false;
-      errorMessage = "Error: $e";
+      errorMessage = "$e";
       notifyListeners();
     }
   }
@@ -524,6 +631,10 @@ class HomeViewModel extends ChangeNotifier {
     required final String label,
     final Campus? campus,
   }) {
+    _indoorNavigationStartOverrideLabel = null;
+    _originIndoorResumeStartLabel = null;
+    _originIndoorResumeDestinationLabel = null;
+
     if (campus != null) {
       selectedCampusIndex = _campusIndexFor(campus);
     }
@@ -856,30 +967,27 @@ class HomeViewModel extends ChangeNotifier {
     return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
   }
 
-  List<SearchSuggestion> _buildingSuggestions(final String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return [];
+  Future<void> _loadRoomManifestIfNeeded() async {
+    if (_didAttemptRoomManifestLoad) return;
+    _didAttemptRoomManifestLoad = true;
 
-    final matches = buildings.values.where((final b) {
-      final name = b.name.toLowerCase();
-      final id = b.id.toLowerCase();
-      return name.contains(q) || id.contains(q);
-    }).toList();
+    try {
+      _allRoomLabels = await RoomManifestLoader.loadRoomNames();
+    } catch (e) {
+      logger.w("HomeViewModel: failed to load room manifest", error: e);
+      _allRoomLabels = [];
+    }
+  }
 
-    matches.sort((final a, final b) {
-      final rankA = _matchRank(a, q);
-      final rankB = _matchRank(b, q);
-      if (rankA != rankB) return rankA.compareTo(rankB);
-      return a.name.compareTo(b.name);
-    });
+  void _rebuildCampusRoomLabels() {
+    if (_allRoomLabels.isEmpty || buildings.isEmpty) {
+      _campusRoomLabels = [];
+      return;
+    }
 
-    return matches.take(6).map((final building) {
-      final campusLabel = building.campus == Campus.sgw ? "SGW" : "LOY";
-      return SearchSuggestion.building(
-        building,
-        subtitle: "$campusLabel - ${building.id.toUpperCase()}",
-      );
-    }).toList();
+    _campusRoomLabels = _allRoomLabels
+        .where((final roomLabel) => QueryHelper.isCampusRoomLabel(roomLabel, buildings))
+        .toList(growable: false);
   }
 
   Future<List<PlaceSuggestion>> _searchNearbyPlaces(final String query) async {
@@ -919,8 +1027,8 @@ class HomeViewModel extends ChangeNotifier {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final centerX = imageWidth / 2;
-    final pinTipY = imageHeight - 4;
+    const double centerX = imageWidth / 2;
+    const double pinTipY = imageHeight - 4;
     final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
 
     final displayLabel = _truncateMarkerLabel(label);
@@ -1005,7 +1113,7 @@ class HomeViewModel extends ChangeNotifier {
       )
       ..arcToPoint(
         Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
-        radius: Radius.circular(pinCircleRadius),
+        radius: const Radius.circular(pinCircleRadius),
         clockwise: true,
       )
       ..quadraticBezierTo(
@@ -1027,7 +1135,7 @@ class HomeViewModel extends ChangeNotifier {
       )
       ..arcToPoint(
         Offset(centerX + pinCircleRadius, pinCircleCenter.dy),
-        radius: Radius.circular(pinCircleRadius),
+        radius: const Radius.circular(pinCircleRadius),
         clockwise: true,
       )
       ..quadraticBezierTo(
@@ -1085,20 +1193,134 @@ class HomeViewModel extends ChangeNotifier {
     }).toSet();
   }
 
-  int _matchRank(final Building building, final String query) {
-    final name = building.name.toLowerCase();
-    final id = building.id.toLowerCase();
-    if (name.startsWith(query)) return 0;
-    if (name.contains(query)) return 1;
-    if (id.startsWith(query)) return 2;
-    if (id.contains(query)) return 3;
-    return 4;
+  ({Building building, String destinationRoomLabel, String roomNumber, String? startRoomLabel})?
+  get indoorNavigationDestination {
+    final parsed = QueryHelper.parseRoomLabel(selectedDestinationLabel ?? "");
+    if (parsed == null) return null;
+
+    final building = QueryHelper.findBuildingById(parsed.buildingId, buildings);
+    if (building == null || building.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    if (building.campus != Campus.sgw && building.campus != Campus.loyola) {
+      return null;
+    }
+
+    return (
+      building: building,
+      destinationRoomLabel: "${building.id.toUpperCase()} ${parsed.roomNumber}",
+      roomNumber: parsed.roomNumber,
+      startRoomLabel: _indoorNavigationStartOverrideLabel,
+    );
+  }
+
+  ({Building building, String startRoomLabel, String destinationRoomLabel})?
+  get originIndoorNavigationResume {
+    final startLabel = _originIndoorResumeStartLabel;
+    final destinationLabel = _originIndoorResumeDestinationLabel;
+    if (startLabel == null || destinationLabel == null) {
+      return null;
+    }
+
+    final parsedStart = QueryHelper.parseRoomLabel(startLabel);
+    if (parsedStart == null) {
+      return null;
+    }
+
+    final building = QueryHelper.findBuildingById(parsedStart.buildingId, buildings);
+    if (building == null || building.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    return (building: building, startRoomLabel: startLabel, destinationRoomLabel: destinationLabel);
+  }
+
+  ({Building building, String startRoomLabel, String? destinationRoomLabel})?
+  get originIndoorNavigationEntry {
+    final startLabel = selectedStartLabel;
+    if (startLabel == null || startLabel.trim().isEmpty) {
+      return null;
+    }
+
+    final parsedStart = QueryHelper.parseRoomLabel(startLabel);
+    if (parsedStart == null) {
+      return null;
+    }
+
+    final startBuilding = QueryHelper.findBuildingById(parsedStart.buildingId, buildings);
+    if (startBuilding == null || startBuilding.supportedIndoorFloors.isEmpty) {
+      return null;
+    }
+
+    String? destinationRoomLabel;
+    final parsedDestination = QueryHelper.parseRoomLabel(selectedDestinationLabel ?? "");
+    if (parsedDestination != null) {
+      destinationRoomLabel =
+          "${parsedDestination.buildingId.toUpperCase()} ${parsedDestination.roomNumber}";
+    }
+
+    return (
+      building: startBuilding,
+      startRoomLabel: "${parsedStart.buildingId.toUpperCase()} ${parsedStart.roomNumber}",
+      destinationRoomLabel: destinationRoomLabel,
+    );
+  }
+
+  Future<bool> startInterBuildingOutdoorNavigation({
+    required final String startBuildingId,
+    required final String destinationBuildingId,
+    required final String startRoomLabel,
+    required final String destinationRoomLabel,
+    required final String destinationIndoorStartLabel,
+    required final String originIndoorStartRoomLabel,
+    required final String originIndoorDestinationRoomLabel,
+  }) async {
+    final startBuilding = QueryHelper.findBuildingById(startBuildingId, buildings);
+    final destinationBuilding = QueryHelper.findBuildingById(destinationBuildingId, buildings);
+
+    if (startBuilding == null || destinationBuilding == null) {
+      errorMessage = "Unable to prepare inter-building navigation.";
+      notifyListeners();
+      return false;
+    }
+
+    _routeRequestId++;
+    routeOptions = {};
+    routePolylines = {};
+    transitChangeCircles = {};
+    routeBounds = null;
+    routeErrorMessage = null;
+
+    _applySelection(
+      field: SearchField.start,
+      coordinate: startBuilding.location,
+      label: startBuilding.name,
+      campus: startBuilding.campus,
+    );
+    _applySelection(
+      field: SearchField.destination,
+      coordinate: destinationBuilding.location,
+      label: destinationRoomLabel,
+      campus: destinationBuilding.campus,
+    );
+
+    _indoorNavigationStartOverrideLabel = destinationIndoorStartLabel;
+    _originIndoorResumeStartLabel = originIndoorStartRoomLabel;
+    _originIndoorResumeDestinationLabel = originIndoorDestinationRoomLabel;
+    cameraTarget = startBuilding.location;
+    isSearchBarExpanded = true;
+
+    await _loadRoutesIfReady();
+    notifyListeners();
+    return true;
   }
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
     _locationSubscription?.cancel();
+    _connectivitySubscription?.cancel();
     LocationService.instance.dispose();
     super.dispose();
   }
@@ -1125,23 +1347,6 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Building? _findBuildingById(final String buildingId) {
-    final normalized = buildingId.trim().toLowerCase();
-    if (normalized.isEmpty) return null;
-
-    final directMatch =
-        buildings[buildingId] ?? buildings[normalized] ?? buildings[normalized.toUpperCase()];
-    if (directMatch != null) return directMatch;
-
-    for (final building in buildings.values) {
-      if (building.id.toLowerCase() == normalized) {
-        return building;
-      }
-    }
-
-    return null;
-  }
-
   Future<void> setDestinationToUpcomingClassBuilding() async {
     setSearchBarExpanded(true);
     await setStartToCurrentLocation();
@@ -1159,7 +1364,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final buildingId = upcoming.room.buildingId;
-    final building = _findBuildingById(buildingId);
+    final building = QueryHelper.findBuildingById(buildingId, buildings);
     if (building != null) {
       _applySelection(
         field: SearchField.destination,
@@ -1206,6 +1411,13 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    if (selectedCalendarId == null) {
+      generateInfoMessage =
+          "No calendar selected. Please select a calendar to view upcoming classes.";
+      notifyListeners();
+      return;
+    }
+
     try {
       // Acceptance Criteria: Only show classes that are upcoming today
       final now = DateTime.now();
@@ -1214,6 +1426,7 @@ class HomeViewModel extends ChangeNotifier {
         timeMin: now,
         timeMax: endOfDay,
         maxResults: 100,
+        calendarId: selectedCalendarId!,
       );
 
       if (classes.isEmpty) {
@@ -1236,6 +1449,11 @@ class HomeViewModel extends ChangeNotifier {
   void clearUpcomingClass() {
     upcomingClass = null;
     _showNextClassDialog = false;
+    notifyListeners();
+  }
+
+  Future<void> loadCalendarTitles() async {
+    _calendarTitles = await calendarInteractor.getUserCalendarOptions();
     notifyListeners();
   }
 }

@@ -103,6 +103,8 @@ class Floorplan {
   late List<Corridor> corridors;
   late List<FloorTransition> transitions;
 
+  bool get _strictConnectorValidation => svgPath.startsWith("assets/floorplans/");
+
   Floorplan({
     required this.buildingId,
     required this.floorNumber,
@@ -204,7 +206,10 @@ class Floorplan {
   ) {
     final roomRegex = RegExp(r"^room-(?:.*?-)?([A-Za-z0-9.-]+)$");
     final List<IndoorMapRoom> rooms = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...roomLayer.findAllElements("rect"),
@@ -224,12 +229,13 @@ class Floorplan {
       }
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$roomNumber";
-      final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return label == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
-      final doorLocation = parsePointFromSvgCircle(doorElement);
+      final doorElement = _findConnector(connectors, expected);
+      final doorLocation = _resolveLocationFromConnectorOrShape(
+        connectorElement: doorElement,
+        shapePoints: points,
+        expectedLabel: expected,
+        entityDescription: "room $roomNumber",
+      );
 
       rooms.add(IndoorMapRoom(name: roomNumber, doorLocation: doorLocation, points: points));
     }
@@ -245,7 +251,10 @@ class Floorplan {
   ) {
     final poiRegex = RegExp(r"^([A-Za-z]+)-([0-9]+)$");
     final List<PointOfInterest> pois = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...poiLayer.findAllElements("rect"),
@@ -267,12 +276,13 @@ class Floorplan {
       }
 
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$poiName-$instanceNum";
-      final doorElement = connectors.firstWhere((final element) {
-        final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return label == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
-      final doorLocation = parsePointFromSvgCircle(doorElement);
+      final doorElement = _findConnector(connectors, expected);
+      final doorLocation = _resolveLocationFromConnectorOrShape(
+        connectorElement: doorElement,
+        shapePoints: points,
+        expectedLabel: expected,
+        entityDescription: "poi $poiName-$instanceNum",
+      );
 
       pois.add(
         PointOfInterest(
@@ -312,7 +322,10 @@ class Floorplan {
       r"^(stairs|stairsUp|stairsDown|elevator|escalatorUp|escalatorDown)-([0-9]+)$",
     );
     final List<FloorTransition> transitions = [];
-    final connectors = connectorsLayer.findAllElements("ellipse");
+    final connectors = [
+      ...connectorsLayer.findAllElements("ellipse"),
+      ...connectorsLayer.findAllElements("circle"),
+    ];
 
     for (final element in [
       ...poiLayer.findAllElements("rect"),
@@ -331,19 +344,27 @@ class Floorplan {
       final transitionType = transitionInfo.key;
       final canonicalGroup = transitionInfo.value;
 
+      List<Point<double>> points = [];
+      if (element.name.local == "rect") {
+        points = parsePointsFromSvgRect(element);
+      } else if (element.name.local == "path") {
+        points = parsePointsFromSvgPath(element);
+      }
+
       // Resolve the door/connector location for this transition.
       final expected = "door-${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum";
-      final doorElement = connectors.firstWhere((final element) {
-        final connLabel = element.getAttribute(_inkscapeLabelRoot) ?? "";
-        return connLabel == expected;
-      }, orElse: () => XmlElement(XmlName("ellipse")));
-
-      final location = parsePointFromSvgCircle(doorElement);
+      final doorElement = _findConnector(connectors, expected);
+      final doorLocation = _resolveLocationFromConnectorOrShape(
+        connectorElement: doorElement,
+        shapePoints: points,
+        expectedLabel: expected,
+        entityDescription: "transition $typeName-$instanceNum",
+      );
 
       transitions.add(
         FloorTransition(
           id: "${buildingId.toLowerCase()}$floorNumber-$typeName-$instanceNum",
-          location: location,
+          location: doorLocation,
           type: transitionType,
           groupTag: canonicalGroup,
         ),
@@ -351,5 +372,44 @@ class Floorplan {
     }
 
     return transitions;
+  }
+
+  XmlElement? _findConnector(final List<XmlElement> connectors, final String expectedLabel) {
+    for (final element in connectors) {
+      final label = element.getAttribute(_inkscapeLabelRoot) ?? "";
+      if (label == expectedLabel) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  Point<double> _resolveLocationFromConnectorOrShape({
+    required final XmlElement? connectorElement,
+    required final List<Point<double>> shapePoints,
+    required final String expectedLabel,
+    required final String entityDescription,
+  }) {
+    if (connectorElement != null) {
+      return parsePointFromSvgCircle(connectorElement);
+    }
+
+    if (_strictConnectorValidation) {
+      throw StateError(
+        "Missing connector '$expectedLabel' for $entityDescription on floor $floorNumber in building $buildingId.",
+      );
+    }
+
+    if (shapePoints.isEmpty) {
+      return const Point(0, 0);
+    }
+
+    var sumX = 0.0;
+    var sumY = 0.0;
+    for (final point in shapePoints) {
+      sumX += point.x;
+      sumY += point.y;
+    }
+    return Point(sumX / shapePoints.length, sumY / shapePoints.length);
   }
 }

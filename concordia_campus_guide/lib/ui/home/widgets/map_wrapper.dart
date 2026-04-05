@@ -11,6 +11,7 @@ class MapWrapper extends StatelessWidget {
   final Set<Polyline> polylines;
   final Set<Circle> circles;
   final void Function(PolygonId)? onPolygonTap;
+  final void Function(MarkerId)? onMarkerTap;
 
   // These are the missing definitions
   final bool myLocationButtonEnabled;
@@ -28,6 +29,7 @@ class MapWrapper extends StatelessWidget {
     this.polylines = const {},
     this.circles = const {},
     this.onPolygonTap,
+    this.onMarkerTap,
     this.myLocationButtonEnabled = false,
     this.zoomControlsEnabled = false,
     this.fortyFiveDegreeImageryEnabled = false,
@@ -47,6 +49,19 @@ class MapWrapper extends StatelessWidget {
               .toSet()
         : polygons;
 
+    final Set<Marker> tappableMarkers = onMarkerTap != null
+        ? markers.map((final marker) {
+            if (marker.onTap != null) {
+              return marker;
+            }
+
+            return marker.copyWith(
+              onTapParam: () => onMarkerTap!(marker.markerId),
+              consumeTapEventsParam: true,
+            );
+          }).toSet()
+        : markers;
+
     return GoogleMap(
       initialCameraPosition: initialCameraPosition,
       onMapCreated: onMapCreated,
@@ -55,7 +70,7 @@ class MapWrapper extends StatelessWidget {
       myLocationButtonEnabled: myLocationButtonEnabled,
       zoomControlsEnabled: zoomControlsEnabled,
       polygons: tappablePolygons,
-      markers: markers,
+      markers: tappableMarkers,
       polylines: polylines,
       circles: circles,
       fortyFiveDegreeImageryEnabled: fortyFiveDegreeImageryEnabled,

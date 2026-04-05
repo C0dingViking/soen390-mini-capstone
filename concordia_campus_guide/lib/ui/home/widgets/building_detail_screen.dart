@@ -36,7 +36,11 @@ class BuildingDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(building.name, style: Theme.of(context).textTheme.headlineSmall),
+                      child: Text(
+                        building.name,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                        key: const Key("building_name"),
+                      ),
                     ),
                   ],
                 ),
@@ -76,6 +80,7 @@ class BuildingDetailScreen extends StatelessWidget {
                       if (building.supportedIndoorFloors.isNotEmpty) ...[
                         const SizedBox(width: 16),
                         FloatingActionButton.extended(
+                          key: const Key("floor_plans_button"),
                           heroTag: "indoor_floor_plans",
                           onPressed: () => _showIndoorFloorPlans(context),
                           tooltip: "Indoor Floor Plans",
@@ -180,6 +185,7 @@ class BuildingDetailScreen extends StatelessWidget {
           building.address,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium,
+          key: const Key("building_address"),
         ),
       ],
     );

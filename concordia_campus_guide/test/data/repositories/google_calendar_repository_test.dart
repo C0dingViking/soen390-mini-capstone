@@ -29,5 +29,15 @@ void main() {
 
       expect(events, isEmpty);
     });
+
+    test("getUserCalendars returns empty list when no user", () async {
+      final mockAuth = MockFirebaseAuth();
+      when(mockAuth.currentUser).thenReturn(null);
+      final repository = GoogleCalendarRepository(firebaseAuth: mockAuth);
+
+      final calendars = await repository.getUserCalendars();
+
+      expect(calendars, isEmpty);
+    });
   });
 }

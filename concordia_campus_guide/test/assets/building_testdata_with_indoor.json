@@ -1,0 +1,27 @@
+{
+  "buildings": [
+    {
+      "id": "h",
+      "googlePlacesId": "ChIJTestRoom123",
+      "name": "Hall Building",
+      "description": "A test building with indoor floors",
+      "street": "1455 De Maisonneuve Blvd W",
+      "postalCode": "H3G 1M8",
+      "location": [45.4973, -73.5788],
+      "campus": "sgw",
+      "hours": {
+        "open_now": true,
+        "periods": []
+      },
+      "buildingFeatures": ["elevator"],
+      "images": [],
+      "supportedIndoorFloors": [1, 2],
+      "points": [
+        [45.4970, -73.5791],
+        [45.4975, -73.5791],
+        [45.4975, -73.5785],
+        [45.4970, -73.5785]
+      ]
+    }
+  ]
+}
