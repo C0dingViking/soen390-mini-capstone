@@ -1029,7 +1029,7 @@ class HomeViewModel extends ChangeNotifier {
     final canvas = Canvas(recorder);
     const double centerX = imageWidth / 2;
     const double pinTipY = imageHeight - 4;
-    final pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
+    const pinCircleCenter = Offset(centerX, pinTipY - pinTipHeight - pinCircleRadius);
 
     final displayLabel = _truncateMarkerLabel(label);
     final textPainter = TextPainter(
