@@ -478,42 +478,6 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
 
   final clearance = _buildClearance(rows, cols, walkable, cellCenter, validCorridors);
 
-  // (int row, int col)? nearestWalkableCell(final Point<double> p) {
-  //   final approxCol = ((p.x - originX) / cellSize).floor();
-  //   final approxRow = ((p.y - originY) / cellSize).floor();
-
-  //   if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
-  //     if (walkable[approxRow][approxCol]) {
-  //       return (approxRow, approxCol);
-  //     }
-  //   }
-
-  //   double best = double.infinity;
-  //   int? bestRow;
-  //   int? bestCol;
-  //   for (var r = 0; r < rows; r++) {
-  //     for (var c = 0; c < cols; c++) {
-  //       if (!walkable[r][c]) {
-  //         continue;
-  //       }
-  //       final pCenter = cellCenter(r, c);
-  //       final dx = pCenter.x - p.x;
-  //       final dy = pCenter.y - p.y;
-  //       final d2 = dx * dx + dy * dy;
-  //       if (d2 < best) {
-  //         best = d2;
-  //         bestRow = r;
-  //         bestCol = c;
-  //       }
-  //     }
-  //   }
-
-  //   if (bestRow == null || bestCol == null) {
-  //     return null;
-  //   }
-  //   return (bestRow, bestCol);
-  // }
-
   final startCell = _nearestWalkableCell(
     startPoint,
     rows,
