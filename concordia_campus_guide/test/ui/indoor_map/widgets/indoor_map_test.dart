@@ -885,7 +885,7 @@ class ThrowingSameFloorSetPathIndoorViewModel extends TestIndoorViewModel {
   }
 
   @override
-  void setIndoorPath(final List<Point<double>> path) {
+  void setIndoorPath(final List<Point<double>> path, {final List<Point<double>>? traversedNodes}) {
     throw Exception("forced same-floor setIndoorPath failure");
   }
 }
