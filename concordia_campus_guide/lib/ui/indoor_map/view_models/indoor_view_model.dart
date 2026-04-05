@@ -22,6 +22,7 @@ class IndoorViewModel extends ChangeNotifier {
   /// The path displayed on the currently selected floor.
 
   List<Point<double>>? indoorPath;
+  List<Point<double>>? debugTraversalNodes;
 
   List<IndoorFloorPathSegment>? _interFloorSegments;
 
@@ -131,6 +132,7 @@ class IndoorViewModel extends ChangeNotifier {
     loadFailed = false;
     isLoading = false;
     indoorPath = null;
+    debugTraversalNodes = null;
     selectedStartRoomName = null;
     selectedEndRoomName = null;
     _interFloorSegments = null;
@@ -154,11 +156,14 @@ class IndoorViewModel extends ChangeNotifier {
         if (segmentIndex >= 0) {
           _currentSegmentIndex = segmentIndex;
           indoorPath = _interFloorSegments![segmentIndex].path;
+          debugTraversalNodes = null;
         } else {
           indoorPath = null;
+          debugTraversalNodes = null;
         }
       } else {
         indoorPath = null;
+        debugTraversalNodes = null;
       }
 
       notifyListeners();
@@ -167,10 +172,11 @@ class IndoorViewModel extends ChangeNotifier {
   }
 
   /// Single-floor path
-  void setIndoorPath(final List<Point<double>> path) {
+  void setIndoorPath(final List<Point<double>> path, {final List<Point<double>>? traversedNodes}) {
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
     indoorPath = path;
+    debugTraversalNodes = traversedNodes;
     notifyListeners();
   }
 
@@ -189,6 +195,7 @@ class IndoorViewModel extends ChangeNotifier {
       selectedFloorplan = loadedFloorplans![firstSegment.floorNumber];
     }
     indoorPath = firstSegment.path;
+    debugTraversalNodes = null;
 
     notifyListeners();
   }
@@ -205,6 +212,7 @@ class IndoorViewModel extends ChangeNotifier {
       selectedFloorplan = loadedFloorplans![segment.floorNumber];
     }
     indoorPath = segment.path;
+    debugTraversalNodes = null;
 
     notifyListeners();
     return true;
@@ -222,6 +230,7 @@ class IndoorViewModel extends ChangeNotifier {
       selectedFloorplan = loadedFloorplans![segment.floorNumber];
     }
     indoorPath = segment.path;
+    debugTraversalNodes = null;
 
     notifyListeners();
     return true;
@@ -232,6 +241,7 @@ class IndoorViewModel extends ChangeNotifier {
       return;
     }
     indoorPath = null;
+    debugTraversalNodes = null;
     _interFloorSegments = null;
     _currentSegmentIndex = 0;
     notifyListeners();

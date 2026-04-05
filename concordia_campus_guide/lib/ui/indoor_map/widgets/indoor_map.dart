@@ -16,6 +16,8 @@ import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:provider/provider.dart";
 
+const bool _showDebugNavigation = false;
+
 @visibleForTesting
 String? resolveRoomNameFromTapPosition(
   final Offset scenePoint,
@@ -687,8 +689,11 @@ class _IndoorMapViewState extends State<IndoorMapView> {
     }
 
     try {
-      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
-      _viewModel.setIndoorPath(path);
+      await _computeAndSetIndoorPath(
+        floorplan: floorplan,
+        startRoomModel: startRoomModel,
+        destinationRoomModel: destinationRoomModel,
+      );
     } on StateError catch (_) {
       _viewModel.clearIndoorPath();
       if (!mounted) return;
@@ -705,6 +710,23 @@ class _IndoorMapViewState extends State<IndoorMapView> {
         "Failed to compute indoor route. Please try again.",
         title: _navigationErrorTitle,
       );
+    }
+  }
+
+  Future<void> _computeAndSetIndoorPath({
+    required final Floorplan floorplan,
+    required final IndoorMapRoom startRoomModel,
+    required final IndoorMapRoom destinationRoomModel,
+  }) async {
+    if (_showDebugNavigation) {
+      final result = floorplan.shortestPathBetweenRoomsWithDebug(
+        startRoomModel,
+        destinationRoomModel,
+      );
+      _viewModel.setIndoorPath(result.path, traversedNodes: result.traversedNodes);
+    } else {
+      final path = floorplan.shortestPathBetweenRooms(startRoomModel, destinationRoomModel);
+      _viewModel.setIndoorPath(path);
     }
   }
 
@@ -1197,6 +1219,7 @@ class _IndoorMapViewState extends State<IndoorMapView> {
                               child: _AnimatedIndoorPath(
                                 floorplan: selectedFloorplan,
                                 path: ivm.indoorPath!,
+                                debugTraversalNodes: ivm.debugTraversalNodes,
                               ),
                             ),
                         ],
@@ -1327,8 +1350,13 @@ class _IndoorMapViewState extends State<IndoorMapView> {
 class _AnimatedIndoorPath extends StatefulWidget {
   final Floorplan floorplan;
   final List<Point<double>> path;
+  final List<Point<double>>? debugTraversalNodes;
 
-  const _AnimatedIndoorPath({required this.floorplan, required this.path});
+  const _AnimatedIndoorPath({
+    required this.floorplan,
+    required this.path,
+    this.debugTraversalNodes,
+  });
 
   @override
   State<_AnimatedIndoorPath> createState() => _AnimatedIndoorPathState();
@@ -1358,6 +1386,7 @@ class _AnimatedIndoorPathState extends State<_AnimatedIndoorPath>
       painter: IndoorPathPainter(
         floorplan: widget.floorplan,
         path: widget.path,
+        debugTraversalNodes: widget.debugTraversalNodes,
         pulseAnimation: _pulse,
       ),
     );
