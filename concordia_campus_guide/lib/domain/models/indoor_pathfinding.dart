@@ -474,74 +474,68 @@ _GridPathResult _computeIndoorShortestPathOnWalkableGrid({
   Point<double> cellCenter(final int row, final int col) =>
       Point<double>(originX + (col + 0.5) * cellSize, originY + (row + 0.5) * cellSize);
 
-  // final walkable = List<List<bool>>.generate(
-  //   rows,
-  //   (_) => List<bool>.filled(cols, false),
-  //   growable: false,
-  // );
-
-  // for (var r = 0; r < rows; r++) {
-  //   for (var c = 0; c < cols; c++) {
-  //     walkable[r][c] = _pointInsideAnyCorridorOrBoundary(cellCenter(r, c), validCorridors);
-  //   }
-  // }
-
   final walkable = _buildWalkable(rows, cols, cellCenter, validCorridors);
-
-  // final clearance = List<List<double>>.generate(
-  //   rows,
-  //   (_) => List<double>.filled(cols, 0),
-  //   growable: false,
-  // );
-  // for (var r = 0; r < rows; r++) {
-  //   for (var c = 0; c < cols; c++) {
-  //     if (!walkable[r][c]) {
-  //       continue;
-  //     }
-  //     clearance[r][c] = _distanceToNearestCorridorBoundary(cellCenter(r, c), validCorridors);
-  //   }
-  // }
 
   final clearance = _buildClearance(rows, cols, walkable, cellCenter, validCorridors);
 
-  (int row, int col)? nearestWalkableCell(final Point<double> p) {
-    final approxCol = ((p.x - originX) / cellSize).floor();
-    final approxRow = ((p.y - originY) / cellSize).floor();
+  // (int row, int col)? nearestWalkableCell(final Point<double> p) {
+  //   final approxCol = ((p.x - originX) / cellSize).floor();
+  //   final approxRow = ((p.y - originY) / cellSize).floor();
 
-    if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
-      if (walkable[approxRow][approxCol]) {
-        return (approxRow, approxCol);
-      }
-    }
+  //   if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
+  //     if (walkable[approxRow][approxCol]) {
+  //       return (approxRow, approxCol);
+  //     }
+  //   }
 
-    double best = double.infinity;
-    int? bestRow;
-    int? bestCol;
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        if (!walkable[r][c]) {
-          continue;
-        }
-        final pCenter = cellCenter(r, c);
-        final dx = pCenter.x - p.x;
-        final dy = pCenter.y - p.y;
-        final d2 = dx * dx + dy * dy;
-        if (d2 < best) {
-          best = d2;
-          bestRow = r;
-          bestCol = c;
-        }
-      }
-    }
+  //   double best = double.infinity;
+  //   int? bestRow;
+  //   int? bestCol;
+  //   for (var r = 0; r < rows; r++) {
+  //     for (var c = 0; c < cols; c++) {
+  //       if (!walkable[r][c]) {
+  //         continue;
+  //       }
+  //       final pCenter = cellCenter(r, c);
+  //       final dx = pCenter.x - p.x;
+  //       final dy = pCenter.y - p.y;
+  //       final d2 = dx * dx + dy * dy;
+  //       if (d2 < best) {
+  //         best = d2;
+  //         bestRow = r;
+  //         bestCol = c;
+  //       }
+  //     }
+  //   }
 
-    if (bestRow == null || bestCol == null) {
-      return null;
-    }
-    return (bestRow, bestCol);
-  }
+  //   if (bestRow == null || bestCol == null) {
+  //     return null;
+  //   }
+  //   return (bestRow, bestCol);
+  // }
 
-  final startCell = nearestWalkableCell(startPoint);
-  final endCell = nearestWalkableCell(endPoint);
+  final startCell = _nearestWalkableCell(
+    startPoint,
+    rows,
+    cols,
+    walkable,
+    cellCenter,
+    originX,
+    originY,
+    cellSize,
+  );
+
+  final endCell = _nearestWalkableCell(
+    endPoint,
+    rows,
+    cols,
+    walkable,
+    cellCenter,
+    originX,
+    originY,
+    cellSize,
+  );
+
   if (startCell == null || endCell == null) {
     return const _GridPathResult(path: <Point<double>>[], traversed: <Point<double>>[]);
   }
@@ -720,6 +714,53 @@ List<List<double>> _buildClearance(
   }
 
   return clearance;
+}
+
+(int row, int col)? _nearestWalkableCell(
+  final Point<double> p,
+  final int rows,
+  final int cols,
+  final List<List<bool>> walkable,
+  final Point<double> Function(int, int) cellCenter,
+  final double originX,
+  final double originY,
+  final double cellSize,
+) {
+  final approxCol = ((p.x - originX) / cellSize).floor();
+  final approxRow = ((p.y - originY) / cellSize).floor();
+
+  if (approxRow >= 0 && approxRow < rows && approxCol >= 0 && approxCol < cols) {
+    if (walkable[approxRow][approxCol]) {
+      return (approxRow, approxCol);
+    }
+  }
+
+  double best = double.infinity;
+  int? bestRow;
+  int? bestCol;
+
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (!walkable[r][c]) continue;
+
+      final pCenter = cellCenter(r, c);
+      final dx = pCenter.x - p.x;
+      final dy = pCenter.y - p.y;
+      final d2 = dx * dx + dy * dy;
+
+      if (d2 < best) {
+        best = d2;
+        bestRow = r;
+        bestCol = c;
+      }
+    }
+  }
+
+  if (bestRow == null || bestCol == null) {
+    return null;
+  }
+
+  return (bestRow, bestCol);
 }
 
 bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
