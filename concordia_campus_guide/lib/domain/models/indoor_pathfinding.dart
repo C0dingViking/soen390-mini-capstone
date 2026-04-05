@@ -657,17 +657,6 @@ _AStarResult _runAStar({
   open.add(startId);
   openSet[startId] = true;
 
-  const neighborOffsets = <(int dr, int dc, double scale)>[
-    (-1, 0, 1.0),
-    (1, 0, 1.0),
-    (0, -1, 1.0),
-    (0, 1, 1.0),
-    (-1, -1, 1.41421356237),
-    (-1, 1, 1.41421356237),
-    (1, -1, 1.41421356237),
-    (1, 1, 1.41421356237),
-  ];
-
   while (open.isNotEmpty) {
     var bestIndex = 0;
     var bestF = f[open[0]];
@@ -693,38 +682,17 @@ _AStarResult _runAStar({
       break;
     }
 
-    for (final (dr, dc, scale) in neighborOffsets) {
-      final nr = cr + dr;
-      final nc = cc + dc;
-      if (nr < 0 || nr >= grid.rows || nc < 0 || nc >= grid.cols) {
-        continue;
-      }
-      if (!grid.walkable[nr][nc]) {
-        continue;
-      }
+    final state = _AStarState(g: g, f: f, prev: prev, open: open, openSet: openSet, closed: closed);
 
-      final neighbor = helpers.id(nr, nc);
-      if (closed[neighbor]) {
-        continue;
-      }
-
-      final edgeBase = grid.cellSize * scale;
-      final edgeClearance = min(grid.clearance[cr][cc], grid.clearance[nr][nc]);
-      final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
-      final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
-
-      final tentative = g[current] + stepCost;
-      if (tentative < g[neighbor]) {
-        g[neighbor] = tentative;
-        prev[neighbor] = current;
-        f[neighbor] = tentative + heuristic(neighbor);
-
-        if (!openSet[neighbor]) {
-          open.add(neighbor);
-          openSet[neighbor] = true;
-        }
-      }
-    }
+    _processNeighbors(
+      current: current,
+      cr: cr,
+      cc: cc,
+      grid: grid,
+      helpers: helpers,
+      state: state,
+      endId: endId,
+    );
   }
 
   return _AStarResult(prev: prev, traversed: traversed);
@@ -751,6 +719,70 @@ List<Point<double>> _reconstructPath(
     final c = id % cols;
     return cellCenter(r, c);
   }).toList();
+}
+
+void _processNeighbors({
+  required final int current,
+  required final int cr,
+  required final int cc,
+  required final _AStarGrid grid,
+  required final _AStarHelpers helpers,
+  required final _AStarState state,
+  required final int endId,
+}) {
+  const neighborOffsets = <(int dr, int dc, double scale)>[
+    (-1, 0, 1.0),
+    (1, 0, 1.0),
+    (0, -1, 1.0),
+    (0, 1, 1.0),
+    (-1, -1, 1.41421356237),
+    (-1, 1, 1.41421356237),
+    (1, -1, 1.41421356237),
+    (1, 1, 1.41421356237),
+  ];
+
+  double heuristic(final int nodeId) {
+    final (r, c) = helpers.decode(nodeId);
+    final (er, ec) = helpers.decode(endId);
+    final dr = (r - er).abs().toDouble();
+    final dc = (c - ec).abs().toDouble();
+    return sqrt(dr * dr + dc * dc) * grid.cellSize;
+  }
+
+  for (final (dr, dc, scale) in neighborOffsets) {
+    final nr = cr + dr;
+    final nc = cc + dc;
+
+    if (nr < 0 || nr >= grid.rows || nc < 0 || nc >= grid.cols) {
+      continue;
+    }
+    if (!grid.walkable[nr][nc]) {
+      continue;
+    }
+
+    final neighbor = helpers.id(nr, nc);
+    if (state.closed[neighbor]) {
+      continue;
+    }
+
+    final edgeBase = grid.cellSize * scale;
+    final edgeClearance = min(grid.clearance[cr][cc], grid.clearance[nr][nc]);
+    final effectiveClearance = max(_minClearanceForCenterBias, edgeClearance);
+    final stepCost = edgeBase * (1 + (_centerBiasStrength / effectiveClearance));
+
+    final tentative = state.g[current] + stepCost;
+
+    if (tentative < state.g[neighbor]) {
+      state.g[neighbor] = tentative;
+      state.prev[neighbor] = current;
+      state.f[neighbor] = tentative + heuristic(neighbor);
+
+      if (!state.openSet[neighbor]) {
+        state.open.add(neighbor);
+        state.openSet[neighbor] = true;
+      }
+    }
+  }
 }
 
 bool _pointInsideAnyCorridorOrBoundary(final Point<double> p, final List<Corridor> corridors) {
@@ -872,4 +904,22 @@ class _AStarHelpers {
   final Point<double> Function(int, int) cellCenter;
 
   const _AStarHelpers({required this.decode, required this.id, required this.cellCenter});
+}
+
+class _AStarState {
+  final List<double> g;
+  final List<double> f;
+  final List<int?> prev;
+  final List<int> open;
+  final List<bool> openSet;
+  final List<bool> closed;
+
+  const _AStarState({
+    required this.g,
+    required this.f,
+    required this.prev,
+    required this.open,
+    required this.openSet,
+    required this.closed,
+  });
 }
