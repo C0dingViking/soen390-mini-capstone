@@ -262,7 +262,7 @@
        cy="375.90915"
        rx="2.852411"
        ry="3.1659176"
-       inkscape:label="door-h1-stairsDown-1" /><ellipse
+       inkscape:label="door-h1-stairs-1" /><ellipse
        style="fill:#20cf4c;fill-opacity:0;fill-rule:evenodd;stroke:#ff0000;stroke-width:0.529169;stroke-opacity:0.00718132"
        id="path14"
        cx="245.26671"
@@ -276,4 +276,4 @@
        cy="312.25177"
        rx="3.6575775"
        ry="4.3890929"
-       inkscape:label="door-h1-stairs-1" /></g></svg>
+       inkscape:label="door-h1-stairsDown-1" /></g></svg>
